@@ -34,17 +34,18 @@ export const MainNav = ({ className, orientation = "horizontal", onNavigate }: P
         className,
       )}
     >
-      {NAV_ITEMS.map(({ to, label, icon: Icon, title }) => (
+      {NAV_ITEMS.map(({ to, label, icon: Icon, title }, idx) => (
         <NavLink
           key={to}
           to={to}
           end={to === "/"}
           title={title}
           onClick={onNavigate}
+          style={vertical ? { animationDelay: `${idx * 60}ms`, animationFillMode: "both" } : undefined}
           className={({ isActive }) =>
             cn(
-              "inline-flex shrink-0 items-center gap-2 rounded-lg font-subtitle font-medium transition",
-              vertical ? "w-full px-3 py-2.5 text-sm" : "px-3 py-1.5 text-xs",
+              "inline-flex shrink-0 items-center gap-2 rounded-lg font-subtitle font-medium transition-all duration-200 hover:translate-x-0.5",
+              vertical ? "w-full px-3 py-2.5 text-sm animate-fade-in" : "px-3 py-1.5 text-xs",
               isActive
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
