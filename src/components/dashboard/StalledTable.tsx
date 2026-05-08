@@ -47,7 +47,11 @@ export const StalledTable = ({ travados, onRowClick }: Props) => {
               </tr>
             )}
             {travados.map((a) => (
-              <tr key={a.cliente + a.etapa} className="transition-colors hover:bg-muted/30">
+              <tr
+                key={a.cliente + a.etapa}
+                onClick={() => onRowClick?.(a.id)}
+                className={`transition-colors hover:bg-muted/30 ${onRowClick ? "cursor-pointer" : ""}`}
+              >
                 <td className="px-4 py-3 font-semibold text-foreground"><DealLink id={a.id}>{a.cliente}</DealLink></td>
                 <td className="px-4 py-3 text-muted-foreground">{a.ativador}</td>
                 <td className="px-4 py-3">
