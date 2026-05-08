@@ -65,7 +65,7 @@ export interface DashData {
   // Atenção
   atencao: { etapa: string; count: number; mrr: number; tone: "danger" | "warning" }[];
   criticos: StalledRow[];
-  topMrrTravado: StalledRow[];
+  topMrrTravado: (StalledRow & { mrr: number })[];
   // Charts
   porEtapa: { etapa: string; count: number; mrr: number }[];
   operadores: OperatorStat[];
