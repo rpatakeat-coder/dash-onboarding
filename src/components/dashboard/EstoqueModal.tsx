@@ -214,7 +214,7 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
             <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
               Perfil
             </span>
-            {perfisDisponiveis.map((p) => {
+            {perfisOrdenados.map((p) => {
               const active = perfilSel.has(p);
               const count = perfilCounts[p] ?? 0;
               const disabled = count === 0 && !active;
