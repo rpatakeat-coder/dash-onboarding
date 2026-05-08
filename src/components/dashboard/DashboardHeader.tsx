@@ -1,4 +1,7 @@
+import { Link, useLocation } from "react-router-dom";
+import { LogIn, LogOut, User } from "lucide-react";
 import logo from "@/assets/logo-takeat.png";
+import { useAuth } from "@/hooks/useAuth";
 
 export const DashboardHeader = () => {
   const today = new Date().toLocaleDateString("pt-BR", {
