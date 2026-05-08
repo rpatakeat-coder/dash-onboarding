@@ -383,7 +383,7 @@ const Index = () => {
 
         {/* Travados */}
         <section className="mb-8">
-          <StalledTable travados={data?.travadosLista ?? []} />
+          <StalledTable travados={travadosLista} />
         </section>
 
         <footer className="pt-4 text-center font-small text-xs text-muted-foreground">
