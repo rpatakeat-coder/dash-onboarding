@@ -1,4 +1,5 @@
 import { Download } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import type { DashRow } from "@/hooks/useDashOperacoes";
 
 interface Props {
@@ -28,19 +29,35 @@ const escape = (v: unknown) => {
 
 export const ExportCsvButton = ({ rows, filename = "operacoes" }: Props) => {
   const handle = () => {
-    const header = COLS.map(([, label]) => label).join(";");
-    const body = rows
-      .map((r) => COLS.map(([k]) => escape(r[k])).join(";"))
-      .join("\n");
-    const csv = "\uFEFF" + header + "\n" + body;
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    const date = new Date().toISOString().slice(0, 10);
-    a.href = url;
-    a.download = `${filename}_${date}_${rows.length}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      if (!rows.length) {
+        toast({ title: "Nada para exportar", description: "Nenhum deal nos filtros atuais." });
+        return;
+      }
+      const header = COLS.map(([, label]) => label).join(";");
+      const body = rows
+        .map((r) => COLS.map(([k]) => escape(r[k])).join(";"))
+        .join("\n");
+      const csv = "\uFEFF" + header + "\n" + body;
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const date = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `${filename}_${date}_${rows.length}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast({ title: "CSV exportado", description: `${rows.length} linhas baixadas.` });
+    } catch (err) {
+      console.error("[ExportCSV]", err);
+      toast({
+        title: "Falha ao exportar CSV",
+        description: err instanceof Error ? err.message : String(err),
+        variant: "destructive",
+      });
+    }
   };
 
   return (

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FileDown, Loader2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export interface PdfSummaryItem {
   label: string;
@@ -22,7 +23,14 @@ export const ExportPdfButton = ({
 
   const handle = async () => {
     const el = document.getElementById(targetId);
-    if (!el) return;
+    if (!el) {
+      toast({
+        title: "Falha ao exportar PDF",
+        description: `Elemento #${targetId} não encontrado.`,
+        variant: "destructive",
+      });
+      return;
+    }
     setBusy(true);
     document.body.classList.add("pdf-export");
     try {
@@ -140,6 +148,14 @@ export const ExportPdfButton = ({
 
       const stamp = new Date().toISOString().slice(0, 10);
       pdf.save(`${filename}_${stamp}.pdf`);
+      toast({ title: "PDF exportado", description: `${totalPages} página(s) gerada(s).` });
+    } catch (err) {
+      console.error("[ExportPDF]", err);
+      toast({
+        title: "Falha ao exportar PDF",
+        description: err instanceof Error ? err.message : String(err),
+        variant: "destructive",
+      });
     } finally {
       document.body.classList.remove("pdf-export");
       setBusy(false);
