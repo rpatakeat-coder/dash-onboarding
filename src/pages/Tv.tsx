@@ -33,8 +33,8 @@ const Tv = () => {
               estouradoCount={data?.estouradoCount ?? 0}
               onEstoqueClick={() => {}}
             />
-            {data?.operadoresGlobal && data.operadoresGlobal.length > 0 && (
-              <Highlights rows={rows} operadores={data.operadoresGlobal} />
+            {data?.operadores && data.operadores.length > 0 && (
+              <Highlights rows={rows} operadores={data.operadores} />
             )}
           </div>
         ),
