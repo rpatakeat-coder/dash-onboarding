@@ -81,6 +81,7 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
             <CommandGroup>
               {sorted.map((opt) => {
                 const active = selected.has(opt);
+                const c = counts?.[opt];
                 return (
                   <CommandItem key={opt} value={opt} onSelect={() => toggle(opt)}>
                     <div
@@ -93,7 +94,12 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
                     >
                       {active && <Check className="h-3 w-3" />}
                     </div>
-                    <span className="truncate">{opt}</span>
+                    <span className="flex-1 truncate">{opt}</span>
+                    {c !== undefined && (
+                      <span className="ml-2 rounded-full bg-muted px-1.5 py-0.5 font-numeric text-[10px] font-bold tabular-nums text-foreground/70">
+                        {c.toLocaleString("pt-BR")}
+                      </span>
+                    )}
                   </CommandItem>
                 );
               })}
