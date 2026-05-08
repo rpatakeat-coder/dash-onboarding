@@ -339,7 +339,7 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
             <TableBody>
               {list.map((r) => (
                 <TableRow key={r.id}>
-                  <TableCell className="font-medium">{r.cliente}</TableCell>
+                  <TableCell className="font-medium"><DealLink id={r.id}>{r.cliente}</DealLink></TableCell>
                   <TableCell className="text-muted-foreground">{r.etapa}</TableCell>
                   <TableCell className="text-muted-foreground">{r.ativador}</TableCell>
                   <TableCell className={cn("text-right font-numeric tabular-nums", slaTone(r.sla))}>
