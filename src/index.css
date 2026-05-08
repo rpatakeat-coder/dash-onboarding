@@ -39,6 +39,12 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 15%;
 
+    /* SLA bands */
+    --sla-critico: 0 84% 55%;          /* vermelho */
+    --sla-atencao: 22 95% 52%;         /* laranja */
+    --sla-alerta: 45 100% 50%;         /* amarelo */
+    --sla-saudavel: 152 60% 40%;       /* verde */
+
     --border: 36 20% 85%;
     --input: 36 20% 88%;
     --ring: 0 78% 50%;
@@ -85,6 +91,10 @@
     --destructive-foreground: 0 0% 100%;
     --success: 152 60% 45%;
     --warning: 38 92% 55%;
+    --sla-critico: 0 84% 60%;
+    --sla-atencao: 22 95% 58%;
+    --sla-alerta: 45 100% 55%;
+    --sla-saudavel: 152 60% 45%;
     --border: 0 0% 25%;
     --input: 0 0% 22%;
     --ring: 0 78% 55%;

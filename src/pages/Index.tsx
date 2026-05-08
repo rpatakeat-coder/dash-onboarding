@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { OperatorsTable } from "@/components/dashboard/OperatorsTable";
+import { OperatorCarteiraModal } from "@/components/dashboard/OperatorCarteiraModal";
 import { StalledTable } from "@/components/dashboard/StalledTable";
 import { SlaKpiRow } from "@/components/dashboard/SlaKpiRow";
 import { PeriodGrids } from "@/components/dashboard/PeriodGrids";
@@ -16,12 +17,15 @@ import {
   filterByPeriod,
   useDashOperacoes,
   type DashRow,
+  type OperatorStat,
   type PeriodKey,
 } from "@/hooks/useDashOperacoes";
 
 const Index = () => {
   const { data, error } = useDashOperacoes();
   const [estoqueOpen, setEstoqueOpen] = useState(false);
+  const [operatorOpen, setOperatorOpen] = useState(false);
+  const [selectedOperator, setSelectedOperator] = useState<OperatorStat | null>(null);
   const [atencaoPeriod, setAtencaoPeriod] = useState<PeriodKey>("tudo");
   const [criticoPeriod, setCriticoPeriod] = useState<PeriodKey>("tudo");
   const [opPeriod, setOpPeriod] = useState<PeriodKey>("tudo");
@@ -143,6 +147,12 @@ const Index = () => {
           open={estoqueOpen}
           onOpenChange={setEstoqueOpen}
           rows={data?.rows ?? []}
+        />
+
+        <OperatorCarteiraModal
+          operador={selectedOperator}
+          open={operatorOpen}
+          onOpenChange={setOperatorOpen}
         />
 
         {/* Filtros globais (Ativador + Etapa) */}
@@ -278,7 +288,13 @@ const Index = () => {
             </h3>
             <PeriodFilter value={opPeriod} onChange={setOpPeriod} counts={countsBy.operadores} />
           </div>
-          <OperatorsTable operadores={opData.operadores} />
+          <OperatorsTable
+            operadores={opData.operadores}
+            onOperatorClick={(op) => {
+              setSelectedOperator(op);
+              setOperatorOpen(true);
+            }}
+          />
         </section>
 
         {/* Travados */}
