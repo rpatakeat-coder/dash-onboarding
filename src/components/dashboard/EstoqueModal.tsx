@@ -39,38 +39,88 @@ const slaTone = (d: number) => {
   return "text-success";
 };
 
+const PERFIS_PADRAO = ["P", "M", "G", "GG"];
+
 export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
   const [q, setQ] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("sla");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [perfilSel, setPerfilSel] = useState<Set<string>>(new Set());
+  const [etapaSel, setEtapaSel] = useState<Set<string>>(new Set());
+
+  const mapped = useMemo(
+    () =>
+      rows.map((r) => {
+        const perfilRaw = r.perfil_cliente?.trim() || "";
+        const perfilKey = perfilRaw.split(/\s+/)[0]?.toUpperCase() || "—";
+        return {
+          id: r.id_deal,
+          cliente: r.nome_negocio?.trim() || "—",
+          etapa: r.etapa_negocio?.trim() || "—",
+          ativador: r.agente_ativacao?.trim() || "—",
+          perfil: perfilKey,
+          sla: toNum(r.sla_dias),
+          mrr: toNum(r.mrr),
+        };
+      }),
+    [rows],
+  );
+
+  const perfisDisponiveis = useMemo(() => {
+    const set = new Set(mapped.map((r) => r.perfil));
+    const known = PERFIS_PADRAO.filter((p) => set.has(p));
+    const extra = [...set].filter((p) => !PERFIS_PADRAO.includes(p)).sort();
+    return [...known, ...extra];
+  }, [mapped]);
+
+  const etapasDisponiveis = useMemo(
+    () => [...new Set(mapped.map((r) => r.etapa))].sort(),
+    [mapped],
+  );
 
   const list = useMemo(() => {
     const term = q.trim().toLowerCase();
-    const mapped = rows.map((r) => ({
-      id: r.id_deal,
-      cliente: r.nome_negocio?.trim() || "—",
-      etapa: r.etapa_negocio?.trim() || "—",
-      ativador: r.agente_ativacao?.trim() || "—",
-      perfil: r.perfil_cliente?.trim() || "—",
-      sla: toNum(r.sla_dias),
-      mrr: toNum(r.mrr),
-    }));
-    const filtered = term
-      ? mapped.filter(
-          (r) =>
-            r.cliente.toLowerCase().includes(term) ||
-            r.etapa.toLowerCase().includes(term) ||
-            r.ativador.toLowerCase().includes(term),
-        )
-      : mapped;
+    const filtered = mapped.filter((r) => {
+      if (perfilSel.size && !perfilSel.has(r.perfil)) return false;
+      if (etapaSel.size && !etapaSel.has(r.etapa)) return false;
+      if (
+        term &&
+        !r.cliente.toLowerCase().includes(term) &&
+        !r.etapa.toLowerCase().includes(term) &&
+        !r.ativador.toLowerCase().includes(term)
+      )
+        return false;
+      return true;
+    });
     const dir = sortDir === "asc" ? 1 : -1;
-    return filtered.sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       const va = a[sortKey];
       const vb = b[sortKey];
       if (typeof va === "number" && typeof vb === "number") return (va - vb) * dir;
       return String(va).localeCompare(String(vb)) * dir;
     });
-  }, [rows, q, sortKey, sortDir]);
+  }, [mapped, q, sortKey, sortDir, perfilSel, etapaSel]);
+
+  const togglePerfil = (p: string) => {
+    setPerfilSel((s) => {
+      const n = new Set(s);
+      n.has(p) ? n.delete(p) : n.add(p);
+      return n;
+    });
+  };
+  const toggleEtapa = (e: string) => {
+    setEtapaSel((s) => {
+      const n = new Set(s);
+      n.has(e) ? n.delete(e) : n.add(e);
+      return n;
+    });
+  };
+  const clearFilters = () => {
+    setPerfilSel(new Set());
+    setEtapaSel(new Set());
+    setQ("");
+  };
+  const hasFilters = perfilSel.size > 0 || etapaSel.size > 0 || q.length > 0;
 
   const toggleSort = (k: SortKey) => {
     if (sortKey === k) setSortDir(sortDir === "asc" ? "desc" : "asc");
