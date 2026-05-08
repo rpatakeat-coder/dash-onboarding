@@ -90,6 +90,32 @@ export const DashboardHeader = () => {
                 Atualizado em tempo real
               </p>
             </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={openPalette}
+                title="Buscar (Ctrl/Cmd + K)"
+                aria-label="Abrir busca global"
+                className="hidden items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5 font-subtitle text-xs text-muted-foreground transition hover:text-foreground md:inline-flex"
+              >
+                <Search className="h-3.5 w-3.5" />
+                <span>Buscar</span>
+                <kbd className="ml-2 rounded border border-border bg-muted px-1.5 py-0.5 font-numeric text-[10px] text-muted-foreground">
+                  {isMac ? "⌘" : "Ctrl"}K
+                </kbd>
+              </button>
+              <NotificationsBell />
+              <ThemeToggle />
+              <button
+                type="button"
+                onClick={prefsDialog.open}
+                title="Preferências (Ctrl/Cmd + ,)"
+                aria-label="Abrir preferências"
+                className="inline-flex items-center justify-center rounded-lg border border-border bg-card p-2 text-muted-foreground transition hover:text-foreground"
+              >
+                <Settings className="h-4 w-4" />
+              </button>
+            </div>
             {session ? (
               <div className="flex items-center gap-2">
                 <span className="hidden items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 font-subtitle text-xs text-muted-foreground sm:inline-flex">
