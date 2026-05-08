@@ -313,6 +313,7 @@ const Index = () => {
             estouradoCount={data?.estouradoCount ?? 0}
             onEstoqueClick={() => setEstoqueOpen(true)}
             deltas={deltas}
+            deltasLoading={deltasLoading}
             windowDays={deltaWindow}
             onChangeWindow={setDeltaWindow}
           />
