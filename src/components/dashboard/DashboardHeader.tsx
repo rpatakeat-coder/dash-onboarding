@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { LogIn, LogOut, Menu, User } from "lucide-react";
+import { LogIn, LogOut, Menu, Search, Settings, User } from "lucide-react";
 import logo from "@/assets/logo-takeat.png";
 import { useAuth } from "@/hooks/useAuth";
 import { MainNav } from "@/components/MainNav";
+import { NotificationsBell } from "@/components/NotificationsBell";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { APP_VERSION } from "@/lib/version";
+import { usePreferencesDialog } from "@/contexts/PreferencesDialogContext";
 
 export const DashboardHeader = () => {
   const today = new Date().toLocaleDateString("pt-BR", {
@@ -17,6 +20,13 @@ export const DashboardHeader = () => {
   });
   const { session, fullName, signOut } = useAuth();
   const [navOpen, setNavOpen] = useState(false);
+  const prefsDialog = usePreferencesDialog();
+  const isMac = typeof navigator !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+  const openPalette = () => {
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "k", metaKey: isMac, ctrlKey: !isMac, bubbles: true }),
+    );
+  };
 
   return (
     <header className="border-b border-border bg-card/60 backdrop-blur-sm">
@@ -79,6 +89,32 @@ export const DashboardHeader = () => {
                 </span>
                 Atualizado em tempo real
               </p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={openPalette}
+                title="Buscar (Ctrl/Cmd + K)"
+                aria-label="Abrir busca global"
+                className="hidden items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5 font-subtitle text-xs text-muted-foreground transition hover:text-foreground md:inline-flex"
+              >
+                <Search className="h-3.5 w-3.5" />
+                <span>Buscar</span>
+                <kbd className="ml-2 rounded border border-border bg-muted px-1.5 py-0.5 font-numeric text-[10px] text-muted-foreground">
+                  {isMac ? "⌘" : "Ctrl"}K
+                </kbd>
+              </button>
+              <NotificationsBell />
+              <ThemeToggle />
+              <button
+                type="button"
+                onClick={prefsDialog.open}
+                title="Preferências (Ctrl/Cmd + ,)"
+                aria-label="Abrir preferências"
+                className="inline-flex items-center justify-center rounded-lg border border-border bg-card p-2 text-muted-foreground transition hover:text-foreground"
+              >
+                <Settings className="h-4 w-4" />
+              </button>
             </div>
             {session ? (
               <div className="flex items-center gap-2">

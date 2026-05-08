@@ -1,95 +1,95 @@
-# Evolução do Dashboard de Operações
+## Objetivo
 
-5 entregas, podem ser feitas em sequência ou em paralelo. Sugiro nessa ordem porque os filtros globais alimentam todas as outras.
-
----
-
-## 1. Filtros globais (período, ativador, perfil)
-
-Barra fixa no topo do dashboard, sincronizada com a URL (compartilhável e sobrevive a reload).
-
-- **Período**: presets (Hoje, 7d, 30d, 90d, Tudo) + range customizado via date picker.
-- **Ativador**: multi-select com lista populada de `dash_operacoes.agente_ativacao`.
-- **Perfil**: chips P / M / G / GG (multi).
-- **Etapa**: multi-select de etapas do funil.
-- Botão "Limpar filtros" + contador de deals filtrados ao lado.
-
-**Como afeta tudo**: criar um `useDashFilters()` hook (Context) que devolve `{ filteredDeals, filters, setFilters }`. Todos os widgets passam a consumir `filteredDeals` em vez de fazer `select` próprio. Reduz queries e garante consistência.
+Adicionar três frentes de produtividade ao painel: central de **notificações & alertas**, **tema claro/escuro com preferências** e **busca global (Cmd+K)** para navegação rápida.
 
 ---
 
-## 2. Drill-down de cliente
+## 1. Notificações & alertas
 
-Clicar em qualquer linha do `RiskRanking` (e de outros widgets onde fizer sentido) abre um **Sheet lateral** (não modal — fica mais leve pra navegar).
+**O que o usuário vê**
+- Sino no header (ao lado do nome) com badge de contagem não-lidas.
+- Popover lista alertas agrupados por tipo (SLA crítico, deal parado, meta atingida) com link direto pro deal/operador.
+- Toast (sonner) ao surgir um alerta novo na sessão.
+- Cada item: marcar como lido, "marcar todos como lidos", limpar histórico.
 
-Conteúdo do painel:
-- **Cabeçalho**: nome do deal, ativador, perfil, MRR, link HubSpot, badge de risco.
-- **KPIs do deal**: SLA atual, dias na etapa, score de risco, posição no ranking.
-- **Timeline de etapas**: parsing de `data_criacao` → `data_entrada_fase` → etapa atual.
-- **Atividade**: últimas ligações (`Ligações Realizadas` por `id_deal`) e reuniões (`Reuniões Marcadas` por `id_deal`), ordenado desc.
-- **Histórico de risco**: mini line chart com o score do deal nos últimos snapshots (precisa estender o snapshot — ver detalhes técnicos).
-- **Ações sugeridas** (regras simples): "SLA > 60d em Pendências → escalar", "MRR alto + sem reunião nos últimos 14d → agendar QBR", etc.
+**Regras automáticas (derivadas dos dados já carregados em `useDashOperacoes`)**
+- SLA crítico: deals onde `dias_em_etapa` excede a meta da etapa.
+- Deal parado: sem movimentação há > 7 dias.
+- Meta semanal: operador atinge / supera meta.
+- Recompute a cada refresh do hook; deduplica por `dealId+tipo`.
 
----
-
-## 3. Comparativo período a período
-
-Cada KPI principal ganha um **delta** vs período anterior equivalente.
-
-- Se filtro = "últimos 7d" → compara com 7d anteriores.
-- Se filtro = "últimos 30d" → compara com 30d anteriores.
-- Se filtro = "Tudo" → compara com snapshot de 30d atrás.
-
-Visual: seta ↑/↓ + percentual + tooltip explicando a base de comparação. Cor verde/vermelho conforme se a métrica é "boa quando sobe" (% no prazo) ou "boa quando cai" (críticos, SLA médio).
-
-Fonte de dados: `dash_operacoes_snapshots` (já temos snapshot diário rodando).
+**Persistência**
+- Lidas/dispensadas em `localStorage` por usuário (`notif:read:<userId>`); sem backend nesta etapa.
 
 ---
 
-## 4. Export CSV / PDF
+## 2. Tema claro/escuro + preferências
 
-Botão no header do dashboard com dropdown:
+**O que o usuário vê**
+- Botão sol/lua no header (claro / escuro / sistema).
+- Painel "Preferências" (modal acionado por ícone de engrenagem) com:
+  - Tema (claro / escuro / auto)
+  - Densidade (confortável / compacta) — afeta paddings dos KPIs/tabelas
+  - Página inicial padrão (Visão geral / Minha carteira / Modo TV)
+  - Toggle de notificações por tipo
 
-- **Exportar CSV**: dump dos deals atualmente filtrados (todas as colunas relevantes). Geração client-side, sem edge function.
-- **Exportar PDF**: snapshot visual do dashboard usando `html2canvas` + `jsPDF`. Inclui filtros aplicados no rodapé e timestamp. Útil pra anexar em ata de reunião.
+**Implementação**
+- Provider `ThemeProvider` em `src/contexts/` salvando em `localStorage` (`prefs:v1`).
+- Tokens dark já existem em `src/index.css` (`.dark` block) — apenas validar contraste; ajustar onde necessário.
+- Densidade aplicada via classe `data-density="compact"` no `<html>` + utilities Tailwind condicionais nos componentes-chave (KpiCard, tabelas).
+
+---
+
+## 3. Busca global Cmd+K
+
+**O que o usuário vê**
+- Atalho `Cmd/Ctrl+K` (e botão discreto no header com hint do atalho) abre paleta.
+- Pesquisa em tempo real:
+  - **Páginas**: Visão geral, Minha carteira, Modo TV, Auth.
+  - **Operadores**: filtra ranking; ao escolher, abre modal `OperatorCarteiraModal`.
+  - **Deals**: por nome do restaurante; ao escolher, abre `DealDrawer`.
+  - **Ações rápidas**: aplicar período (Hoje, 7d, 30d), alternar tema, exportar CSV/PDF, abrir preferências.
+- Navegação por teclado (setas, enter, esc).
+
+**Implementação**
+- Componente `CommandPalette` usando `cmdk` (já presente em shadcn `command.tsx`).
+- Provider montado no `App.tsx` para estar disponível em todas as rotas.
+- Listener global de teclado em `useEffect`.
 
 ---
 
-## 5. Modo TV
+## Arquivos novos
 
-Rota nova `/tv` (sem header, fundo escuro, fontes maiores).
+```text
+src/contexts/PreferencesContext.tsx     // tema + densidade + página inicial + toggles
+src/contexts/NotificationsContext.tsx   // gera, persiste e expõe alertas
+src/components/CommandPalette.tsx       // Cmd+K
+src/components/NotificationsBell.tsx    // sino + popover
+src/components/PreferencesDialog.tsx    // modal de preferências
+src/components/ThemeToggle.tsx          // botão sol/lua
+src/lib/notifications.ts                // regras: gerarAlertas(dadosDash)
+```
 
-- Auto-refresh dos dados a cada 60s.
-- Carrossel: rotaciona a cada 20s entre 3 telas: (1) KPIs + heatmap, (2) Top 10 risco, (3) trend chart.
-- Tecla `F` ou botão "Tela cheia" pra fullscreen real.
-- Sem necessidade de login (usa anon — RLS já permite leitura).
+## Arquivos editados
 
----
+```text
+src/App.tsx                             // envolve com PreferencesProvider + NotificationsProvider + CommandPalette
+src/components/dashboard/DashboardHeader.tsx  // adiciona sino, theme toggle, botão Cmd+K, ícone preferências
+src/index.css                           // ajustes finos de contraste no .dark e variáveis de densidade
+src/hooks/useDashOperacoes.ts           // expõe dados para feed de notificações (sem mudar lógica)
+```
 
 ## Detalhes técnicos
 
-- **Filtros via URL**: usar `useSearchParams` do React Router. Estado canônico fica na URL, hook lê/escreve.
-- **Consistência de dados**: hoje cada componente faz seu próprio `supabase.from('dash_operacoes')`. Refatorar pra um único `useDashOperacoes()` que carrega tudo uma vez (paginado) e cacheia via React Query. Os filtros são aplicados em memória — mais rápido e consistente.
-- **Drill-down — histórico de risco do deal**: o snapshot atual só guarda agregados. Pra ter o score histórico por deal, duas opções:
-  - (a) Adicionar tabela `deal_risk_history` (id_deal, snapshot_date, score, sla_dias, etapa) populada pela mesma edge function `snapshot-dash-operacoes`. Permite line chart real.
-  - (b) Pular esse gráfico no drill-down v1 e adicionar depois.
-  Sugiro **(a)** — custo baixo (mesma função, +1 insert) e desbloqueia o gráfico individual.
-- **PDF**: `html2canvas` + `jspdf` (ambos npm, leves). Renderiza o `<main>` do dashboard.
-- **Modo TV**: componente `<TvCarousel>` reutilizando os widgets existentes, com wrapper de fonte maior e auto-rotate via `setInterval`.
-- **Performance**: com filtros em memória + React Query, só fazemos 1-2 queries por sessão em vez de 6+.
+- **Sem novas tabelas/edge functions** nesta etapa — tudo client-side com `localStorage`.
+- **cmdk** já está instalado via shadcn (`src/components/ui/command.tsx`).
+- **sonner** já configurado para toasts.
+- Atalhos: `Cmd/Ctrl+K` (busca), `Cmd/Ctrl+,` (preferências), `Cmd/Ctrl+Shift+L` (alternar tema).
+- Acessibilidade: foco visível, `aria-live="polite"` no badge do sino, todos os menus/dialogs do Radix.
+- Performance: alertas memoizados; paleta usa virtualização do `cmdk` nativamente.
 
----
+## Fora de escopo (sugestões para próximas iterações)
 
-## Ordem sugerida de execução
-
-```text
-1. Filtros globais  ──┐
-                       ├──▶  3. Comparativo período
-2. useDashOperacoes() ─┘                            
-                                                    
-4. Drill-down (depende de 1 + nova tabela history)  
-5. Export CSV/PDF (depende de 1)                    
-6. Modo TV (depende de 1)                           
-```
-
-Posso começar por **1 + 2 (refactor base)** que destrava o resto, ou ir direto no drill-down se preferir ver valor de cliente primeiro. Me diz qual prefere.
+- Push notifications nativas (precisa Lovable Cloud + service worker — incompatível com a configuração manifest-only atual).
+- Sincronização de preferências entre dispositivos (exigiria tabela `user_preferences`).
+- Busca dentro de relatórios históricos.
