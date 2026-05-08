@@ -17,6 +17,7 @@ import {
   filterByPeriod,
   useDashOperacoes,
   type DashRow,
+  type OperatorStat,
   type PeriodKey,
 } from "@/hooks/useDashOperacoes";
 
