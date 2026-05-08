@@ -62,6 +62,10 @@ export interface DashData {
   mesAnterior: PeriodStat;
   // Perfil
   perfis: PerfilStat[];
+  // Atenção
+  atencao: { etapa: string; count: number; mrr: number; tone: "danger" | "warning" }[];
+  criticos: StalledRow[];
+  topMrrTravado: StalledRow[];
   // Charts
   porEtapa: { etapa: string; count: number; mrr: number }[];
   operadores: OperatorStat[];
