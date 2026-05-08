@@ -142,8 +142,9 @@ describe("paginateCanvas — A4 invariants across viewports & zoom", () => {
             firstPagePx,
             fullPagePx,
           });
-          // Upper bound: ceil(H / fullPage) + 2 (first page can be smaller)
-          const upper = Math.ceil(canvasHeight / fullPagePx) + 2;
+          // Upper bound: first page (smaller) + remaining at full-page size
+          const remaining = Math.max(0, canvasHeight - firstPagePx);
+          const upper = 1 + Math.ceil(remaining / fullPagePx) + 1;
           expect(slices.length).toBeLessThanOrEqual(upper);
         });
       }
