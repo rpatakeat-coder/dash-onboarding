@@ -24,6 +24,8 @@ import {
 const Index = () => {
   const { data, error } = useDashOperacoes();
   const [estoqueOpen, setEstoqueOpen] = useState(false);
+  const [operatorOpen, setOperatorOpen] = useState(false);
+  const [selectedOperator, setSelectedOperator] = useState<OperatorStat | null>(null);
   const [atencaoPeriod, setAtencaoPeriod] = useState<PeriodKey>("tudo");
   const [criticoPeriod, setCriticoPeriod] = useState<PeriodKey>("tudo");
   const [opPeriod, setOpPeriod] = useState<PeriodKey>("tudo");
