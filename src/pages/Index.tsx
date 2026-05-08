@@ -211,7 +211,39 @@ const Index = () => {
     return out;
   }, [rows]);
 
-  const travadosLista = useMemo(() => {
+  // Comparativos A vs B (compartilham contagens com kpiCounts)
+  const slaCmp = useMemo(() => {
+    const a = computeSlaKpis(filterByPeriod(rows, slaCmpA));
+    const b = computeSlaKpis(filterByPeriod(rows, slaCmpB));
+    return { a, b };
+  }, [rows, slaCmpA, slaCmpB]);
+
+  const execCmp = useMemo(() => {
+    const a = computePeriodSummary(filterByPeriod(rows, execCmpA));
+    const b = computePeriodSummary(filterByPeriod(rows, execCmpB));
+    return { a, b };
+  }, [rows, execCmpA, execCmpB]);
+
+  const slaCmpMetrics = useMemo<CompareMetric[]>(
+    () => [
+      { label: "Estoque total", a: slaCmp.a.total, b: slaCmp.b.total, goodDirection: "down" },
+      { label: "SLA médio", a: slaCmp.a.slaMedio, b: slaCmp.b.slaMedio, unit: "d", decimals: 1, goodDirection: "down" },
+      { label: "% no prazo", a: slaCmp.a.noPrazo, b: slaCmp.b.noPrazo, unit: "%", decimals: 1, goodDirection: "up" },
+      { label: "% SLA estourado", a: slaCmp.a.estourado, b: slaCmp.b.estourado, unit: "%", decimals: 1, goodDirection: "down" },
+    ],
+    [slaCmp],
+  );
+
+  const execCmpMetrics = useMemo<CompareMetric[]>(
+    () => [
+      { label: "Novos clientes", a: execCmp.a.novos, b: execCmp.b.novos, goodDirection: "up" },
+      { label: "Ativados", a: execCmp.a.ativados, b: execCmp.b.ativados, goodDirection: "up" },
+      { label: "MRR ativado", a: execCmp.a.mrrAtivado, b: execCmp.b.mrrAtivado, goodDirection: "up", fmt: fmtBRLk },
+      { label: "% MRR ativado", a: execCmp.a.pctAtivado, b: execCmp.b.pctAtivado, decimals: 1, goodDirection: "up", fmt: (n) => fmtPct(n, 1) },
+    ],
+    [execCmp],
+  );
+
     const TRAVADO_DIAS = 7;
     return rows
       .map((r) => ({
