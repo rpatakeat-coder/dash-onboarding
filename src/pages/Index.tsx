@@ -124,6 +124,21 @@ const Index = () => {
   const criticoData = useMemo(() => computeFiltered(filterByPeriod(rows, criticoPeriod)), [rows, criticoPeriod]);
   const opData = useMemo(() => computeFiltered(filterByPeriod(rows, opPeriod)), [rows, opPeriod]);
 
+  const travadosLista = useMemo(() => {
+    const TRAVADO_DIAS = 7;
+    return rows
+      .map((r) => ({
+        id: r.id_deal,
+        cliente: r.nome_negocio?.trim() || "—",
+        ativador: r.agente_ativacao?.trim() || "—",
+        etapa: r.etapa_negocio?.trim() || "—",
+        dias: slaOf(r),
+      }))
+      .filter((r) => r.dias > TRAVADO_DIAS)
+      .sort((a, b) => b.dias - a.dias)
+      .slice(0, 10);
+  }, [rows]);
+
   const countsBy = useMemo(() => {
     const ETAPAS_ATENCAO = new Set(["Pré-Cancelamento", "Inativo", "Pendências", "Processo Pausado"]);
     const periodos: PeriodKey[] = ["tudo", "hoje", "semana", "mes"];
@@ -183,7 +198,7 @@ const Index = () => {
         <EstoqueModal
           open={estoqueOpen}
           onOpenChange={setEstoqueOpen}
-          rows={data?.rows ?? []}
+          rows={rows}
         />
 
         <OperatorCarteiraModal
@@ -368,7 +383,7 @@ const Index = () => {
 
         {/* Travados */}
         <section className="mb-8">
-          <StalledTable travados={data?.travadosLista ?? []} />
+          <StalledTable travados={travadosLista} />
         </section>
 
         <footer className="pt-4 text-center font-small text-xs text-muted-foreground">
