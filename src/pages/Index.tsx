@@ -150,8 +150,9 @@ const Index = () => {
   }, [allRows]);
 
   const rows = useMemo<DashRow[]>(
-    () =>
-      allRows.filter((r) => {
+    () => {
+      const me = onlyMine && fullName ? fullName.trim().toLowerCase() : null;
+      return allRows.filter((r) => {
         if (
           ativadorSel.size &&
           !ativadorSel.has(r.agente_ativacao?.trim() || "Sem responsável")
@@ -161,9 +162,11 @@ const Index = () => {
           return false;
         if (bandSelKeys.size && !bandSelKeys.has(slaBand(slaOf(r)))) return false;
         if (perfilSel.size && !perfilSel.has(perfilOf(r))) return false;
+        if (me && (r.agente_ativacao?.trim().toLowerCase() ?? "") !== me) return false;
         return true;
-      }),
-    [allRows, ativadorSel, etapaSel, bandSelKeys, perfilSel],
+      });
+    },
+    [allRows, ativadorSel, etapaSel, bandSelKeys, perfilSel, onlyMine, fullName],
   );
 
   const atencaoData = useMemo(() => computeFiltered(filterByPeriod(rows, atencaoPeriod)), [rows, atencaoPeriod]);
