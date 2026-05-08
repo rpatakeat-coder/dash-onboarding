@@ -17,6 +17,8 @@ import { Highlights } from "@/components/dashboard/Highlights";
 import { BottleneckHeatmap } from "@/components/dashboard/BottleneckHeatmap";
 import { RankingTable } from "@/components/dashboard/RankingTable";
 import { PerfilSlaPanel } from "@/components/dashboard/PerfilSlaPanel";
+import { RiskRanking } from "@/components/dashboard/RiskRanking";
+import { TrendChart } from "@/components/dashboard/TrendChart";
 import {
   computeFiltered,
   filterByPeriod,
