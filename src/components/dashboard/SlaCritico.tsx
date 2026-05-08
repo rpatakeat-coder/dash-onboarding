@@ -1,5 +1,6 @@
 import { Flame } from "lucide-react";
 import { StalledRow } from "@/hooks/useDashOperacoes";
+import { DealLink } from "./DealLink";
 
 interface Props {
   criticos: StalledRow[];
