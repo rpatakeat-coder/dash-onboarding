@@ -30,6 +30,31 @@ const Index = () => {
 
   const allRows = data?.rows ?? [];
 
+  // Counts respect the OTHER dimension's selection
+  const ativadoresCounts = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const r of allRows) {
+      if (etapaSel.size && !etapaSel.has(r.etapa_negocio?.trim() || "Sem etapa")) continue;
+      const k = r.agente_ativacao?.trim() || "Sem responsável";
+      out[k] = (out[k] ?? 0) + 1;
+    }
+    return out;
+  }, [allRows, etapaSel]);
+
+  const etapasCounts = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const r of allRows) {
+      if (
+        ativadorSel.size &&
+        !ativadorSel.has(r.agente_ativacao?.trim() || "Sem responsável")
+      )
+        continue;
+      const k = r.etapa_negocio?.trim() || "Sem etapa";
+      out[k] = (out[k] ?? 0) + 1;
+    }
+    return out;
+  }, [allRows, ativadorSel]);
+
   const ativadoresOpts = useMemo(
     () => [...new Set(allRows.map((r) => r.agente_ativacao?.trim() || "Sem responsável"))],
     [allRows],
