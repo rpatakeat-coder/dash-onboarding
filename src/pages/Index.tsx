@@ -1,12 +1,12 @@
-import { AlertTriangle, Clock, DollarSign, Store } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { KpiCard } from "@/components/dashboard/KpiCard";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { OperatorsTable } from "@/components/dashboard/OperatorsTable";
 import { StalledTable } from "@/components/dashboard/StalledTable";
 import { SlaKpiRow } from "@/components/dashboard/SlaKpiRow";
 import { PeriodGrids } from "@/components/dashboard/PeriodGrids";
-import { useDashOperacoes, fmtBRL, fmtDias } from "@/hooks/useDashOperacoes";
+import { AttentionPoints } from "@/components/dashboard/AttentionPoints";
+import { SlaCritico } from "@/components/dashboard/SlaCritico";
+import { useDashOperacoes } from "@/hooks/useDashOperacoes";
 
 const Index = () => {
   const { data, isLoading, error } = useDashOperacoes();
