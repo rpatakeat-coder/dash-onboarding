@@ -594,7 +594,13 @@ const Index = () => {
               total={allRows.length}
             />
           </div>
-          <StalledTable travados={travadosLista} />
+          <StalledTable
+            travados={travadosLista}
+            onRowClick={(id) => {
+              const row = allRows.find((r) => r.id_deal === id);
+              if (row) openDeal(row);
+            }}
+          />
         </section>
 
         <footer className="pt-4 text-center font-small text-xs text-muted-foreground">
