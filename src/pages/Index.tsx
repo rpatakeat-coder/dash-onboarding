@@ -149,6 +149,12 @@ const Index = () => {
           rows={data?.rows ?? []}
         />
 
+        <OperatorCarteiraModal
+          operador={selectedOperator}
+          open={operatorOpen}
+          onOpenChange={setOperatorOpen}
+        />
+
         {/* Filtros globais (Ativador + Etapa) */}
         <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card/50 p-3">
           <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
