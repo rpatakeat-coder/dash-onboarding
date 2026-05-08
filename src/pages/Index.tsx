@@ -397,6 +397,26 @@ const Index = () => {
                   </span>
                 );
               })}
+              {[...perfilSel].map((v) => (
+                <span
+                  key={`p-${v}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 font-subtitle text-xs font-medium text-accent-foreground"
+                >
+                  <span className="text-[10px] uppercase tracking-wider opacity-70">Perfil</span>
+                  <span>{v}</span>
+                  <button
+                    onClick={() => {
+                      const n = new Set(perfilSel);
+                      n.delete(v);
+                      setPerfilSel(n);
+                    }}
+                    className="ml-0.5 rounded-full p-0.5 hover:bg-accent/20"
+                    aria-label={`Remover ${v}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
             </div>
           )}
         </div>
