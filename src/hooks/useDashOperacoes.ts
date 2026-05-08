@@ -289,6 +289,28 @@ export function filterByPeriod(rows: DashRow[], period: PeriodKey): DashRow[] {
   });
 }
 
+export interface SlaKpis {
+  total: number;
+  slaP75: number;
+  slaMedio: number;
+  noPrazo: number;
+  noPrazoCount: number;
+  estourado: number;
+  estouradoCount: number;
+}
+
+export function computeSlaKpis(rows: DashRow[]): SlaKpis {
+  const total = rows.length;
+  const dias = rows.map((r) => toNum(r.sla_dias));
+  const slaMedio = dias.length ? dias.reduce((a, b) => a + b, 0) / dias.length : 0;
+  const slaP75 = percentile(dias, 0.75);
+  const noPrazoCount = rows.filter((r) => toNum(r.sla_dias) <= SLA_PRAZO).length;
+  const estouradoCount = total - noPrazoCount;
+  const noPrazo = total ? (noPrazoCount / total) * 100 : 0;
+  const estourado = total ? (estouradoCount / total) * 100 : 0;
+  return { total, slaP75, slaMedio, noPrazo, noPrazoCount, estourado, estouradoCount };
+}
+
 function aggregate(rows: DashRow[]): DashData {
   const total = rows.length;
   const mrrTotal = rows.reduce((s, r) => s + toNum(r.mrr), 0);
