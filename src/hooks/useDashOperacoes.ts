@@ -217,22 +217,59 @@ function aggregate(rows: DashRow[]): DashData {
     }))
     .sort((a, b) => b.ativos - a.ativos);
 
-  const travadosLista: StalledRow[] = rows
+  const allMapped: StalledRow[] = rows.map((r) => ({
+    cliente: r.nome_negocio?.trim() || "—",
+    ativador: r.agente_ativacao?.trim() || "—",
+    etapa: r.etapa_negocio?.trim() || "—",
+    dias: toNum(r.sla_dias),
+  }));
+
+  const travadosLista = allMapped
+    .filter((r) => r.dias > TRAVADO_DIAS)
+    .sort((a, b) => b.dias - a.dias)
+    .slice(0, 10);
+
+  // Pontos de atenção (etapas problemáticas)
+  const atencaoEtapas: { etapa: string; tone: "danger" | "warning" }[] = [
+    { etapa: "Pré-Cancelamento", tone: "danger" },
+    { etapa: "Inativo", tone: "danger" },
+    { etapa: "Pendências", tone: "warning" },
+    { etapa: "Processo Pausado", tone: "warning" },
+  ];
+  const atencao = atencaoEtapas
+    .map(({ etapa, tone }) => {
+      const v = etapaMap.get(etapa);
+      return { etapa, tone, count: v?.count ?? 0, mrr: v?.mrr ?? 0 };
+    })
+    .filter((e) => e.count > 0);
+
+  // SLA crítico (>30 dias na fase) — top 8
+  const criticos = allMapped
+    .filter((r) => r.dias > SLA_PRAZO)
+    .sort((a, b) => b.dias - a.dias)
+    .slice(0, 8);
+
+  // Top MRR travado/atrasado
+  const mrrByDeal = new Map<number, number>();
+  rows.forEach((r) => mrrByDeal.set(r.id_deal, toNum(r.mrr)));
+  const topMrrTravado = rows
+    .filter((r) => toNum(r.sla_dias) > TRAVADO_DIAS)
     .map((r) => ({
       cliente: r.nome_negocio?.trim() || "—",
       ativador: r.agente_ativacao?.trim() || "—",
       etapa: r.etapa_negocio?.trim() || "—",
       dias: toNum(r.sla_dias),
+      mrr: mrrByDeal.get(r.id_deal) ?? 0,
     }))
-    .filter((r) => r.dias > TRAVADO_DIAS)
-    .sort((a, b) => b.dias - a.dias)
-    .slice(0, 10);
+    .sort((a, b) => b.mrr - a.mrr)
+    .slice(0, 5);
 
   return {
     rows, total, mrrTotal, tempoMedioFase, travados,
     slaMedio, slaP75, noPrazo, noPrazoCount, estourado, estouradoCount,
     hoje, semana, mes, mesAnterior,
     perfis,
+    atencao, criticos, topMrrTravado,
     porEtapa, operadores, travadosLista,
   };
 }
