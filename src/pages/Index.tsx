@@ -9,7 +9,7 @@ import { SlaCritico } from "@/components/dashboard/SlaCritico";
 import { useDashOperacoes } from "@/hooks/useDashOperacoes";
 
 const Index = () => {
-  const { data, isLoading, error } = useDashOperacoes();
+  const { data, error } = useDashOperacoes();
 
   return (
     <div className="min-h-screen bg-gradient-surface">
