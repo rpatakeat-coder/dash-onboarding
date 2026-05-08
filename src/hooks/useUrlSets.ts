@@ -1,55 +1,61 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 
+type Sets = Record<string, Set<string>>;
+type Flags = Record<string, boolean>;
+
 /**
- * Sincroniza um conjunto de filtros (Set<string> + booleans) com a URL via searchParams.
- * Cada chave em `defs.sets` vira `?key=val1,val2`. Cada chave em `defs.flags` vira `?key=1`.
+ * Sincroniza filtros (Set<string>) e flags (boolean) com a URL.
+ * Hidrata o estado da URL no mount e escreve de volta a cada mudança.
  */
-export function useUrlSets<
-  S extends Record<string, Set<string>>,
-  F extends Record<string, boolean>,
->(
-  sets: S,
-  setSets: { [K in keyof S]: (v: Set<string>) => void },
-  flags: F,
-  setFlags: { [K in keyof F]: (v: boolean) => void },
+export function useUrlSets(
+  sets: Sets,
+  setSets: Record<string, (v: Set<string>) => void>,
+  flags: Flags,
+  setFlags: Record<string, (v: boolean) => void>,
 ) {
   const [params, setParams] = useSearchParams();
-  const initialized = useRef(false);
+  const hydrated = useRef(false);
 
-  // Hidrata estado a partir da URL na primeira render
+  // Hidrata uma vez na montagem
   useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
-    for (const k of Object.keys(sets) as (keyof S)[]) {
-      const raw = params.get(String(k));
+    if (hydrated.current) return;
+    hydrated.current = true;
+    for (const k of Object.keys(sets)) {
+      const raw = params.get(k);
       if (raw) setSets[k](new Set(raw.split(",").filter(Boolean)));
     }
-    for (const k of Object.keys(flags) as (keyof F)[]) {
-      if (params.get(String(k)) === "1") setFlags[k](true);
+    for (const k of Object.keys(flags)) {
+      if (params.get(k) === "1") setFlags[k](true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Sincroniza estado → URL
+  // Serializa estado atual num string estável e usa como dep única
+  const serialized =
+    Object.entries(sets)
+      .map(([k, v]) => `${k}=${[...v].sort().join(",")}`)
+      .join("|") +
+    "::" +
+    Object.entries(flags)
+      .map(([k, v]) => `${k}=${v ? "1" : "0"}`)
+      .join("|");
+
   useEffect(() => {
-    if (!initialized.current) return;
+    if (!hydrated.current) return;
     const next = new URLSearchParams(params);
-    for (const k of Object.keys(sets) as (keyof S)[]) {
-      const arr = [...sets[k]];
-      if (arr.length) next.set(String(k), arr.join(","));
-      else next.delete(String(k));
+    for (const [k, v] of Object.entries(sets)) {
+      const arr = [...v];
+      if (arr.length) next.set(k, arr.join(","));
+      else next.delete(k);
     }
-    for (const k of Object.keys(flags) as (keyof F)[]) {
-      if (flags[k]) next.set(String(k), "1");
-      else next.delete(String(k));
+    for (const [k, v] of Object.entries(flags)) {
+      if (v) next.set(k, "1");
+      else next.delete(k);
     }
     if (next.toString() !== params.toString()) {
       setParams(next, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    ...Object.values(sets).map((s) => [...s].join(",")),
-    ...Object.values(flags),
-  ]);
+  }, [serialized]);
 }
