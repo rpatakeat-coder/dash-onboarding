@@ -303,26 +303,7 @@ function aggregate(rows: DashRow[]): DashData {
     .sort((a, b) => b.count - a.count);
 
   // Operadores
-  const opMap = new Map<string, { ativos: number; mrr: number; soma: number; travados: number }>();
-  for (const r of rows) {
-    const k = r.agente_ativacao?.trim() || "Sem responsável";
-    const cur = opMap.get(k) ?? { ativos: 0, mrr: 0, soma: 0, travados: 0 };
-    const d = toNum(r.sla_dias);
-    cur.ativos += 1;
-    cur.mrr += toNum(r.mrr);
-    cur.soma += d;
-    if (d > TRAVADO_DIAS) cur.travados += 1;
-    opMap.set(k, cur);
-  }
-  const operadores = [...opMap.entries()]
-    .map(([nome, v]) => ({
-      nome,
-      ativos: v.ativos,
-      mrr: v.mrr,
-      tempoMedio: v.ativos ? v.soma / v.ativos : 0,
-      travados: v.travados,
-    }))
-    .sort((a, b) => b.ativos - a.ativos);
+  const operadores = buildOperadores(rows);
 
   const allMapped: StalledRow[] = rows.map((r) => ({
     cliente: r.nome_negocio?.trim() || "—",
