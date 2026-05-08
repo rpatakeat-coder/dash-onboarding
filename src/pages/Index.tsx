@@ -152,6 +152,54 @@ const Index = () => {
               </button>
             </>
           )}
+
+          {hasGlobalFilters && (
+            <div className="flex w-full flex-wrap items-center gap-2 border-t border-border pt-3">
+              <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+                Ativos:
+              </span>
+              {[...ativadorSel].map((v) => (
+                <span
+                  key={`a-${v}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 font-subtitle text-xs font-medium text-primary"
+                >
+                  <span className="text-[10px] uppercase tracking-wider opacity-70">Ativador</span>
+                  <span>{v}</span>
+                  <button
+                    onClick={() => {
+                      const n = new Set(ativadorSel);
+                      n.delete(v);
+                      setAtivadorSel(n);
+                    }}
+                    className="ml-0.5 rounded-full p-0.5 hover:bg-primary/20"
+                    aria-label={`Remover ${v}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+              {[...etapaSel].map((v) => (
+                <span
+                  key={`e-${v}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-secondary/30 bg-secondary/10 px-2.5 py-1 font-subtitle text-xs font-medium text-secondary"
+                >
+                  <span className="text-[10px] uppercase tracking-wider opacity-70">Etapa</span>
+                  <span>{v}</span>
+                  <button
+                    onClick={() => {
+                      const n = new Set(etapaSel);
+                      n.delete(v);
+                      setEtapaSel(n);
+                    }}
+                    className="ml-0.5 rounded-full p-0.5 hover:bg-secondary/20"
+                    aria-label={`Remover ${v}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Períodos + Perfis + MRR Ativado */}
