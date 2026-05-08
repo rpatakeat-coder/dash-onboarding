@@ -12,6 +12,10 @@ import { SlaCritico } from "@/components/dashboard/SlaCritico";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
 import { PeriodFilter } from "@/components/dashboard/PeriodFilter";
 import { MultiSelectFilter } from "@/components/dashboard/MultiSelectFilter";
+import { Highlights } from "@/components/dashboard/Highlights";
+import { BottleneckHeatmap } from "@/components/dashboard/BottleneckHeatmap";
+import { RankingTable } from "@/components/dashboard/RankingTable";
+import { PerfilSlaPanel } from "@/components/dashboard/PerfilSlaPanel";
 import {
   computeFiltered,
   filterByPeriod,
@@ -66,8 +70,12 @@ const Index = () => {
   const [ativadorSel, setAtivadorSel] = useState<Set<string>>(new Set());
   const [etapaSel, setEtapaSel] = useState<Set<string>>(new Set());
   const [bandSel, setBandSel] = useState<Set<string>>(new Set());
+  const [perfilSel, setPerfilSel] = useState<Set<string>>(new Set());
 
   const allRows = data?.rows ?? [];
+
+  const perfilOf = (r: DashRow) =>
+    (r.perfil_cliente?.trim().split(/\s+/)[0] || "—").toUpperCase();
 
   const bandSelKeys = useMemo(
     () => new Set([...bandSel].map(bandFromLabel)),
@@ -125,6 +133,18 @@ const Index = () => {
     [allRows],
   );
   const bandOpts = useMemo(() => BAND_ORDER.map(bandLabel), []);
+  const perfilOpts = useMemo(
+    () => [...new Set(allRows.map(perfilOf))].sort(),
+    [allRows],
+  );
+  const perfilCounts = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const r of allRows) {
+      const k = perfilOf(r);
+      out[k] = (out[k] ?? 0) + 1;
+    }
+    return out;
+  }, [allRows]);
 
   const rows = useMemo<DashRow[]>(
     () =>
@@ -137,9 +157,10 @@ const Index = () => {
         if (etapaSel.size && !etapaSel.has(r.etapa_negocio?.trim() || "Sem etapa"))
           return false;
         if (bandSelKeys.size && !bandSelKeys.has(slaBand(slaOf(r)))) return false;
+        if (perfilSel.size && !perfilSel.has(perfilOf(r))) return false;
         return true;
       }),
-    [allRows, ativadorSel, etapaSel, bandSelKeys],
+    [allRows, ativadorSel, etapaSel, bandSelKeys, perfilSel],
   );
 
   const atencaoData = useMemo(() => computeFiltered(filterByPeriod(rows, atencaoPeriod)), [rows, atencaoPeriod]);
@@ -207,7 +228,7 @@ const Index = () => {
     };
   }, [rows]);
 
-  const hasGlobalFilters = ativadorSel.size > 0 || etapaSel.size > 0 || bandSel.size > 0;
+  const hasGlobalFilters = ativadorSel.size > 0 || etapaSel.size > 0 || bandSel.size > 0 || perfilSel.size > 0;
 
   return (
     <div className="min-h-screen bg-gradient-surface">
