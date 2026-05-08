@@ -6,7 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { SlaBandBar } from "./SlaBandBar";
 import { DealLink } from "./DealLink";
@@ -32,16 +33,32 @@ export const OperatorCarteiraModal = ({ operador, open, onOpenChange }: Props) =
     alerta: true,
     saudavel: false,
   });
+  const [search, setSearch] = useState("");
+
+  const term = search.trim().toLowerCase();
 
   const grouped = useMemo(() => {
     if (!operador) return {} as Record<SlaBand, OperatorStat["clientes"]>;
     const g: Record<SlaBand, OperatorStat["clientes"]> = {
       critico: [], atencao: [], alerta: [], saudavel: [],
     };
-    for (const c of operador.clientes) g[c.band].push(c);
+    const filtered = term
+      ? operador.clientes.filter(
+          (c) =>
+            c.cliente.toLowerCase().includes(term) ||
+            c.etapa.toLowerCase().includes(term) ||
+            String(c.id).includes(term),
+        )
+      : operador.clientes;
+    for (const c of filtered) g[c.band].push(c);
     for (const k of ORDER) g[k].sort((a, b) => b.sla - a.sla);
     return g;
-  }, [operador]);
+  }, [operador, term]);
+
+  const totalFiltrados = useMemo(
+    () => ORDER.reduce((s, k) => s + grouped[k].length, 0),
+    [grouped],
+  );
 
   if (!operador) return null;
 
@@ -63,25 +80,50 @@ export const OperatorCarteiraModal = ({ operador, open, onOpenChange }: Props) =
 
         <SlaBandBar bands={operador.bands} height="lg" showLabels />
 
+        <div className="relative mt-2">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por cliente, etapa ou ID do deal…"
+            className="pl-9 pr-9"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted"
+              aria-label="Limpar busca"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+        {term && (
+          <p className="font-small text-[11px] text-muted-foreground">
+            {totalFiltrados} cliente{totalFiltrados === 1 ? "" : "s"} encontrado{totalFiltrados === 1 ? "" : "s"}
+          </p>
+        )}
+
         <div className="mt-2 max-h-[55vh] space-y-3 overflow-auto pr-1">
           {ORDER.map((k) => {
             const meta = SLA_BAND_META[k];
             const list = grouped[k];
-            const count = operador.bands[k];
+            const count = list.length;
+            const totalBand = operador.bands[k];
             const mrr = operador.bandsMrr[k];
-            const isOpen = expanded[k];
+            const isOpen = term ? count > 0 : expanded[k];
             const color = `hsl(var(${meta.cssVar}))`;
             return (
               <div
                 key={k}
                 className="overflow-hidden rounded-xl border"
-                style={{ borderColor: count > 0 ? color : undefined }}
+                style={{ borderColor: totalBand > 0 ? color : undefined }}
               >
                 <button
                   onClick={() => toggle(k)}
                   className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-muted/50"
                   style={{
-                    backgroundColor: count > 0 ? `${color.replace("hsl(", "hsla(").replace(")", ", 0.08)")}` : undefined,
+                    backgroundColor: totalBand > 0 ? `${color.replace("hsl(", "hsla(").replace(")", ", 0.08)")}` : undefined,
                   }}
                 >
                   <div className="flex items-center gap-3">
