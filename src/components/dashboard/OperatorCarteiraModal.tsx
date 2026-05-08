@@ -9,6 +9,7 @@ import {
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SlaBandBar } from "./SlaBandBar";
+import { DealLink } from "./DealLink";
 import {
   SLA_BAND_META,
   fmtBRL,
