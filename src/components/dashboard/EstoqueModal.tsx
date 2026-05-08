@@ -197,18 +197,30 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
             </span>
             {perfisDisponiveis.map((p) => {
               const active = perfilSel.has(p);
+              const count = perfilCounts[p] ?? 0;
+              const disabled = count === 0 && !active;
               return (
                 <button
                   key={p}
                   onClick={() => togglePerfil(p)}
+                  disabled={disabled}
                   className={cn(
-                    "rounded-full border px-3 py-1 font-subtitle text-xs font-semibold transition",
+                    "flex items-center gap-1.5 rounded-full border px-3 py-1 font-subtitle text-xs font-semibold transition",
                     active
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                    disabled && "opacity-40 hover:border-border hover:text-muted-foreground",
                   )}
                 >
-                  {p}
+                  <span>{p}</span>
+                  <span
+                    className={cn(
+                      "rounded-full px-1.5 py-0.5 font-numeric text-[10px] font-bold tabular-nums",
+                      active ? "bg-primary-foreground/20" : "bg-muted text-foreground/70",
+                    )}
+                  >
+                    {count}
+                  </span>
                 </button>
               );
             })}
