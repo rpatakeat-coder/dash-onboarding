@@ -15,6 +15,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtBRL, type DashRow } from "@/hooks/useDashOperacoes";
