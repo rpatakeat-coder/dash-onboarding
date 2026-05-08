@@ -139,6 +139,32 @@ const Index = () => {
       .slice(0, 10);
   }, [rows]);
 
+  const scopeCounts = useMemo(() => {
+    const ETAPAS_ATENCAO = new Set(["Pré-Cancelamento", "Inativo", "Pendências", "Processo Pausado"]);
+    const TRAVADO_DIAS = 7;
+    const atencaoRows = filterByPeriod(rows, atencaoPeriod);
+    const criticoRows = filterByPeriod(rows, criticoPeriod);
+    const opRows = filterByPeriod(rows, opPeriod);
+    return {
+      atencao: {
+        scope: atencaoRows.length,
+        destaque: atencaoRows.filter((r) => ETAPAS_ATENCAO.has(r.etapa_negocio?.trim() || "")).length,
+      },
+      critico: {
+        scope: criticoRows.length,
+        destaque: criticoRows.filter((r) => slaOf(r) > 30).length,
+      },
+      operadores: {
+        scope: opRows.length,
+        destaque: opData.operadores.length,
+      },
+      travados: {
+        scope: rows.length,
+        destaque: rows.filter((r) => slaOf(r) > TRAVADO_DIAS).length,
+      },
+    };
+  }, [rows, atencaoPeriod, criticoPeriod, opPeriod, opData.operadores.length]);
+
   const countsBy = useMemo(() => {
     const ETAPAS_ATENCAO = new Set(["Pré-Cancelamento", "Inativo", "Pendências", "Processo Pausado"]);
     const periodos: PeriodKey[] = ["tudo", "hoje", "semana", "mes"];
