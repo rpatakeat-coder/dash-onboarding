@@ -1,7 +1,8 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { LogIn, LogOut, User } from "lucide-react";
 import logo from "@/assets/logo-takeat.png";
 import { useAuth } from "@/hooks/useAuth";
+import { MainNav } from "@/components/MainNav";
 
 export const DashboardHeader = () => {
   const today = new Date().toLocaleDateString("pt-BR", {
@@ -11,7 +12,6 @@ export const DashboardHeader = () => {
     year: "numeric",
   });
   const { session, fullName, signOut } = useAuth();
-  const loc = useLocation();
 
   return (
     <header className="border-b border-border bg-card/60 backdrop-blur-sm">
