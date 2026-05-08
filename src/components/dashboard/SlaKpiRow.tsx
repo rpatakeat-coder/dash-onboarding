@@ -14,6 +14,7 @@ interface Props {
   estouradoCount: number;
   onEstoqueClick?: () => void;
   deltas?: SnapshotDeltas;
+  deltasLoading?: boolean;
   windowDays?: DeltaWindow;
   onChangeWindow?: (w: DeltaWindow) => void;
 }
