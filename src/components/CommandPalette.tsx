@@ -128,6 +128,17 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
       .slice(0, 30);
   }, [data, query]);
 
+  const slaOf = (r: DashRow) => {
+    const n = parseFloat(String(r.sla_dias ?? "").replace(",", "."));
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const allStages = useMemo(() => {
+    const set = new Set<string>();
+    (data?.rows ?? []).forEach((r) => r.etapa_negocio && set.add(r.etapa_negocio));
+    return [...set].sort();
+  }, [data]);
+
   const deals = useMemo(() => {
     const cutoff =
       period === "tudo"
@@ -136,6 +147,8 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
     const list = (data?.rows ?? [])
       .filter((d) => {
         if (cutoff && dateMs(d.data_entrada_fase) < cutoff) return false;
+        if (stages.size > 0 && !(d.etapa_negocio && stages.has(d.etapa_negocio))) return false;
+        if (bands.size > 0 && !bands.has(slaBand(slaOf(d)))) return false;
         return true;
       })
       .map((d) => {
@@ -146,7 +159,7 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
     return list
       .sort((a, b) => (b.score === a.score ? b.recency - a.recency : b.score - a.score))
       .slice(0, 80);
-  }, [data, query, period]);
+  }, [data, query, period, stages, bands]);
 
   const showPages = scope === "all" || scope === "pages";
   const showActions = scope === "all" || scope === "actions";
