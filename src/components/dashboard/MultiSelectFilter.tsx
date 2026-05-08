@@ -17,12 +17,18 @@ interface Props {
   options: string[];
   selected: Set<string>;
   onChange: (next: Set<string>) => void;
+  counts?: Record<string, number>;
   className?: string;
 }
 
-export const MultiSelectFilter = ({ label, options, selected, onChange, className }: Props) => {
+export const MultiSelectFilter = ({ label, options, selected, onChange, counts, className }: Props) => {
   const [open, setOpen] = useState(false);
-  const sorted = useMemo(() => [...options].sort((a, b) => a.localeCompare(b)), [options]);
+  const sorted = useMemo(() => {
+    if (counts) {
+      return [...options].sort((a, b) => (counts[b] ?? 0) - (counts[a] ?? 0) || a.localeCompare(b));
+    }
+    return [...options].sort((a, b) => a.localeCompare(b));
+  }, [options, counts]);
 
   const toggle = (v: string) => {
     const n = new Set(selected);
