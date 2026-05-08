@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { MainNav } from "@/components/MainNav";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { APP_VERSION } from "@/lib/version";
 
 export const DashboardHeader = () => {
   const today = new Date().toLocaleDateString("pt-BR", {
