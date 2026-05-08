@@ -354,12 +354,15 @@ const Index = () => {
                   setBandSel(new Set());
                   setPerfilSel(new Set());
                 }}
-                className="ml-auto rounded-lg px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-destructive"
+                className="rounded-lg px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-destructive"
               >
                 Limpar filtros
               </button>
             </>
           )}
+          <div className="ml-auto">
+            <ExportCsvButton rows={rows} />
+          </div>
 
           {hasGlobalFilters && (
             <div className="flex w-full flex-wrap items-center gap-2 border-t border-border pt-3">
