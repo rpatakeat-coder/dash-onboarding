@@ -4,6 +4,8 @@ import { KpiCard } from "@/components/dashboard/KpiCard";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { OperatorsTable } from "@/components/dashboard/OperatorsTable";
 import { StalledTable } from "@/components/dashboard/StalledTable";
+import { SlaKpiRow } from "@/components/dashboard/SlaKpiRow";
+import { PeriodGrids } from "@/components/dashboard/PeriodGrids";
 import { useDashOperacoes, fmtBRL, fmtDias } from "@/hooks/useDashOperacoes";
 
 const Index = () => {
@@ -29,6 +31,33 @@ const Index = () => {
           </div>
         )}
 
+        {/* SLA / Estoque */}
+        <div className="mb-6">
+          <SlaKpiRow
+            total={data?.total ?? 0}
+            slaP75={data?.slaP75 ?? 0}
+            slaMedio={data?.slaMedio ?? 0}
+            noPrazo={data?.noPrazo ?? 0}
+            noPrazoCount={data?.noPrazoCount ?? 0}
+            estourado={data?.estourado ?? 0}
+            estouradoCount={data?.estouradoCount ?? 0}
+          />
+        </div>
+
+        {/* Períodos + Perfis + MRR Ativado */}
+        <div className="mb-8">
+          {data && (
+            <PeriodGrids
+              hoje={data.hoje}
+              semana={data.semana}
+              mes={data.mes}
+              mesAnterior={data.mesAnterior}
+              perfis={data.perfis}
+            />
+          )}
+        </div>
+
+        {/* KPIs operacionais antigos */}
         <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <KpiCard
             label="Em onboarding"
