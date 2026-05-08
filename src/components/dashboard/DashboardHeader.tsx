@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { LogIn, LogOut, User } from "lucide-react";
+import { LogIn, LogOut, Menu, User } from "lucide-react";
 import logo from "@/assets/logo-takeat.png";
 import { useAuth } from "@/hooks/useAuth";
 import { MainNav } from "@/components/MainNav";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export const DashboardHeader = () => {
   const today = new Date().toLocaleDateString("pt-BR", {
@@ -12,6 +14,7 @@ export const DashboardHeader = () => {
     year: "numeric",
   });
   const { session, fullName, signOut } = useAuth();
+  const [navOpen, setNavOpen] = useState(false);
 
   return (
     <header className="border-b border-border bg-card/60 backdrop-blur-sm">
