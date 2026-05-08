@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { LogIn, LogOut, Menu, User } from "lucide-react";
+import { LogIn, LogOut, Menu, Search, Settings, User } from "lucide-react";
 import logo from "@/assets/logo-takeat.png";
 import { useAuth } from "@/hooks/useAuth";
 import { MainNav } from "@/components/MainNav";
+import { NotificationsBell } from "@/components/NotificationsBell";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { APP_VERSION } from "@/lib/version";
+import { usePreferencesDialog } from "@/contexts/PreferencesDialogContext";
 
 export const DashboardHeader = () => {
   const today = new Date().toLocaleDateString("pt-BR", {
