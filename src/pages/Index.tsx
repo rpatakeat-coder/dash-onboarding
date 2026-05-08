@@ -273,10 +273,28 @@ const Index = () => {
     if (opPeriod !== "tudo") periodos.push(`Operadores: ${periodLabel(opPeriod)}`);
     if (periodos.length) out.push({ label: "Períodos", value: periodos.join(" · ") });
     if (onlyMine && fullName) out.push({ label: "Visão", value: `Só meus deals (${fullName})` });
-    if (ativadorSel.size) out.push({ label: "Ativador", value: [...ativadorSel].join(", ") });
-    if (etapaSel.size) out.push({ label: "Etapa", value: [...etapaSel].join(", ") });
-    if (bandSel.size) out.push({ label: "Faixa SLA", value: [...bandSel].join(", ") });
-    if (perfilSel.size) out.push({ label: "Perfil", value: [...perfilSel].join(", ") });
+    const multiLabel = (base: string, criterio: string, n: number) =>
+      n > 1 ? `${base} (${n} selecionados, por ${criterio})` : base;
+    if (ativadorSel.size)
+      out.push({
+        label: multiLabel("Ativador", "nome", ativadorSel.size),
+        value: [...ativadorSel].join(", "),
+      });
+    if (etapaSel.size)
+      out.push({
+        label: multiLabel("Etapa", "fase do funil", etapaSel.size),
+        value: [...etapaSel].join(", "),
+      });
+    if (bandSel.size)
+      out.push({
+        label: multiLabel("Faixa SLA", "dias na fase", bandSel.size),
+        value: [...bandSel].join(", "),
+      });
+    if (perfilSel.size)
+      out.push({
+        label: multiLabel("Perfil", "segmento", perfilSel.size),
+        value: [...perfilSel].join(", "),
+      });
     return out;
   }, [rows.length, allRows.length, deltaWindow, atencaoPeriod, criticoPeriod, opPeriod, onlyMine, fullName, ativadorSel, etapaSel, bandSel, perfilSel]);
 
