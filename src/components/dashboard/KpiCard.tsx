@@ -10,6 +10,7 @@ interface KpiCardProps {
   hint?: string;
 }
 
+
 const toneMap = {
   primary: "text-primary bg-primary/10",
   secondary: "text-secondary bg-secondary/10",

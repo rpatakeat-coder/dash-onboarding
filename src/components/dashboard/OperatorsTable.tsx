@@ -1,15 +1,12 @@
 import { Trophy } from "lucide-react";
+import { OperatorStat, fmtBRL } from "@/hooks/useDashOperacoes";
 
-const operadores = [
-  { nome: "Ana Souza", ativos: 12, concluidos: 28, tempoMedio: 14 },
-  { nome: "Bruno Lima", ativos: 9, concluidos: 24, tempoMedio: 16 },
-  { nome: "Carla Mendes", ativos: 11, concluidos: 22, tempoMedio: 18 },
-  { nome: "Diego Rocha", ativos: 7, concluidos: 19, tempoMedio: 15 },
-  { nome: "Elisa Tavares", ativos: 10, concluidos: 17, tempoMedio: 21 },
-];
+interface Props {
+  operadores: OperatorStat[];
+}
 
-export const OperatorsTable = () => {
-  const max = Math.max(...operadores.map((o) => o.concluidos));
+export const OperatorsTable = ({ operadores }: Props) => {
+  const max = Math.max(1, ...operadores.map((o) => o.ativos));
   return (
     <div className="rounded-2xl border border-border bg-card p-6 shadow-sm-soft">
       <div className="mb-5 flex items-center justify-between">
@@ -18,31 +15,41 @@ export const OperatorsTable = () => {
             Performance por ativador
           </h2>
           <p className="font-small text-xs text-muted-foreground">
-            Onboardings ativos, concluídos e tempo médio (dias)
+            Onboardings ativos, MRR no funil e tempo médio na fase
           </p>
         </div>
         <Trophy className="h-5 w-5 text-warning" />
       </div>
-      <div className="space-y-4">
+      <div className="space-y-4 max-h-[340px] overflow-y-auto pr-2">
+        {operadores.length === 0 && (
+          <p className="font-small text-sm text-muted-foreground">Sem dados.</p>
+        )}
         {operadores.map((op, i) => (
           <div key={op.nome} className="space-y-1.5">
             <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-3">
-                <span className="font-numeric text-xs font-bold text-muted-foreground w-5">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="font-numeric text-xs font-bold text-muted-foreground w-5 shrink-0">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <span className="font-subtitle font-semibold text-foreground">{op.nome}</span>
+                <span className="font-subtitle font-semibold text-foreground truncate">
+                  {op.nome}
+                </span>
               </div>
-              <div className="flex items-center gap-4 font-numeric text-xs text-muted-foreground">
+              <div className="flex shrink-0 items-center gap-3 font-numeric text-xs text-muted-foreground">
                 <span><span className="font-bold text-foreground">{op.ativos}</span> ativos</span>
-                <span><span className="font-bold text-foreground">{op.concluidos}</span> concluídos</span>
-                <span><span className="font-bold text-foreground">{op.tempoMedio}d</span> médio</span>
+                <span className="hidden sm:inline"><span className="font-bold text-foreground">{fmtBRL(op.mrr)}</span></span>
+                <span><span className="font-bold text-foreground">{op.tempoMedio.toFixed(1)}d</span></span>
+                {op.travados > 0 && (
+                  <span className="rounded-full bg-destructive/10 px-1.5 py-0.5 font-bold text-destructive">
+                    {op.travados} travados
+                  </span>
+                )}
               </div>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full rounded-full bg-gradient-primary transition-all"
-                style={{ width: `${(op.concluidos / max) * 100}%` }}
+                style={{ width: `${(op.ativos / max) * 100}%` }}
               />
             </div>
           </div>

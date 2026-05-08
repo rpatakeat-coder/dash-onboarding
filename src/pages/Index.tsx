@@ -1,11 +1,14 @@
-import { AlertTriangle, CheckCircle2, Clock, Store } from "lucide-react";
+import { AlertTriangle, Clock, DollarSign, Store } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { OperatorsTable } from "@/components/dashboard/OperatorsTable";
 import { StalledTable } from "@/components/dashboard/StalledTable";
+import { useDashOperacoes, fmtBRL, fmtDias } from "@/hooks/useDashOperacoes";
 
 const Index = () => {
+  const { data, isLoading, error } = useDashOperacoes();
+
   return (
     <div className="min-h-screen bg-gradient-surface">
       <DashboardHeader />
@@ -20,48 +23,54 @@ const Index = () => {
           </p>
         </div>
 
+        {error && (
+          <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            Erro ao carregar dados: {(error as Error).message}
+          </div>
+        )}
+
         <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <KpiCard
             label="Em onboarding"
-            value={49}
+            value={isLoading ? "…" : data?.total ?? 0}
             icon={Store}
             tone="primary"
-            delta={{ value: 12 }}
             hint="Restaurantes ativos no funil"
           />
           <KpiCard
-            label="Tempo médio"
-            value="17d"
-            icon={Clock}
+            label="MRR no funil"
+            value={isLoading ? "…" : fmtBRL(data?.mrrTotal ?? 0)}
+            icon={DollarSign}
             tone="secondary"
-            delta={{ value: -8 }}
-            hint="Cadastro até go-live"
+            hint="Receita recorrente em ativação"
           />
           <KpiCard
-            label="Concluídos no mês"
-            value={28}
-            icon={CheckCircle2}
+            label="Tempo médio na fase"
+            value={isLoading ? "…" : fmtDias(data?.tempoMedioFase ?? 0)}
+            icon={Clock}
             tone="success"
-            delta={{ value: 22 }}
-            hint="Restaurantes que foram ao ar"
+            hint="Dias na etapa atual"
           />
           <KpiCard
             label="Travados"
-            value={5}
+            value={isLoading ? "…" : data?.travados ?? 0}
             icon={AlertTriangle}
             tone="warning"
-            delta={{ value: 25 }}
-            hint="Sem evolução há +10 dias"
+            hint="Mais de 7 dias parados"
           />
         </section>
 
         <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-5">
-          <div className="lg:col-span-2"><FunnelChart /></div>
-          <div className="lg:col-span-3"><OperatorsTable /></div>
+          <div className="lg:col-span-2">
+            <FunnelChart data={data?.porEtapa ?? []} total={data?.total ?? 0} />
+          </div>
+          <div className="lg:col-span-3">
+            <OperatorsTable operadores={data?.operadores ?? []} />
+          </div>
         </section>
 
         <section className="mb-8">
-          <StalledTable />
+          <StalledTable travados={data?.travadosLista ?? []} />
         </section>
 
         <footer className="pt-4 text-center font-small text-xs text-muted-foreground">
