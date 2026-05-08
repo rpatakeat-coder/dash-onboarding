@@ -113,7 +113,7 @@ export const OperatorCarteiraModal = ({ operador, open, onOpenChange }: Props) =
                       >
                         <div className="min-w-0 flex-1">
                           <p className="truncate font-subtitle text-sm font-semibold text-foreground">
-                            {c.cliente}
+                            <DealLink id={c.id}>{c.cliente}</DealLink>
                           </p>
                           <p className="truncate font-small text-[11px] text-muted-foreground">
                             {c.etapa} · perfil {c.perfil}
