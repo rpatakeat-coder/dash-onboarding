@@ -13,12 +13,44 @@ export interface DashRow {
   etapa_negocio: string | null;
 }
 
+export type SlaBand = "critico" | "atencao" | "alerta" | "saudavel";
+
+export const slaBand = (dias: number): SlaBand => {
+  if (dias > 30) return "critico";
+  if (dias === 30) return "atencao";
+  if (dias >= 21) return "alerta";
+  return "saudavel";
+};
+
+export const SLA_BAND_META: Record<
+  SlaBand,
+  { label: string; range: string; cssVar: string; order: number }
+> = {
+  critico: { label: "Crítico", range: ">30 dias", cssVar: "--sla-critico", order: 0 },
+  atencao: { label: "Atenção", range: "= 30 dias", cssVar: "--sla-atencao", order: 1 },
+  alerta: { label: "Alerta", range: "21–29 dias", cssVar: "--sla-alerta", order: 2 },
+  saudavel: { label: "Saudável", range: "≤ 20 dias", cssVar: "--sla-saudavel", order: 3 },
+};
+
+export interface OperatorClient {
+  id: number;
+  cliente: string;
+  etapa: string;
+  perfil: string;
+  sla: number;
+  mrr: number;
+  band: SlaBand;
+}
+
 export interface OperatorStat {
   nome: string;
   ativos: number;
   mrr: number;
   tempoMedio: number;
   travados: number;
+  bands: Record<SlaBand, number>;
+  bandsMrr: Record<SlaBand, number>;
+  clientes: OperatorClient[];
 }
 
 export interface StalledRow {
