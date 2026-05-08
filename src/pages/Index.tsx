@@ -211,6 +211,13 @@ const Index = () => {
             selected={etapaSel}
             onChange={setEtapaSel}
           />
+          <MultiSelectFilter
+            label="Faixa SLA"
+            options={bandOpts}
+            counts={bandCounts}
+            selected={bandSel}
+            onChange={setBandSel}
+          />
           {hasGlobalFilters && (
             <>
               <span className="font-small text-xs text-muted-foreground">
@@ -220,6 +227,7 @@ const Index = () => {
                 onClick={() => {
                   setAtivadorSel(new Set());
                   setEtapaSel(new Set());
+                  setBandSel(new Set());
                 }}
                 className="ml-auto rounded-lg px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-destructive"
               >
