@@ -20,6 +20,7 @@ import { PerfilSlaPanel } from "@/components/dashboard/PerfilSlaPanel";
 import { RiskRanking } from "@/components/dashboard/RiskRanking";
 import { TrendChart } from "@/components/dashboard/TrendChart";
 import { ExportCsvButton } from "@/components/dashboard/ExportCsvButton";
+import { ExportPdfButton } from "@/components/dashboard/ExportPdfButton";
 import { useUrlSets } from "@/hooks/useUrlSets";
 import { useDealDrawer } from "@/contexts/DealDrawer";
 import {
