@@ -152,6 +152,8 @@ export const SlaKpiRow = ({
           windowLabel={windowLabel}
           showDelta
           deltaLoading={deltasLoading}
+          currentRange={deltas?.currentRange}
+          previousRange={deltas?.previousRange}
         />
         <Card
           label="P75 SLA"
@@ -172,6 +174,8 @@ export const SlaKpiRow = ({
           windowLabel={windowLabel}
           showDelta
           deltaLoading={deltasLoading}
+          currentRange={deltas?.currentRange}
+          previousRange={deltas?.previousRange}
         />
         <Card
           label="% no prazo (≤30d)"
@@ -185,6 +189,8 @@ export const SlaKpiRow = ({
           windowLabel={windowLabel}
           showDelta
           deltaLoading={deltasLoading}
+          currentRange={deltas?.currentRange}
+          previousRange={deltas?.previousRange}
         />
         <Card
           label="SLA estourado (>30d)"
@@ -198,6 +204,8 @@ export const SlaKpiRow = ({
           windowLabel={windowLabel}
           showDelta
           deltaLoading={deltasLoading}
+          currentRange={deltas?.currentRange}
+          previousRange={deltas?.previousRange}
         />
       </div>
     </section>
