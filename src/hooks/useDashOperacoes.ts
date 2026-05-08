@@ -243,6 +243,7 @@ export function computeFiltered(rows: DashRow[]): FilteredData {
     .filter((e) => e.count > 0);
 
   const allMapped: StalledRow[] = rows.map((r) => ({
+    id: r.id_deal,
     cliente: r.nome_negocio?.trim() || "—",
     ativador: r.agente_ativacao?.trim() || "—",
     etapa: r.etapa_negocio?.trim() || "—",
