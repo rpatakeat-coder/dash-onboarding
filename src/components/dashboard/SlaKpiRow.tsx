@@ -9,6 +9,7 @@ interface Props {
   noPrazoCount: number;
   estourado: number;
   estouradoCount: number;
+  onEstoqueClick?: () => void;
 }
 
 const Card = ({
@@ -17,12 +18,14 @@ const Card = ({
   unit,
   hint,
   tone,
+  onClick,
 }: {
   label: string;
   value: string;
   unit?: string;
   hint: string;
   tone?: "default" | "success" | "danger" | "warning";
+  onClick?: () => void;
 }) => {
   const ring = {
     default: "border-border",
