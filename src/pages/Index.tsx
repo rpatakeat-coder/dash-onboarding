@@ -287,6 +287,19 @@ const Index = () => {
           <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
             Filtrar por
           </span>
+          {fullName && (
+            <button
+              onClick={() => setOnlyMine((v) => !v)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-subtitle text-xs font-medium transition ${
+                onlyMine
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
+              title={`Mostrar apenas clientes de ${fullName}`}
+            >
+              <UserCheck className="h-3 w-3" /> Só meus deals
+            </button>
+          )}
           <MultiSelectFilter
             label="Ativador"
             options={ativadoresOpts}
