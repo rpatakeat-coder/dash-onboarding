@@ -1,5 +1,6 @@
 import { AlertTriangle, Clock } from "lucide-react";
 import { StalledRow } from "@/hooks/useDashOperacoes";
+import { DealLink } from "./DealLink";
 
 interface Props {
   travados: StalledRow[];
