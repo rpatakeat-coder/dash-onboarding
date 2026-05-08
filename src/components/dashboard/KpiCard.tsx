@@ -10,8 +10,6 @@ interface KpiCardProps {
   hint?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _unused = TrendingDown;
 
 const toneMap = {
   primary: "text-primary bg-primary/10",
