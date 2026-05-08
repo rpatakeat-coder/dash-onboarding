@@ -38,7 +38,7 @@ export const SlaCritico = ({ criticos }: Props) => {
               <div className="mb-1.5 flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate font-subtitle text-sm font-semibold text-foreground">
-                    {c.cliente}
+                    <DealLink id={c.id}>{c.cliente}</DealLink>
                   </p>
                   <p className="truncate font-small text-xs text-muted-foreground">
                     {c.ativador} · {c.etapa}
