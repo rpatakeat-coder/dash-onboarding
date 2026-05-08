@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { DealLink } from "@/components/dashboard/DealLink";
 import {
   Dialog,
   DialogContent,
