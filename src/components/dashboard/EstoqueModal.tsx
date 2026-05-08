@@ -266,7 +266,7 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
             <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
               Etapa
             </span>
-            {etapasDisponiveis.map((e) => {
+            {etapasOrdenadas.map((e) => {
               const active = etapaSel.has(e);
               const count = etapaCounts[e] ?? 0;
               const disabled = count === 0 && !active;
