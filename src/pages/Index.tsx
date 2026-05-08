@@ -81,7 +81,7 @@ const Index = () => {
   const [perfilSel, setPerfilSel] = useState<Set<string>>(new Set());
   const [onlyMine, setOnlyMine] = useState(false);
   const [deltaWindow, setDeltaWindow] = useState<DeltaWindow>(7);
-  const { data: deltas } = useSnapshotDeltas(deltaWindow);
+  const { data: deltas, isLoading: deltasLoading } = useSnapshotDeltas(deltaWindow);
   const { fullName } = useAuth();
   const { open: openDeal } = useDealDrawer();
 
@@ -313,6 +313,7 @@ const Index = () => {
             estouradoCount={data?.estouradoCount ?? 0}
             onEstoqueClick={() => setEstoqueOpen(true)}
             deltas={deltas}
+            deltasLoading={deltasLoading}
             windowDays={deltaWindow}
             onChangeWindow={setDeltaWindow}
           />

@@ -87,6 +87,7 @@ export function useSnapshotDeltas(windowDays: DeltaWindow) {
     },
     refetchInterval: 5 * 60_000,
     placeholderData: (prev) => prev,
+    staleTime: 60_000,
   });
 }
 

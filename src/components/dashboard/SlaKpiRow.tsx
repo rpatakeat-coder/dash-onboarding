@@ -14,6 +14,7 @@ interface Props {
   estouradoCount: number;
   onEstoqueClick?: () => void;
   deltas?: SnapshotDeltas;
+  deltasLoading?: boolean;
   windowDays?: DeltaWindow;
   onChangeWindow?: (w: DeltaWindow) => void;
 }
@@ -30,6 +31,8 @@ const Card = ({
   deltaDecimals,
   goodDirection,
   windowLabel,
+  showDelta,
+  deltaLoading,
 }: {
   label: string;
   value: string;
@@ -42,6 +45,8 @@ const Card = ({
   deltaDecimals?: number;
   goodDirection?: "up" | "down";
   windowLabel?: string;
+  showDelta?: boolean;
+  deltaLoading?: boolean;
 }) => {
   const ring = {
     default: "border-border",
@@ -84,13 +89,14 @@ const Card = ({
         {hint}
         {interactive && <span className="ml-1 text-primary">→ ver detalhes</span>}
       </p>
-      {delta && windowLabel && (
+      {showDelta && windowLabel && (
         <KpiDeltaBadge
           delta={delta}
           unit={deltaUnit}
           decimals={deltaDecimals}
           goodDirection={goodDirection}
           windowLabel={windowLabel}
+          loading={deltaLoading}
         />
       )}
     </div>
@@ -99,7 +105,7 @@ const Card = ({
 
 export const SlaKpiRow = ({
   total, slaP75, slaMedio, noPrazo, noPrazoCount, estourado, estouradoCount, onEstoqueClick,
-  deltas, windowDays = 7, onChangeWindow,
+  deltas, deltasLoading, windowDays = 7, onChangeWindow,
 }: Props) => {
   const windowLabel = `vs ${windowDays}d antes`;
   return (
@@ -138,6 +144,8 @@ export const SlaKpiRow = ({
           deltaDecimals={0}
           goodDirection="down"
           windowLabel={windowLabel}
+          showDelta
+          deltaLoading={deltasLoading}
         />
         <Card
           label="P75 SLA"
@@ -156,6 +164,8 @@ export const SlaKpiRow = ({
           deltaDecimals={1}
           goodDirection="down"
           windowLabel={windowLabel}
+          showDelta
+          deltaLoading={deltasLoading}
         />
         <Card
           label="% no prazo (≤30d)"
@@ -167,6 +177,8 @@ export const SlaKpiRow = ({
           deltaDecimals={1}
           goodDirection="up"
           windowLabel={windowLabel}
+          showDelta
+          deltaLoading={deltasLoading}
         />
         <Card
           label="SLA estourado (>30d)"
@@ -178,6 +190,8 @@ export const SlaKpiRow = ({
           deltaDecimals={1}
           goodDirection="down"
           windowLabel={windowLabel}
+          showDelta
+          deltaLoading={deltasLoading}
         />
       </div>
     </section>
