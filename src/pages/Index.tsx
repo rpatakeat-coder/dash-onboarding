@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { OperatorsTable } from "@/components/dashboard/OperatorsTable";
@@ -6,10 +7,12 @@ import { SlaKpiRow } from "@/components/dashboard/SlaKpiRow";
 import { PeriodGrids } from "@/components/dashboard/PeriodGrids";
 import { AttentionPoints } from "@/components/dashboard/AttentionPoints";
 import { SlaCritico } from "@/components/dashboard/SlaCritico";
+import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
 import { useDashOperacoes } from "@/hooks/useDashOperacoes";
 
 const Index = () => {
   const { data, error } = useDashOperacoes();
+  const [estoqueOpen, setEstoqueOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-surface">
@@ -41,8 +44,15 @@ const Index = () => {
             noPrazoCount={data?.noPrazoCount ?? 0}
             estourado={data?.estourado ?? 0}
             estouradoCount={data?.estouradoCount ?? 0}
+            onEstoqueClick={() => setEstoqueOpen(true)}
           />
         </div>
+
+        <EstoqueModal
+          open={estoqueOpen}
+          onOpenChange={setEstoqueOpen}
+          rows={data?.rows ?? []}
+        />
 
         {/* Períodos + Perfis + MRR Ativado */}
         <div className="mb-8">
