@@ -398,6 +398,7 @@ function aggregate(rows: DashRow[]): DashData {
   const topMrrTravado = rows
     .filter((r) => toNum(r.sla_dias) > TRAVADO_DIAS)
     .map((r) => ({
+      id: r.id_deal,
       cliente: r.nome_negocio?.trim() || "—",
       ativador: r.agente_ativacao?.trim() || "—",
       etapa: r.etapa_negocio?.trim() || "—",
