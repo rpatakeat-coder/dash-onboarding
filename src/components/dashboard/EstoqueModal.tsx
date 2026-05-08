@@ -114,6 +114,18 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapped, perfilSel, q]);
 
+  const perfisOrdenados = useMemo(
+    () => [...perfisDisponiveis].sort((a, b) => (perfilCounts[b] ?? 0) - (perfilCounts[a] ?? 0)),
+    [perfisDisponiveis, perfilCounts],
+  );
+  const etapasOrdenadas = useMemo(
+    () =>
+      [...etapasDisponiveis].sort(
+        (a, b) => (etapaCounts[b] ?? 0) - (etapaCounts[a] ?? 0) || a.localeCompare(b),
+      ),
+    [etapasDisponiveis, etapaCounts],
+  );
+
   const list = useMemo(() => {
     const term = q.trim().toLowerCase();
     const filtered = mapped.filter((r) => {
