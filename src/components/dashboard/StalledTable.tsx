@@ -47,7 +47,7 @@ export const StalledTable = ({ travados }: Props) => {
             )}
             {travados.map((a) => (
               <tr key={a.cliente + a.etapa} className="transition-colors hover:bg-muted/30">
-                <td className="px-4 py-3 font-semibold text-foreground">{a.cliente}</td>
+                <td className="px-4 py-3 font-semibold text-foreground"><DealLink id={a.id}>{a.cliente}</DealLink></td>
                 <td className="px-4 py-3 text-muted-foreground">{a.ativador}</td>
                 <td className="px-4 py-3">
                   <span className="rounded-md bg-secondary/10 px-2 py-0.5 font-subtitle text-xs font-medium text-secondary">
