@@ -4,9 +4,10 @@ import { DealLink } from "./DealLink";
 
 interface Props {
   travados: StalledRow[];
+  onRowClick?: (id: number) => void;
 }
 
-export const StalledTable = ({ travados }: Props) => {
+export const StalledTable = ({ travados, onRowClick }: Props) => {
   return (
     <div className="rounded-2xl border border-border bg-card p-6 shadow-sm-soft">
       <div className="mb-5 flex items-center justify-between">
