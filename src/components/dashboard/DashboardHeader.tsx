@@ -30,41 +30,43 @@ export const DashboardHeader = () => {
             </div>
             {session && <MainNav className="ml-2 hidden md:flex" />}
           </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden text-right md:block">
-            <p className="font-small text-xs uppercase tracking-wider text-muted-foreground">
-              {today}
-            </p>
-            <p className="flex items-center justify-end gap-2 font-subtitle text-sm font-medium text-foreground">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-pulse-soft rounded-full bg-success opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
-              </span>
-              Atualizado em tempo real
-            </p>
-          </div>
-          {session ? (
-            <div className="flex items-center gap-2">
-              <span className="hidden items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 font-subtitle text-xs text-muted-foreground sm:inline-flex">
-                <User className="h-3 w-3" />
-                {fullName || session.user.email}
-              </span>
-              <button
-                onClick={() => signOut()}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-destructive"
-              >
-                <LogOut className="h-3 w-3" /> Sair
-              </button>
+          <div className="flex items-center gap-4">
+            <div className="hidden text-right md:block">
+              <p className="font-small text-xs uppercase tracking-wider text-muted-foreground">
+                {today}
+              </p>
+              <p className="flex items-center justify-end gap-2 font-subtitle text-sm font-medium text-foreground">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-pulse-soft rounded-full bg-success opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+                </span>
+                Atualizado em tempo real
+              </p>
             </div>
-          ) : (
-            <Link
-              to="/auth"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 font-subtitle text-xs font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              <LogIn className="h-3 w-3" /> Entrar
-            </Link>
-          )}
+            {session ? (
+              <div className="flex items-center gap-2">
+                <span className="hidden items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 font-subtitle text-xs text-muted-foreground sm:inline-flex">
+                  <User className="h-3 w-3" />
+                  {fullName || session.user.email}
+                </span>
+                <button
+                  onClick={() => signOut()}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-destructive"
+                >
+                  <LogOut className="h-3 w-3" /> Sair
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/auth"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 font-subtitle text-xs font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                <LogIn className="h-3 w-3" /> Entrar
+              </Link>
+            )}
+          </div>
         </div>
+        {session && <MainNav className="mt-3 md:hidden" />}
       </div>
     </header>
   );
