@@ -76,6 +76,7 @@ const Index = () => {
   const [atencaoPeriod, setAtencaoPeriod] = useState<PeriodKey>("tudo");
   const [criticoPeriod, setCriticoPeriod] = useState<PeriodKey>("tudo");
   const [opPeriod, setOpPeriod] = useState<PeriodKey>("tudo");
+  const [kpiPeriod, setKpiPeriod] = useState<PeriodKey>("tudo");
   const [ativadorSel, setAtivadorSel] = useState<Set<string>>(new Set());
   const [etapaSel, setEtapaSel] = useState<Set<string>>(new Set());
   const [bandSel, setBandSel] = useState<Set<string>>(new Set());
