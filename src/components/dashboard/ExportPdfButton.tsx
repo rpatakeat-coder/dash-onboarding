@@ -59,7 +59,7 @@ export const ExportPdfButton = ({
       pdf.text(`Gerado em ${date}`, margin, margin + 18);
 
       // Resumo de filtros estruturado (label : value), com wrap
-      const labelW = 70; // pt
+      const labelW = 110; // pt — acomoda labels com sufixos descritivos
       const valueW = usableW - labelW - 8;
       const lineH = 11;
       let cursorY = margin + 34;
@@ -74,14 +74,16 @@ export const ExportPdfButton = ({
           pdf.setFont("helvetica", "bold");
           pdf.setFontSize(8);
           pdf.setTextColor(90);
-          pdf.text(item.label.toUpperCase(), margin, cursorY);
+          const labelLines = pdf.splitTextToSize(item.label.toUpperCase(), labelW) as string[];
+          pdf.text(labelLines, margin, cursorY);
 
           pdf.setFont("helvetica", "normal");
           pdf.setFontSize(9);
           pdf.setTextColor(40);
-          const lines = pdf.splitTextToSize(item.value, valueW) as string[];
-          pdf.text(lines, margin + labelW, cursorY);
-          cursorY += Math.max(lineH, lines.length * lineH);
+          const valueLines = pdf.splitTextToSize(item.value, valueW) as string[];
+          pdf.text(valueLines, margin + labelW, cursorY);
+          const rows = Math.max(labelLines.length, valueLines.length);
+          cursorY += rows * lineH;
         }
         cursorY += 4;
         pdf.setDrawColor(220);
