@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { X } from "lucide-react";
+import { X, UserCheck } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { OperatorsTable } from "@/components/dashboard/OperatorsTable";
