@@ -97,6 +97,8 @@ const Card = ({
           goodDirection={goodDirection}
           windowLabel={windowLabel}
           loading={deltaLoading}
+          currentRange={currentRange}
+          previousRange={previousRange}
         />
       )}
     </div>
