@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FileDown, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -20,6 +21,7 @@ export const ExportPdfButton = ({
   filename = "operacoes",
 }: Props) => {
   const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<{ url: string; pages: number; name: string } | null>(null);
 
   const handle = async () => {
     const el = document.getElementById(targetId);
@@ -236,8 +238,9 @@ export const ExportPdfButton = ({
       });
 
       const stamp = new Date().toISOString().slice(0, 10);
-      pdf.save(`${filename}_${stamp}.pdf`);
-      toast({ title: "PDF exportado", description: `${totalPages} página(s) gerada(s).` });
+      const blob = pdf.output("blob") as Blob;
+      const url = URL.createObjectURL(blob);
+      setPreview({ url, pages: totalPages, name: `${filename}_${stamp}.pdf` });
     } catch (err) {
       console.error("[ExportPDF]", err);
       toast({
@@ -251,19 +254,86 @@ export const ExportPdfButton = ({
     }
   };
 
+  const closePreview = () => {
+    if (preview) URL.revokeObjectURL(preview.url);
+    setPreview(null);
+  };
+
+  const downloadPreview = () => {
+    if (!preview) return;
+    const a = document.createElement("a");
+    a.href = preview.url;
+    a.download = preview.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast({ title: "PDF baixado", description: `${preview.pages} página(s).` });
+    closePreview();
+  };
+
+  // Limpa blob URL quando o componente é desmontado
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview.url);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <button
-      onClick={handle}
-      disabled={busy}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-40"
-      title="Exportar dashboard em PDF"
-    >
-      {busy ? (
-        <Loader2 className="h-3 w-3 animate-spin" />
-      ) : (
-        <FileDown className="h-3 w-3" />
-      )}
-      {busy ? "Gerando…" : "Exportar PDF"}
-    </button>
+    <>
+      <button
+        onClick={handle}
+        disabled={busy}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-40"
+        title="Exportar dashboard em PDF"
+      >
+        {busy ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <FileDown className="h-3 w-3" />
+        )}
+        {busy ? "Gerando…" : "Exportar PDF"}
+      </button>
+
+      <Dialog open={!!preview} onOpenChange={(o) => !o && closePreview()}>
+        <DialogContent className="max-w-5xl p-0 sm:max-w-[min(95vw,1100px)]">
+          <DialogHeader className="px-6 pt-5">
+            <DialogTitle className="font-display text-base">
+              Prévia do PDF · {preview?.pages} página(s)
+            </DialogTitle>
+          </DialogHeader>
+          <div className="h-[70vh] w-full overflow-hidden border-y border-border bg-muted">
+            {preview && (
+              <iframe
+                src={preview.url}
+                title="Prévia PDF"
+                className="h-full w-full"
+              />
+            )}
+          </div>
+          <DialogFooter className="gap-2 px-6 pb-5">
+            <button
+              onClick={closePreview}
+              className="rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => preview && window.open(preview.url, "_blank", "noopener")}
+              className="rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              Abrir em nova aba
+            </button>
+            <button
+              onClick={downloadPreview}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 font-subtitle text-xs font-semibold text-primary-foreground hover:opacity-90"
+            >
+              <FileDown className="h-3 w-3" />
+              Baixar PDF
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
