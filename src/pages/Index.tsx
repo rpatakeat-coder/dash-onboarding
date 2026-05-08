@@ -320,6 +320,16 @@ const Index = () => {
       label: "Comparativo",
       value: `${deltaWindow}d vs ${deltaWindow}d anteriores`,
     });
+    if (slaCmpA !== slaCmpB)
+      out.push({
+        label: "Comparativo SLA (A vs B)",
+        value: `${periodLabel(slaCmpA)} vs ${periodLabel(slaCmpB)}`,
+      });
+    if (execCmpA !== execCmpB)
+      out.push({
+        label: "Comparativo Executivo (A vs B)",
+        value: `${periodLabel(execCmpA)} vs ${periodLabel(execCmpB)}`,
+      });
     const periodos: string[] = [];
     if (kpiPeriod !== "tudo") periodos.push(`KPIs: ${periodLabel(kpiPeriod)}`);
     if (atencaoPeriod !== "tudo") periodos.push(`Atenção: ${periodLabel(atencaoPeriod)}`);
