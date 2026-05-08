@@ -133,6 +133,18 @@ const Index = () => {
     [allRows],
   );
   const bandOpts = useMemo(() => BAND_ORDER.map(bandLabel), []);
+  const perfilOpts = useMemo(
+    () => [...new Set(allRows.map(perfilOf))].sort(),
+    [allRows],
+  );
+  const perfilCounts = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const r of allRows) {
+      const k = perfilOf(r);
+      out[k] = (out[k] ?? 0) + 1;
+    }
+    return out;
+  }, [allRows]);
 
   const rows = useMemo<DashRow[]>(
     () =>
@@ -145,9 +157,10 @@ const Index = () => {
         if (etapaSel.size && !etapaSel.has(r.etapa_negocio?.trim() || "Sem etapa"))
           return false;
         if (bandSelKeys.size && !bandSelKeys.has(slaBand(slaOf(r)))) return false;
+        if (perfilSel.size && !perfilSel.has(perfilOf(r))) return false;
         return true;
       }),
-    [allRows, ativadorSel, etapaSel, bandSelKeys],
+    [allRows, ativadorSel, etapaSel, bandSelKeys, perfilSel],
   );
 
   const atencaoData = useMemo(() => computeFiltered(filterByPeriod(rows, atencaoPeriod)), [rows, atencaoPeriod]);
