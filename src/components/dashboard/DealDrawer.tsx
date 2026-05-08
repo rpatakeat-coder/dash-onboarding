@@ -127,7 +127,7 @@ export const DealDrawer = ({ deal, onClose }: Props) => {
         .order("data_reuniao", { ascending: false })
         .limit(20);
       if (error) throw error;
-      return (data ?? []) as Array<{
+      return (data ?? []) as unknown as Array<{
         data_reuniao: string | null;
         data_reuniao_realizada: string | null;
         reuniao_realizada: string | null;
