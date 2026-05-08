@@ -26,6 +26,7 @@ import { useDealDrawer } from "@/contexts/DealDrawer";
 import { useSnapshotDeltas, type DeltaWindow } from "@/hooks/useSnapshotDeltas";
 import {
   computeFiltered,
+  computeSlaKpis,
   filterByPeriod,
   slaBand,
   SLA_BAND_META,
