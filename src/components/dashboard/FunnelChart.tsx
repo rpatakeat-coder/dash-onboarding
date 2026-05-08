@@ -1,14 +1,11 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-const data = [
-  { etapa: "Cadastro", count: 12 },
-  { etapa: "Configuração", count: 18 },
-  { etapa: "Treinamento", count: 9 },
-  { etapa: "Testes", count: 6 },
-  { etapa: "Go-live", count: 4 },
-];
+interface Props {
+  data: { etapa: string; count: number; mrr: number }[];
+  total: number;
+}
 
-export const FunnelChart = () => {
+export const FunnelChart = ({ data, total }: Props) => {
   return (
     <div className="rounded-2xl border border-border bg-card p-6 shadow-sm-soft">
       <div className="mb-4 flex items-end justify-between">
@@ -21,10 +18,10 @@ export const FunnelChart = () => {
           </p>
         </div>
         <span className="rounded-full bg-muted px-3 py-1 font-subtitle text-xs font-medium text-muted-foreground">
-          49 ativos
+          {total} ativos
         </span>
       </div>
-      <ResponsiveContainer width="100%" height={260}>
+      <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
           <defs>
             <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
@@ -33,7 +30,17 @@ export const FunnelChart = () => {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-          <XAxis dataKey="etapa" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+          <XAxis
+            dataKey="etapa"
+            stroke="hsl(var(--muted-foreground))"
+            fontSize={11}
+            tickLine={false}
+            axisLine={false}
+            interval={0}
+            angle={-15}
+            textAnchor="end"
+            height={60}
+          />
           <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
           <Tooltip
             cursor={{ fill: "hsl(var(--muted))" }}
@@ -44,7 +51,7 @@ export const FunnelChart = () => {
               fontFamily: "Nunito Sans",
             }}
           />
-          <Bar dataKey="count" fill="url(#barFill)" radius={[8, 8, 0, 0]} />
+          <Bar dataKey="count" name="Restaurantes" fill="url(#barFill)" radius={[8, 8, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
