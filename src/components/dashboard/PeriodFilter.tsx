@@ -11,10 +11,11 @@ const OPTS: { key: PeriodKey; label: string }[] = [
 interface Props {
   value: PeriodKey;
   onChange: (v: PeriodKey) => void;
+  counts?: Partial<Record<PeriodKey, number>>;
   className?: string;
 }
 
-export const PeriodFilter = ({ value, onChange, className }: Props) => {
+export const PeriodFilter = ({ value, onChange, counts, className }: Props) => {
   return (
     <div
       role="tablist"
@@ -25,6 +26,7 @@ export const PeriodFilter = ({ value, onChange, className }: Props) => {
     >
       {OPTS.map((o) => {
         const active = value === o.key;
+        const count = counts?.[o.key];
         return (
           <button
             key={o.key}
@@ -32,13 +34,25 @@ export const PeriodFilter = ({ value, onChange, className }: Props) => {
             aria-selected={active}
             onClick={() => onChange(o.key)}
             className={cn(
-              "rounded-lg px-3 py-1.5 font-subtitle text-xs font-semibold transition",
+              "flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-subtitle text-xs font-semibold transition",
               active
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
-            {o.label}
+            <span>{o.label}</span>
+            {count !== undefined && (
+              <span
+                className={cn(
+                  "rounded-full px-1.5 py-0.5 font-numeric text-[10px] font-bold tabular-nums",
+                  active
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-muted text-foreground/70",
+                )}
+              >
+                {count.toLocaleString("pt-BR")}
+              </span>
+            )}
           </button>
         );
       })}
