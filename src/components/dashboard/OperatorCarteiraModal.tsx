@@ -33,16 +33,32 @@ export const OperatorCarteiraModal = ({ operador, open, onOpenChange }: Props) =
     alerta: true,
     saudavel: false,
   });
+  const [search, setSearch] = useState("");
+
+  const term = search.trim().toLowerCase();
 
   const grouped = useMemo(() => {
     if (!operador) return {} as Record<SlaBand, OperatorStat["clientes"]>;
     const g: Record<SlaBand, OperatorStat["clientes"]> = {
       critico: [], atencao: [], alerta: [], saudavel: [],
     };
-    for (const c of operador.clientes) g[c.band].push(c);
+    const filtered = term
+      ? operador.clientes.filter(
+          (c) =>
+            c.cliente.toLowerCase().includes(term) ||
+            c.etapa.toLowerCase().includes(term) ||
+            String(c.id).includes(term),
+        )
+      : operador.clientes;
+    for (const c of filtered) g[c.band].push(c);
     for (const k of ORDER) g[k].sort((a, b) => b.sla - a.sla);
     return g;
-  }, [operador]);
+  }, [operador, term]);
+
+  const totalFiltrados = useMemo(
+    () => ORDER.reduce((s, k) => s + grouped[k].length, 0),
+    [grouped],
+  );
 
   if (!operador) return null;
 
