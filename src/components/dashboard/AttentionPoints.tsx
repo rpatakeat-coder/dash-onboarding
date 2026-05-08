@@ -87,7 +87,7 @@ export const AttentionPoints = ({ atencao, topMrrTravado }: Props) => {
               <li key={c.cliente + i} className="flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-subtitle text-sm font-semibold text-foreground">
-                    {c.cliente}
+                    <DealLink id={c.id}>{c.cliente}</DealLink>
                   </p>
                   <p className="truncate font-small text-xs text-muted-foreground">
                     {c.ativador} · {c.etapa}
