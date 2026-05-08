@@ -79,6 +79,15 @@ const Index = () => {
   const [perfilSel, setPerfilSel] = useState<Set<string>>(new Set());
   const [onlyMine, setOnlyMine] = useState(false);
   const { fullName } = useAuth();
+  const { open: openDeal } = useDealDrawer();
+
+  // Sincroniza filtros com a URL (compartilhável + sobrevive a reload)
+  useUrlSets(
+    { ativador: ativadorSel, etapa: etapaSel, band: bandSel, perfil: perfilSel },
+    { ativador: setAtivadorSel, etapa: setEtapaSel, band: setBandSel, perfil: setPerfilSel },
+    { mine: onlyMine },
+    { mine: setOnlyMine },
+  );
 
   const allRows = data?.rows ?? [];
 
