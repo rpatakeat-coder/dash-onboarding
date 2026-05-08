@@ -17,12 +17,18 @@ interface Props {
   options: string[];
   selected: Set<string>;
   onChange: (next: Set<string>) => void;
+  counts?: Record<string, number>;
   className?: string;
 }
 
-export const MultiSelectFilter = ({ label, options, selected, onChange, className }: Props) => {
+export const MultiSelectFilter = ({ label, options, selected, onChange, counts, className }: Props) => {
   const [open, setOpen] = useState(false);
-  const sorted = useMemo(() => [...options].sort((a, b) => a.localeCompare(b)), [options]);
+  const sorted = useMemo(() => {
+    if (counts) {
+      return [...options].sort((a, b) => (counts[b] ?? 0) - (counts[a] ?? 0) || a.localeCompare(b));
+    }
+    return [...options].sort((a, b) => a.localeCompare(b));
+  }, [options, counts]);
 
   const toggle = (v: string) => {
     const n = new Set(selected);
@@ -75,6 +81,7 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, classNam
             <CommandGroup>
               {sorted.map((opt) => {
                 const active = selected.has(opt);
+                const c = counts?.[opt];
                 return (
                   <CommandItem key={opt} value={opt} onSelect={() => toggle(opt)}>
                     <div
@@ -87,7 +94,12 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, classNam
                     >
                       {active && <Check className="h-3 w-3" />}
                     </div>
-                    <span className="truncate">{opt}</span>
+                    <span className="flex-1 truncate">{opt}</span>
+                    {c !== undefined && (
+                      <span className="ml-2 rounded-full bg-muted px-1.5 py-0.5 font-numeric text-[10px] font-bold tabular-nums text-foreground/70">
+                        {c.toLocaleString("pt-BR")}
+                      </span>
+                    )}
                   </CommandItem>
                 );
               })}
