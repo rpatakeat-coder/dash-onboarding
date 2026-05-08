@@ -20,6 +20,13 @@ export const DashboardHeader = () => {
   });
   const { session, fullName, signOut } = useAuth();
   const [navOpen, setNavOpen] = useState(false);
+  const prefsDialog = usePreferencesDialog();
+  const isMac = typeof navigator !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+  const openPalette = () => {
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "k", metaKey: isMac, ctrlKey: !isMac, bubbles: true }),
+    );
+  };
 
   return (
     <header className="border-b border-border bg-card/60 backdrop-blur-sm">
