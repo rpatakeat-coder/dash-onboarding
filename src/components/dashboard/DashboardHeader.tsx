@@ -20,7 +20,28 @@ export const DashboardHeader = () => {
     <header className="border-b border-border bg-card/60 backdrop-blur-sm">
       <div className="mx-auto max-w-[1400px] px-6 py-4 md:px-10">
         <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Sheet open={navOpen} onOpenChange={setNavOpen}>
+              <SheetTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Abrir menu de navegação"
+                  className="inline-flex items-center justify-center rounded-lg border border-border bg-card p-2 text-muted-foreground transition hover:text-foreground md:hidden"
+                >
+                  <Menu className="h-4 w-4" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-72 p-0">
+                <SheetHeader className="border-b border-border px-5 py-4 text-left">
+                  <SheetTitle className="font-display text-base font-semibold text-secondary">
+                    Navegação
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="px-3 py-4">
+                  <MainNav orientation="vertical" onNavigate={() => setNavOpen(false)} />
+                </div>
+              </SheetContent>
+            </Sheet>
             <img src={logo} alt="Takeat" className="h-9 w-auto" />
             <div className="hidden h-8 w-px bg-border md:block" />
             <div className="hidden md:block">
