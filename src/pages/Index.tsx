@@ -144,7 +144,7 @@ const Index = () => {
     };
   }, [rows]);
 
-  const hasGlobalFilters = ativadorSel.size > 0 || etapaSel.size > 0;
+  const hasGlobalFilters = ativadorSel.size > 0 || etapaSel.size > 0 || bandSel.size > 0;
 
   return (
     <div className="min-h-screen bg-gradient-surface">
