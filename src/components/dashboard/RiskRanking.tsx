@@ -24,6 +24,7 @@ const BAND_TONE = {
 
 export const RiskRanking = ({ rows, limit = 10 }: Props) => {
   const top = useMemo(() => computeRisk(rows).slice(0, limit), [rows, limit]);
+  const { open } = useDealDrawer();
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
