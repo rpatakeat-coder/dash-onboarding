@@ -9,10 +9,12 @@ import { AttentionPoints } from "@/components/dashboard/AttentionPoints";
 import { SlaCritico } from "@/components/dashboard/SlaCritico";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
 import { PeriodFilter } from "@/components/dashboard/PeriodFilter";
+import { MultiSelectFilter } from "@/components/dashboard/MultiSelectFilter";
 import {
   computeFiltered,
   filterByPeriod,
   useDashOperacoes,
+  type DashRow,
   type PeriodKey,
 } from "@/hooks/useDashOperacoes";
 
