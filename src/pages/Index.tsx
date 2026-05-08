@@ -134,7 +134,7 @@ const Index = () => {
             <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
               Performance por ativador
             </h3>
-            <PeriodFilter value={opPeriod} onChange={setOpPeriod} />
+            <PeriodFilter value={opPeriod} onChange={setOpPeriod} counts={countsBy.operadores} />
           </div>
           <OperatorsTable operadores={opData.operadores} />
         </section>
