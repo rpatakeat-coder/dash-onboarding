@@ -114,6 +114,57 @@ const toNum = (v: string | null | undefined) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+const emptyBands = (): Record<SlaBand, number> => ({
+  critico: 0, atencao: 0, alerta: 0, saudavel: 0,
+});
+
+function buildOperadores(rows: DashRow[]): OperatorStat[] {
+  const map = new Map<string, {
+    ativos: number; mrr: number; soma: number; travados: number;
+    bands: Record<SlaBand, number>;
+    bandsMrr: Record<SlaBand, number>;
+    clientes: OperatorClient[];
+  }>();
+  for (const r of rows) {
+    const k = r.agente_ativacao?.trim() || "Sem responsável";
+    const cur = map.get(k) ?? {
+      ativos: 0, mrr: 0, soma: 0, travados: 0,
+      bands: emptyBands(), bandsMrr: emptyBands(), clientes: [],
+    };
+    const d = toNum(r.sla_dias);
+    const m = toNum(r.mrr);
+    const band = slaBand(d);
+    cur.ativos += 1;
+    cur.mrr += m;
+    cur.soma += d;
+    if (d > TRAVADO_DIAS) cur.travados += 1;
+    cur.bands[band] += 1;
+    cur.bandsMrr[band] += m;
+    cur.clientes.push({
+      id: r.id_deal,
+      cliente: r.nome_negocio?.trim() || "—",
+      etapa: r.etapa_negocio?.trim() || "—",
+      perfil: (r.perfil_cliente?.trim().split(/\s+/)[0] || "—").toUpperCase(),
+      sla: d,
+      mrr: m,
+      band,
+    });
+    map.set(k, cur);
+  }
+  return [...map.entries()]
+    .map(([nome, v]) => ({
+      nome,
+      ativos: v.ativos,
+      mrr: v.mrr,
+      tempoMedio: v.ativos ? v.soma / v.ativos : 0,
+      travados: v.travados,
+      bands: v.bands,
+      bandsMrr: v.bandsMrr,
+      clientes: v.clientes.sort((a, b) => b.sla - a.sla),
+    }))
+    .sort((a, b) => b.bands.critico - a.bands.critico || b.ativos - a.ativos);
+}
+
 const parseDate = (s: string | null): Date | null => {
   if (!s) return null;
   // formato "YYYY-MM-DD HH:MM"
