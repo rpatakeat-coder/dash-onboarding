@@ -302,6 +302,13 @@ const Index = () => {
             selected={bandSel}
             onChange={setBandSel}
           />
+          <MultiSelectFilter
+            label="Perfil"
+            options={perfilOpts}
+            counts={perfilCounts}
+            selected={perfilSel}
+            onChange={setPerfilSel}
+          />
           {hasGlobalFilters && (
             <>
               <span className="font-small text-xs text-muted-foreground">
@@ -312,6 +319,7 @@ const Index = () => {
                   setAtivadorSel(new Set());
                   setEtapaSel(new Set());
                   setBandSel(new Set());
+                  setPerfilSel(new Set());
                 }}
                 className="ml-auto rounded-lg px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-destructive"
               >
