@@ -72,6 +72,8 @@ const Index = () => {
   const [etapaSel, setEtapaSel] = useState<Set<string>>(new Set());
   const [bandSel, setBandSel] = useState<Set<string>>(new Set());
   const [perfilSel, setPerfilSel] = useState<Set<string>>(new Set());
+  const [onlyMine, setOnlyMine] = useState(false);
+  const { fullName } = useAuth();
 
   const allRows = data?.rows ?? [];
 
