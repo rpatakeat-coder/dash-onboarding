@@ -77,6 +77,17 @@ const Index = () => {
   const [estoqueOpen, setEstoqueOpen] = useState(false);
   const [operatorOpen, setOperatorOpen] = useState(false);
   const [selectedOperator, setSelectedOperator] = useState<OperatorStat | null>(null);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const op = (e as CustomEvent<OperatorStat>).detail;
+      if (!op) return;
+      setSelectedOperator(op);
+      setOperatorOpen(true);
+    };
+    window.addEventListener("open-operator", handler);
+    return () => window.removeEventListener("open-operator", handler);
+  }, []);
   const [atencaoPeriod, setAtencaoPeriod] = useState<PeriodKey>("tudo");
   const [criticoPeriod, setCriticoPeriod] = useState<PeriodKey>("tudo");
   const [opPeriod, setOpPeriod] = useState<PeriodKey>("tudo");
