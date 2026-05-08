@@ -1,20 +1,38 @@
 import { TrendingDown, TrendingUp, Minus, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { KpiDelta } from "@/hooks/useSnapshotDeltas";
+import type { KpiDelta, DateRange } from "@/hooks/useSnapshotDeltas";
 
 interface Props {
   delta?: KpiDelta;
-  /** Unidade do valor absoluto (ex.: "d", "%", ""). */
   unit?: string;
-  /** Casas decimais do valor absoluto. */
   decimals?: number;
-  /** "up" = subir é bom (verde); "down" = descer é bom (verde). */
   goodDirection?: "up" | "down";
-  /** Rótulo da janela (ex.: "vs 7d antes"). */
   windowLabel: string;
-  /** Carregando dados pela primeira vez. */
   loading?: boolean;
+  currentRange?: DateRange;
+  previousRange?: DateRange;
 }
+
+const fmtBR = (iso: string) => {
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y.slice(2)}`;
+};
+
+const buildTooltip = (
+  current?: DateRange,
+  previous?: DateRange,
+  curDays?: number,
+  prevDays?: number,
+) => {
+  if (!current || !previous) return undefined;
+  const cur = `Atual: ${fmtBR(current.start)} – ${fmtBR(current.end)}${
+    curDays !== undefined ? ` (${curDays}d com dados)` : ""
+  }`;
+  const prv = `Anterior: ${fmtBR(previous.start)} – ${fmtBR(previous.end)}${
+    prevDays !== undefined ? ` (${prevDays}d com dados)` : ""
+  }`;
+  return `${cur}\n${prv}`;
+};
 
 const Skeleton = ({ windowLabel }: { windowLabel: string }) => (
   <div className="mt-3 flex items-center gap-1.5">
@@ -23,10 +41,20 @@ const Skeleton = ({ windowLabel }: { windowLabel: string }) => (
   </div>
 );
 
-const NoHistory = ({ windowLabel }: { windowLabel: string }) => (
+const NoHistory = ({
+  windowLabel,
+  tooltip,
+}: {
+  windowLabel: string;
+  tooltip?: string;
+}) => (
   <div
     className="mt-3 flex items-center gap-1.5"
-    title="Sem snapshots suficientes para comparar este período. O histórico é coletado diariamente."
+    title={
+      tooltip
+        ? `Sem snapshots suficientes para comparar.\n${tooltip}`
+        : "Sem snapshots suficientes para comparar este período. O histórico é coletado diariamente."
+    }
   >
     <span className="inline-flex items-center gap-1 rounded-full border border-dashed border-border bg-muted/30 px-2 py-0.5 font-numeric text-[11px] font-medium text-muted-foreground">
       <Clock className="h-3 w-3" />
@@ -43,9 +71,20 @@ export const KpiDeltaBadge = ({
   goodDirection = "up",
   windowLabel,
   loading = false,
+  currentRange,
+  previousRange,
 }: Props) => {
   if (loading) return <Skeleton windowLabel={windowLabel} />;
-  if (!delta || delta.abs === null) return <NoHistory windowLabel={windowLabel} />;
+
+  const tooltip = buildTooltip(
+    currentRange,
+    previousRange,
+    delta?.currentDays,
+    delta?.previousDays,
+  );
+
+  if (!delta || delta.abs === null)
+    return <NoHistory windowLabel={windowLabel} tooltip={tooltip} />;
 
   const isFlat = Math.abs(delta.abs) < 0.05;
   const isUp = delta.abs > 0;
@@ -67,10 +106,7 @@ export const KpiDeltaBadge = ({
       ? ` (${isUp ? "+" : ""}${delta.pct.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%)`
       : "";
   return (
-    <div
-      className="mt-3 flex items-center gap-1.5"
-      title={`Janela atual: ${delta.currentDays}d · anterior: ${delta.previousDays}d`}
-    >
+    <div className="mt-3 flex items-center gap-1.5" title={tooltip}>
       <span
         className={cn(
           "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-numeric text-[11px] font-semibold",
