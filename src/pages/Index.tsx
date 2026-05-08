@@ -254,15 +254,32 @@ const Index = () => {
 
   const hasGlobalFilters = ativadorSel.size > 0 || etapaSel.size > 0 || bandSel.size > 0 || perfilSel.size > 0;
 
-  const filterChips = useMemo(() => {
-    const out: string[] = [];
-    if (onlyMine && fullName) out.push(`Só meus deals (${fullName})`);
-    if (ativadorSel.size) out.push(`Ativador: ${[...ativadorSel].join(", ")}`);
-    if (etapaSel.size) out.push(`Etapa: ${[...etapaSel].join(", ")}`);
-    if (bandSel.size) out.push(`Faixa SLA: ${[...bandSel].join(", ")}`);
-    if (perfilSel.size) out.push(`Perfil: ${[...perfilSel].join(", ")}`);
+  const periodLabel = (p: PeriodKey) =>
+    ({ tudo: "Tudo", hoje: "Hoje", semana: "Semana", mes: "Mês" }[p]);
+
+  const pdfSummary = useMemo(() => {
+    const out: { label: string; value: string }[] = [];
+    out.push({
+      label: "Escopo",
+      value: `${rows.length.toLocaleString("pt-BR")} de ${allRows.length.toLocaleString("pt-BR")} clientes`,
+    });
+    out.push({
+      label: "Comparativo",
+      value: `${deltaWindow}d vs ${deltaWindow}d anteriores`,
+    });
+    const periodos: string[] = [];
+    if (atencaoPeriod !== "tudo") periodos.push(`Atenção: ${periodLabel(atencaoPeriod)}`);
+    if (criticoPeriod !== "tudo") periodos.push(`Crítico: ${periodLabel(criticoPeriod)}`);
+    if (opPeriod !== "tudo") periodos.push(`Operadores: ${periodLabel(opPeriod)}`);
+    if (periodos.length) out.push({ label: "Períodos", value: periodos.join(" · ") });
+    if (onlyMine && fullName) out.push({ label: "Visão", value: `Só meus deals (${fullName})` });
+    if (ativadorSel.size) out.push({ label: "Ativador", value: [...ativadorSel].join(", ") });
+    if (etapaSel.size) out.push({ label: "Etapa", value: [...etapaSel].join(", ") });
+    if (bandSel.size) out.push({ label: "Faixa SLA", value: [...bandSel].join(", ") });
+    if (perfilSel.size) out.push({ label: "Perfil", value: [...perfilSel].join(", ") });
     return out;
-  }, [onlyMine, fullName, ativadorSel, etapaSel, bandSel, perfilSel]);
+  }, [rows.length, allRows.length, deltaWindow, atencaoPeriod, criticoPeriod, opPeriod, onlyMine, fullName, ativadorSel, etapaSel, bandSel, perfilSel]);
+
 
   return (
     <div className="min-h-screen bg-gradient-surface">
@@ -379,7 +396,7 @@ const Index = () => {
           )}
           <div className="ml-auto flex items-center gap-2 pdf-hide">
             <ExportCsvButton rows={rows} />
-            <ExportPdfButton filters={filterChips} />
+            <ExportPdfButton summary={pdfSummary} />
           </div>
 
           {hasGlobalFilters && (
