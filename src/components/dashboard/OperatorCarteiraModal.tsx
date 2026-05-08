@@ -34,31 +34,43 @@ export const OperatorCarteiraModal = ({ operador, open, onOpenChange }: Props) =
     saudavel: false,
   });
   const [search, setSearch] = useState("");
+  const [bandFilter, setBandFilter] = useState<Set<SlaBand>>(new Set());
 
   const term = search.trim().toLowerCase();
 
   const grouped = useMemo(() => {
-    if (!operador) return {} as Record<SlaBand, OperatorStat["clientes"]>;
     const g: Record<SlaBand, OperatorStat["clientes"]> = {
       critico: [], atencao: [], alerta: [], saudavel: [],
     };
-    const filtered = term
-      ? operador.clientes.filter(
-          (c) =>
-            c.cliente.toLowerCase().includes(term) ||
-            c.etapa.toLowerCase().includes(term) ||
-            String(c.id).includes(term),
-        )
-      : operador.clientes;
+    if (!operador) return g;
+    const filtered = operador.clientes.filter((c) => {
+      if (bandFilter.size && !bandFilter.has(c.band)) return false;
+      if (!term) return true;
+      return (
+        c.cliente.toLowerCase().includes(term) ||
+        c.etapa.toLowerCase().includes(term) ||
+        String(c.id).includes(term)
+      );
+    });
     for (const c of filtered) g[c.band].push(c);
     for (const k of ORDER) g[k].sort((a, b) => b.sla - a.sla);
     return g;
-  }, [operador, term]);
+  }, [operador, term, bandFilter]);
 
   const totalFiltrados = useMemo(
-    () => ORDER.reduce((s, k) => s + grouped[k].length, 0),
+    () => ORDER.reduce((s, k) => s + (grouped[k]?.length ?? 0), 0),
     [grouped],
   );
+
+  const hasFilters = term.length > 0 || bandFilter.size > 0;
+
+  const toggleBand = (k: SlaBand) =>
+    setBandFilter((s) => {
+      const n = new Set(s);
+      if (n.has(k)) n.delete(k);
+      else n.add(k);
+      return n;
+    });
 
   if (!operador) return null;
 
