@@ -220,7 +220,7 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
               const disabled = count === 0 && !active;
               const criterios: string[] = [];
               if (q.trim()) criterios.push(`busca "${q.trim()}"`);
-              if (etapaSel.size) criterios.push(`${etapaSel.size} etapa(s) selecionada(s)`);
+              if (etapaSel.size) criterios.push(`etapas: ${[...etapaSel].join(", ")}`);
               const resumo = criterios.length
                 ? `Considerando: ${criterios.join(" + ")}`
                 : "Sem outros filtros aplicados";
