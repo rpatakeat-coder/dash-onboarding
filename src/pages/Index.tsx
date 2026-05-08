@@ -198,7 +198,7 @@ const Index = () => {
         <EstoqueModal
           open={estoqueOpen}
           onOpenChange={setEstoqueOpen}
-          rows={data?.rows ?? []}
+          rows={rows}
         />
 
         <OperatorCarteiraModal
