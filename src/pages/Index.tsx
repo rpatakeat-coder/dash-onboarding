@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { X } from "lucide-react";
+import { X, UserCheck } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { OperatorsTable } from "@/components/dashboard/OperatorsTable";
@@ -71,6 +72,8 @@ const Index = () => {
   const [etapaSel, setEtapaSel] = useState<Set<string>>(new Set());
   const [bandSel, setBandSel] = useState<Set<string>>(new Set());
   const [perfilSel, setPerfilSel] = useState<Set<string>>(new Set());
+  const [onlyMine, setOnlyMine] = useState(false);
+  const { fullName } = useAuth();
 
   const allRows = data?.rows ?? [];
 
@@ -147,8 +150,9 @@ const Index = () => {
   }, [allRows]);
 
   const rows = useMemo<DashRow[]>(
-    () =>
-      allRows.filter((r) => {
+    () => {
+      const me = onlyMine && fullName ? fullName.trim().toLowerCase() : null;
+      return allRows.filter((r) => {
         if (
           ativadorSel.size &&
           !ativadorSel.has(r.agente_ativacao?.trim() || "Sem responsável")
@@ -158,9 +162,11 @@ const Index = () => {
           return false;
         if (bandSelKeys.size && !bandSelKeys.has(slaBand(slaOf(r)))) return false;
         if (perfilSel.size && !perfilSel.has(perfilOf(r))) return false;
+        if (me && (r.agente_ativacao?.trim().toLowerCase() ?? "") !== me) return false;
         return true;
-      }),
-    [allRows, ativadorSel, etapaSel, bandSelKeys, perfilSel],
+      });
+    },
+    [allRows, ativadorSel, etapaSel, bandSelKeys, perfilSel, onlyMine, fullName],
   );
 
   const atencaoData = useMemo(() => computeFiltered(filterByPeriod(rows, atencaoPeriod)), [rows, atencaoPeriod]);
@@ -281,6 +287,19 @@ const Index = () => {
           <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
             Filtrar por
           </span>
+          {fullName && (
+            <button
+              onClick={() => setOnlyMine((v) => !v)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-subtitle text-xs font-medium transition ${
+                onlyMine
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
+              title={`Mostrar apenas clientes de ${fullName}`}
+            >
+              <UserCheck className="h-3 w-3" /> Só meus deals
+            </button>
+          )}
           <MultiSelectFilter
             label="Ativador"
             options={ativadoresOpts}
