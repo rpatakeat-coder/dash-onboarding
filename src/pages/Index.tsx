@@ -505,6 +505,12 @@ const Index = () => {
           </div>
         </section>
 
+        {/* Tendência + Top risco */}
+        <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <TrendChart />
+          <RiskRanking rows={rows} limit={10} />
+        </section>
+
         {/* Heatmap de gargalos + SLA por perfil */}
         <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <BottleneckHeatmap rows={rows} />
