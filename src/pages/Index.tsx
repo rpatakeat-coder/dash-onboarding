@@ -119,6 +119,41 @@ const Index = () => {
           rows={data?.rows ?? []}
         />
 
+        {/* Filtros globais (Ativador + Etapa) */}
+        <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card/50 p-3">
+          <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+            Filtrar por
+          </span>
+          <MultiSelectFilter
+            label="Ativador"
+            options={ativadoresOpts}
+            selected={ativadorSel}
+            onChange={setAtivadorSel}
+          />
+          <MultiSelectFilter
+            label="Etapa"
+            options={etapasOpts}
+            selected={etapaSel}
+            onChange={setEtapaSel}
+          />
+          {hasGlobalFilters && (
+            <>
+              <span className="font-small text-xs text-muted-foreground">
+                {rows.length.toLocaleString("pt-BR")} de {allRows.length.toLocaleString("pt-BR")} clientes
+              </span>
+              <button
+                onClick={() => {
+                  setAtivadorSel(new Set());
+                  setEtapaSel(new Set());
+                }}
+                className="ml-auto rounded-lg px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-destructive"
+              >
+                Limpar filtros
+              </button>
+            </>
+          )}
+        </div>
+
         {/* Períodos + Perfis + MRR Ativado */}
         <div className="mb-8">
           {data && (
