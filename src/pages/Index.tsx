@@ -421,6 +421,13 @@ const Index = () => {
           )}
         </div>
 
+        {/* Destaques automáticos */}
+        {data && opData.operadores.length > 0 && (
+          <section className="mb-8">
+            <Highlights rows={rows} operadores={opData.operadores} />
+          </section>
+        )}
+
         {/* Períodos + Perfis + MRR Ativado */}
         <div className="mb-8">
           {data && (
