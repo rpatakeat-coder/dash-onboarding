@@ -282,7 +282,13 @@ const Index = () => {
             </h3>
             <PeriodFilter value={opPeriod} onChange={setOpPeriod} counts={countsBy.operadores} />
           </div>
-          <OperatorsTable operadores={opData.operadores} />
+          <OperatorsTable
+            operadores={opData.operadores}
+            onOperatorClick={(op) => {
+              setSelectedOperator(op);
+              setOperatorOpen(true);
+            }}
+          />
         </section>
 
         {/* Travados */}
