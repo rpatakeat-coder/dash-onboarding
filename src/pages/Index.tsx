@@ -70,8 +70,12 @@ const Index = () => {
   const [ativadorSel, setAtivadorSel] = useState<Set<string>>(new Set());
   const [etapaSel, setEtapaSel] = useState<Set<string>>(new Set());
   const [bandSel, setBandSel] = useState<Set<string>>(new Set());
+  const [perfilSel, setPerfilSel] = useState<Set<string>>(new Set());
 
   const allRows = data?.rows ?? [];
+
+  const perfilOf = (r: DashRow) =>
+    (r.perfil_cliente?.trim().split(/\s+/)[0] || "—").toUpperCase();
 
   const bandSelKeys = useMemo(
     () => new Set([...bandSel].map(bandFromLabel)),
