@@ -15,11 +15,23 @@ import { MultiSelectFilter } from "@/components/dashboard/MultiSelectFilter";
 import {
   computeFiltered,
   filterByPeriod,
+  slaBand,
+  SLA_BAND_META,
   useDashOperacoes,
   type DashRow,
   type OperatorStat,
   type PeriodKey,
+  type SlaBand,
 } from "@/hooks/useDashOperacoes";
+
+const BAND_ORDER: SlaBand[] = ["critico", "atencao", "alerta", "saudavel"];
+const bandLabel = (b: SlaBand) => `${SLA_BAND_META[b].label} (${SLA_BAND_META[b].range})`;
+const bandFromLabel = (l: string): SlaBand =>
+  (BAND_ORDER.find((b) => bandLabel(b) === l) as SlaBand) ?? "saudavel";
+const slaOf = (r: DashRow) => {
+  const n = parseFloat(String(r.sla_dias ?? "").replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+};
 
 const Index = () => {
   const { data, error } = useDashOperacoes();
@@ -31,19 +43,26 @@ const Index = () => {
   const [opPeriod, setOpPeriod] = useState<PeriodKey>("tudo");
   const [ativadorSel, setAtivadorSel] = useState<Set<string>>(new Set());
   const [etapaSel, setEtapaSel] = useState<Set<string>>(new Set());
+  const [bandSel, setBandSel] = useState<Set<string>>(new Set());
 
   const allRows = data?.rows ?? [];
 
-  // Counts respect the OTHER dimension's selection
+  const bandSelKeys = useMemo(
+    () => new Set([...bandSel].map(bandFromLabel)),
+    [bandSel],
+  );
+
+  // Counts respect the OTHER dimensions' selections
   const ativadoresCounts = useMemo(() => {
     const out: Record<string, number> = {};
     for (const r of allRows) {
       if (etapaSel.size && !etapaSel.has(r.etapa_negocio?.trim() || "Sem etapa")) continue;
+      if (bandSelKeys.size && !bandSelKeys.has(slaBand(slaOf(r)))) continue;
       const k = r.agente_ativacao?.trim() || "Sem responsável";
       out[k] = (out[k] ?? 0) + 1;
     }
     return out;
-  }, [allRows, etapaSel]);
+  }, [allRows, etapaSel, bandSelKeys]);
 
   const etapasCounts = useMemo(() => {
     const out: Record<string, number> = {};
@@ -53,11 +72,27 @@ const Index = () => {
         !ativadorSel.has(r.agente_ativacao?.trim() || "Sem responsável")
       )
         continue;
+      if (bandSelKeys.size && !bandSelKeys.has(slaBand(slaOf(r)))) continue;
       const k = r.etapa_negocio?.trim() || "Sem etapa";
       out[k] = (out[k] ?? 0) + 1;
     }
     return out;
-  }, [allRows, ativadorSel]);
+  }, [allRows, ativadorSel, bandSelKeys]);
+
+  const bandCounts = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const r of allRows) {
+      if (
+        ativadorSel.size &&
+        !ativadorSel.has(r.agente_ativacao?.trim() || "Sem responsável")
+      )
+        continue;
+      if (etapaSel.size && !etapaSel.has(r.etapa_negocio?.trim() || "Sem etapa")) continue;
+      const k = bandLabel(slaBand(slaOf(r)));
+      out[k] = (out[k] ?? 0) + 1;
+    }
+    return out;
+  }, [allRows, ativadorSel, etapaSel]);
 
   const ativadoresOpts = useMemo(
     () => [...new Set(allRows.map((r) => r.agente_ativacao?.trim() || "Sem responsável"))],
@@ -67,6 +102,7 @@ const Index = () => {
     () => [...new Set(allRows.map((r) => r.etapa_negocio?.trim() || "Sem etapa"))],
     [allRows],
   );
+  const bandOpts = useMemo(() => BAND_ORDER.map(bandLabel), []);
 
   const rows = useMemo<DashRow[]>(
     () =>
@@ -78,9 +114,10 @@ const Index = () => {
           return false;
         if (etapaSel.size && !etapaSel.has(r.etapa_negocio?.trim() || "Sem etapa"))
           return false;
+        if (bandSelKeys.size && !bandSelKeys.has(slaBand(slaOf(r)))) return false;
         return true;
       }),
-    [allRows, ativadorSel, etapaSel],
+    [allRows, ativadorSel, etapaSel, bandSelKeys],
   );
 
   const atencaoData = useMemo(() => computeFiltered(filterByPeriod(rows, atencaoPeriod)), [rows, atencaoPeriod]);
@@ -107,7 +144,7 @@ const Index = () => {
     };
   }, [rows]);
 
-  const hasGlobalFilters = ativadorSel.size > 0 || etapaSel.size > 0;
+  const hasGlobalFilters = ativadorSel.size > 0 || etapaSel.size > 0 || bandSel.size > 0;
 
   return (
     <div className="min-h-screen bg-gradient-surface">
@@ -174,6 +211,13 @@ const Index = () => {
             selected={etapaSel}
             onChange={setEtapaSel}
           />
+          <MultiSelectFilter
+            label="Faixa SLA"
+            options={bandOpts}
+            counts={bandCounts}
+            selected={bandSel}
+            onChange={setBandSel}
+          />
           {hasGlobalFilters && (
             <>
               <span className="font-small text-xs text-muted-foreground">
@@ -183,6 +227,7 @@ const Index = () => {
                 onClick={() => {
                   setAtivadorSel(new Set());
                   setEtapaSel(new Set());
+                  setBandSel(new Set());
                 }}
                 className="ml-auto rounded-lg px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-destructive"
               >
@@ -236,6 +281,30 @@ const Index = () => {
                   </button>
                 </span>
               ))}
+              {[...bandSel].map((v) => {
+                const color = `hsl(var(${SLA_BAND_META[bandFromLabel(v)].cssVar}))`;
+                return (
+                  <span
+                    key={`b-${v}`}
+                    className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-subtitle text-xs font-medium"
+                    style={{ borderColor: `${color.replace("hsl(", "hsla(").replace(")", ", 0.35)")}`, backgroundColor: `${color.replace("hsl(", "hsla(").replace(")", ", 0.12)")}`, color }}
+                  >
+                    <span className="text-[10px] uppercase tracking-wider opacity-70">SLA</span>
+                    <span>{v}</span>
+                    <button
+                      onClick={() => {
+                        const n = new Set(bandSel);
+                        n.delete(v);
+                        setBandSel(n);
+                      }}
+                      className="ml-0.5 rounded-full p-0.5 hover:opacity-70"
+                      aria-label={`Remover ${v}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                );
+              })}
             </div>
           )}
         </div>
