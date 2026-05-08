@@ -170,7 +170,7 @@ export const OperatorCarteiraModal = ({ operador, open, onOpenChange }: Props) =
             const count = list.length;
             const totalBand = operador.bands[k];
             const mrr = operador.bandsMrr[k];
-            const isOpen = term ? count > 0 : expanded[k];
+            const isOpen = hasFilters ? count > 0 : expanded[k];
             const color = `hsl(var(${meta.cssVar}))`;
             return (
               <div
