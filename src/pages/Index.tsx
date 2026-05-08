@@ -81,6 +81,10 @@ const Index = () => {
   const [criticoPeriod, setCriticoPeriod] = useState<PeriodKey>("tudo");
   const [opPeriod, setOpPeriod] = useState<PeriodKey>("tudo");
   const [kpiPeriod, setKpiPeriod] = useState<PeriodKey>("tudo");
+  const [slaCmpA, setSlaCmpA] = useState<PeriodKey>("semana");
+  const [slaCmpB, setSlaCmpB] = useState<PeriodKey>("mes");
+  const [execCmpA, setExecCmpA] = useState<PeriodKey>("semana");
+  const [execCmpB, setExecCmpB] = useState<PeriodKey>("mes");
   const [ativadorSel, setAtivadorSel] = useState<Set<string>>(new Set());
   const [etapaSel, setEtapaSel] = useState<Set<string>>(new Set());
   const [bandSel, setBandSel] = useState<Set<string>>(new Set());
