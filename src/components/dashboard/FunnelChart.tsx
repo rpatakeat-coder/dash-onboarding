@@ -21,7 +21,8 @@ export const FunnelChart = ({ data, total }: Props) => {
           {total} ativos
         </span>
       </div>
-      <ResponsiveContainer width="100%" height={220}>
+      <div className="h-60 w-full sm:h-64 md:h-72 lg:h-80">
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
           <defs>
             <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
@@ -54,6 +55,7 @@ export const FunnelChart = ({ data, total }: Props) => {
           <Bar dataKey="count" name="Restaurantes" fill="url(#barFill)" radius={[8, 8, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 };
