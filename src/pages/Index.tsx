@@ -17,6 +17,8 @@ import { Highlights } from "@/components/dashboard/Highlights";
 import { BottleneckHeatmap } from "@/components/dashboard/BottleneckHeatmap";
 import { RankingTable } from "@/components/dashboard/RankingTable";
 import { PerfilSlaPanel } from "@/components/dashboard/PerfilSlaPanel";
+import { RiskRanking } from "@/components/dashboard/RiskRanking";
+import { TrendChart } from "@/components/dashboard/TrendChart";
 import {
   computeFiltered,
   filterByPeriod,
@@ -501,6 +503,12 @@ const Index = () => {
             </div>
             <SlaCritico criticos={criticoData.criticos} />
           </div>
+        </section>
+
+        {/* Tendência + Top risco */}
+        <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <TrendChart />
+          <RiskRanking rows={rows} limit={10} />
         </section>
 
         {/* Heatmap de gargalos + SLA por perfil */}

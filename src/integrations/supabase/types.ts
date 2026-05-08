@@ -50,6 +50,54 @@ export type Database = {
         }
         Relationships: []
       }
+      dash_operacoes_snapshots: {
+        Row: {
+          band_alerta: number
+          band_atencao: number
+          band_critico: number
+          band_saudavel: number
+          created_at: string
+          id: string
+          mrr_total: number
+          pct_no_prazo: number
+          por_ativador: Json
+          por_etapa: Json
+          sla_medio: number
+          snapshot_date: string
+          total: number
+        }
+        Insert: {
+          band_alerta?: number
+          band_atencao?: number
+          band_critico?: number
+          band_saudavel?: number
+          created_at?: string
+          id?: string
+          mrr_total?: number
+          pct_no_prazo?: number
+          por_ativador?: Json
+          por_etapa?: Json
+          sla_medio?: number
+          snapshot_date: string
+          total?: number
+        }
+        Update: {
+          band_alerta?: number
+          band_atencao?: number
+          band_critico?: number
+          band_saudavel?: number
+          created_at?: string
+          id?: string
+          mrr_total?: number
+          pct_no_prazo?: number
+          por_ativador?: Json
+          por_etapa?: Json
+          sla_medio?: number
+          snapshot_date?: string
+          total?: number
+        }
+        Relationships: []
+      }
       "Leads Criados Hubspot": {
         Row: {
           data_criacao: string | null
