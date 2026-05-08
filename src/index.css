@@ -94,19 +94,19 @@
     --accent: 0 85% 58%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 85% 60%;
+    --destructive: 0 95% 65%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 60% 50%;
+    --success: 145 75% 55%;
     --success-foreground: 0 0% 4%;
 
-    --warning: 38 95% 60%;
+    --warning: 38 100% 62%;
     --warning-foreground: 0 0% 4%;
 
-    --sla-critico: 0 90% 62%;
-    --sla-atencao: 22 95% 60%;
-    --sla-alerta: 45 100% 58%;
-    --sla-saudavel: 152 60% 50%;
+    --sla-critico: 0 95% 65%;        /* vermelho puro vibrante */
+    --sla-atencao: 28 100% 62%;       /* laranja saturado */
+    --sla-alerta: 48 100% 60%;        /* âmbar dourado */
+    --sla-saudavel: 145 75% 55%;      /* verde esmeralda */
 
     --border: 0 0% 16%;
     --input: 0 0% 14%;
