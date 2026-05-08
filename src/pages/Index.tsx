@@ -9,10 +9,12 @@ import { AttentionPoints } from "@/components/dashboard/AttentionPoints";
 import { SlaCritico } from "@/components/dashboard/SlaCritico";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
 import { PeriodFilter } from "@/components/dashboard/PeriodFilter";
+import { MultiSelectFilter } from "@/components/dashboard/MultiSelectFilter";
 import {
   computeFiltered,
   filterByPeriod,
   useDashOperacoes,
+  type DashRow,
   type PeriodKey,
 } from "@/hooks/useDashOperacoes";
 
@@ -22,8 +24,35 @@ const Index = () => {
   const [atencaoPeriod, setAtencaoPeriod] = useState<PeriodKey>("tudo");
   const [criticoPeriod, setCriticoPeriod] = useState<PeriodKey>("tudo");
   const [opPeriod, setOpPeriod] = useState<PeriodKey>("tudo");
+  const [ativadorSel, setAtivadorSel] = useState<Set<string>>(new Set());
+  const [etapaSel, setEtapaSel] = useState<Set<string>>(new Set());
 
-  const rows = data?.rows ?? [];
+  const allRows = data?.rows ?? [];
+
+  const ativadoresOpts = useMemo(
+    () => [...new Set(allRows.map((r) => r.agente_ativacao?.trim() || "Sem responsável"))],
+    [allRows],
+  );
+  const etapasOpts = useMemo(
+    () => [...new Set(allRows.map((r) => r.etapa_negocio?.trim() || "Sem etapa"))],
+    [allRows],
+  );
+
+  const rows = useMemo<DashRow[]>(
+    () =>
+      allRows.filter((r) => {
+        if (
+          ativadorSel.size &&
+          !ativadorSel.has(r.agente_ativacao?.trim() || "Sem responsável")
+        )
+          return false;
+        if (etapaSel.size && !etapaSel.has(r.etapa_negocio?.trim() || "Sem etapa"))
+          return false;
+        return true;
+      }),
+    [allRows, ativadorSel, etapaSel],
+  );
+
   const atencaoData = useMemo(() => computeFiltered(filterByPeriod(rows, atencaoPeriod)), [rows, atencaoPeriod]);
   const criticoData = useMemo(() => computeFiltered(filterByPeriod(rows, criticoPeriod)), [rows, criticoPeriod]);
   const opData = useMemo(() => computeFiltered(filterByPeriod(rows, opPeriod)), [rows, opPeriod]);
@@ -47,6 +76,8 @@ const Index = () => {
       operadores: make(() => true),
     };
   }, [rows]);
+
+  const hasGlobalFilters = ativadorSel.size > 0 || etapaSel.size > 0;
 
   return (
     <div className="min-h-screen bg-gradient-surface">
@@ -87,6 +118,41 @@ const Index = () => {
           onOpenChange={setEstoqueOpen}
           rows={data?.rows ?? []}
         />
+
+        {/* Filtros globais (Ativador + Etapa) */}
+        <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card/50 p-3">
+          <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+            Filtrar por
+          </span>
+          <MultiSelectFilter
+            label="Ativador"
+            options={ativadoresOpts}
+            selected={ativadorSel}
+            onChange={setAtivadorSel}
+          />
+          <MultiSelectFilter
+            label="Etapa"
+            options={etapasOpts}
+            selected={etapaSel}
+            onChange={setEtapaSel}
+          />
+          {hasGlobalFilters && (
+            <>
+              <span className="font-small text-xs text-muted-foreground">
+                {rows.length.toLocaleString("pt-BR")} de {allRows.length.toLocaleString("pt-BR")} clientes
+              </span>
+              <button
+                onClick={() => {
+                  setAtivadorSel(new Set());
+                  setEtapaSel(new Set());
+                }}
+                className="ml-auto rounded-lg px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-destructive"
+              >
+                Limpar filtros
+              </button>
+            </>
+          )}
+        </div>
 
         {/* Períodos + Perfis + MRR Ativado */}
         <div className="mb-8">
