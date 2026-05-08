@@ -15,11 +15,23 @@ import { MultiSelectFilter } from "@/components/dashboard/MultiSelectFilter";
 import {
   computeFiltered,
   filterByPeriod,
+  slaBand,
+  SLA_BAND_META,
   useDashOperacoes,
   type DashRow,
   type OperatorStat,
   type PeriodKey,
+  type SlaBand,
 } from "@/hooks/useDashOperacoes";
+
+const BAND_ORDER: SlaBand[] = ["critico", "atencao", "alerta", "saudavel"];
+const bandLabel = (b: SlaBand) => `${SLA_BAND_META[b].label} (${SLA_BAND_META[b].range})`;
+const bandFromLabel = (l: string): SlaBand =>
+  (BAND_ORDER.find((b) => bandLabel(b) === l) as SlaBand) ?? "saudavel";
+const slaOf = (r: DashRow) => {
+  const n = parseFloat(String(r.sla_dias ?? "").replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+};
 
 const Index = () => {
   const { data, error } = useDashOperacoes();
