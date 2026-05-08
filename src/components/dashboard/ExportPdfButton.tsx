@@ -1,16 +1,21 @@
 import { useState } from "react";
 import { FileDown, Loader2 } from "lucide-react";
 
+export interface PdfSummaryItem {
+  label: string;
+  value: string;
+}
+
 interface Props {
   /** id do elemento a capturar */
   targetId?: string;
-  filters?: string[];
+  summary?: PdfSummaryItem[];
   filename?: string;
 }
 
 export const ExportPdfButton = ({
   targetId = "dashboard-pdf-root",
-  filters = [],
+  summary = [],
   filename = "operacoes",
 }: Props) => {
   const [busy, setBusy] = useState(false);
@@ -41,26 +46,52 @@ export const ExportPdfButton = ({
       const pageH = pdf.internal.pageSize.getHeight();
       const margin = 24;
       const usableW = pageW - margin * 2;
-      const imgH = (canvas.height * usableW) / canvas.width;
 
-      // Cabeçalho
+      // ===== Cabeçalho =====
       const date = new Date().toLocaleString("pt-BR");
+      pdf.setFont("helvetica", "bold");
       pdf.setFontSize(14);
+      pdf.setTextColor(20);
       pdf.text("Painel de Operações — Onboarding Takeat", margin, margin + 4);
+      pdf.setFont("helvetica", "normal");
       pdf.setFontSize(9);
       pdf.setTextColor(120);
-      pdf.text(`Gerado em ${date}`, margin, margin + 20);
-      if (filters.length) {
-        const f = `Filtros: ${filters.join(" · ")}`;
-        const split = pdf.splitTextToSize(f, usableW);
-        pdf.text(split, margin, margin + 34);
+      pdf.text(`Gerado em ${date}`, margin, margin + 18);
+
+      // Resumo de filtros estruturado (label : value), com wrap
+      const labelW = 70; // pt
+      const valueW = usableW - labelW - 8;
+      const lineH = 11;
+      let cursorY = margin + 34;
+
+      if (summary.length) {
+        // Linha divisória sutil
+        pdf.setDrawColor(220);
+        pdf.setLineWidth(0.5);
+        pdf.line(margin, cursorY - 6, margin + usableW, cursorY - 6);
+
+        for (const item of summary) {
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(8);
+          pdf.setTextColor(90);
+          pdf.text(item.label.toUpperCase(), margin, cursorY);
+
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(9);
+          pdf.setTextColor(40);
+          const lines = pdf.splitTextToSize(item.value, valueW) as string[];
+          pdf.text(lines, margin + labelW, cursorY);
+          cursorY += Math.max(lineH, lines.length * lineH);
+        }
+        cursorY += 4;
+        pdf.setDrawColor(220);
+        pdf.line(margin, cursorY - 4, margin + usableW, cursorY - 4);
       }
 
-      const headerOffset = margin + (filters.length ? 56 : 36);
-      const contentTop = headerOffset;
+      const contentTop = cursorY + 6;
       const availPerPage = pageH - contentTop - margin;
 
-      // Quebra a imagem em páginas
+      // ===== Imagem do dashboard, paginada =====
       const pxPerPt = canvas.width / usableW;
       const pageHeightPx = availPerPage * pxPerPt;
       let renderedPx = 0;

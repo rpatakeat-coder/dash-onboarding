@@ -396,7 +396,7 @@ const Index = () => {
           )}
           <div className="ml-auto flex items-center gap-2 pdf-hide">
             <ExportCsvButton rows={rows} />
-            <ExportPdfButton filters={filterChips} />
+            <ExportPdfButton summary={pdfSummary} />
           </div>
 
           {hasGlobalFilters && (
