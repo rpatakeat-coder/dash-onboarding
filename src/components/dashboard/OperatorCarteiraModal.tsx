@@ -80,13 +80,38 @@ export const OperatorCarteiraModal = ({ operador, open, onOpenChange }: Props) =
 
         <SlaBandBar bands={operador.bands} height="lg" showLabels />
 
+        <div className="relative mt-2">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por cliente, etapa ou ID do deal…"
+            className="pl-9 pr-9"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted"
+              aria-label="Limpar busca"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+        {term && (
+          <p className="font-small text-[11px] text-muted-foreground">
+            {totalFiltrados} cliente{totalFiltrados === 1 ? "" : "s"} encontrado{totalFiltrados === 1 ? "" : "s"}
+          </p>
+        )}
+
         <div className="mt-2 max-h-[55vh] space-y-3 overflow-auto pr-1">
           {ORDER.map((k) => {
             const meta = SLA_BAND_META[k];
             const list = grouped[k];
-            const count = operador.bands[k];
+            const count = list.length;
+            const totalBand = operador.bands[k];
             const mrr = operador.bandsMrr[k];
-            const isOpen = expanded[k];
+            const isOpen = term ? count > 0 : expanded[k];
             const color = `hsl(var(${meta.cssVar}))`;
             return (
               <div
