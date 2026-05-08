@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Flame, ExternalLink } from "lucide-react";
 import { computeRisk } from "@/lib/risk";
 import { fmtBRL, slaBand, SLA_BAND_META, type DashRow } from "@/hooks/useDashOperacoes";
+import { useDealDrawer } from "@/contexts/DealDrawer";
 
 interface Props {
   rows: DashRow[];
