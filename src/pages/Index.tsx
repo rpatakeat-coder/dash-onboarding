@@ -153,6 +153,7 @@ const Index = () => {
           <MultiSelectFilter
             label="Ativador"
             options={ativadoresOpts}
+            counts={ativadoresCounts}
             selected={ativadorSel}
             onChange={setAtivadorSel}
           />
