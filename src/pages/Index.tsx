@@ -122,7 +122,7 @@ const Index = () => {
               <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
                 SLA crítico
               </h3>
-              <PeriodFilter value={criticoPeriod} onChange={setCriticoPeriod} />
+              <PeriodFilter value={criticoPeriod} onChange={setCriticoPeriod} counts={countsBy.critico} />
             </div>
             <SlaCritico criticos={criticoData.criticos} />
           </div>
