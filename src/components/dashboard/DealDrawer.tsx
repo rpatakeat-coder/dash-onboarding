@@ -105,7 +105,7 @@ export const DealDrawer = ({ deal, onClose }: Props) => {
         .order("data_realizada", { ascending: false })
         .limit(20);
       if (error) throw error;
-      return (data ?? []) as Array<{
+      return (data ?? []) as unknown as Array<{
         id_chamada: number;
         resultado_chamada: string | null;
         duracao_chamada: string | null;
