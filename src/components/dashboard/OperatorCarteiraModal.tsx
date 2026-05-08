@@ -34,31 +34,43 @@ export const OperatorCarteiraModal = ({ operador, open, onOpenChange }: Props) =
     saudavel: false,
   });
   const [search, setSearch] = useState("");
+  const [bandFilter, setBandFilter] = useState<Set<SlaBand>>(new Set());
 
   const term = search.trim().toLowerCase();
 
   const grouped = useMemo(() => {
-    if (!operador) return {} as Record<SlaBand, OperatorStat["clientes"]>;
     const g: Record<SlaBand, OperatorStat["clientes"]> = {
       critico: [], atencao: [], alerta: [], saudavel: [],
     };
-    const filtered = term
-      ? operador.clientes.filter(
-          (c) =>
-            c.cliente.toLowerCase().includes(term) ||
-            c.etapa.toLowerCase().includes(term) ||
-            String(c.id).includes(term),
-        )
-      : operador.clientes;
+    if (!operador) return g;
+    const filtered = operador.clientes.filter((c) => {
+      if (bandFilter.size && !bandFilter.has(c.band)) return false;
+      if (!term) return true;
+      return (
+        c.cliente.toLowerCase().includes(term) ||
+        c.etapa.toLowerCase().includes(term) ||
+        String(c.id).includes(term)
+      );
+    });
     for (const c of filtered) g[c.band].push(c);
     for (const k of ORDER) g[k].sort((a, b) => b.sla - a.sla);
     return g;
-  }, [operador, term]);
+  }, [operador, term, bandFilter]);
 
   const totalFiltrados = useMemo(
-    () => ORDER.reduce((s, k) => s + grouped[k].length, 0),
+    () => ORDER.reduce((s, k) => s + (grouped[k]?.length ?? 0), 0),
     [grouped],
   );
+
+  const hasFilters = term.length > 0 || bandFilter.size > 0;
+
+  const toggleBand = (k: SlaBand) =>
+    setBandFilter((s) => {
+      const n = new Set(s);
+      if (n.has(k)) n.delete(k);
+      else n.add(k);
+      return n;
+    });
 
   if (!operador) return null;
 
@@ -80,25 +92,72 @@ export const OperatorCarteiraModal = ({ operador, open, onOpenChange }: Props) =
 
         <SlaBandBar bands={operador.bands} height="lg" showLabels />
 
-        <div className="relative mt-2">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por cliente, etapa ou ID do deal…"
-            className="pl-9 pr-9"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted"
-              aria-label="Limpar busca"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <div className="relative min-w-[220px] flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por cliente, etapa ou ID do deal…"
+              className="pl-9 pr-9"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted"
+                aria-label="Limpar busca"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {ORDER.map((k) => {
+              const meta = SLA_BAND_META[k];
+              const total = operador.bands[k];
+              const active = bandFilter.has(k);
+              const color = `hsl(var(${meta.cssVar}))`;
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => toggleBand(k)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-subtitle text-xs font-medium transition",
+                    active ? "shadow-sm-soft" : "hover:bg-muted/60",
+                  )}
+                  style={{
+                    borderColor: active
+                      ? color
+                      : `${color.replace("hsl(", "hsla(").replace(")", ", 0.35)")}`,
+                    backgroundColor: active
+                      ? `${color.replace("hsl(", "hsla(").replace(")", ", 0.16)")}`
+                      : "transparent",
+                    color,
+                  }}
+                  aria-pressed={active}
+                  title={`${meta.label} · ${meta.range}`}
+                >
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: color }}
+                  />
+                  {meta.label}
+                  <span className="font-numeric tabular-nums opacity-80">{total}</span>
+                </button>
+              );
+            })}
+            {bandFilter.size > 0 && (
+              <button
+                onClick={() => setBandFilter(new Set())}
+                className="rounded-full px-2 py-1 font-subtitle text-[11px] text-muted-foreground hover:text-destructive"
+              >
+                Limpar
+              </button>
+            )}
+          </div>
         </div>
-        {term && (
+        {hasFilters && (
           <p className="font-small text-[11px] text-muted-foreground">
             {totalFiltrados} cliente{totalFiltrados === 1 ? "" : "s"} encontrado{totalFiltrados === 1 ? "" : "s"}
           </p>
@@ -111,7 +170,7 @@ export const OperatorCarteiraModal = ({ operador, open, onOpenChange }: Props) =
             const count = list.length;
             const totalBand = operador.bands[k];
             const mrr = operador.bandsMrr[k];
-            const isOpen = term ? count > 0 : expanded[k];
+            const isOpen = hasFilters ? count > 0 : expanded[k];
             const color = `hsl(var(${meta.cssVar}))`;
             return (
               <div
