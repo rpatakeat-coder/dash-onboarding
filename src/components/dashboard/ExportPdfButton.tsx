@@ -152,24 +152,66 @@ export const ExportPdfButton = ({
       const contentTop = cursorY + 6;
       const availPerPage = pageH - contentTop - margin;
 
-      // ===== Imagem do dashboard, paginada =====
+      // ===== Imagem do dashboard, paginada sem cortes nem repetições =====
       const pxPerPt = canvas.width / usableW;
-      const pageHeightPx = availPerPage * pxPerPt;
-      let renderedPx = 0;
-      let pageIdx = 0;
-      const totalPages = Math.ceil(canvas.height / pageHeightPx);
+      const firstPagePx = Math.floor((pageH - contentTop - margin) * pxPerPt);
+      const fullPagePx = Math.floor((pageH - margin * 2) * pxPerPt);
 
-      while (renderedPx < canvas.height) {
-        const sliceHpx = Math.min(pageHeightPx, canvas.height - renderedPx);
+      // Coleta candidatos de "quebra segura": topo de cada card/linha relevante,
+      // mapeado do espaço do DOM para coordenadas do canvas.
+      const elRect = el.getBoundingClientRect();
+      const domToCanvas = canvas.height / el.scrollHeight;
+      const breakSelector =
+        "[data-pdf-break], section, article, .rounded-xl, .rounded-2xl, .grid > *, table, tr";
+      const breakSet = new Set<number>([0, canvas.height]);
+      el.querySelectorAll<HTMLElement>(breakSelector).forEach((node) => {
+        if (node.offsetParent === null) return;
+        const r = node.getBoundingClientRect();
+        const topPx = Math.round((r.top - elRect.top) * domToCanvas);
+        const bottomPx = Math.round((r.bottom - elRect.top) * domToCanvas);
+        if (topPx > 0 && topPx < canvas.height) breakSet.add(topPx);
+        if (bottomPx > 0 && bottomPx < canvas.height) breakSet.add(bottomPx);
+      });
+      const breaks = Array.from(breakSet).sort((a, b) => a - b);
+
+      // Decide o melhor ponto de corte <= limite. Se nenhum candidato couber,
+      // faz corte "duro" no limite para evitar páginas vazias / loop.
+      const pickCut = (start: number, maxLen: number) => {
+        const limit = Math.min(start + maxLen, canvas.height);
+        let best = start;
+        for (const b of breaks) {
+          if (b > start && b <= limit) best = b;
+          if (b > limit) break;
+        }
+        // Exige pelo menos 15% da página para evitar avanços ínfimos
+        if (best - start < maxLen * 0.15) return limit;
+        return best;
+      };
+
+      // Pré-calcula os intervalos das páginas (sem repetir nem ultrapassar)
+      const slices: Array<{ start: number; end: number }> = [];
+      let cursor = 0;
+      while (cursor < canvas.height) {
+        const isFirst = slices.length === 0;
+        const maxLen = isFirst ? firstPagePx : fullPagePx;
+        const end = pickCut(cursor, maxLen);
+        if (end <= cursor) break; // proteção contra loop infinito
+        slices.push({ start: cursor, end });
+        cursor = end;
+      }
+      const totalPages = slices.length;
+
+      slices.forEach((slice, pageIdx) => {
+        const sliceHpx = slice.end - slice.start;
         const sliceCanvas = document.createElement("canvas");
         sliceCanvas.width = canvas.width;
         sliceCanvas.height = sliceHpx;
         const ctx = sliceCanvas.getContext("2d");
-        if (!ctx) break;
+        if (!ctx) return;
         ctx.drawImage(
           canvas,
           0,
-          renderedPx,
+          slice.start,
           canvas.width,
           sliceHpx,
           0,
@@ -183,7 +225,6 @@ export const ExportPdfButton = ({
         const top = pageIdx === 0 ? contentTop : margin;
         pdf.addImage(data, "JPEG", margin, top, usableW, sliceHpt);
 
-        // Rodapé
         pdf.setFontSize(8);
         pdf.setTextColor(150);
         pdf.text(
@@ -192,10 +233,7 @@ export const ExportPdfButton = ({
           pageH - 10,
           { align: "right" },
         );
-
-        renderedPx += sliceHpx;
-        pageIdx++;
-      }
+      });
 
       const stamp = new Date().toISOString().slice(0, 10);
       pdf.save(`${filename}_${stamp}.pdf`);
