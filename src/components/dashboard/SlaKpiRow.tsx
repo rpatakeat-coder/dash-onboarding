@@ -73,7 +73,7 @@ const Card = ({
 };
 
 export const SlaKpiRow = ({
-  total, slaP75, slaMedio, noPrazo, noPrazoCount, estourado, estouradoCount,
+  total, slaP75, slaMedio, noPrazo, noPrazoCount, estourado, estouradoCount, onEstoqueClick,
 }: Props) => {
   return (
     <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -81,6 +81,7 @@ export const SlaKpiRow = ({
         label="Estoque total"
         value={total.toLocaleString("pt-BR")}
         hint="clientes em onboarding"
+        onClick={onEstoqueClick}
       />
       <Card
         label="P75 SLA"
