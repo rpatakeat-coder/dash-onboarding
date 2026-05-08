@@ -12,6 +12,7 @@ import { AttentionPoints } from "@/components/dashboard/AttentionPoints";
 import { SlaCritico } from "@/components/dashboard/SlaCritico";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
 import { PeriodFilter } from "@/components/dashboard/PeriodFilter";
+import { PeriodCompare, type CompareMetric } from "@/components/dashboard/PeriodCompare";
 import { MultiSelectFilter } from "@/components/dashboard/MultiSelectFilter";
 import { Highlights } from "@/components/dashboard/Highlights";
 import { BottleneckHeatmap } from "@/components/dashboard/BottleneckHeatmap";
