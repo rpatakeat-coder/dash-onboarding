@@ -83,20 +83,40 @@ const Index = () => {
 
         {/* Pontos de atenção */}
         {data && (
-          <div className="mb-8">
-            <AttentionPoints atencao={data.atencao} topMrrTravado={data.topMrrTravado} />
-          </div>
+          <section className="mb-8">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                Pontos de atenção
+              </h3>
+              <PeriodFilter value={atencaoPeriod} onChange={setAtencaoPeriod} />
+            </div>
+            <AttentionPoints atencao={atencaoData.atencao} topMrrTravado={atencaoData.topMrrTravado} />
+          </section>
         )}
 
         {/* Funil + SLA crítico */}
         <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <FunnelChart data={data?.porEtapa ?? []} total={data?.total ?? 0} />
-          <SlaCritico criticos={data?.criticos ?? []} />
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                SLA crítico
+              </h3>
+              <PeriodFilter value={criticoPeriod} onChange={setCriticoPeriod} />
+            </div>
+            <SlaCritico criticos={criticoData.criticos} />
+          </div>
         </section>
 
         {/* Performance por ativador */}
         <section className="mb-8">
-          <OperatorsTable operadores={data?.operadores ?? []} />
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+              Performance por ativador
+            </h3>
+            <PeriodFilter value={opPeriod} onChange={setOpPeriod} />
+          </div>
+          <OperatorsTable operadores={opData.operadores} />
         </section>
 
         {/* Travados */}
