@@ -19,6 +19,9 @@ import { RankingTable } from "@/components/dashboard/RankingTable";
 import { PerfilSlaPanel } from "@/components/dashboard/PerfilSlaPanel";
 import { RiskRanking } from "@/components/dashboard/RiskRanking";
 import { TrendChart } from "@/components/dashboard/TrendChart";
+import { ExportCsvButton } from "@/components/dashboard/ExportCsvButton";
+import { useUrlSets } from "@/hooks/useUrlSets";
+import { useDealDrawer } from "@/contexts/DealDrawer";
 import {
   computeFiltered,
   filterByPeriod,
