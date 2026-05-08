@@ -1,10 +1,11 @@
 import { AlertOctagon, AlertTriangle, PauseCircle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtBRL } from "@/hooks/useDashOperacoes";
+import { DealLink } from "./DealLink";
 
 interface Props {
   atencao: { etapa: string; count: number; mrr: number; tone: "danger" | "warning" }[];
-  topMrrTravado: { cliente: string; ativador: string; etapa: string; dias: number; mrr: number }[];
+  topMrrTravado: { id: number; cliente: string; ativador: string; etapa: string; dias: number; mrr: number }[];
 }
 
 const ICON_MAP: Record<string, typeof AlertOctagon> = {
