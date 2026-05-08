@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { paginateCanvas } from "@/lib/pdfPagination";
 import { FileDown, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
