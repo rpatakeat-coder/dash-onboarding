@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { fmtPct } from "@/hooks/useDashOperacoes";
 import type { SnapshotDeltas, DeltaWindow } from "@/hooks/useSnapshotDeltas";
 import { KpiDeltaBadge } from "./KpiDeltaBadge";
-import type { KpiDelta } from "@/hooks/useSnapshotDeltas";
+import type { KpiDelta, DateRange } from "@/hooks/useSnapshotDeltas";
 
 interface Props {
   total: number;
@@ -33,6 +33,8 @@ const Card = ({
   windowLabel,
   showDelta,
   deltaLoading,
+  currentRange,
+  previousRange,
 }: {
   label: string;
   value: string;
@@ -47,6 +49,8 @@ const Card = ({
   windowLabel?: string;
   showDelta?: boolean;
   deltaLoading?: boolean;
+  currentRange?: DateRange;
+  previousRange?: DateRange;
 }) => {
   const ring = {
     default: "border-border",
@@ -97,6 +101,8 @@ const Card = ({
           goodDirection={goodDirection}
           windowLabel={windowLabel}
           loading={deltaLoading}
+          currentRange={currentRange}
+          previousRange={previousRange}
         />
       )}
     </div>
@@ -146,6 +152,8 @@ export const SlaKpiRow = ({
           windowLabel={windowLabel}
           showDelta
           deltaLoading={deltasLoading}
+          currentRange={deltas?.currentRange}
+          previousRange={deltas?.previousRange}
         />
         <Card
           label="P75 SLA"
@@ -166,6 +174,8 @@ export const SlaKpiRow = ({
           windowLabel={windowLabel}
           showDelta
           deltaLoading={deltasLoading}
+          currentRange={deltas?.currentRange}
+          previousRange={deltas?.previousRange}
         />
         <Card
           label="% no prazo (≤30d)"
@@ -179,6 +189,8 @@ export const SlaKpiRow = ({
           windowLabel={windowLabel}
           showDelta
           deltaLoading={deltasLoading}
+          currentRange={deltas?.currentRange}
+          previousRange={deltas?.previousRange}
         />
         <Card
           label="SLA estourado (>30d)"
@@ -192,6 +204,8 @@ export const SlaKpiRow = ({
           windowLabel={windowLabel}
           showDelta
           deltaLoading={deltasLoading}
+          currentRange={deltas?.currentRange}
+          previousRange={deltas?.previousRange}
         />
       </div>
     </section>

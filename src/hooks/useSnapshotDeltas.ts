@@ -3,6 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type DeltaWindow = 7 | 30;
 
+export interface DateRange {
+  /** ISO date (YYYY-MM-DD) — início (inclusivo). */
+  start: string;
+  /** ISO date (YYYY-MM-DD) — fim (inclusivo). */
+  end: string;
+}
+
 export interface KpiDelta {
   /** Diferença absoluta (atual - anterior). null se não houver dados anteriores. */
   abs: number | null;
@@ -20,6 +27,10 @@ export interface SnapshotDeltas {
   noPrazo: KpiDelta;
   estourado: KpiDelta;
   windowDays: DeltaWindow;
+  /** Janela atual planejada (independe da existência de dados). */
+  currentRange: DateRange;
+  /** Janela anterior planejada. */
+  previousRange: DateRange;
 }
 
 interface SnapshotRow {
@@ -45,13 +56,26 @@ function computeDelta(current: number[], previous: number[]): KpiDelta {
   return { abs, pct, currentDays: current.length, previousDays: previous.length };
 }
 
+const isoDay = (d: Date) => d.toISOString().slice(0, 10);
+
 export function useSnapshotDeltas(windowDays: DeltaWindow) {
   return useQuery({
     queryKey: ["snapshot_deltas", windowDays],
     queryFn: async (): Promise<SnapshotDeltas> => {
-      const since = new Date();
-      since.setDate(since.getDate() - windowDays * 2);
-      const sinceStr = since.toISOString().slice(0, 10);
+      const today = new Date();
+      const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+      const currentEnd = startOfToday;
+      const currentStart = new Date(currentEnd);
+      currentStart.setDate(currentStart.getDate() - (windowDays - 1));
+
+      const previousEnd = new Date(currentStart);
+      previousEnd.setDate(previousEnd.getDate() - 1);
+      const previousStart = new Date(previousEnd);
+      previousStart.setDate(previousStart.getDate() - (windowDays - 1));
+
+      const sinceStr = isoDay(previousStart);
+
       const { data, error } = await supabase
         .from("dash_operacoes_snapshots")
         .select("snapshot_date,total,sla_medio,pct_no_prazo")
@@ -60,16 +84,12 @@ export function useSnapshotDeltas(windowDays: DeltaWindow) {
       if (error) throw error;
       const rows = (data ?? []) as SnapshotRow[];
 
-      const today = new Date();
-      const cutCurrent = new Date(today);
-      cutCurrent.setDate(cutCurrent.getDate() - windowDays);
-      const cutPrev = new Date(today);
-      cutPrev.setDate(cutPrev.getDate() - windowDays * 2);
-
-      const cur = rows.filter((r) => new Date(r.snapshot_date) > cutCurrent);
-      const prev = rows.filter(
-        (r) => new Date(r.snapshot_date) > cutPrev && new Date(r.snapshot_date) <= cutCurrent,
-      );
+      const inRange = (r: SnapshotRow, start: Date, end: Date) => {
+        const d = new Date(r.snapshot_date);
+        return d >= start && d <= end;
+      };
+      const cur = rows.filter((r) => inRange(r, currentStart, currentEnd));
+      const prev = rows.filter((r) => inRange(r, previousStart, previousEnd));
 
       const pick = (xs: SnapshotRow[], k: keyof SnapshotRow) =>
         xs.map((r) => Number(r[k])).filter((n) => Number.isFinite(n));
@@ -83,6 +103,8 @@ export function useSnapshotDeltas(windowDays: DeltaWindow) {
           pick(prev, "pct_no_prazo").map((v) => 100 - v),
         ),
         windowDays,
+        currentRange: { start: isoDay(currentStart), end: isoDay(currentEnd) },
+        previousRange: { start: isoDay(previousStart), end: isoDay(previousEnd) },
       };
     },
     refetchInterval: 5 * 60_000,
