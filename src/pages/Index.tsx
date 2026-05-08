@@ -302,6 +302,13 @@ const Index = () => {
             selected={bandSel}
             onChange={setBandSel}
           />
+          <MultiSelectFilter
+            label="Perfil"
+            options={perfilOpts}
+            counts={perfilCounts}
+            selected={perfilSel}
+            onChange={setPerfilSel}
+          />
           {hasGlobalFilters && (
             <>
               <span className="font-small text-xs text-muted-foreground">
@@ -312,6 +319,7 @@ const Index = () => {
                   setAtivadorSel(new Set());
                   setEtapaSel(new Set());
                   setBandSel(new Set());
+                  setPerfilSel(new Set());
                 }}
                 className="ml-auto rounded-lg px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-destructive"
               >
@@ -389,9 +397,36 @@ const Index = () => {
                   </span>
                 );
               })}
+              {[...perfilSel].map((v) => (
+                <span
+                  key={`p-${v}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 font-subtitle text-xs font-medium text-accent-foreground"
+                >
+                  <span className="text-[10px] uppercase tracking-wider opacity-70">Perfil</span>
+                  <span>{v}</span>
+                  <button
+                    onClick={() => {
+                      const n = new Set(perfilSel);
+                      n.delete(v);
+                      setPerfilSel(n);
+                    }}
+                    className="ml-0.5 rounded-full p-0.5 hover:bg-accent/20"
+                    aria-label={`Remover ${v}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
             </div>
           )}
         </div>
+
+        {/* Destaques automáticos */}
+        {data && opData.operadores.length > 0 && (
+          <section className="mb-8">
+            <Highlights rows={rows} operadores={opData.operadores} />
+          </section>
+        )}
 
         {/* Períodos + Perfis + MRR Ativado */}
         <div className="mb-8">
@@ -448,6 +483,36 @@ const Index = () => {
             <SlaCritico criticos={criticoData.criticos} />
           </div>
         </section>
+
+        {/* Heatmap de gargalos + SLA por perfil */}
+        <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <BottleneckHeatmap rows={rows} />
+          <PerfilSlaPanel rows={rows} />
+        </section>
+
+        {/* Ranking de ativadores vs metas */}
+        {opData.operadores.length > 0 && (
+          <section className="mb-8">
+            <div className="mb-3 flex items-center gap-2">
+              <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                Ranking vs metas
+              </h3>
+              <ScopeBadge
+                scope={scopeCounts.operadores.scope}
+                destaque={opData.operadores.length}
+                destaqueLabel="ativadores"
+                total={allRows.length}
+              />
+            </div>
+            <RankingTable
+              operadores={opData.operadores}
+              onOperatorClick={(op) => {
+                setSelectedOperator(op);
+                setOperatorOpen(true);
+              }}
+            />
+          </section>
+        )}
 
         {/* Performance por ativador */}
         <section className="mb-8">
