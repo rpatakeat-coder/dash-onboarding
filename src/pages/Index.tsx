@@ -484,6 +484,36 @@ const Index = () => {
           </div>
         </section>
 
+        {/* Heatmap de gargalos + SLA por perfil */}
+        <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <BottleneckHeatmap rows={rows} />
+          <PerfilSlaPanel rows={rows} />
+        </section>
+
+        {/* Ranking de ativadores vs metas */}
+        {opData.operadores.length > 0 && (
+          <section className="mb-8">
+            <div className="mb-3 flex items-center gap-2">
+              <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                Ranking vs metas
+              </h3>
+              <ScopeBadge
+                scope={scopeCounts.operadores.scope}
+                destaque={opData.operadores.length}
+                destaqueLabel="ativadores"
+                total={allRows.length}
+              />
+            </div>
+            <RankingTable
+              operadores={opData.operadores}
+              onOperatorClick={(op) => {
+                setSelectedOperator(op);
+                setOperatorOpen(true);
+              }}
+            />
+          </section>
+        )}
+
         {/* Performance por ativador */}
         <section className="mb-8">
           <div className="mb-3 flex items-center justify-between gap-3">
