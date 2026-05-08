@@ -90,7 +90,7 @@ export const DashboardHeader = () => {
             )}
           </div>
         </div>
-        <MainNav className="mt-3 md:hidden" />
+        
       </div>
     </header>
   );
