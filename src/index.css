@@ -94,13 +94,13 @@
     --accent: 0 85% 58%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 85% 60%;
+    --destructive: 0 95% 65%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 60% 50%;
+    --success: 145 75% 55%;
     --success-foreground: 0 0% 4%;
 
-    --warning: 38 95% 60%;
+    --warning: 38 100% 62%;
     --warning-foreground: 0 0% 4%;
 
     --sla-critico: 0 95% 65%;        /* vermelho puro vibrante */
