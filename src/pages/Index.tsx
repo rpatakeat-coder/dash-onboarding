@@ -604,7 +604,7 @@ const Index = () => {
         )}
 
         {/* Períodos + Perfis + MRR Ativado */}
-        <div className="mb-8">
+        <div className="mb-8 space-y-6">
           {data && (
             <PeriodGrids
               hoje={data.hoje}
@@ -614,6 +614,17 @@ const Index = () => {
               perfis={data.perfis}
             />
           )}
+          <PeriodCompare
+            title="Comparar painel executivo entre períodos"
+            caption="Compare entradas, ativações e MRR entre dois recortes (ex.: Semana vs Mês)."
+            periodA={execCmpA}
+            periodB={execCmpB}
+            onChangeA={setExecCmpA}
+            onChangeB={setExecCmpB}
+            countsA={kpiCounts}
+            countsB={kpiCounts}
+            metrics={execCmpMetrics}
+          />
         </div>
 
         {/* Pontos de atenção */}
