@@ -1,88 +1,95 @@
-## Roadmap proposto
+# Evolução do Dashboard de Operações
 
-Organizei em 4 fases incrementais, da maior para a menor relação valor/esforço, separando o que é **frontend puro** (rápido) do que precisa de **dados novos / backend** (mais investimento). Você aprova fase a fase.
-
----
-
-### Fase 1 — Camada do gestor (frontend, sem novos dados)
-
-1. **Ranking + metas por ativador** — nova tabela com:
-   - posição, ativos, % SLA no prazo, % crítico, MRR sob gestão
-   - barra de meta de SLA (default 80% no prazo, configurável em `src/lib/metas.ts`)
-   - delta vs. média do time
-2. **Heatmap de gargalos (etapa × faixa SLA)** — grid colorido mostrando quantos deals estão em cada cruzamento; clique abre o EstoqueModal já filtrado.
-3. **Cards de "Destaques automáticos"** acima dos pontos de atenção:
-   - operador com mais críticos
-   - etapa com maior MRR travado
-   - perfil (P/M/G/GG) com pior SLA
-   - variação simples vs. snapshot anterior (quando Fase 3 estiver pronta)
-4. **Cruzamento por perfil de cliente (P/M/G/GG)**:
-   - novo bloco "SLA por perfil" (já temos `perfis`, falta cruzar com SLA)
-   - filtro global "Perfil" no mesmo padrão dos atuais
-
-Entregáveis técnicos: novos componentes em `src/components/dashboard/` (`RankingTable`, `BottleneckHeatmap`, `Highlights`, `PerfilSlaPanel`) + extensão do `useDashOperacoes` para cruzamentos; nada novo no Supabase.
+5 entregas, podem ser feitas em sequência ou em paralelo. Sugiro nessa ordem porque os filtros globais alimentam todas as outras.
 
 ---
 
-### Fase 2 — Visão do ativador (frontend + leve auth)
+## 1. Filtros globais (período, ativador, perfil)
 
-1. **Toggle "Só meus deals"** — usa o login Supabase existente, faz match `profiles.full_name` ↔ `dash_operacoes.agente_ativacao`. Quando ativo, todos os módulos passam a operar só na carteira do usuário.
-2. **Página `/minha-carteira`** com:
-   - KPIs pessoais (SLA médio, ativos, ativados no mês, % meta)
-   - comparação com média do time
-   - "Próximos 10" priorizados (SLA × MRR), com link HubSpot, ícone de ligação e botão "marcar follow-up" (Fase 4)
-3. **Filtro rápido "minhas faixas"** já feito — só falta replicar o pattern no card pessoal.
+Barra fixa no topo do dashboard, sincronizada com a URL (compartilhável e sobrevive a reload).
 
-Entregáveis: nova rota + tabela `vendedores` já existente para mapear nome ↔ usuário (precisa popular). Caso o nome no HubSpot não bata, criar coluna `agente_hubspot` em `vendedores`.
+- **Período**: presets (Hoje, 7d, 30d, 90d, Tudo) + range customizado via date picker.
+- **Ativador**: multi-select com lista populada de `dash_operacoes.agente_ativacao`.
+- **Perfil**: chips P / M / G / GG (multi).
+- **Etapa**: multi-select de etapas do funil.
+- Botão "Limpar filtros" + contador de deals filtrados ao lado.
 
----
-
-### Fase 3 — Dados novos (Supabase + edge functions)
-
-Exigem trabalho de backend, mas destravam o resto.
-
-1. **Snapshots diários de `dash_operacoes`** (cron + edge function):
-   - tabela `dash_operacoes_snapshots` (id_deal, data, etapa, sla_dias, mrr)
-   - habilita **tendências históricas** (linha de SLA/MRR/estoque por semana)
-   - habilita **conversão por etapa** real (taxa que avança vs. trava + tempo médio até a próxima etapa)
-   - habilita o "variação vs. semana passada" da Fase 1
-2. **Motivos de bloqueio/pausa**:
-   - sincronizar campo do HubSpot (`hs_pipeline_stage` + propriedade de motivo) para `dash_operacoes` ou tabela paralela
-   - mostrar lista agrupada nos cards de "Pendências" e "Processo Pausado"
-3. **Score de risco/churn** (regra simples, sem ML):
-   - fórmula: `dias_na_fase × peso_etapa × peso_perfil`
-   - badge de risco (Baixo/Médio/Alto) em cada card de cliente
-   - ranking "Top 10 risco de churn" no painel do gestor
-
-Entregáveis: 1 migration (snapshots), 1 edge function diária via `pg_cron`, atualização do `useDashOperacoes` para consumir histórico.
+**Como afeta tudo**: criar um `useDashFilters()` hook (Context) que devolve `{ filteredDeals, filters, setFilters }`. Todos os widgets passam a consumir `filteredDeals` em vez de fazer `select` próprio. Reduz queries e garante consistência.
 
 ---
 
-### Fase 4 — Distribuição & operação
+## 2. Drill-down de cliente
 
-1. **Exportar CSV/Excel** dos modais (Estoque, Carteira, Travados) — usar a skill xlsx do servidor ou geração client-side com `xlsx`/`papaparse`.
-2. **Compartilhar link com filtros** — serializar estado de filtros na URL (`?ativador=...&band=critico,atencao&periodo=semana`), restaurar no mount.
-3. **Resumo diário automático** — edge function que monta um JSON com KPIs + alertas e:
-   - envia por e-mail (Resend) ou Slack webhook
-   - opção "às 8h dias úteis" via `pg_cron`
-4. **Modo TV/fullscreen** — rota `/tv` com layout grande, rotação automática entre 3 telas (KPIs, ranking, gargalos), refresh a cada 60s.
+Clicar em qualquer linha do `RiskRanking` (e de outros widgets onde fizer sentido) abre um **Sheet lateral** (não modal — fica mais leve pra navegar).
 
----
-
-## Fora deste roadmap (intencional)
-
-- **ML real de churn**: começamos com score por regra; ML só depois de 90 dias de snapshots.
-- **Edição de deals dentro do dashboard**: continuamos como leitura; ações vão pro HubSpot.
-- **Notificações push no navegador**: avaliar depois do Slack/e-mail.
+Conteúdo do painel:
+- **Cabeçalho**: nome do deal, ativador, perfil, MRR, link HubSpot, badge de risco.
+- **KPIs do deal**: SLA atual, dias na etapa, score de risco, posição no ranking.
+- **Timeline de etapas**: parsing de `data_criacao` → `data_entrada_fase` → etapa atual.
+- **Atividade**: últimas ligações (`Ligações Realizadas` por `id_deal`) e reuniões (`Reuniões Marcadas` por `id_deal`), ordenado desc.
+- **Histórico de risco**: mini line chart com o score do deal nos últimos snapshots (precisa estender o snapshot — ver detalhes técnicos).
+- **Ações sugeridas** (regras simples): "SLA > 60d em Pendências → escalar", "MRR alto + sem reunião nos últimos 14d → agendar QBR", etc.
 
 ---
 
-## Sugestão de ordem de execução
+## 3. Comparativo período a período
 
-1. Fase 1 inteira (impacto alto, baixo risco, sem backend)
-2. Fase 4 itens 1 e 2 (export + URL compartilhável — rápidos)
-3. Fase 2 (precisa decidir como mapear usuário ↔ ativador)
-4. Fase 3 (snapshots + risco + motivos)
-5. Fase 4 itens 3 e 4 (resumo automático + modo TV)
+Cada KPI principal ganha um **delta** vs período anterior equivalente.
 
-Confirma se faz sentido começarmos pela **Fase 1** ou se quer reordenar/recortar algo antes de eu detalhar a implementação.
+- Se filtro = "últimos 7d" → compara com 7d anteriores.
+- Se filtro = "últimos 30d" → compara com 30d anteriores.
+- Se filtro = "Tudo" → compara com snapshot de 30d atrás.
+
+Visual: seta ↑/↓ + percentual + tooltip explicando a base de comparação. Cor verde/vermelho conforme se a métrica é "boa quando sobe" (% no prazo) ou "boa quando cai" (críticos, SLA médio).
+
+Fonte de dados: `dash_operacoes_snapshots` (já temos snapshot diário rodando).
+
+---
+
+## 4. Export CSV / PDF
+
+Botão no header do dashboard com dropdown:
+
+- **Exportar CSV**: dump dos deals atualmente filtrados (todas as colunas relevantes). Geração client-side, sem edge function.
+- **Exportar PDF**: snapshot visual do dashboard usando `html2canvas` + `jsPDF`. Inclui filtros aplicados no rodapé e timestamp. Útil pra anexar em ata de reunião.
+
+---
+
+## 5. Modo TV
+
+Rota nova `/tv` (sem header, fundo escuro, fontes maiores).
+
+- Auto-refresh dos dados a cada 60s.
+- Carrossel: rotaciona a cada 20s entre 3 telas: (1) KPIs + heatmap, (2) Top 10 risco, (3) trend chart.
+- Tecla `F` ou botão "Tela cheia" pra fullscreen real.
+- Sem necessidade de login (usa anon — RLS já permite leitura).
+
+---
+
+## Detalhes técnicos
+
+- **Filtros via URL**: usar `useSearchParams` do React Router. Estado canônico fica na URL, hook lê/escreve.
+- **Consistência de dados**: hoje cada componente faz seu próprio `supabase.from('dash_operacoes')`. Refatorar pra um único `useDashOperacoes()` que carrega tudo uma vez (paginado) e cacheia via React Query. Os filtros são aplicados em memória — mais rápido e consistente.
+- **Drill-down — histórico de risco do deal**: o snapshot atual só guarda agregados. Pra ter o score histórico por deal, duas opções:
+  - (a) Adicionar tabela `deal_risk_history` (id_deal, snapshot_date, score, sla_dias, etapa) populada pela mesma edge function `snapshot-dash-operacoes`. Permite line chart real.
+  - (b) Pular esse gráfico no drill-down v1 e adicionar depois.
+  Sugiro **(a)** — custo baixo (mesma função, +1 insert) e desbloqueia o gráfico individual.
+- **PDF**: `html2canvas` + `jspdf` (ambos npm, leves). Renderiza o `<main>` do dashboard.
+- **Modo TV**: componente `<TvCarousel>` reutilizando os widgets existentes, com wrapper de fonte maior e auto-rotate via `setInterval`.
+- **Performance**: com filtros em memória + React Query, só fazemos 1-2 queries por sessão em vez de 6+.
+
+---
+
+## Ordem sugerida de execução
+
+```text
+1. Filtros globais  ──┐
+                       ├──▶  3. Comparativo período
+2. useDashOperacoes() ─┘                            
+                                                    
+4. Drill-down (depende de 1 + nova tabela history)  
+5. Export CSV/PDF (depende de 1)                    
+6. Modo TV (depende de 1)                           
+```
+
+Posso começar por **1 + 2 (refactor base)** que destrava o resto, ou ir direto no drill-down se preferir ver valor de cliente primeiro. Me diz qual prefere.

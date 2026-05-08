@@ -19,6 +19,9 @@ import { RankingTable } from "@/components/dashboard/RankingTable";
 import { PerfilSlaPanel } from "@/components/dashboard/PerfilSlaPanel";
 import { RiskRanking } from "@/components/dashboard/RiskRanking";
 import { TrendChart } from "@/components/dashboard/TrendChart";
+import { ExportCsvButton } from "@/components/dashboard/ExportCsvButton";
+import { useUrlSets } from "@/hooks/useUrlSets";
+import { useDealDrawer } from "@/contexts/DealDrawer";
 import {
   computeFiltered,
   filterByPeriod,
@@ -76,6 +79,15 @@ const Index = () => {
   const [perfilSel, setPerfilSel] = useState<Set<string>>(new Set());
   const [onlyMine, setOnlyMine] = useState(false);
   const { fullName } = useAuth();
+  const { open: openDeal } = useDealDrawer();
+
+  // Sincroniza filtros com a URL (compartilhável + sobrevive a reload)
+  useUrlSets(
+    { ativador: ativadorSel, etapa: etapaSel, band: bandSel, perfil: perfilSel },
+    { ativador: setAtivadorSel, etapa: setEtapaSel, band: setBandSel, perfil: setPerfilSel },
+    { mine: onlyMine },
+    { mine: setOnlyMine },
+  );
 
   const allRows = data?.rows ?? [];
 
@@ -342,12 +354,15 @@ const Index = () => {
                   setBandSel(new Set());
                   setPerfilSel(new Set());
                 }}
-                className="ml-auto rounded-lg px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-destructive"
+                className="rounded-lg px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-destructive"
               >
                 Limpar filtros
               </button>
             </>
           )}
+          <div className="ml-auto">
+            <ExportCsvButton rows={rows} />
+          </div>
 
           {hasGlobalFilters && (
             <div className="flex w-full flex-wrap items-center gap-2 border-t border-border pt-3">
@@ -579,7 +594,13 @@ const Index = () => {
               total={allRows.length}
             />
           </div>
-          <StalledTable travados={travadosLista} />
+          <StalledTable
+            travados={travadosLista}
+            onRowClick={(id) => {
+              const row = allRows.find((r) => r.id_deal === id);
+              if (row) openDeal(row);
+            }}
+          />
         </section>
 
         <footer className="pt-4 text-center font-small text-xs text-muted-foreground">

@@ -49,6 +49,17 @@ export const DashboardHeader = () => {
               >
                 Minha carteira
               </Link>
+              <Link
+                to="/tv"
+                className={`rounded-lg px-3 py-1.5 font-subtitle text-xs font-medium ${
+                  loc.pathname === "/tv"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                title="Tela cheia para TV da operação"
+              >
+                Modo TV
+              </Link>
             </nav>
           )}
         </div>

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Flame, ExternalLink } from "lucide-react";
 import { computeRisk } from "@/lib/risk";
 import { fmtBRL, slaBand, SLA_BAND_META, type DashRow } from "@/hooks/useDashOperacoes";
+import { useDealDrawer } from "@/contexts/DealDrawer";
 
 interface Props {
   rows: DashRow[];
@@ -23,6 +24,7 @@ const BAND_TONE = {
 
 export const RiskRanking = ({ rows, limit = 10 }: Props) => {
   const top = useMemo(() => computeRisk(rows).slice(0, limit), [rows, limit]);
+  const { open } = useDealDrawer();
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
@@ -53,7 +55,11 @@ export const RiskRanking = ({ rows, limit = 10 }: Props) => {
             {top.map((it, i) => {
               const meta = SLA_BAND_META[slaBand(slaOf(it.row))];
               return (
-                <tr key={it.row.id_deal} className="border-t border-border">
+                <tr
+                  key={it.row.id_deal}
+                  onClick={() => open(it.row)}
+                  className="cursor-pointer border-t border-border transition-colors hover:bg-muted/30"
+                >
                   <td className="px-3 py-2 font-numeric text-xs text-muted-foreground">{i + 1}</td>
                   <td className="px-3 py-2 font-medium text-foreground">
                     {it.row.nome_negocio?.trim() || "—"}
@@ -85,6 +91,7 @@ export const RiskRanking = ({ rows, limit = 10 }: Props) => {
                       href={`https://app.hubspot.com/contacts/_/deal/${it.row.id_deal}`}
                       target="_blank"
                       rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
                       className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                     >
                       <ExternalLink className="h-3 w-3" />
