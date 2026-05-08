@@ -43,6 +43,7 @@ const Index = () => {
   const [opPeriod, setOpPeriod] = useState<PeriodKey>("tudo");
   const [ativadorSel, setAtivadorSel] = useState<Set<string>>(new Set());
   const [etapaSel, setEtapaSel] = useState<Set<string>>(new Set());
+  const [bandSel, setBandSel] = useState<Set<string>>(new Set());
 
   const allRows = data?.rows ?? [];
 
