@@ -28,6 +28,26 @@ const Index = () => {
   const criticoData = useMemo(() => computeFiltered(filterByPeriod(rows, criticoPeriod)), [rows, criticoPeriod]);
   const opData = useMemo(() => computeFiltered(filterByPeriod(rows, opPeriod)), [rows, opPeriod]);
 
+  const countsBy = useMemo(() => {
+    const ETAPAS_ATENCAO = new Set(["Pré-Cancelamento", "Inativo", "Pendências", "Processo Pausado"]);
+    const periodos: PeriodKey[] = ["tudo", "hoje", "semana", "mes"];
+    const make = (predicate: (r: (typeof rows)[number]) => boolean) => {
+      const out: Partial<Record<PeriodKey, number>> = {};
+      for (const p of periodos) {
+        out[p] = filterByPeriod(rows, p).filter(predicate).length;
+      }
+      return out;
+    };
+    return {
+      atencao: make((r) => ETAPAS_ATENCAO.has(r.etapa_negocio?.trim() || "")),
+      critico: make((r) => {
+        const n = parseFloat(String(r.sla_dias ?? "").replace(",", "."));
+        return Number.isFinite(n) && n > 30;
+      }),
+      operadores: make(() => true),
+    };
+  }, [rows]);
+
   return (
     <div className="min-h-screen bg-gradient-surface">
       <DashboardHeader />
