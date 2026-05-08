@@ -44,7 +44,15 @@ const Index = () => {
             noPrazoCount={data?.noPrazoCount ?? 0}
             estourado={data?.estourado ?? 0}
             estouradoCount={data?.estouradoCount ?? 0}
+            onEstoqueClick={() => setEstoqueOpen(true)}
           />
+        </div>
+
+        <EstoqueModal
+          open={estoqueOpen}
+          onOpenChange={setEstoqueOpen}
+          rows={data?.rows ?? []}
+        />
         </div>
 
         {/* Períodos + Perfis + MRR Ativado */}
