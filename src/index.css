@@ -114,3 +114,16 @@
   .font-small { font-family: 'Raleway', sans-serif; }
   .font-numeric { font-family: 'Poppins', sans-serif; font-variant-numeric: tabular-nums; }
 }
+
+/* PDF export — esconde controles e força layout limpo durante captura */
+body.pdf-export .pdf-hide { display: none !important; }
+body.pdf-export #dashboard-pdf-root {
+  background: hsl(var(--background)) !important;
+}
+body.pdf-export #dashboard-pdf-root * {
+  animation: none !important;
+  transition: none !important;
+}
+body.pdf-export #dashboard-pdf-root .grid-cols-1.lg\:grid-cols-2 {
+  grid-template-columns: 1fr 1fr !important;
+}
