@@ -1,10 +1,11 @@
 import { AlertOctagon, AlertTriangle, PauseCircle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtBRL } from "@/hooks/useDashOperacoes";
+import { DealLink } from "./DealLink";
 
 interface Props {
   atencao: { etapa: string; count: number; mrr: number; tone: "danger" | "warning" }[];
-  topMrrTravado: { cliente: string; ativador: string; etapa: string; dias: number; mrr: number }[];
+  topMrrTravado: { id: number; cliente: string; ativador: string; etapa: string; dias: number; mrr: number }[];
 }
 
 const ICON_MAP: Record<string, typeof AlertOctagon> = {
@@ -86,7 +87,7 @@ export const AttentionPoints = ({ atencao, topMrrTravado }: Props) => {
               <li key={c.cliente + i} className="flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-subtitle text-sm font-semibold text-foreground">
-                    {c.cliente}
+                    <DealLink id={c.id}>{c.cliente}</DealLink>
                   </p>
                   <p className="truncate font-small text-xs text-muted-foreground">
                     {c.ativador} · {c.etapa}
