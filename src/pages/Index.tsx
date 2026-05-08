@@ -244,6 +244,7 @@ const Index = () => {
     [execCmp],
   );
 
+  const travadosLista = useMemo(() => {
     const TRAVADO_DIAS = 7;
     return rows
       .map((r) => ({
