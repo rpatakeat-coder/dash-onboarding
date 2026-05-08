@@ -1,5 +1,6 @@
 {
   "name": "Takeat Onboarding — Painel de Operações",
+  "version": "1.0.0",
   "short_name": "Takeat Onboarding",
   "description": "Dashboard executivo do time de Onboarding Takeat.",
   "start_url": "/",

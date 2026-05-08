@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { MainNav } from "@/components/MainNav";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { APP_VERSION } from "@/lib/version";
 
 export const DashboardHeader = () => {
   const today = new Date().toLocaleDateString("pt-BR", {
@@ -57,8 +58,11 @@ export const DashboardHeader = () => {
               <p className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">
                 Painel de Operações
               </p>
-              <h1 className="font-display text-lg font-semibold text-secondary">
+              <h1 className="flex items-center gap-2 font-display text-lg font-semibold text-secondary">
                 Onboarding
+                <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 font-subtitle text-[10px] font-medium uppercase tracking-wider text-muted-foreground" title="Versão do app">
+                  v{APP_VERSION}
+                </span>
               </h1>
             </div>
             <MainNav className="ml-2 hidden md:flex" />
