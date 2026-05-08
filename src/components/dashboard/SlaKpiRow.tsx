@@ -105,7 +105,7 @@ const Card = ({
 
 export const SlaKpiRow = ({
   total, slaP75, slaMedio, noPrazo, noPrazoCount, estourado, estouradoCount, onEstoqueClick,
-  deltas, windowDays = 7, onChangeWindow,
+  deltas, deltasLoading, windowDays = 7, onChangeWindow,
 }: Props) => {
   const windowLabel = `vs ${windowDays}d antes`;
   return (
