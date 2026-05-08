@@ -1,15 +1,15 @@
-import { AlertTriangle, Clock, DollarSign, Store } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { KpiCard } from "@/components/dashboard/KpiCard";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { OperatorsTable } from "@/components/dashboard/OperatorsTable";
 import { StalledTable } from "@/components/dashboard/StalledTable";
 import { SlaKpiRow } from "@/components/dashboard/SlaKpiRow";
 import { PeriodGrids } from "@/components/dashboard/PeriodGrids";
-import { useDashOperacoes, fmtBRL, fmtDias } from "@/hooks/useDashOperacoes";
+import { AttentionPoints } from "@/components/dashboard/AttentionPoints";
+import { SlaCritico } from "@/components/dashboard/SlaCritico";
+import { useDashOperacoes } from "@/hooks/useDashOperacoes";
 
 const Index = () => {
-  const { data, isLoading, error } = useDashOperacoes();
+  const { data, error } = useDashOperacoes();
 
   return (
     <div className="min-h-screen bg-gradient-surface">
@@ -57,47 +57,25 @@ const Index = () => {
           )}
         </div>
 
-        {/* KPIs operacionais antigos */}
-        <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard
-            label="Em onboarding"
-            value={isLoading ? "…" : data?.total ?? 0}
-            icon={Store}
-            tone="primary"
-            hint="Restaurantes ativos no funil"
-          />
-          <KpiCard
-            label="MRR no funil"
-            value={isLoading ? "…" : fmtBRL(data?.mrrTotal ?? 0)}
-            icon={DollarSign}
-            tone="secondary"
-            hint="Receita recorrente em ativação"
-          />
-          <KpiCard
-            label="Tempo médio na fase"
-            value={isLoading ? "…" : fmtDias(data?.tempoMedioFase ?? 0)}
-            icon={Clock}
-            tone="success"
-            hint="Dias na etapa atual"
-          />
-          <KpiCard
-            label="Travados"
-            value={isLoading ? "…" : data?.travados ?? 0}
-            icon={AlertTriangle}
-            tone="warning"
-            hint="Mais de 7 dias parados"
-          />
+        {/* Pontos de atenção */}
+        {data && (
+          <div className="mb-8">
+            <AttentionPoints atencao={data.atencao} topMrrTravado={data.topMrrTravado} />
+          </div>
+        )}
+
+        {/* Funil + SLA crítico */}
+        <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <FunnelChart data={data?.porEtapa ?? []} total={data?.total ?? 0} />
+          <SlaCritico criticos={data?.criticos ?? []} />
         </section>
 
-        <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-5">
-          <div className="lg:col-span-2">
-            <FunnelChart data={data?.porEtapa ?? []} total={data?.total ?? 0} />
-          </div>
-          <div className="lg:col-span-3">
-            <OperatorsTable operadores={data?.operadores ?? []} />
-          </div>
+        {/* Performance por ativador */}
+        <section className="mb-8">
+          <OperatorsTable operadores={data?.operadores ?? []} />
         </section>
 
+        {/* Travados */}
         <section className="mb-8">
           <StalledTable travados={data?.travadosLista ?? []} />
         </section>
