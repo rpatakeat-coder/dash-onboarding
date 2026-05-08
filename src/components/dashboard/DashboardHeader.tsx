@@ -15,54 +15,21 @@ export const DashboardHeader = () => {
 
   return (
     <header className="border-b border-border bg-card/60 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-6 py-4 md:px-10">
-        <div className="flex items-center gap-4">
-          <img src={logo} alt="Takeat" className="h-9 w-auto" />
-          <div className="hidden h-8 w-px bg-border md:block" />
-          <div className="hidden md:block">
-            <p className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">
-              Painel de Operações
-            </p>
-            <h1 className="font-display text-lg font-semibold text-secondary">
-              Onboarding
-            </h1>
+      <div className="mx-auto max-w-[1400px] px-6 py-4 md:px-10">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <img src={logo} alt="Takeat" className="h-9 w-auto" />
+            <div className="hidden h-8 w-px bg-border md:block" />
+            <div className="hidden md:block">
+              <p className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">
+                Painel de Operações
+              </p>
+              <h1 className="font-display text-lg font-semibold text-secondary">
+                Onboarding
+              </h1>
+            </div>
+            {session && <MainNav className="ml-2 hidden md:flex" />}
           </div>
-          {session && (
-            <nav className="ml-4 hidden items-center gap-1 md:flex">
-              <Link
-                to="/"
-                className={`rounded-lg px-3 py-1.5 font-subtitle text-xs font-medium ${
-                  loc.pathname === "/"
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Visão geral
-              </Link>
-              <Link
-                to="/minha-carteira"
-                className={`rounded-lg px-3 py-1.5 font-subtitle text-xs font-medium ${
-                  loc.pathname === "/minha-carteira"
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Minha carteira
-              </Link>
-              <Link
-                to="/tv"
-                className={`rounded-lg px-3 py-1.5 font-subtitle text-xs font-medium ${
-                  loc.pathname === "/tv"
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-                title="Tela cheia para TV da operação"
-              >
-                Modo TV
-              </Link>
-            </nav>
-          )}
-        </div>
         <div className="flex items-center gap-4">
           <div className="hidden text-right md:block">
             <p className="font-small text-xs uppercase tracking-wider text-muted-foreground">
