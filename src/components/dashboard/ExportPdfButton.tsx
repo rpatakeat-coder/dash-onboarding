@@ -21,6 +21,7 @@ export const ExportPdfButton = ({
   filename = "operacoes",
 }: Props) => {
   const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<{ url: string; pages: number; name: string } | null>(null);
 
   const handle = async () => {
     const el = document.getElementById(targetId);
