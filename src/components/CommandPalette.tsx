@@ -21,10 +21,19 @@ import {
   Globe,
   Zap,
 } from "lucide-react";
-import { useDashOperacoes, type DashRow, type OperatorStat } from "@/hooks/useDashOperacoes";
+import {
+  slaBand,
+  SLA_BAND_META,
+  useDashOperacoes,
+  type DashRow,
+  type OperatorStat,
+  type SlaBand,
+} from "@/hooks/useDashOperacoes";
 import { useDealDrawer } from "@/contexts/DealDrawer";
 import { usePreferences } from "@/contexts/PreferencesContext";
 import { cn } from "@/lib/utils";
+
+const BANDS: SlaBand[] = ["critico", "atencao", "alerta", "saudavel"];
 
 interface Props {
   onOpenPreferences: () => void;
