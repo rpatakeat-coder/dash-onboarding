@@ -47,16 +47,22 @@ const Index = () => {
 
   const allRows = data?.rows ?? [];
 
-  // Counts respect the OTHER dimension's selection
+  const bandSelKeys = useMemo(
+    () => new Set([...bandSel].map(bandFromLabel)),
+    [bandSel],
+  );
+
+  // Counts respect the OTHER dimensions' selections
   const ativadoresCounts = useMemo(() => {
     const out: Record<string, number> = {};
     for (const r of allRows) {
       if (etapaSel.size && !etapaSel.has(r.etapa_negocio?.trim() || "Sem etapa")) continue;
+      if (bandSelKeys.size && !bandSelKeys.has(slaBand(slaOf(r)))) continue;
       const k = r.agente_ativacao?.trim() || "Sem responsável";
       out[k] = (out[k] ?? 0) + 1;
     }
     return out;
-  }, [allRows, etapaSel]);
+  }, [allRows, etapaSel, bandSelKeys]);
 
   const etapasCounts = useMemo(() => {
     const out: Record<string, number> = {};
@@ -66,11 +72,27 @@ const Index = () => {
         !ativadorSel.has(r.agente_ativacao?.trim() || "Sem responsável")
       )
         continue;
+      if (bandSelKeys.size && !bandSelKeys.has(slaBand(slaOf(r)))) continue;
       const k = r.etapa_negocio?.trim() || "Sem etapa";
       out[k] = (out[k] ?? 0) + 1;
     }
     return out;
-  }, [allRows, ativadorSel]);
+  }, [allRows, ativadorSel, bandSelKeys]);
+
+  const bandCounts = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const r of allRows) {
+      if (
+        ativadorSel.size &&
+        !ativadorSel.has(r.agente_ativacao?.trim() || "Sem responsável")
+      )
+        continue;
+      if (etapaSel.size && !etapaSel.has(r.etapa_negocio?.trim() || "Sem etapa")) continue;
+      const k = bandLabel(slaBand(slaOf(r)));
+      out[k] = (out[k] ?? 0) + 1;
+    }
+    return out;
+  }, [allRows, ativadorSel, etapaSel]);
 
   const ativadoresOpts = useMemo(
     () => [...new Set(allRows.map((r) => r.agente_ativacao?.trim() || "Sem responsável"))],
@@ -80,6 +102,7 @@ const Index = () => {
     () => [...new Set(allRows.map((r) => r.etapa_negocio?.trim() || "Sem etapa"))],
     [allRows],
   );
+  const bandOpts = useMemo(() => BAND_ORDER.map(bandLabel), []);
 
   const rows = useMemo<DashRow[]>(
     () =>
@@ -91,9 +114,10 @@ const Index = () => {
           return false;
         if (etapaSel.size && !etapaSel.has(r.etapa_negocio?.trim() || "Sem etapa"))
           return false;
+        if (bandSelKeys.size && !bandSelKeys.has(slaBand(slaOf(r)))) return false;
         return true;
       }),
-    [allRows, ativadorSel, etapaSel],
+    [allRows, ativadorSel, etapaSel, bandSelKeys],
   );
 
   const atencaoData = useMemo(() => computeFiltered(filterByPeriod(rows, atencaoPeriod)), [rows, atencaoPeriod]);
