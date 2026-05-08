@@ -61,7 +61,7 @@ export const TrendChart = () => {
           Aguardando snapshots diários — a tendência aparece após 2 dias.
         </div>
       ) : (
-        <div className="h-64 w-full">
+        <div className="h-48 w-full sm:h-52">
           <ResponsiveContainer>
             <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
