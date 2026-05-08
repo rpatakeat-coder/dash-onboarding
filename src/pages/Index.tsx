@@ -281,6 +281,30 @@ const Index = () => {
                   </button>
                 </span>
               ))}
+              {[...bandSel].map((v) => {
+                const color = `hsl(var(${SLA_BAND_META[bandFromLabel(v)].cssVar}))`;
+                return (
+                  <span
+                    key={`b-${v}`}
+                    className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-subtitle text-xs font-medium"
+                    style={{ borderColor: `${color.replace("hsl(", "hsla(").replace(")", ", 0.35)")}`, backgroundColor: `${color.replace("hsl(", "hsla(").replace(")", ", 0.12)")}`, color }}
+                  >
+                    <span className="text-[10px] uppercase tracking-wider opacity-70">SLA</span>
+                    <span>{v}</span>
+                    <button
+                      onClick={() => {
+                        const n = new Set(bandSel);
+                        n.delete(v);
+                        setBandSel(n);
+                      }}
+                      className="ml-0.5 rounded-full p-0.5 hover:opacity-70"
+                      aria-label={`Remover ${v}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                );
+              })}
             </div>
           )}
         </div>
