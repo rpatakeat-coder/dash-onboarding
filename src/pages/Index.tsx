@@ -33,6 +33,28 @@ const slaOf = (r: DashRow) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+const ScopeBadge = ({
+  scope,
+  destaque,
+  destaqueLabel,
+  total,
+}: {
+  scope: number;
+  destaque: number;
+  destaqueLabel: string;
+  total: number;
+}) => (
+  <span
+    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-0.5 font-numeric text-[11px] tabular-nums text-muted-foreground"
+    title={`${scope.toLocaleString("pt-BR")} no escopo (após filtros) · ${destaque.toLocaleString("pt-BR")} ${destaqueLabel} · base total ${total.toLocaleString("pt-BR")}`}
+  >
+    <span className="font-semibold text-foreground">{scope.toLocaleString("pt-BR")}</span>
+    <span>de {total.toLocaleString("pt-BR")}</span>
+    <span className="opacity-60">·</span>
+    <span className="text-destructive">{destaque.toLocaleString("pt-BR")} {destaqueLabel}</span>
+  </span>
+);
+
 const Index = () => {
   const { data, error } = useDashOperacoes();
   const [estoqueOpen, setEstoqueOpen] = useState(false);
@@ -138,6 +160,32 @@ const Index = () => {
       .sort((a, b) => b.dias - a.dias)
       .slice(0, 10);
   }, [rows]);
+
+  const scopeCounts = useMemo(() => {
+    const ETAPAS_ATENCAO = new Set(["Pré-Cancelamento", "Inativo", "Pendências", "Processo Pausado"]);
+    const TRAVADO_DIAS = 7;
+    const atencaoRows = filterByPeriod(rows, atencaoPeriod);
+    const criticoRows = filterByPeriod(rows, criticoPeriod);
+    const opRows = filterByPeriod(rows, opPeriod);
+    return {
+      atencao: {
+        scope: atencaoRows.length,
+        destaque: atencaoRows.filter((r) => ETAPAS_ATENCAO.has(r.etapa_negocio?.trim() || "")).length,
+      },
+      critico: {
+        scope: criticoRows.length,
+        destaque: criticoRows.filter((r) => slaOf(r) > 30).length,
+      },
+      operadores: {
+        scope: opRows.length,
+        destaque: opData.operadores.length,
+      },
+      travados: {
+        scope: rows.length,
+        destaque: rows.filter((r) => slaOf(r) > TRAVADO_DIAS).length,
+      },
+    };
+  }, [rows, atencaoPeriod, criticoPeriod, opPeriod, opData.operadores.length]);
 
   const countsBy = useMemo(() => {
     const ETAPAS_ATENCAO = new Set(["Pré-Cancelamento", "Inativo", "Pendências", "Processo Pausado"]);
@@ -340,10 +388,18 @@ const Index = () => {
         {/* Pontos de atenção */}
         {data && (
           <section className="mb-8">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                Pontos de atenção
-              </h3>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                  Pontos de atenção
+                </h3>
+                <ScopeBadge
+                  scope={scopeCounts.atencao.scope}
+                  destaque={scopeCounts.atencao.destaque}
+                  destaqueLabel="em etapas críticas"
+                  total={allRows.length}
+                />
+              </div>
               <PeriodFilter value={atencaoPeriod} onChange={setAtencaoPeriod} counts={countsBy.atencao} />
             </div>
             <AttentionPoints atencao={atencaoData.atencao} topMrrTravado={atencaoData.topMrrTravado} />
@@ -354,10 +410,18 @@ const Index = () => {
         <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <FunnelChart data={data?.porEtapa ?? []} total={data?.total ?? 0} />
           <div>
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                SLA crítico
-              </h3>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                  SLA crítico
+                </h3>
+                <ScopeBadge
+                  scope={scopeCounts.critico.scope}
+                  destaque={scopeCounts.critico.destaque}
+                  destaqueLabel="acima de 30d"
+                  total={allRows.length}
+                />
+              </div>
               <PeriodFilter value={criticoPeriod} onChange={setCriticoPeriod} counts={countsBy.critico} />
             </div>
             <SlaCritico criticos={criticoData.criticos} />
@@ -366,10 +430,18 @@ const Index = () => {
 
         {/* Performance por ativador */}
         <section className="mb-8">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-              Performance por ativador
-            </h3>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                Performance por ativador
+              </h3>
+              <ScopeBadge
+                scope={scopeCounts.operadores.scope}
+                destaque={scopeCounts.operadores.destaque}
+                destaqueLabel="ativadores"
+                total={allRows.length}
+              />
+            </div>
             <PeriodFilter value={opPeriod} onChange={setOpPeriod} counts={countsBy.operadores} />
           </div>
           <OperatorsTable
@@ -383,6 +455,17 @@ const Index = () => {
 
         {/* Travados */}
         <section className="mb-8">
+          <div className="mb-3 flex items-center gap-2">
+            <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+              Onboardings travados
+            </h3>
+            <ScopeBadge
+              scope={scopeCounts.travados.scope}
+              destaque={scopeCounts.travados.destaque}
+              destaqueLabel="travados >7d"
+              total={allRows.length}
+            />
+          </div>
           <StalledTable travados={travadosLista} />
         </section>
 
