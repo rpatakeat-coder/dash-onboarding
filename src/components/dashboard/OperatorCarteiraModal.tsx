@@ -117,13 +117,13 @@ export const OperatorCarteiraModal = ({ operador, open, onOpenChange }: Props) =
               <div
                 key={k}
                 className="overflow-hidden rounded-xl border"
-                style={{ borderColor: count > 0 ? color : undefined }}
+                style={{ borderColor: totalBand > 0 ? color : undefined }}
               >
                 <button
                   onClick={() => toggle(k)}
                   className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-muted/50"
                   style={{
-                    backgroundColor: count > 0 ? `${color.replace("hsl(", "hsla(").replace(")", ", 0.08)")}` : undefined,
+                    backgroundColor: totalBand > 0 ? `${color.replace("hsl(", "hsla(").replace(")", ", 0.08)")}` : undefined,
                   }}
                 >
                   <div className="flex items-center gap-3">
