@@ -42,12 +42,63 @@ export const ExportPdfButton = ({
       // Aguarda 1 frame para o CSS de export ser aplicado antes da captura
       await new Promise((r) => requestAnimationFrame(() => r(null)));
 
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: getComputedStyle(document.body).backgroundColor || "#ffffff",
-        windowWidth: el.scrollWidth,
-      });
+      const bg = getComputedStyle(document.body).backgroundColor || "#ffffff";
+      // Tentativas em cascata: do mais fiel ao mais tolerante.
+      // Cada fallback reduz scale, desativa recursos que costumam quebrar
+      // (CORS de imagens externas, fontes web, foreignObject) e por fim
+      // ignora nodes problemáticos (canvas/iframes) para garantir saída.
+      const attempts: Array<{ label: string; opts: Parameters<typeof html2canvas>[1] }> = [
+        {
+          label: "alta-fidelidade",
+          opts: { scale: 2, useCORS: true, backgroundColor: bg, windowWidth: el.scrollWidth },
+        },
+        {
+          label: "sem-cors",
+          opts: {
+            scale: 1.5,
+            useCORS: false,
+            allowTaint: true,
+            backgroundColor: bg,
+            windowWidth: el.scrollWidth,
+          },
+        },
+        {
+          label: "minimo",
+          opts: {
+            scale: 1,
+            useCORS: false,
+            allowTaint: true,
+            foreignObjectRendering: false,
+            backgroundColor: bg,
+            windowWidth: el.scrollWidth,
+            logging: false,
+            ignoreElements: (node: Element) => {
+              const tag = node.tagName?.toLowerCase();
+              return tag === "iframe" || tag === "video" || node.hasAttribute?.("data-pdf-skip");
+            },
+          },
+        },
+      ];
+
+      let canvas: HTMLCanvasElement | null = null;
+      let lastErr: unknown = null;
+      for (const attempt of attempts) {
+        try {
+          canvas = await html2canvas(el, attempt.opts);
+          if (attempt.label !== "alta-fidelidade") {
+            console.warn(`[ExportPDF] usado fallback "${attempt.label}"`);
+            toast({
+              title: "PDF gerado em modo compatível",
+              description: `Captura usou fallback "${attempt.label}".`,
+            });
+          }
+          break;
+        } catch (e) {
+          lastErr = e;
+          console.warn(`[ExportPDF] tentativa "${attempt.label}" falhou:`, e);
+        }
+      }
+      if (!canvas) throw lastErr ?? new Error("html2canvas falhou em todas as tentativas");
 
       const pdf = new jsPDF({ orientation: "p", unit: "pt", format: "a4" });
       const pageW = pdf.internal.pageSize.getWidth();
