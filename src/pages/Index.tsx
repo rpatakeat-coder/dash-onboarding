@@ -273,26 +273,31 @@ const Index = () => {
     if (opPeriod !== "tudo") periodos.push(`Operadores: ${periodLabel(opPeriod)}`);
     if (periodos.length) out.push({ label: "Períodos", value: periodos.join(" · ") });
     if (onlyMine && fullName) out.push({ label: "Visão", value: `Só meus deals (${fullName})` });
-    const multiLabel = (base: string, criterio: string, n: number) =>
-      n > 1 ? `${base} (${n} selecionados, por ${criterio})` : base;
+    // Critério segue a fonte de dados real do filtro:
+    //  - Ativador: campo `agente_ativacao` (nome do responsável)
+    //  - Etapa:    campo `etapa_negocio`  (fase do funil)
+    //  - Faixa SLA: derivada de `sla_dias` (faixa de dias na fase)
+    //  - Perfil:   campo `perfil_cliente` (segmento P/M/G/GG)
+    const filterLabel = (base: string, criterio: string, n: number) =>
+      `${base} (${n > 1 ? `${n} selecionados, ` : ""}por ${criterio})`;
     if (ativadorSel.size)
       out.push({
-        label: multiLabel("Ativador", "nome", ativadorSel.size),
+        label: filterLabel("Ativador", "nome", ativadorSel.size),
         value: [...ativadorSel].join(", "),
       });
     if (etapaSel.size)
       out.push({
-        label: multiLabel("Etapa", "fase do funil", etapaSel.size),
+        label: filterLabel("Etapa", "fase do funil", etapaSel.size),
         value: [...etapaSel].join(", "),
       });
     if (bandSel.size)
       out.push({
-        label: multiLabel("Faixa SLA", "dias na fase", bandSel.size),
+        label: filterLabel("Faixa SLA", "dias na fase", bandSel.size),
         value: [...bandSel].join(", "),
       });
     if (perfilSel.size)
       out.push({
-        label: multiLabel("Perfil", "segmento", perfilSel.size),
+        label: filterLabel("Perfil", "segmento", perfilSel.size),
         value: [...perfilSel].join(", "),
       });
     return out;
