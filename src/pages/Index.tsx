@@ -365,7 +365,7 @@ const Index = () => {
         value: [...perfilSel].join(", "),
       });
     return out;
-  }, [rows.length, allRows.length, deltaWindow, kpiPeriod, atencaoPeriod, criticoPeriod, opPeriod, onlyMine, fullName, ativadorSel, etapaSel, bandSel, perfilSel]);
+  }, [rows.length, allRows.length, deltaWindow, kpiPeriod, atencaoPeriod, criticoPeriod, opPeriod, slaCmpA, slaCmpB, execCmpA, execCmpB, onlyMine, fullName, ativadorSel, etapaSel, bandSel, perfilSel]);
 
 
   return (
