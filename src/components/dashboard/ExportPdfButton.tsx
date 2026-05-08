@@ -176,31 +176,12 @@ export const ExportPdfButton = ({
       });
       const breaks = Array.from(breakSet).sort((a, b) => a - b);
 
-      // Decide o melhor ponto de corte <= limite. Se nenhum candidato couber,
-      // faz corte "duro" no limite para evitar páginas vazias / loop.
-      const pickCut = (start: number, maxLen: number) => {
-        const limit = Math.min(start + maxLen, canvas.height);
-        let best = start;
-        for (const b of breaks) {
-          if (b > start && b <= limit) best = b;
-          if (b > limit) break;
-        }
-        // Exige pelo menos 15% da página para evitar avanços ínfimos
-        if (best - start < maxLen * 0.15) return limit;
-        return best;
-      };
-
-      // Pré-calcula os intervalos das páginas (sem repetir nem ultrapassar)
-      const slices: Array<{ start: number; end: number }> = [];
-      let cursor = 0;
-      while (cursor < canvas.height) {
-        const isFirst = slices.length === 0;
-        const maxLen = isFirst ? firstPagePx : fullPagePx;
-        const end = pickCut(cursor, maxLen);
-        if (end <= cursor) break; // proteção contra loop infinito
-        slices.push({ start: cursor, end });
-        cursor = end;
-      }
+      const slices = paginateCanvas({
+        canvasHeight: canvas.height,
+        breaks,
+        firstPagePx,
+        fullPagePx,
+      });
       const totalPages = slices.length;
 
       slices.forEach((slice, pageIdx) => {
