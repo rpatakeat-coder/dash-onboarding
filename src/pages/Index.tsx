@@ -12,6 +12,7 @@ import { AttentionPoints } from "@/components/dashboard/AttentionPoints";
 import { SlaCritico } from "@/components/dashboard/SlaCritico";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
 import { PeriodFilter } from "@/components/dashboard/PeriodFilter";
+import { PeriodCompare, type CompareMetric } from "@/components/dashboard/PeriodCompare";
 import { MultiSelectFilter } from "@/components/dashboard/MultiSelectFilter";
 import { Highlights } from "@/components/dashboard/Highlights";
 import { BottleneckHeatmap } from "@/components/dashboard/BottleneckHeatmap";
@@ -26,8 +27,11 @@ import { useDealDrawer } from "@/contexts/DealDrawer";
 import { useSnapshotDeltas, type DeltaWindow } from "@/hooks/useSnapshotDeltas";
 import {
   computeFiltered,
+  computePeriodSummary,
   computeSlaKpis,
   filterByPeriod,
+  fmtBRLk,
+  fmtPct,
   slaBand,
   SLA_BAND_META,
   useDashOperacoes,
@@ -77,6 +81,10 @@ const Index = () => {
   const [criticoPeriod, setCriticoPeriod] = useState<PeriodKey>("tudo");
   const [opPeriod, setOpPeriod] = useState<PeriodKey>("tudo");
   const [kpiPeriod, setKpiPeriod] = useState<PeriodKey>("tudo");
+  const [slaCmpA, setSlaCmpA] = useState<PeriodKey>("semana");
+  const [slaCmpB, setSlaCmpB] = useState<PeriodKey>("mes");
+  const [execCmpA, setExecCmpA] = useState<PeriodKey>("semana");
+  const [execCmpB, setExecCmpB] = useState<PeriodKey>("mes");
   const [ativadorSel, setAtivadorSel] = useState<Set<string>>(new Set());
   const [etapaSel, setEtapaSel] = useState<Set<string>>(new Set());
   const [bandSel, setBandSel] = useState<Set<string>>(new Set());
@@ -203,6 +211,39 @@ const Index = () => {
     return out;
   }, [rows]);
 
+  // Comparativos A vs B (compartilham contagens com kpiCounts)
+  const slaCmp = useMemo(() => {
+    const a = computeSlaKpis(filterByPeriod(rows, slaCmpA));
+    const b = computeSlaKpis(filterByPeriod(rows, slaCmpB));
+    return { a, b };
+  }, [rows, slaCmpA, slaCmpB]);
+
+  const execCmp = useMemo(() => {
+    const a = computePeriodSummary(filterByPeriod(rows, execCmpA));
+    const b = computePeriodSummary(filterByPeriod(rows, execCmpB));
+    return { a, b };
+  }, [rows, execCmpA, execCmpB]);
+
+  const slaCmpMetrics = useMemo<CompareMetric[]>(
+    () => [
+      { label: "Estoque total", a: slaCmp.a.total, b: slaCmp.b.total, goodDirection: "down" },
+      { label: "SLA médio", a: slaCmp.a.slaMedio, b: slaCmp.b.slaMedio, unit: "d", decimals: 1, goodDirection: "down" },
+      { label: "% no prazo", a: slaCmp.a.noPrazo, b: slaCmp.b.noPrazo, unit: "%", decimals: 1, goodDirection: "up" },
+      { label: "% SLA estourado", a: slaCmp.a.estourado, b: slaCmp.b.estourado, unit: "%", decimals: 1, goodDirection: "down" },
+    ],
+    [slaCmp],
+  );
+
+  const execCmpMetrics = useMemo<CompareMetric[]>(
+    () => [
+      { label: "Novos clientes", a: execCmp.a.novos, b: execCmp.b.novos, goodDirection: "up" },
+      { label: "Ativados", a: execCmp.a.ativados, b: execCmp.b.ativados, goodDirection: "up" },
+      { label: "MRR ativado", a: execCmp.a.mrrAtivado, b: execCmp.b.mrrAtivado, goodDirection: "up", fmt: fmtBRLk },
+      { label: "% MRR ativado", a: execCmp.a.pctAtivado, b: execCmp.b.pctAtivado, decimals: 1, goodDirection: "up", fmt: (n) => fmtPct(n, 1) },
+    ],
+    [execCmp],
+  );
+
   const travadosLista = useMemo(() => {
     const TRAVADO_DIAS = 7;
     return rows
@@ -279,6 +320,16 @@ const Index = () => {
       label: "Comparativo",
       value: `${deltaWindow}d vs ${deltaWindow}d anteriores`,
     });
+    if (slaCmpA !== slaCmpB)
+      out.push({
+        label: "Comparativo SLA (A vs B)",
+        value: `${periodLabel(slaCmpA)} vs ${periodLabel(slaCmpB)}`,
+      });
+    if (execCmpA !== execCmpB)
+      out.push({
+        label: "Comparativo Executivo (A vs B)",
+        value: `${periodLabel(execCmpA)} vs ${periodLabel(execCmpB)}`,
+      });
     const periodos: string[] = [];
     if (kpiPeriod !== "tudo") periodos.push(`KPIs: ${periodLabel(kpiPeriod)}`);
     if (atencaoPeriod !== "tudo") periodos.push(`Atenção: ${periodLabel(atencaoPeriod)}`);
@@ -314,7 +365,7 @@ const Index = () => {
         value: [...perfilSel].join(", "),
       });
     return out;
-  }, [rows.length, allRows.length, deltaWindow, kpiPeriod, atencaoPeriod, criticoPeriod, opPeriod, onlyMine, fullName, ativadorSel, etapaSel, bandSel, perfilSel]);
+  }, [rows.length, allRows.length, deltaWindow, kpiPeriod, atencaoPeriod, criticoPeriod, opPeriod, slaCmpA, slaCmpB, execCmpA, execCmpB, onlyMine, fullName, ativadorSel, etapaSel, bandSel, perfilSel]);
 
 
   return (
@@ -367,6 +418,17 @@ const Index = () => {
             deltasLoading={deltasLoading}
             windowDays={deltaWindow}
             onChangeWindow={setDeltaWindow}
+          />
+          <PeriodCompare
+            title="Comparar SLA entre períodos"
+            caption="Escolha dois recortes do estoque atual para ver a diferença em cada KPI."
+            periodA={slaCmpA}
+            periodB={slaCmpB}
+            onChangeA={setSlaCmpA}
+            onChangeB={setSlaCmpB}
+            countsA={kpiCounts}
+            countsB={kpiCounts}
+            metrics={slaCmpMetrics}
           />
         </div>
 
@@ -552,7 +614,7 @@ const Index = () => {
         )}
 
         {/* Períodos + Perfis + MRR Ativado */}
-        <div className="mb-8">
+        <div className="mb-8 space-y-6">
           {data && (
             <PeriodGrids
               hoje={data.hoje}
@@ -562,6 +624,17 @@ const Index = () => {
               perfis={data.perfis}
             />
           )}
+          <PeriodCompare
+            title="Comparar painel executivo entre períodos"
+            caption="Compare entradas, ativações e MRR entre dois recortes (ex.: Semana vs Mês)."
+            periodA={execCmpA}
+            periodB={execCmpB}
+            onChangeA={setExecCmpA}
+            onChangeB={setExecCmpB}
+            countsA={kpiCounts}
+            countsB={kpiCounts}
+            metrics={execCmpMetrics}
+          />
         </div>
 
         {/* Pontos de atenção */}

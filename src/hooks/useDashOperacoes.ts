@@ -299,6 +299,25 @@ export interface SlaKpis {
   estouradoCount: number;
 }
 
+export interface PeriodSummary {
+  novos: number;
+  ativados: number;
+  mrrTotal: number;
+  mrrAtivado: number;
+  pctAtivado: number;
+}
+
+/** Resumo executivo (novos, ativados, MRR) calculado sobre o conjunto já filtrado por período. */
+export function computePeriodSummary(rows: DashRow[]): PeriodSummary {
+  const novos = rows.length;
+  const ativadosRows = rows.filter((r) => r.etapa_negocio?.trim() === ETAPA_ATIVADO);
+  const ativados = ativadosRows.length;
+  const mrrTotal = rows.reduce((s, r) => s + toNum(r.mrr), 0);
+  const mrrAtivado = ativadosRows.reduce((s, r) => s + toNum(r.mrr), 0);
+  const pctAtivado = mrrTotal > 0 ? (mrrAtivado / mrrTotal) * 100 : 0;
+  return { novos, ativados, mrrTotal, mrrAtivado, pctAtivado };
+}
+
 export function computeSlaKpis(rows: DashRow[]): SlaKpis {
   const total = rows.length;
   const dias = rows.map((r) => toNum(r.sla_dias));
