@@ -21,10 +21,19 @@ import {
   Globe,
   Zap,
 } from "lucide-react";
-import { useDashOperacoes, type DashRow, type OperatorStat } from "@/hooks/useDashOperacoes";
+import {
+  slaBand,
+  SLA_BAND_META,
+  useDashOperacoes,
+  type DashRow,
+  type OperatorStat,
+  type SlaBand,
+} from "@/hooks/useDashOperacoes";
 import { useDealDrawer } from "@/contexts/DealDrawer";
 import { usePreferences } from "@/contexts/PreferencesContext";
 import { cn } from "@/lib/utils";
+
+const BANDS: SlaBand[] = ["critico", "atencao", "alerta", "saudavel"];
 
 interface Props {
   onOpenPreferences: () => void;
@@ -74,6 +83,8 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
   const [query, setQuery] = useState("");
   const [scope, setScope] = useState<Scope>("all");
   const [period, setPeriod] = useState<Period>("tudo");
+  const [stages, setStages] = useState<Set<string>>(new Set());
+  const [bands, setBands] = useState<Set<SlaBand>>(new Set());
   const navigate = useNavigate();
   const { data } = useDashOperacoes();
   const { open: openDeal } = useDealDrawer();
@@ -117,6 +128,17 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
       .slice(0, 30);
   }, [data, query]);
 
+  const slaOf = (r: DashRow) => {
+    const n = parseFloat(String(r.sla_dias ?? "").replace(",", "."));
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const allStages = useMemo(() => {
+    const set = new Set<string>();
+    (data?.rows ?? []).forEach((r) => r.etapa_negocio && set.add(r.etapa_negocio));
+    return [...set].sort();
+  }, [data]);
+
   const deals = useMemo(() => {
     const cutoff =
       period === "tudo"
@@ -125,6 +147,8 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
     const list = (data?.rows ?? [])
       .filter((d) => {
         if (cutoff && dateMs(d.data_entrada_fase) < cutoff) return false;
+        if (stages.size > 0 && !(d.etapa_negocio && stages.has(d.etapa_negocio))) return false;
+        if (bands.size > 0 && !bands.has(slaBand(slaOf(d)))) return false;
         return true;
       })
       .map((d) => {
@@ -135,7 +159,7 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
     return list
       .sort((a, b) => (b.score === a.score ? b.recency - a.recency : b.score - a.score))
       .slice(0, 80);
-  }, [data, query, period]);
+  }, [data, query, period, stages, bands]);
 
   const showPages = scope === "all" || scope === "pages";
   const showActions = scope === "all" || scope === "actions";
@@ -198,6 +222,85 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
               </button>
             ))}
           </>
+        )}
+        {showPeriodChips && (
+          <div className="flex w-full flex-wrap items-center gap-1.5">
+            <span className="mx-1 h-4 w-px bg-border" />
+            <span className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
+              SLA
+            </span>
+            {BANDS.map((b) => {
+              const active = bands.has(b);
+              return (
+                <button
+                  key={b}
+                  type="button"
+                  onClick={() =>
+                    setBands((prev) => {
+                      const next = new Set(prev);
+                      next.has(b) ? next.delete(b) : next.add(b);
+                      return next;
+                    })
+                  }
+                  className={cn(
+                    "rounded-full border px-2 py-0.5 font-subtitle text-[10px] transition",
+                    active
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {SLA_BAND_META[b].label}
+                </button>
+              );
+            })}
+            {allStages.length > 0 && (
+              <>
+                <span className="mx-1 h-4 w-px bg-border" />
+                <span className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Etapa
+                </span>
+                <div className="flex max-w-full flex-wrap gap-1 overflow-x-auto">
+                  {allStages.map((s) => {
+                    const active = stages.has(s);
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() =>
+                          setStages((prev) => {
+                            const next = new Set(prev);
+                            next.has(s) ? next.delete(s) : next.add(s);
+                            return next;
+                          })
+                        }
+                        className={cn(
+                          "max-w-[180px] truncate rounded-full border px-2 py-0.5 font-subtitle text-[10px] transition",
+                          active
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-card text-muted-foreground hover:text-foreground",
+                        )}
+                        title={s}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+            {(stages.size > 0 || bands.size > 0) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setStages(new Set());
+                  setBands(new Set());
+                }}
+                className="ml-auto rounded-full border border-border bg-card px-2 py-0.5 font-subtitle text-[10px] text-muted-foreground hover:text-destructive"
+              >
+                Limpar
+              </button>
+            )}
+          </div>
         )}
       </div>
       <CommandList>
