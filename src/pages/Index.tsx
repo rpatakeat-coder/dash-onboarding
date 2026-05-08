@@ -108,7 +108,7 @@ const Index = () => {
               <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
                 Pontos de atenção
               </h3>
-              <PeriodFilter value={atencaoPeriod} onChange={setAtencaoPeriod} />
+              <PeriodFilter value={atencaoPeriod} onChange={setAtencaoPeriod} counts={countsBy.atencao} />
             </div>
             <AttentionPoints atencao={atencaoData.atencao} topMrrTravado={atencaoData.topMrrTravado} />
           </section>
