@@ -54,6 +54,7 @@ export interface OperatorStat {
 }
 
 export interface StalledRow {
+  id: number;
   cliente: string;
   ativador: string;
   etapa: string;
