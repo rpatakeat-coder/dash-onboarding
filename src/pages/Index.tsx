@@ -388,10 +388,18 @@ const Index = () => {
         {/* Pontos de atenção */}
         {data && (
           <section className="mb-8">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                Pontos de atenção
-              </h3>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                  Pontos de atenção
+                </h3>
+                <ScopeBadge
+                  scope={scopeCounts.atencao.scope}
+                  destaque={scopeCounts.atencao.destaque}
+                  destaqueLabel="em etapas críticas"
+                  total={allRows.length}
+                />
+              </div>
               <PeriodFilter value={atencaoPeriod} onChange={setAtencaoPeriod} counts={countsBy.atencao} />
             </div>
             <AttentionPoints atencao={atencaoData.atencao} topMrrTravado={atencaoData.topMrrTravado} />
@@ -402,10 +410,18 @@ const Index = () => {
         <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <FunnelChart data={data?.porEtapa ?? []} total={data?.total ?? 0} />
           <div>
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                SLA crítico
-              </h3>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                  SLA crítico
+                </h3>
+                <ScopeBadge
+                  scope={scopeCounts.critico.scope}
+                  destaque={scopeCounts.critico.destaque}
+                  destaqueLabel="acima de 30d"
+                  total={allRows.length}
+                />
+              </div>
               <PeriodFilter value={criticoPeriod} onChange={setCriticoPeriod} counts={countsBy.critico} />
             </div>
             <SlaCritico criticos={criticoData.criticos} />
@@ -414,10 +430,18 @@ const Index = () => {
 
         {/* Performance por ativador */}
         <section className="mb-8">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-              Performance por ativador
-            </h3>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                Performance por ativador
+              </h3>
+              <ScopeBadge
+                scope={scopeCounts.operadores.scope}
+                destaque={scopeCounts.operadores.destaque}
+                destaqueLabel="ativadores"
+                total={allRows.length}
+              />
+            </div>
             <PeriodFilter value={opPeriod} onChange={setOpPeriod} counts={countsBy.operadores} />
           </div>
           <OperatorsTable
@@ -431,6 +455,17 @@ const Index = () => {
 
         {/* Travados */}
         <section className="mb-8">
+          <div className="mb-3 flex items-center gap-2">
+            <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+              Onboardings travados
+            </h3>
+            <ScopeBadge
+              scope={scopeCounts.travados.scope}
+              destaque={scopeCounts.travados.destaque}
+              destaqueLabel="travados >7d"
+              total={allRows.length}
+            />
+          </div>
           <StalledTable travados={travadosLista} />
         </section>
 
