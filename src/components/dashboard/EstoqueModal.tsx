@@ -78,6 +78,36 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
     [mapped],
   );
 
+  // Counts respect search + the OTHER dimension's selection (not the dimension itself)
+  const term = q.trim().toLowerCase();
+  const matchesSearch = (r: (typeof mapped)[number]) =>
+    !term ||
+    r.cliente.toLowerCase().includes(term) ||
+    r.etapa.toLowerCase().includes(term) ||
+    r.ativador.toLowerCase().includes(term);
+
+  const perfilCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const r of mapped) {
+      if (!matchesSearch(r)) continue;
+      if (etapaSel.size && !etapaSel.has(r.etapa)) continue;
+      counts[r.perfil] = (counts[r.perfil] ?? 0) + 1;
+    }
+    return counts;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapped, etapaSel, q]);
+
+  const etapaCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const r of mapped) {
+      if (!matchesSearch(r)) continue;
+      if (perfilSel.size && !perfilSel.has(r.perfil)) continue;
+      counts[r.etapa] = (counts[r.etapa] ?? 0) + 1;
+    }
+    return counts;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapped, perfilSel, q]);
+
   const list = useMemo(() => {
     const term = q.trim().toLowerCase();
     const filtered = mapped.filter((r) => {
