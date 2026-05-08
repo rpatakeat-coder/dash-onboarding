@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { OperatorsTable } from "@/components/dashboard/OperatorsTable";
@@ -8,11 +8,25 @@ import { PeriodGrids } from "@/components/dashboard/PeriodGrids";
 import { AttentionPoints } from "@/components/dashboard/AttentionPoints";
 import { SlaCritico } from "@/components/dashboard/SlaCritico";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
-import { useDashOperacoes } from "@/hooks/useDashOperacoes";
+import { PeriodFilter } from "@/components/dashboard/PeriodFilter";
+import {
+  computeFiltered,
+  filterByPeriod,
+  useDashOperacoes,
+  type PeriodKey,
+} from "@/hooks/useDashOperacoes";
 
 const Index = () => {
   const { data, error } = useDashOperacoes();
   const [estoqueOpen, setEstoqueOpen] = useState(false);
+  const [atencaoPeriod, setAtencaoPeriod] = useState<PeriodKey>("tudo");
+  const [criticoPeriod, setCriticoPeriod] = useState<PeriodKey>("tudo");
+  const [opPeriod, setOpPeriod] = useState<PeriodKey>("tudo");
+
+  const rows = data?.rows ?? [];
+  const atencaoData = useMemo(() => computeFiltered(filterByPeriod(rows, atencaoPeriod)), [rows, atencaoPeriod]);
+  const criticoData = useMemo(() => computeFiltered(filterByPeriod(rows, criticoPeriod)), [rows, criticoPeriod]);
+  const opData = useMemo(() => computeFiltered(filterByPeriod(rows, opPeriod)), [rows, opPeriod]);
 
   return (
     <div className="min-h-screen bg-gradient-surface">
