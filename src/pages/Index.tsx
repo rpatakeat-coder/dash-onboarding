@@ -53,7 +53,6 @@ const Index = () => {
           onOpenChange={setEstoqueOpen}
           rows={data?.rows ?? []}
         />
-        </div>
 
         {/* Períodos + Perfis + MRR Ativado */}
         <div className="mb-8">
