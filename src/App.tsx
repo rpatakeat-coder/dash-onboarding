@@ -8,6 +8,8 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AuthPage from "./pages/Auth.tsx";
 import MinhaCarteira from "./pages/MinhaCarteira.tsx";
+import Tv from "./pages/Tv.tsx";
+import { DealDrawerProvider } from "./contexts/DealDrawer";
 
 const queryClient = new QueryClient();
 
@@ -18,13 +20,16 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/minha-carteira" element={<MinhaCarteira />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <DealDrawerProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/minha-carteira" element={<MinhaCarteira />} />
+              <Route path="/tv" element={<Tv />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </DealDrawerProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
