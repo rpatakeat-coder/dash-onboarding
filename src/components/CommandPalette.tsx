@@ -223,6 +223,85 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
             ))}
           </>
         )}
+        {showPeriodChips && (
+          <div className="flex w-full flex-wrap items-center gap-1.5">
+            <span className="mx-1 h-4 w-px bg-border" />
+            <span className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
+              SLA
+            </span>
+            {BANDS.map((b) => {
+              const active = bands.has(b);
+              return (
+                <button
+                  key={b}
+                  type="button"
+                  onClick={() =>
+                    setBands((prev) => {
+                      const next = new Set(prev);
+                      next.has(b) ? next.delete(b) : next.add(b);
+                      return next;
+                    })
+                  }
+                  className={cn(
+                    "rounded-full border px-2 py-0.5 font-subtitle text-[10px] transition",
+                    active
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {SLA_BAND_META[b].label}
+                </button>
+              );
+            })}
+            {allStages.length > 0 && (
+              <>
+                <span className="mx-1 h-4 w-px bg-border" />
+                <span className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Etapa
+                </span>
+                <div className="flex max-w-full flex-wrap gap-1 overflow-x-auto">
+                  {allStages.map((s) => {
+                    const active = stages.has(s);
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() =>
+                          setStages((prev) => {
+                            const next = new Set(prev);
+                            next.has(s) ? next.delete(s) : next.add(s);
+                            return next;
+                          })
+                        }
+                        className={cn(
+                          "max-w-[180px] truncate rounded-full border px-2 py-0.5 font-subtitle text-[10px] transition",
+                          active
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-card text-muted-foreground hover:text-foreground",
+                        )}
+                        title={s}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+            {(stages.size > 0 || bands.size > 0) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setStages(new Set());
+                  setBands(new Set());
+                }}
+                className="ml-auto rounded-full border border-border bg-card px-2 py-0.5 font-subtitle text-[10px] text-muted-foreground hover:text-destructive"
+              >
+                Limpar
+              </button>
+            )}
+          </div>
+        )}
       </div>
       <CommandList>
         <CommandEmpty>Nenhum resultado.</CommandEmpty>
