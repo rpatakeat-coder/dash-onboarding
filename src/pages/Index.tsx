@@ -160,6 +160,7 @@ const Index = () => {
           <MultiSelectFilter
             label="Etapa"
             options={etapasOpts}
+            counts={etapasCounts}
             selected={etapaSel}
             onChange={setEtapaSel}
           />
