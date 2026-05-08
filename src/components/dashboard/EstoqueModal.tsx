@@ -196,6 +196,7 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
           />
         </div>
 
+        <TooltipProvider delayDuration={150}>
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
@@ -205,29 +206,47 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
               const active = perfilSel.has(p);
               const count = perfilCounts[p] ?? 0;
               const disabled = count === 0 && !active;
+              const criterios: string[] = [];
+              if (q.trim()) criterios.push(`busca "${q.trim()}"`);
+              if (etapaSel.size) criterios.push(`${etapaSel.size} etapa(s) selecionada(s)`);
+              const resumo = criterios.length
+                ? `Considerando: ${criterios.join(" + ")}`
+                : "Sem outros filtros aplicados";
               return (
-                <button
-                  key={p}
-                  onClick={() => togglePerfil(p)}
-                  disabled={disabled}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-full border px-3 py-1 font-subtitle text-xs font-semibold transition",
-                    active
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
-                    disabled && "opacity-40 hover:border-border hover:text-muted-foreground",
-                  )}
-                >
-                  <span>{p}</span>
-                  <span
-                    className={cn(
-                      "rounded-full px-1.5 py-0.5 font-numeric text-[10px] font-bold tabular-nums",
-                      active ? "bg-primary-foreground/20" : "bg-muted text-foreground/70",
+                <Tooltip key={p}>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => togglePerfil(p)}
+                      disabled={disabled}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-full border px-3 py-1 font-subtitle text-xs font-semibold transition",
+                        active
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                        disabled && "opacity-40 hover:border-border hover:text-muted-foreground",
+                      )}
+                    >
+                      <span>{p}</span>
+                      <span
+                        className={cn(
+                          "rounded-full px-1.5 py-0.5 font-numeric text-[10px] font-bold tabular-nums",
+                          active ? "bg-primary-foreground/20" : "bg-muted text-foreground/70",
+                        )}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[260px]">
+                    <p className="font-subtitle text-xs font-semibold">
+                      Perfil {p} · {count} cliente{count === 1 ? "" : "s"}
+                    </p>
+                    <p className="mt-1 font-small text-[11px] text-muted-foreground">{resumo}</p>
+                    {active && (
+                      <p className="mt-1 font-small text-[11px] text-primary">Filtro ativo — clique para remover</p>
                     )}
-                  >
-                    {count}
-                  </span>
-                </button>
+                  </TooltipContent>
+                </Tooltip>
               );
             })}
           </div>
@@ -239,29 +258,47 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
               const active = etapaSel.has(e);
               const count = etapaCounts[e] ?? 0;
               const disabled = count === 0 && !active;
+              const criterios: string[] = [];
+              if (q.trim()) criterios.push(`busca "${q.trim()}"`);
+              if (perfilSel.size) criterios.push(`perfis: ${[...perfilSel].join(", ")}`);
+              const resumo = criterios.length
+                ? `Considerando: ${criterios.join(" + ")}`
+                : "Sem outros filtros aplicados";
               return (
-                <button
-                  key={e}
-                  onClick={() => toggleEtapa(e)}
-                  disabled={disabled}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-full border px-3 py-1 font-subtitle text-xs font-medium transition",
-                    active
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
-                    disabled && "opacity-40 hover:border-border hover:text-muted-foreground",
-                  )}
-                >
-                  <span>{e}</span>
-                  <span
-                    className={cn(
-                      "rounded-full px-1.5 py-0.5 font-numeric text-[10px] font-bold tabular-nums",
-                      active ? "bg-primary-foreground/20" : "bg-muted text-foreground/70",
+                <Tooltip key={e}>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => toggleEtapa(e)}
+                      disabled={disabled}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-full border px-3 py-1 font-subtitle text-xs font-medium transition",
+                        active
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                        disabled && "opacity-40 hover:border-border hover:text-muted-foreground",
+                      )}
+                    >
+                      <span>{e}</span>
+                      <span
+                        className={cn(
+                          "rounded-full px-1.5 py-0.5 font-numeric text-[10px] font-bold tabular-nums",
+                          active ? "bg-primary-foreground/20" : "bg-muted text-foreground/70",
+                        )}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[280px]">
+                    <p className="font-subtitle text-xs font-semibold">
+                      {e} · {count} cliente{count === 1 ? "" : "s"}
+                    </p>
+                    <p className="mt-1 font-small text-[11px] text-muted-foreground">{resumo}</p>
+                    {active && (
+                      <p className="mt-1 font-small text-[11px] text-primary">Filtro ativo — clique para remover</p>
                     )}
-                  >
-                    {count}
-                  </span>
-                </button>
+                  </TooltipContent>
+                </Tooltip>
               );
             })}
             {hasFilters && (
@@ -274,6 +311,7 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
             )}
           </div>
         </div>
+        </TooltipProvider>
 
         <div className="max-h-[60vh] overflow-auto rounded-lg border">
           <Table>
