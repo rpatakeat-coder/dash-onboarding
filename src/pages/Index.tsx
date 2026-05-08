@@ -23,6 +23,7 @@ import { ExportCsvButton } from "@/components/dashboard/ExportCsvButton";
 import { ExportPdfButton } from "@/components/dashboard/ExportPdfButton";
 import { useUrlSets } from "@/hooks/useUrlSets";
 import { useDealDrawer } from "@/contexts/DealDrawer";
+import { useSnapshotDeltas, type DeltaWindow } from "@/hooks/useSnapshotDeltas";
 import {
   computeFiltered,
   filterByPeriod,
@@ -79,6 +80,8 @@ const Index = () => {
   const [bandSel, setBandSel] = useState<Set<string>>(new Set());
   const [perfilSel, setPerfilSel] = useState<Set<string>>(new Set());
   const [onlyMine, setOnlyMine] = useState(false);
+  const [deltaWindow, setDeltaWindow] = useState<DeltaWindow>(7);
+  const { data: deltas } = useSnapshotDeltas(deltaWindow);
   const { fullName } = useAuth();
   const { open: openDeal } = useDealDrawer();
 
@@ -292,6 +295,9 @@ const Index = () => {
             estourado={data?.estourado ?? 0}
             estouradoCount={data?.estouradoCount ?? 0}
             onEstoqueClick={() => setEstoqueOpen(true)}
+            deltas={deltas}
+            windowDays={deltaWindow}
+            onChangeWindow={setDeltaWindow}
           />
         </div>
 
