@@ -31,6 +31,8 @@ const Card = ({
   deltaDecimals,
   goodDirection,
   windowLabel,
+  showDelta,
+  deltaLoading,
 }: {
   label: string;
   value: string;
@@ -43,6 +45,8 @@ const Card = ({
   deltaDecimals?: number;
   goodDirection?: "up" | "down";
   windowLabel?: string;
+  showDelta?: boolean;
+  deltaLoading?: boolean;
 }) => {
   const ring = {
     default: "border-border",
@@ -85,13 +89,14 @@ const Card = ({
         {hint}
         {interactive && <span className="ml-1 text-primary">→ ver detalhes</span>}
       </p>
-      {delta && windowLabel && (
+      {showDelta && windowLabel && (
         <KpiDeltaBadge
           delta={delta}
           unit={deltaUnit}
           decimals={deltaDecimals}
           goodDirection={goodDirection}
           windowLabel={windowLabel}
+          loading={deltaLoading}
         />
       )}
     </div>
