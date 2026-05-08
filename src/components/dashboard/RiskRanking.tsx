@@ -55,7 +55,11 @@ export const RiskRanking = ({ rows, limit = 10 }: Props) => {
             {top.map((it, i) => {
               const meta = SLA_BAND_META[slaBand(slaOf(it.row))];
               return (
-                <tr key={it.row.id_deal} className="border-t border-border">
+                <tr
+                  key={it.row.id_deal}
+                  onClick={() => open(it.row)}
+                  className="cursor-pointer border-t border-border transition-colors hover:bg-muted/30"
+                >
                   <td className="px-3 py-2 font-numeric text-xs text-muted-foreground">{i + 1}</td>
                   <td className="px-3 py-2 font-medium text-foreground">
                     {it.row.nome_negocio?.trim() || "—"}
