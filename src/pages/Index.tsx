@@ -12,6 +12,10 @@ import { SlaCritico } from "@/components/dashboard/SlaCritico";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
 import { PeriodFilter } from "@/components/dashboard/PeriodFilter";
 import { MultiSelectFilter } from "@/components/dashboard/MultiSelectFilter";
+import { Highlights } from "@/components/dashboard/Highlights";
+import { BottleneckHeatmap } from "@/components/dashboard/BottleneckHeatmap";
+import { RankingTable } from "@/components/dashboard/RankingTable";
+import { PerfilSlaPanel } from "@/components/dashboard/PerfilSlaPanel";
 import {
   computeFiltered,
   filterByPeriod,
