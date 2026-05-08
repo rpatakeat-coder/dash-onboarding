@@ -160,6 +160,61 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
           />
         </div>
 
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+              Perfil
+            </span>
+            {perfisDisponiveis.map((p) => {
+              const active = perfilSel.has(p);
+              return (
+                <button
+                  key={p}
+                  onClick={() => togglePerfil(p)}
+                  className={cn(
+                    "rounded-full border px-3 py-1 font-subtitle text-xs font-semibold transition",
+                    active
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                  )}
+                >
+                  {p}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+              Etapa
+            </span>
+            {etapasDisponiveis.map((e) => {
+              const active = etapaSel.has(e);
+              return (
+                <button
+                  key={e}
+                  onClick={() => toggleEtapa(e)}
+                  className={cn(
+                    "rounded-full border px-3 py-1 font-subtitle text-xs font-medium transition",
+                    active
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                  )}
+                >
+                  {e}
+                </button>
+              );
+            })}
+            {hasFilters && (
+              <button
+                onClick={clearFilters}
+                className="ml-auto rounded-full px-3 py-1 font-subtitle text-xs text-muted-foreground underline-offset-2 hover:text-destructive hover:underline"
+              >
+                Limpar filtros
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="max-h-[60vh] overflow-auto rounded-lg border">
           <Table>
             <TableHeader className="sticky top-0 bg-card">
