@@ -251,11 +251,21 @@ const Index = () => {
 
   const hasGlobalFilters = ativadorSel.size > 0 || etapaSel.size > 0 || bandSel.size > 0 || perfilSel.size > 0;
 
+  const filterChips = useMemo(() => {
+    const out: string[] = [];
+    if (onlyMine && fullName) out.push(`Só meus deals (${fullName})`);
+    if (ativadorSel.size) out.push(`Ativador: ${[...ativadorSel].join(", ")}`);
+    if (etapaSel.size) out.push(`Etapa: ${[...etapaSel].join(", ")}`);
+    if (bandSel.size) out.push(`Faixa SLA: ${[...bandSel].join(", ")}`);
+    if (perfilSel.size) out.push(`Perfil: ${[...perfilSel].join(", ")}`);
+    return out;
+  }, [onlyMine, fullName, ativadorSel, etapaSel, bandSel, perfilSel]);
+
   return (
     <div className="min-h-screen bg-gradient-surface">
       <DashboardHeader />
 
-      <main className="mx-auto max-w-[1400px] px-6 py-8 md:px-10 md:py-10">
+      <main id="dashboard-pdf-root" className="mx-auto max-w-[1400px] px-6 py-8 md:px-10 md:py-10">
         <div className="mb-8 animate-fade-in-up">
           <h2 className="font-display text-3xl font-bold tracking-tight text-secondary md:text-4xl">
             Visão executiva
