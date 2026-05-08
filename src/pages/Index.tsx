@@ -33,6 +33,28 @@ const slaOf = (r: DashRow) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+const ScopeBadge = ({
+  scope,
+  destaque,
+  destaqueLabel,
+  total,
+}: {
+  scope: number;
+  destaque: number;
+  destaqueLabel: string;
+  total: number;
+}) => (
+  <span
+    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-0.5 font-numeric text-[11px] tabular-nums text-muted-foreground"
+    title={`${scope.toLocaleString("pt-BR")} no escopo (após filtros) · ${destaque.toLocaleString("pt-BR")} ${destaqueLabel} · base total ${total.toLocaleString("pt-BR")}`}
+  >
+    <span className="font-semibold text-foreground">{scope.toLocaleString("pt-BR")}</span>
+    <span>de {total.toLocaleString("pt-BR")}</span>
+    <span className="opacity-60">·</span>
+    <span className="text-destructive">{destaque.toLocaleString("pt-BR")} {destaqueLabel}</span>
+  </span>
+);
+
 const Index = () => {
   const { data, error } = useDashOperacoes();
   const [estoqueOpen, setEstoqueOpen] = useState(false);
