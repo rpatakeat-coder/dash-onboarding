@@ -280,6 +280,7 @@ const Index = () => {
       value: `${deltaWindow}d vs ${deltaWindow}d anteriores`,
     });
     const periodos: string[] = [];
+    if (kpiPeriod !== "tudo") periodos.push(`KPIs: ${periodLabel(kpiPeriod)}`);
     if (atencaoPeriod !== "tudo") periodos.push(`Atenção: ${periodLabel(atencaoPeriod)}`);
     if (criticoPeriod !== "tudo") periodos.push(`Crítico: ${periodLabel(criticoPeriod)}`);
     if (opPeriod !== "tudo") periodos.push(`Operadores: ${periodLabel(opPeriod)}`);
