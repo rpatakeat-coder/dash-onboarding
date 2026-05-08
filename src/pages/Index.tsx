@@ -26,6 +26,7 @@ import { useDealDrawer } from "@/contexts/DealDrawer";
 import { useSnapshotDeltas, type DeltaWindow } from "@/hooks/useSnapshotDeltas";
 import {
   computeFiltered,
+  computeSlaKpis,
   filterByPeriod,
   slaBand,
   SLA_BAND_META,
@@ -75,6 +76,7 @@ const Index = () => {
   const [atencaoPeriod, setAtencaoPeriod] = useState<PeriodKey>("tudo");
   const [criticoPeriod, setCriticoPeriod] = useState<PeriodKey>("tudo");
   const [opPeriod, setOpPeriod] = useState<PeriodKey>("tudo");
+  const [kpiPeriod, setKpiPeriod] = useState<PeriodKey>("tudo");
   const [ativadorSel, setAtivadorSel] = useState<Set<string>>(new Set());
   const [etapaSel, setEtapaSel] = useState<Set<string>>(new Set());
   const [bandSel, setBandSel] = useState<Set<string>>(new Set());
@@ -190,6 +192,16 @@ const Index = () => {
   const atencaoData = useMemo(() => computeFiltered(filterByPeriod(rows, atencaoPeriod)), [rows, atencaoPeriod]);
   const criticoData = useMemo(() => computeFiltered(filterByPeriod(rows, criticoPeriod)), [rows, criticoPeriod]);
   const opData = useMemo(() => computeFiltered(filterByPeriod(rows, opPeriod)), [rows, opPeriod]);
+  const kpiData = useMemo(
+    () => computeSlaKpis(filterByPeriod(rows, kpiPeriod)),
+    [rows, kpiPeriod],
+  );
+  const kpiCounts = useMemo<Partial<Record<PeriodKey, number>>>(() => {
+    const periodos: PeriodKey[] = ["tudo", "hoje", "semana", "mes"];
+    const out: Partial<Record<PeriodKey, number>> = {};
+    for (const p of periodos) out[p] = filterByPeriod(rows, p).length;
+    return out;
+  }, [rows]);
 
   const travadosLista = useMemo(() => {
     const TRAVADO_DIAS = 7;
@@ -268,6 +280,7 @@ const Index = () => {
       value: `${deltaWindow}d vs ${deltaWindow}d anteriores`,
     });
     const periodos: string[] = [];
+    if (kpiPeriod !== "tudo") periodos.push(`KPIs: ${periodLabel(kpiPeriod)}`);
     if (atencaoPeriod !== "tudo") periodos.push(`Atenção: ${periodLabel(atencaoPeriod)}`);
     if (criticoPeriod !== "tudo") periodos.push(`Crítico: ${periodLabel(criticoPeriod)}`);
     if (opPeriod !== "tudo") periodos.push(`Operadores: ${periodLabel(opPeriod)}`);
@@ -301,7 +314,7 @@ const Index = () => {
         value: [...perfilSel].join(", "),
       });
     return out;
-  }, [rows.length, allRows.length, deltaWindow, atencaoPeriod, criticoPeriod, opPeriod, onlyMine, fullName, ativadorSel, etapaSel, bandSel, perfilSel]);
+  }, [rows.length, allRows.length, deltaWindow, kpiPeriod, atencaoPeriod, criticoPeriod, opPeriod, onlyMine, fullName, ativadorSel, etapaSel, bandSel, perfilSel]);
 
 
   return (
@@ -325,15 +338,30 @@ const Index = () => {
         )}
 
         {/* SLA / Estoque */}
-        <div className="mb-6">
+        <div className="mb-6 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 pdf-hide">
+            <div>
+              <h3 className="font-display text-lg font-semibold text-foreground">
+                Indicadores de SLA
+              </h3>
+              <p className="font-small text-xs text-muted-foreground">
+                {kpiPeriod === "tudo"
+                  ? "Considera todo o estoque atual"
+                  : `Apenas clientes criados em "${
+                      { hoje: "Hoje", semana: "Semana", mes: "Mês" }[kpiPeriod]
+                    }"`}
+              </p>
+            </div>
+            <PeriodFilter value={kpiPeriod} onChange={setKpiPeriod} counts={kpiCounts} />
+          </div>
           <SlaKpiRow
-            total={data?.total ?? 0}
-            slaP75={data?.slaP75 ?? 0}
-            slaMedio={data?.slaMedio ?? 0}
-            noPrazo={data?.noPrazo ?? 0}
-            noPrazoCount={data?.noPrazoCount ?? 0}
-            estourado={data?.estourado ?? 0}
-            estouradoCount={data?.estouradoCount ?? 0}
+            total={kpiData.total}
+            slaP75={kpiData.slaP75}
+            slaMedio={kpiData.slaMedio}
+            noPrazo={kpiData.noPrazo}
+            noPrazoCount={kpiData.noPrazoCount}
+            estourado={kpiData.estourado}
+            estouradoCount={kpiData.estouradoCount}
             onEstoqueClick={() => setEstoqueOpen(true)}
             deltas={deltas}
             deltasLoading={deltasLoading}
