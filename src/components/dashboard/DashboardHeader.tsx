@@ -28,7 +28,7 @@ export const DashboardHeader = () => {
                 Onboarding
               </h1>
             </div>
-            {session && <MainNav className="ml-2 hidden md:flex" />}
+            <MainNav className="ml-2 hidden md:flex" />
           </div>
           <div className="flex items-center gap-4">
             <div className="hidden text-right md:block">
@@ -66,7 +66,7 @@ export const DashboardHeader = () => {
             )}
           </div>
         </div>
-        {session && <MainNav className="mt-3 md:hidden" />}
+        <MainNav className="mt-3 md:hidden" />
       </div>
     </header>
   );
