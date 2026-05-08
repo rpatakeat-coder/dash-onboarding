@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { OperatorsTable } from "@/components/dashboard/OperatorsTable";
+import { OperatorCarteiraModal } from "@/components/dashboard/OperatorCarteiraModal";
 import { StalledTable } from "@/components/dashboard/StalledTable";
 import { SlaKpiRow } from "@/components/dashboard/SlaKpiRow";
 import { PeriodGrids } from "@/components/dashboard/PeriodGrids";
