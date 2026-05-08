@@ -78,6 +78,36 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
     [mapped],
   );
 
+  // Counts respect search + the OTHER dimension's selection (not the dimension itself)
+  const term = q.trim().toLowerCase();
+  const matchesSearch = (r: (typeof mapped)[number]) =>
+    !term ||
+    r.cliente.toLowerCase().includes(term) ||
+    r.etapa.toLowerCase().includes(term) ||
+    r.ativador.toLowerCase().includes(term);
+
+  const perfilCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const r of mapped) {
+      if (!matchesSearch(r)) continue;
+      if (etapaSel.size && !etapaSel.has(r.etapa)) continue;
+      counts[r.perfil] = (counts[r.perfil] ?? 0) + 1;
+    }
+    return counts;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapped, etapaSel, q]);
+
+  const etapaCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const r of mapped) {
+      if (!matchesSearch(r)) continue;
+      if (perfilSel.size && !perfilSel.has(r.perfil)) continue;
+      counts[r.etapa] = (counts[r.etapa] ?? 0) + 1;
+    }
+    return counts;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapped, perfilSel, q]);
+
   const list = useMemo(() => {
     const term = q.trim().toLowerCase();
     const filtered = mapped.filter((r) => {
@@ -167,18 +197,30 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
             </span>
             {perfisDisponiveis.map((p) => {
               const active = perfilSel.has(p);
+              const count = perfilCounts[p] ?? 0;
+              const disabled = count === 0 && !active;
               return (
                 <button
                   key={p}
                   onClick={() => togglePerfil(p)}
+                  disabled={disabled}
                   className={cn(
-                    "rounded-full border px-3 py-1 font-subtitle text-xs font-semibold transition",
+                    "flex items-center gap-1.5 rounded-full border px-3 py-1 font-subtitle text-xs font-semibold transition",
                     active
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                    disabled && "opacity-40 hover:border-border hover:text-muted-foreground",
                   )}
                 >
-                  {p}
+                  <span>{p}</span>
+                  <span
+                    className={cn(
+                      "rounded-full px-1.5 py-0.5 font-numeric text-[10px] font-bold tabular-nums",
+                      active ? "bg-primary-foreground/20" : "bg-muted text-foreground/70",
+                    )}
+                  >
+                    {count}
+                  </span>
                 </button>
               );
             })}
@@ -189,18 +231,30 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
             </span>
             {etapasDisponiveis.map((e) => {
               const active = etapaSel.has(e);
+              const count = etapaCounts[e] ?? 0;
+              const disabled = count === 0 && !active;
               return (
                 <button
                   key={e}
                   onClick={() => toggleEtapa(e)}
+                  disabled={disabled}
                   className={cn(
-                    "rounded-full border px-3 py-1 font-subtitle text-xs font-medium transition",
+                    "flex items-center gap-1.5 rounded-full border px-3 py-1 font-subtitle text-xs font-medium transition",
                     active
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                    disabled && "opacity-40 hover:border-border hover:text-muted-foreground",
                   )}
                 >
-                  {e}
+                  <span>{e}</span>
+                  <span
+                    className={cn(
+                      "rounded-full px-1.5 py-0.5 font-numeric text-[10px] font-bold tabular-nums",
+                      active ? "bg-primary-foreground/20" : "bg-muted text-foreground/70",
+                    )}
+                  >
+                    {count}
+                  </span>
                 </button>
               );
             })}
