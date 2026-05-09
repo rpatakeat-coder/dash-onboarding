@@ -355,6 +355,17 @@ export const ExportPdfButton = ({
       const blob = pdf.output("blob") as Blob;
       const url = URL.createObjectURL(blob);
       setPreview({ url, pages: totalPages, name: `${filename}_${stamp}.pdf` });
+      history.add({
+        title: cfg.title,
+        subtitle: cfg.subtitle,
+        period: cfg.period,
+        filtersText: cfg.filtersText,
+        includeCover: cfg.includeCover,
+        includeToc: cfg.includeToc,
+        includeWatermark: cfg.includeWatermark,
+        includeFooter: cfg.includeFooter,
+        pageCount: totalPages,
+      });
       setConfigOpen(false);
     } catch (err) {
       console.error("[ExportPDF]", err);
