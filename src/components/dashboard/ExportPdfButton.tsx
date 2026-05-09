@@ -524,6 +524,79 @@ export const ExportPdfButton = ({
                 </div>
               ))}
             </div>
+
+            {history.entries.length > 0 && (
+              <div className="grid gap-2 rounded-lg border border-border bg-muted/40 p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <History className="h-3.5 w-3.5" />
+                    Últimas exportações
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => history.clear()}
+                    className="text-[10px] text-muted-foreground hover:text-destructive"
+                  >
+                    Limpar tudo
+                  </button>
+                </div>
+                <ul className="-mx-1 max-h-44 space-y-1 overflow-y-auto pr-1">
+                  {history.entries.map((entry) => (
+                    <li
+                      key={entry.id}
+                      className="group flex items-start gap-2 rounded-md border border-transparent bg-card/60 px-2 py-1.5 hover:border-border"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-xs font-medium text-foreground">
+                          {entry.title}
+                        </div>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
+                          <span className="inline-flex items-center gap-1">
+                            <Clock className="h-2.5 w-2.5" />
+                            {new Date(entry.createdAt).toLocaleString("pt-BR", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                          {entry.period && <span>· {entry.period}</span>}
+                          <span>· {entry.pageCount} pág.</span>
+                          {entry.filtersText && (
+                            <span className="truncate">
+                              ·{" "}
+                              {entry.filtersText
+                                .split(/\r?\n/)
+                                .filter(Boolean)
+                                .length}{" "}
+                              filtro(s)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => restoreFromHistory(entry)}
+                        title="Restaurar configuração"
+                        aria-label="Restaurar configuração desta exportação"
+                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-primary"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => history.remove(entry.id)}
+                        title="Remover do histórico"
+                        aria-label="Remover do histórico"
+                        className="rounded p-1 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:bg-muted hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <DialogFooter className="gap-2">
