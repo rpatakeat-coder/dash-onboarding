@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { paginateCanvas } from "@/lib/pdfPagination";
+import {
+  addCoverPage,
+  addOutline,
+  addTocPage,
+  stampPagesWithBranding,
+  type SectionAnchor,
+} from "@/lib/pdfBranding";
+import logoTakeat from "@/assets/logo-takeat.png";
 import { FileDown, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -14,12 +22,65 @@ interface Props {
   targetId?: string;
   summary?: PdfSummaryItem[];
   filename?: string;
+  /** Título exibido na capa do PDF. */
+  title?: string;
+  /** Subtítulo exibido sob o título da capa. */
+  subtitle?: string;
 }
+
+/**
+ * Carrega uma imagem importada do bundle como data-URL (necessário para
+ * jsPDF.addImage funcionar offline e para a marca d'água).
+ */
+const loadImageAsDataUrl = async (src: string): Promise<string> => {
+  if (src.startsWith("data:")) return src;
+  const res = await fetch(src);
+  const blob = await res.blob();
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+/**
+ * Coleta âncoras de seção a partir do DOM capturado. Para cada `<section>`
+ * com `data-pdf-title` (ou primeiro `<h3>` interno), grava o título + a
+ * posição Y em coordenadas do canvas html2canvas.
+ */
+const collectSectionAnchors = (
+  el: HTMLElement,
+  canvas: HTMLCanvasElement,
+): Array<{ title: string; canvasY: number }> => {
+  const elRect = el.getBoundingClientRect();
+  const ratio = canvas.height / el.scrollHeight;
+  const out: Array<{ title: string; canvasY: number }> = [];
+  el.querySelectorAll<HTMLElement>("section, [data-pdf-section]").forEach((node) => {
+    if (node.offsetParent === null) return;
+    const explicit = node.getAttribute("data-pdf-title");
+    const heading = node.querySelector<HTMLElement>("h2, h3");
+    const title = (explicit || heading?.textContent || "").trim();
+    if (!title) return;
+    const r = node.getBoundingClientRect();
+    const canvasY = Math.max(0, Math.round((r.top - elRect.top) * ratio));
+    out.push({ title, canvasY });
+  });
+  // Dedup por título (alguns wrappers internos repetem o h3) — fica o primeiro
+  const seen = new Set<string>();
+  return out.filter((a) => {
+    if (seen.has(a.title)) return false;
+    seen.add(a.title);
+    return true;
+  });
+};
 
 export const ExportPdfButton = ({
   targetId = "dashboard-pdf-root",
   summary = [],
   filename = "operacoes",
+  title = "Painel de Operações — Onboarding Takeat",
+  subtitle = "Visão consolidada de KPIs, funil, SLA e performance dos ativadores.",
 }: Props) => {
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<{ url: string; pages: number; name: string } | null>(null);
@@ -37,19 +98,15 @@ export const ExportPdfButton = ({
     setBusy(true);
     document.body.classList.add("pdf-export");
     try {
-      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+      const [{ default: html2canvas }, { jsPDF }, logoDataUrl] = await Promise.all([
         import("html2canvas-pro"),
         import("jspdf"),
+        loadImageAsDataUrl(logoTakeat).catch(() => undefined),
       ]);
 
-      // Aguarda 1 frame para o CSS de export ser aplicado antes da captura
       await new Promise((r) => requestAnimationFrame(() => r(null)));
 
       const bg = getComputedStyle(document.body).backgroundColor || "#ffffff";
-      // Tentativas em cascata: do mais fiel ao mais tolerante.
-      // Cada fallback reduz scale, desativa recursos que costumam quebrar
-      // (CORS de imagens externas, fontes web, foreignObject) e por fim
-      // ignora nodes problemáticos (canvas/iframes) para garantir saída.
       const attempts: Array<{ label: string; opts: Parameters<typeof html2canvas>[1] }> = [
         {
           label: "alta-fidelidade",
@@ -109,59 +166,34 @@ export const ExportPdfButton = ({
       const margin = 24;
       const usableW = pageW - margin * 2;
 
-      // ===== Cabeçalho =====
-      const date = new Date().toLocaleString("pt-BR");
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(14);
-      pdf.setTextColor(20);
-      pdf.text("Painel de Operações — Onboarding Takeat", margin, margin + 4);
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(9);
-      pdf.setTextColor(120);
-      pdf.text(`Gerado em ${date}`, margin, margin + 18);
+      pdf.setProperties({
+        title,
+        subject: subtitle,
+        author: "Takeat",
+        creator: "Takeat Dashboard",
+      });
 
-      // Resumo de filtros estruturado (label : value), com wrap
-      const labelW = 110; // pt — acomoda labels com sufixos descritivos
-      const valueW = usableW - labelW - 8;
-      const lineH = 11;
-      let cursorY = margin + 34;
+      // ===== Página 1: Capa =====
+      addCoverPage(pdf, {
+        title,
+        subtitle,
+        period: summary.find((s) => /per[ií]odo/i.test(s.label))?.value,
+        filters: summary,
+        logoDataUrl,
+      });
 
-      if (summary.length) {
-        // Linha divisória sutil
-        pdf.setDrawColor(220);
-        pdf.setLineWidth(0.5);
-        pdf.line(margin, cursorY - 6, margin + usableW, cursorY - 6);
+      // ===== Página 2: Sumário (placeholder; preenchido depois) =====
+      pdf.addPage();
+      const tocPageNumber = pdf.getNumberOfPages();
 
-        for (const item of summary) {
-          pdf.setFont("helvetica", "bold");
-          pdf.setFontSize(8);
-          pdf.setTextColor(90);
-          const labelLines = pdf.splitTextToSize(item.label.toUpperCase(), labelW) as string[];
-          pdf.text(labelLines, margin, cursorY);
+      // ===== Páginas 3+: Conteúdo paginado =====
+      pdf.addPage();
+      const firstContentPage = pdf.getNumberOfPages();
 
-          pdf.setFont("helvetica", "normal");
-          pdf.setFontSize(9);
-          pdf.setTextColor(40);
-          const valueLines = pdf.splitTextToSize(item.value, valueW) as string[];
-          pdf.text(valueLines, margin + labelW, cursorY);
-          const rows = Math.max(labelLines.length, valueLines.length);
-          cursorY += rows * lineH;
-        }
-        cursorY += 4;
-        pdf.setDrawColor(220);
-        pdf.line(margin, cursorY - 4, margin + usableW, cursorY - 4);
-      }
-
-      const contentTop = cursorY + 6;
-      const availPerPage = pageH - contentTop - margin;
-
-      // ===== Imagem do dashboard, paginada sem cortes nem repetições =====
       const pxPerPt = canvas.width / usableW;
-      const firstPagePx = Math.floor((pageH - contentTop - margin) * pxPerPt);
       const fullPagePx = Math.floor((pageH - margin * 2) * pxPerPt);
 
-      // Coleta candidatos de "quebra segura": topo de cada card/linha relevante,
-      // mapeado do espaço do DOM para coordenadas do canvas.
+      // Coleta candidatos de quebra segura
       const elRect = el.getBoundingClientRect();
       const domToCanvas = canvas.height / el.scrollHeight;
       const breakSelector =
@@ -177,13 +209,26 @@ export const ExportPdfButton = ({
       });
       const breaks = Array.from(breakSet).sort((a, b) => a - b);
 
+      // Sem header de conteúdo: primeira página de conteúdo já usa full page
       const slices = paginateCanvas({
         canvasHeight: canvas.height,
         breaks,
-        firstPagePx,
+        firstPagePx: fullPagePx,
         fullPagePx,
       });
-      const totalPages = slices.length;
+
+      // Coleta âncoras de seção para sumário/outline
+      const sections = collectSectionAnchors(el, canvas);
+      const anchors: SectionAnchor[] = [];
+      const findPageForCanvasY = (y: number) => {
+        for (let i = 0; i < slices.length; i++) {
+          if (y >= slices[i].start && y < slices[i].end) return firstContentPage + i;
+        }
+        return firstContentPage + slices.length - 1;
+      };
+      for (const s of sections) {
+        anchors.push({ title: s.title, page: findPageForCanvasY(s.canvasY) });
+      }
 
       slices.forEach((slice, pageIdx) => {
         const sliceHpx = slice.end - slice.start;
@@ -206,19 +251,18 @@ export const ExportPdfButton = ({
         const data = sliceCanvas.toDataURL("image/jpeg", 0.92);
         if (pageIdx > 0) pdf.addPage();
         const sliceHpt = sliceHpx / pxPerPt;
-        const top = pageIdx === 0 ? contentTop : margin;
-        pdf.addImage(data, "JPEG", margin, top, usableW, sliceHpt);
-
-        pdf.setFontSize(8);
-        pdf.setTextColor(150);
-        pdf.text(
-          `Página ${pageIdx + 1} de ${totalPages} · Takeat`,
-          pageW - margin,
-          pageH - 10,
-          { align: "right" },
-        );
+        pdf.addImage(data, "JPEG", margin, margin, usableW, sliceHpt);
       });
 
+      // ===== Finaliza: sumário, marca d'água + rodapé, outline =====
+      addTocPage(pdf, anchors, tocPageNumber);
+      addOutline(pdf, anchors);
+      stampPagesWithBranding(pdf, {
+        logoDataUrl,
+        skipPages: [1, tocPageNumber],
+      });
+
+      const totalPages = pdf.getNumberOfPages();
       const stamp = new Date().toISOString().slice(0, 10);
       const blob = pdf.output("blob") as Blob;
       const url = URL.createObjectURL(blob);
@@ -253,7 +297,6 @@ export const ExportPdfButton = ({
     closePreview();
   };
 
-  // Limpa blob URL quando o componente é desmontado
   useEffect(() => {
     return () => {
       if (preview) URL.revokeObjectURL(preview.url);
