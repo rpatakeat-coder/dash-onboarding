@@ -47,7 +47,7 @@ export const BottleneckHeatmap = ({ rows, onCellClick }: Props) => {
   if (!matrix.length) return null;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm-soft">
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm-soft sm:p-6">
       <div className="mb-5 flex items-center gap-2.5">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-warning/10">
           <Flame className="h-5 w-5 text-warning" />
