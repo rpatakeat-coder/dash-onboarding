@@ -575,7 +575,7 @@ export const ExportPdfButton = ({
                     <History className="h-3.5 w-3.5" />
                     Últimas exportações
                     <span className="ml-1 hidden font-normal text-[10px] text-muted-foreground/80 sm:inline">
-                      · foque um item e tecle <kbd className="rounded border border-border bg-card px-1 text-[9px]">Enter</kbd> ou <kbd className="rounded border border-border bg-card px-1 text-[9px]">G</kbd> para gerar de novo
+                      · <kbd className="rounded border border-border bg-card px-1 text-[9px]">↑</kbd>/<kbd className="rounded border border-border bg-card px-1 text-[9px]">↓</kbd> navegam, <kbd className="rounded border border-border bg-card px-1 text-[9px]">Enter</kbd> ou <kbd className="rounded border border-border bg-card px-1 text-[9px]">G</kbd> geram de novo
                     </span>
                   </div>
                   <button
