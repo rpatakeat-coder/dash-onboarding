@@ -156,19 +156,8 @@ export const ExportPdfButton = ({
   );
 
   const [config, setConfig] = useState<ExportConfig>(() => {
-    const def = history.defaultEntry;
-    if (def) {
-      return {
-        title: def.title,
-        subtitle: def.subtitle,
-        period: def.period,
-        filtersText: def.filtersText,
-        includeCover: def.includeCover,
-        includeToc: def.includeToc,
-        includeWatermark: def.includeWatermark,
-        includeFooter: def.includeFooter,
-      };
-    }
+    const def = history.defaults;
+    if (def) return { ...def };
     return {
       title,
       subtitle,
@@ -580,67 +569,87 @@ export const ExportPdfButton = ({
                       key={entry.id}
                       className="group flex items-start gap-2 rounded-md border border-transparent bg-card/60 px-2 py-1.5 hover:border-border"
                     >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="truncate text-xs font-medium text-foreground">
-                            {entry.title}
-                          </span>
-                          {entry.isDefault && (
-                            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary">
-                              <Star className="h-2.5 w-2.5 fill-current" />
-                              Padrão
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
-                          <span className="inline-flex items-center gap-1">
-                            <Clock className="h-2.5 w-2.5" />
-                            {new Date(entry.createdAt).toLocaleString("pt-BR", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                          {entry.period && <span>· {entry.period}</span>}
-                          <span>· {entry.pageCount} pág.</span>
-                          {entry.filtersText && (
-                            <span className="truncate">
-                              ·{" "}
-                              {entry.filtersText
-                                .split(/\r?\n/)
-                                .filter(Boolean)
-                                .length}{" "}
-                              filtro(s)
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          history.toggleDefault(entry.id);
-                          toast({
-                            title: entry.isDefault
-                              ? "Padrão removido"
-                              : "Definido como padrão",
-                            description: entry.isDefault
-                              ? "O modal voltará ao preenchimento normal."
-                              : "Da próxima vez o modal abrirá com estas opções.",
-                          });
-                        }}
-                        title={entry.isDefault ? "Desmarcar padrão" : "Definir como padrão"}
-                        aria-label={entry.isDefault ? "Desmarcar padrão" : "Definir como padrão"}
-                        className={
-                          entry.isDefault
-                            ? "rounded p-1 text-primary hover:bg-muted"
-                            : "rounded p-1 text-muted-foreground hover:bg-muted hover:text-primary"
-                        }
-                      >
-                        <Star
-                          className={`h-3.5 w-3.5 ${entry.isDefault ? "fill-current" : ""}`}
-                        />
-                      </button>
+                      {(() => {
+                        const isDefault = history.isDefaultEntry(entry);
+                        return (
+                          <>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="truncate text-xs font-medium text-foreground">
+                                  {entry.title}
+                                </span>
+                                {isDefault && (
+                                  <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary">
+                                    <Star className="h-2.5 w-2.5 fill-current" />
+                                    Padrão
+                                  </span>
+                                )}
+                              </div>
+                              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
+                                <span className="inline-flex items-center gap-1">
+                                  <Clock className="h-2.5 w-2.5" />
+                                  {new Date(entry.createdAt).toLocaleString("pt-BR", {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </span>
+                                {entry.period && <span>· {entry.period}</span>}
+                                <span>· {entry.pageCount} pág.</span>
+                                {entry.filtersText && (
+                                  <span className="truncate">
+                                    ·{" "}
+                                    {entry.filtersText
+                                      .split(/\r?\n/)
+                                      .filter(Boolean)
+                                      .length}{" "}
+                                    filtro(s)
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (isDefault) {
+                                  history.clearDefault();
+                                  toast({
+                                    title: "Padrão removido",
+                                    description: "O modal voltará ao preenchimento normal.",
+                                  });
+                                } else {
+                                  history.saveDefault({
+                                    title: entry.title,
+                                    subtitle: entry.subtitle,
+                                    period: entry.period,
+                                    filtersText: entry.filtersText,
+                                    includeCover: entry.includeCover,
+                                    includeToc: entry.includeToc,
+                                    includeWatermark: entry.includeWatermark,
+                                    includeFooter: entry.includeFooter,
+                                  });
+                                  toast({
+                                    title: "Definido como padrão",
+                                    description: "Da próxima vez o modal abrirá com estas opções.",
+                                  });
+                                }
+                              }}
+                              title={isDefault ? "Desmarcar padrão" : "Definir como padrão"}
+                              aria-label={isDefault ? "Desmarcar padrão" : "Definir como padrão"}
+                              className={
+                                isDefault
+                                  ? "rounded p-1 text-primary hover:bg-muted"
+                                  : "rounded p-1 text-muted-foreground hover:bg-muted hover:text-primary"
+                              }
+                            >
+                              <Star
+                                className={`h-3.5 w-3.5 ${isDefault ? "fill-current" : ""}`}
+                              />
+                            </button>
+                          </>
+                        );
+                      })()}
                       <button
                         type="button"
                         onClick={() => regenerateFromHistory(entry)}
@@ -680,26 +689,77 @@ export const ExportPdfButton = ({
             )}
           </div>
 
-          <DialogFooter className="gap-2">
-            <button
-              onClick={() => setConfigOpen(false)}
-              disabled={busy}
-              className="rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-40"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={() => runExport(config)}
-              disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 font-subtitle text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40"
-            >
-              {busy ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <FileDown className="h-3 w-3" />
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  history.saveDefault({ ...config });
+                  toast({
+                    title: "Padrão salvo",
+                    description:
+                      "O modal abrirá com estas opções nas próximas exportações.",
+                  });
+                }}
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs font-medium text-muted-foreground hover:text-primary disabled:opacity-40"
+                title="Salvar configuração atual como padrão"
+              >
+                <Star
+                  className={`h-3 w-3 ${
+                    history.defaults &&
+                    history.defaults.title === config.title &&
+                    history.defaults.subtitle === config.subtitle &&
+                    history.defaults.period === config.period &&
+                    history.defaults.filtersText === config.filtersText &&
+                    history.defaults.includeCover === config.includeCover &&
+                    history.defaults.includeToc === config.includeToc &&
+                    history.defaults.includeWatermark === config.includeWatermark &&
+                    history.defaults.includeFooter === config.includeFooter
+                      ? "fill-current text-primary"
+                      : ""
+                  }`}
+                />
+                Salvar como padrão
+              </button>
+              {history.defaults && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    history.clearDefault();
+                    toast({
+                      title: "Padrão removido",
+                      description: "O modal voltará ao preenchimento normal.",
+                    });
+                  }}
+                  disabled={busy}
+                  className="rounded-lg px-2 py-1 font-subtitle text-[11px] text-muted-foreground hover:text-destructive disabled:opacity-40"
+                >
+                  Limpar padrão
+                </button>
               )}
-              {busy ? "Gerando…" : "Gerar prévia"}
-            </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setConfigOpen(false)}
+                disabled={busy}
+                className="rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-40"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => runExport(config)}
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 font-subtitle text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40"
+              >
+                {busy ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <FileDown className="h-3 w-3" />
+                )}
+                {busy ? "Gerando…" : "Gerar prévia"}
+              </button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
