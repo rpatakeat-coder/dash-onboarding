@@ -196,6 +196,15 @@ export const ExportPdfButton = ({
   const update = <K extends keyof ExportConfig>(key: K, value: ExportConfig[K]) =>
     setConfig((prev) => ({ ...prev, [key]: value }));
 
+  // Auto-salva o padrão (debounce 600ms) enquanto o modal está aberto.
+  useEffect(() => {
+    if (!autoSaveDefault || !configOpen) return;
+    const t = window.setTimeout(() => {
+      history.saveDefault({ ...config });
+    }, 600);
+    return () => window.clearTimeout(t);
+  }, [autoSaveDefault, configOpen, config, history]);
+
   const runExport = async (cfg: ExportConfig) => {
     const el = document.getElementById(targetId);
     if (!el) {
