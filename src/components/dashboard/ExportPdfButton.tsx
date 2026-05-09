@@ -136,16 +136,31 @@ export const ExportPdfButton = ({
     [summary],
   );
 
-  const [config, setConfig] = useState<ExportConfig>(() => ({
-    title,
-    subtitle,
-    period: initialPeriod,
-    filtersText: summaryToText(summary),
-    includeCover: true,
-    includeToc: true,
-    includeWatermark: true,
-    includeFooter: true,
-  }));
+  const [config, setConfig] = useState<ExportConfig>(() => {
+    const def = history.defaultEntry;
+    if (def) {
+      return {
+        title: def.title,
+        subtitle: def.subtitle,
+        period: def.period,
+        filtersText: def.filtersText,
+        includeCover: def.includeCover,
+        includeToc: def.includeToc,
+        includeWatermark: def.includeWatermark,
+        includeFooter: def.includeFooter,
+      };
+    }
+    return {
+      title,
+      subtitle,
+      period: initialPeriod,
+      filtersText: summaryToText(summary),
+      includeCover: true,
+      includeToc: true,
+      includeWatermark: true,
+      includeFooter: true,
+    };
+  });
 
   // Sincroniza valores quando o usuário reabre o modal (props podem ter mudado)
   useEffect(() => {
