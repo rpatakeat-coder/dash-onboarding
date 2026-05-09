@@ -772,6 +772,7 @@ export const ExportPdfButton = ({
                 >
                   Limpar padrão
                 </button>
+              )}
               <label
                 className="ml-1 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card/60 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
                 title="Sempre que você ajustar título, filtros ou toggles, o padrão é atualizado automaticamente."
