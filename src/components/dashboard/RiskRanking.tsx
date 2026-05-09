@@ -37,8 +37,8 @@ export const RiskRanking = ({ rows, limit = 10 }: Props) => {
           dias × etapa × perfil × MRR
         </span>
       </div>
-      <div className="overflow-hidden rounded-lg border border-border">
-        <table className="w-full text-left text-sm">
+      <div className="-mx-1 overflow-x-auto rounded-lg border border-border sm:mx-0">
+        <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="bg-muted/40">
             <tr className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
               <th className="px-3 py-2">#</th>
