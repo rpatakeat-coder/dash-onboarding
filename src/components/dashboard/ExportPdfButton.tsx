@@ -562,8 +562,16 @@ export const ExportPdfButton = ({
                       className="group flex items-start gap-2 rounded-md border border-transparent bg-card/60 px-2 py-1.5 hover:border-border"
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-xs font-medium text-foreground">
-                          {entry.title}
+                        <div className="flex items-center gap-1.5">
+                          <span className="truncate text-xs font-medium text-foreground">
+                            {entry.title}
+                          </span>
+                          {entry.isDefault && (
+                            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary">
+                              <Star className="h-2.5 w-2.5 fill-current" />
+                              Padrão
+                            </span>
+                          )}
                         </div>
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
                           <span className="inline-flex items-center gap-1">
@@ -589,6 +597,31 @@ export const ExportPdfButton = ({
                           )}
                         </div>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          history.toggleDefault(entry.id);
+                          toast({
+                            title: entry.isDefault
+                              ? "Padrão removido"
+                              : "Definido como padrão",
+                            description: entry.isDefault
+                              ? "O modal voltará ao preenchimento normal."
+                              : "Da próxima vez o modal abrirá com estas opções.",
+                          });
+                        }}
+                        title={entry.isDefault ? "Desmarcar padrão" : "Definir como padrão"}
+                        aria-label={entry.isDefault ? "Desmarcar padrão" : "Definir como padrão"}
+                        className={
+                          entry.isDefault
+                            ? "rounded p-1 text-primary hover:bg-muted"
+                            : "rounded p-1 text-muted-foreground hover:bg-muted hover:text-primary"
+                        }
+                      >
+                        <Star
+                          className={`h-3.5 w-3.5 ${entry.isDefault ? "fill-current" : ""}`}
+                        />
+                      </button>
                       <button
                         type="button"
                         onClick={() => restoreFromHistory(entry)}
