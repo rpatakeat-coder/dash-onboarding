@@ -628,6 +628,14 @@ export const ExportPdfButton = ({
                             e.preventDefault();
                             focusAt(items.length - 1);
                             return;
+                          case "PageDown":
+                            e.preventDefault();
+                            focusAt(idx + 5);
+                            return;
+                          case "PageUp":
+                            e.preventDefault();
+                            focusAt(idx - 5);
+                            return;
                         }
 
                         if (busy) return;
