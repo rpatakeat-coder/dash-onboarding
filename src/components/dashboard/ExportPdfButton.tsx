@@ -13,7 +13,7 @@ import {
   type SectionAnchor,
 } from "@/lib/pdfBranding";
 import logoTakeat from "@/assets/logo-takeat.png";
-import { Clock, FileDown, History, Loader2, RotateCcw, Settings2, Star, Trash2 } from "lucide-react";
+import { Clock, FileDown, History, Loader2, Play, RotateCcw, Settings2, Star, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useExportHistory, type ExportHistoryEntry } from "@/hooks/useExportHistory";
 
