@@ -113,6 +113,17 @@ export const ExportPdfButton = ({
   const [configOpen, setConfigOpen] = useState(false);
   const [preview, setPreview] = useState<{ url: string; pages: number; name: string } | null>(null);
   const history = useExportHistory();
+  const [autoSaveDefault, setAutoSaveDefault] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("takeat:pdf-export-autosave:v1") === "1";
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(
+      "takeat:pdf-export-autosave:v1",
+      autoSaveDefault ? "1" : "0",
+    );
+  }, [autoSaveDefault]);
 
   const restoreFromHistory = (entry: ExportHistoryEntry) => {
     setConfig({
