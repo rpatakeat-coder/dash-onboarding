@@ -422,7 +422,7 @@ export const ExportPdfButton = ({
 
       {/* === Modal de configuração === */}
       <Dialog open={configOpen} onOpenChange={(o) => !busy && setConfigOpen(o)}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-display text-base">
               <Settings2 className="h-4 w-4" />
