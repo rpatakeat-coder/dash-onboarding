@@ -35,7 +35,7 @@ export const RankingTable = ({ operadores, onOperatorClick }: Props) => {
     Math.max(1, rows.reduce((s, r) => s + r.op.ativos, 0));
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm-soft">
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm-soft sm:p-6">
       <div className="mb-5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
