@@ -567,7 +567,19 @@ export const ExportPdfButton = ({
                   {history.entries.map((entry) => (
                     <li
                       key={entry.id}
-                      className="group flex items-start gap-2 rounded-md border border-transparent bg-card/60 px-2 py-1.5 hover:border-border"
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Item ${entry.title}. Pressione Enter para gerar de novo.`}
+                      onKeyDown={(e) => {
+                        if (busy) return;
+                        // Ignora se o foco está num botão interno (Enter ativa o próprio botão)
+                        if (e.target !== e.currentTarget) return;
+                        if (e.key === "Enter" || e.key.toLowerCase() === "g") {
+                          e.preventDefault();
+                          regenerateFromHistory(entry);
+                        }
+                      }}
+                      className="group flex items-start gap-2 rounded-md border border-transparent bg-card/60 px-2 py-1.5 outline-none hover:border-border focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/40"
                     >
                       {(() => {
                         const isDefault = history.isDefaultEntry(entry);
