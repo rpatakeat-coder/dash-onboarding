@@ -383,7 +383,7 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-surface">
       <DashboardHeader />
 
-      <main id="dashboard-pdf-root" className="mx-auto max-w-[1400px] px-6 py-8 md:px-10 md:py-10">
+      <main id="dashboard-pdf-root" className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-10">
         <div className="mb-8 animate-fade-in-up">
           <h2 className="font-display text-3xl font-bold tracking-tight text-secondary md:text-4xl">
             Visão executiva
