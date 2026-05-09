@@ -30,7 +30,7 @@ export const DashboardHeader = () => {
 
   return (
     <header className="border-b border-border bg-card/60 backdrop-blur-sm">
-      <div className="mx-auto max-w-[1400px] px-6 py-4 md:px-10">
+      <div className="mx-auto max-w-[1400px] px-4 py-3 sm:px-6 sm:py-4 md:px-10">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Sheet open={navOpen} onOpenChange={setNavOpen}>
