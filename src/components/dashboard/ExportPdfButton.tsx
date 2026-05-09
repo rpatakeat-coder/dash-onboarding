@@ -13,8 +13,9 @@ import {
   type SectionAnchor,
 } from "@/lib/pdfBranding";
 import logoTakeat from "@/assets/logo-takeat.png";
-import { FileDown, Loader2, Settings2 } from "lucide-react";
+import { Clock, FileDown, History, Loader2, RotateCcw, Settings2, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useExportHistory, type ExportHistoryEntry } from "@/hooks/useExportHistory";
 
 export interface PdfSummaryItem {
   label: string;
