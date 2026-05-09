@@ -643,8 +643,22 @@ export const ExportPdfButton = ({
                       </button>
                       <button
                         type="button"
+                        onClick={() => regenerateFromHistory(entry)}
+                        disabled={busy}
+                        title="Gerar de novo com esta configuração"
+                        aria-label="Gerar de novo com esta configuração"
+                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-primary disabled:opacity-40"
+                      >
+                        {busy ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Play className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => restoreFromHistory(entry)}
-                        title="Restaurar configuração"
+                        title="Restaurar configuração (sem gerar)"
                         aria-label="Restaurar configuração desta exportação"
                         className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-primary"
                       >
