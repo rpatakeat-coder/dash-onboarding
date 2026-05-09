@@ -554,6 +554,9 @@ export const ExportPdfButton = ({
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                     <History className="h-3.5 w-3.5" />
                     Últimas exportações
+                    <span className="ml-1 hidden font-normal text-[10px] text-muted-foreground/80 sm:inline">
+                      · foque um item e tecle <kbd className="rounded border border-border bg-card px-1 text-[9px]">Enter</kbd> ou <kbd className="rounded border border-border bg-card px-1 text-[9px]">G</kbd> para gerar de novo
+                    </span>
                   </div>
                   <button
                     type="button"
