@@ -113,6 +113,17 @@ export const ExportPdfButton = ({
   const [configOpen, setConfigOpen] = useState(false);
   const [preview, setPreview] = useState<{ url: string; pages: number; name: string } | null>(null);
   const history = useExportHistory();
+  const [autoSaveDefault, setAutoSaveDefault] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("takeat:pdf-export-autosave:v1") === "1";
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(
+      "takeat:pdf-export-autosave:v1",
+      autoSaveDefault ? "1" : "0",
+    );
+  }, [autoSaveDefault]);
 
   const restoreFromHistory = (entry: ExportHistoryEntry) => {
     setConfig({
@@ -184,6 +195,15 @@ export const ExportPdfButton = ({
 
   const update = <K extends keyof ExportConfig>(key: K, value: ExportConfig[K]) =>
     setConfig((prev) => ({ ...prev, [key]: value }));
+
+  // Auto-salva o padrão (debounce 600ms) enquanto o modal está aberto.
+  useEffect(() => {
+    if (!autoSaveDefault || !configOpen) return;
+    const t = window.setTimeout(() => {
+      history.saveDefault({ ...config });
+    }, 600);
+    return () => window.clearTimeout(t);
+  }, [autoSaveDefault, configOpen, config, history]);
 
   const runExport = async (cfg: ExportConfig) => {
     const el = document.getElementById(targetId);
@@ -753,6 +773,25 @@ export const ExportPdfButton = ({
                   Limpar padrão
                 </button>
               )}
+              <label
+                className="ml-1 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card/60 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+                title="Sempre que você ajustar título, filtros ou toggles, o padrão é atualizado automaticamente."
+              >
+                <Switch
+                  checked={autoSaveDefault}
+                  onCheckedChange={(v) => {
+                    setAutoSaveDefault(v);
+                    if (v) history.saveDefault({ ...config });
+                    toast({
+                      title: v ? "Auto-salvar ativado" : "Auto-salvar desativado",
+                      description: v
+                        ? "Mudanças no modal viram padrão automaticamente."
+                        : "O padrão só será atualizado quando você clicar em Salvar.",
+                    });
+                  }}
+                />
+                Auto-salvar padrão
+              </label>
             </div>
             <div className="flex items-center gap-2">
               <button
