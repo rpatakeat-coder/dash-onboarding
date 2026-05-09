@@ -204,10 +204,22 @@ const assertNoAtomicSplit = (
   }
 };
 
-const assertStartsAtBreak = (slices: Slice[], breaks: number[]) => {
+const assertStartsAtBreakOrHardCut = (
+  slices: Slice[],
+  breaks: number[],
+  firstPagePx: number,
+  fullPagePx: number,
+) => {
   const breakSet = new Set(breaks);
-  for (const s of slices) {
-    expect(breakSet.has(s.start)).toBe(true);
+  for (let i = 0; i < slices.length; i++) {
+    const s = slices[i];
+    if (breakSet.has(s.start)) continue;
+    // Otherwise the previous slice must have been a forced hard cut
+    // (filled its entire page budget because no break fit).
+    expect(i).toBeGreaterThan(0);
+    const prev = slices[i - 1];
+    const prevLimit = i - 1 === 0 ? firstPagePx : fullPagePx;
+    expect(prev.end - prev.start).toBe(prevLimit);
   }
 };
 
