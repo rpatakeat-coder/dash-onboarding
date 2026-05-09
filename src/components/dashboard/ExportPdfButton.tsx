@@ -575,7 +575,7 @@ export const ExportPdfButton = ({
                     <History className="h-3.5 w-3.5" />
                     Últimas exportações
                     <span className="ml-1 hidden font-normal text-[10px] text-muted-foreground/80 sm:inline">
-                      · <kbd className="rounded border border-border bg-card px-1 text-[9px]">↑</kbd>/<kbd className="rounded border border-border bg-card px-1 text-[9px]">↓</kbd> navegam, <kbd className="rounded border border-border bg-card px-1 text-[9px]">Enter</kbd> ou <kbd className="rounded border border-border bg-card px-1 text-[9px]">G</kbd> geram de novo
+                      · <kbd className="rounded border border-border bg-card px-1 text-[9px]">↑</kbd>/<kbd className="rounded border border-border bg-card px-1 text-[9px]">↓</kbd> navegam · <kbd className="rounded border border-border bg-card px-1 text-[9px]">PgUp</kbd>/<kbd className="rounded border border-border bg-card px-1 text-[9px]">PgDn</kbd> saltam · <kbd className="rounded border border-border bg-card px-1 text-[9px]">Enter</kbd>/<kbd className="rounded border border-border bg-card px-1 text-[9px]">G</kbd> geram de novo
                     </span>
                   </div>
                   <button
@@ -627,6 +627,14 @@ export const ExportPdfButton = ({
                           case "End":
                             e.preventDefault();
                             focusAt(items.length - 1);
+                            return;
+                          case "PageDown":
+                            e.preventDefault();
+                            focusAt(idx + 5);
+                            return;
+                          case "PageUp":
+                            e.preventDefault();
+                            focusAt(idx - 5);
                             return;
                         }
 
