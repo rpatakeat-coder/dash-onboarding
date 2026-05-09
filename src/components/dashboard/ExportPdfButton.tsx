@@ -112,6 +112,24 @@ export const ExportPdfButton = ({
   const [busy, setBusy] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
   const [preview, setPreview] = useState<{ url: string; pages: number; name: string } | null>(null);
+  const history = useExportHistory();
+
+  const restoreFromHistory = (entry: ExportHistoryEntry) => {
+    setConfig({
+      title: entry.title,
+      subtitle: entry.subtitle,
+      period: entry.period,
+      filtersText: entry.filtersText,
+      includeCover: entry.includeCover,
+      includeToc: entry.includeToc,
+      includeWatermark: entry.includeWatermark,
+      includeFooter: entry.includeFooter,
+    });
+    toast({
+      title: "Configuração restaurada",
+      description: "Ajuste o que precisar e clique em Gerar prévia.",
+    });
+  };
 
   const initialPeriod = useMemo(
     () => summary.find((s) => /per[ií]odo/i.test(s.label))?.value ?? "",
