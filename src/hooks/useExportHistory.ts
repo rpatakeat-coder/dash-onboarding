@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export interface ExportHistoryEntry {
   id: string;
@@ -12,6 +12,7 @@ export interface ExportHistoryEntry {
   includeWatermark: boolean;
   includeFooter: boolean;
   pageCount: number;
+  isDefault?: boolean;
 }
 
 const KEY = "takeat:pdf-export-history:v1";
@@ -42,6 +43,7 @@ const write = (entries: ExportHistoryEntry[]) => {
 /**
  * Histórico local (localStorage) das exportações de PDF.
  * Guarda apenas metadados para reabrir e regerar — não armazena o PDF em si.
+ * Permite marcar UMA entrada como padrão para pré-carregar no modal.
  */
 export const useExportHistory = () => {
   const [entries, setEntries] = useState<ExportHistoryEntry[]>(() => read());
@@ -82,5 +84,23 @@ export const useExportHistory = () => {
     write([]);
   }, []);
 
-  return { entries, add, remove, clear };
+  /** Marca uma entrada como padrão (ou desmarca se já for). Apenas uma pode ser padrão. */
+  const toggleDefault = useCallback((id: string) => {
+    setEntries((prev) => {
+      const wasDefault = prev.find((e) => e.id === id)?.isDefault === true;
+      const next = prev.map((e) => ({
+        ...e,
+        isDefault: e.id === id ? !wasDefault : false,
+      }));
+      write(next);
+      return next;
+    });
+  }, []);
+
+  const defaultEntry = useMemo(
+    () => entries.find((e) => e.isDefault) ?? null,
+    [entries],
+  );
+
+  return { entries, add, remove, clear, toggleDefault, defaultEntry };
 };

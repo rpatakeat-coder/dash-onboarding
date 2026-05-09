@@ -13,7 +13,7 @@ import {
   type SectionAnchor,
 } from "@/lib/pdfBranding";
 import logoTakeat from "@/assets/logo-takeat.png";
-import { Clock, FileDown, History, Loader2, RotateCcw, Settings2, Trash2 } from "lucide-react";
+import { Clock, FileDown, History, Loader2, RotateCcw, Settings2, Star, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useExportHistory, type ExportHistoryEntry } from "@/hooks/useExportHistory";
 
@@ -136,16 +136,31 @@ export const ExportPdfButton = ({
     [summary],
   );
 
-  const [config, setConfig] = useState<ExportConfig>(() => ({
-    title,
-    subtitle,
-    period: initialPeriod,
-    filtersText: summaryToText(summary),
-    includeCover: true,
-    includeToc: true,
-    includeWatermark: true,
-    includeFooter: true,
-  }));
+  const [config, setConfig] = useState<ExportConfig>(() => {
+    const def = history.defaultEntry;
+    if (def) {
+      return {
+        title: def.title,
+        subtitle: def.subtitle,
+        period: def.period,
+        filtersText: def.filtersText,
+        includeCover: def.includeCover,
+        includeToc: def.includeToc,
+        includeWatermark: def.includeWatermark,
+        includeFooter: def.includeFooter,
+      };
+    }
+    return {
+      title,
+      subtitle,
+      period: initialPeriod,
+      filtersText: summaryToText(summary),
+      includeCover: true,
+      includeToc: true,
+      includeWatermark: true,
+      includeFooter: true,
+    };
+  });
 
   // Sincroniza valores quando o usuário reabre o modal (props podem ter mudado)
   useEffect(() => {
@@ -547,8 +562,16 @@ export const ExportPdfButton = ({
                       className="group flex items-start gap-2 rounded-md border border-transparent bg-card/60 px-2 py-1.5 hover:border-border"
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-xs font-medium text-foreground">
-                          {entry.title}
+                        <div className="flex items-center gap-1.5">
+                          <span className="truncate text-xs font-medium text-foreground">
+                            {entry.title}
+                          </span>
+                          {entry.isDefault && (
+                            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary">
+                              <Star className="h-2.5 w-2.5 fill-current" />
+                              Padrão
+                            </span>
+                          )}
                         </div>
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
                           <span className="inline-flex items-center gap-1">
@@ -574,6 +597,31 @@ export const ExportPdfButton = ({
                           )}
                         </div>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          history.toggleDefault(entry.id);
+                          toast({
+                            title: entry.isDefault
+                              ? "Padrão removido"
+                              : "Definido como padrão",
+                            description: entry.isDefault
+                              ? "O modal voltará ao preenchimento normal."
+                              : "Da próxima vez o modal abrirá com estas opções.",
+                          });
+                        }}
+                        title={entry.isDefault ? "Desmarcar padrão" : "Definir como padrão"}
+                        aria-label={entry.isDefault ? "Desmarcar padrão" : "Definir como padrão"}
+                        className={
+                          entry.isDefault
+                            ? "rounded p-1 text-primary hover:bg-muted"
+                            : "rounded p-1 text-muted-foreground hover:bg-muted hover:text-primary"
+                        }
+                      >
+                        <Star
+                          className={`h-3.5 w-3.5 ${entry.isDefault ? "fill-current" : ""}`}
+                        />
+                      </button>
                       <button
                         type="button"
                         onClick={() => restoreFromHistory(entry)}
