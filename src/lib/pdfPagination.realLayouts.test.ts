@@ -244,9 +244,14 @@ describe("paginateCanvas — realistic layouts", () => {
         assertNoAtomicSplit(slices, scenario.atomicRanges, scenario.fullPagePx);
       });
 
-      it("starts every page at a registered break point", () => {
+      it("starts every page at a registered break or after a hard cut", () => {
         const slices = paginateCanvas(scenario);
-        assertStartsAtBreak(slices, scenario.breaks);
+        assertStartsAtBreakOrHardCut(
+          slices,
+          scenario.breaks,
+          scenario.firstPagePx,
+          scenario.fullPagePx,
+        );
       });
 
       it("never repeats a slice (unique [start,end) intervals)", () => {
