@@ -689,26 +689,77 @@ export const ExportPdfButton = ({
             )}
           </div>
 
-          <DialogFooter className="gap-2">
-            <button
-              onClick={() => setConfigOpen(false)}
-              disabled={busy}
-              className="rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-40"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={() => runExport(config)}
-              disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 font-subtitle text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40"
-            >
-              {busy ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <FileDown className="h-3 w-3" />
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  history.saveDefault({ ...config });
+                  toast({
+                    title: "Padrão salvo",
+                    description:
+                      "O modal abrirá com estas opções nas próximas exportações.",
+                  });
+                }}
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs font-medium text-muted-foreground hover:text-primary disabled:opacity-40"
+                title="Salvar configuração atual como padrão"
+              >
+                <Star
+                  className={`h-3 w-3 ${
+                    history.defaults &&
+                    history.defaults.title === config.title &&
+                    history.defaults.subtitle === config.subtitle &&
+                    history.defaults.period === config.period &&
+                    history.defaults.filtersText === config.filtersText &&
+                    history.defaults.includeCover === config.includeCover &&
+                    history.defaults.includeToc === config.includeToc &&
+                    history.defaults.includeWatermark === config.includeWatermark &&
+                    history.defaults.includeFooter === config.includeFooter
+                      ? "fill-current text-primary"
+                      : ""
+                  }`}
+                />
+                Salvar como padrão
+              </button>
+              {history.defaults && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    history.clearDefault();
+                    toast({
+                      title: "Padrão removido",
+                      description: "O modal voltará ao preenchimento normal.",
+                    });
+                  }}
+                  disabled={busy}
+                  className="rounded-lg px-2 py-1 font-subtitle text-[11px] text-muted-foreground hover:text-destructive disabled:opacity-40"
+                >
+                  Limpar padrão
+                </button>
               )}
-              {busy ? "Gerando…" : "Gerar prévia"}
-            </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setConfigOpen(false)}
+                disabled={busy}
+                className="rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-40"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => runExport(config)}
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 font-subtitle text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40"
+              >
+                {busy ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <FileDown className="h-3 w-3" />
+                )}
+                {busy ? "Gerando…" : "Gerar prévia"}
+              </button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
