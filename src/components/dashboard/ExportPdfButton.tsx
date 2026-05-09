@@ -156,19 +156,8 @@ export const ExportPdfButton = ({
   );
 
   const [config, setConfig] = useState<ExportConfig>(() => {
-    const def = history.defaultEntry;
-    if (def) {
-      return {
-        title: def.title,
-        subtitle: def.subtitle,
-        period: def.period,
-        filtersText: def.filtersText,
-        includeCover: def.includeCover,
-        includeToc: def.includeToc,
-        includeWatermark: def.includeWatermark,
-        includeFooter: def.includeFooter,
-      };
-    }
+    const def = history.defaults;
+    if (def) return { ...def };
     return {
       title,
       subtitle,
