@@ -131,6 +131,25 @@ export const ExportPdfButton = ({
     });
   };
 
+  const regenerateFromHistory = (entry: ExportHistoryEntry) => {
+    const cfg: ExportConfig = {
+      title: entry.title,
+      subtitle: entry.subtitle,
+      period: entry.period,
+      filtersText: entry.filtersText,
+      includeCover: entry.includeCover,
+      includeToc: entry.includeToc,
+      includeWatermark: entry.includeWatermark,
+      includeFooter: entry.includeFooter,
+    };
+    setConfig(cfg);
+    toast({
+      title: "Gerando novamente…",
+      description: "Reaproveitando a configuração desta exportação.",
+    });
+    void runExport(cfg);
+  };
+
   const initialPeriod = useMemo(
     () => summary.find((s) => /per[ií]odo/i.test(s.label))?.value ?? "",
     [summary],
