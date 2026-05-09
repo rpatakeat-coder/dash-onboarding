@@ -554,6 +554,9 @@ export const ExportPdfButton = ({
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                     <History className="h-3.5 w-3.5" />
                     Últimas exportações
+                    <span className="ml-1 hidden font-normal text-[10px] text-muted-foreground/80 sm:inline">
+                      · foque um item e tecle <kbd className="rounded border border-border bg-card px-1 text-[9px]">Enter</kbd> ou <kbd className="rounded border border-border bg-card px-1 text-[9px]">G</kbd> para gerar de novo
+                    </span>
                   </div>
                   <button
                     type="button"
@@ -567,7 +570,19 @@ export const ExportPdfButton = ({
                   {history.entries.map((entry) => (
                     <li
                       key={entry.id}
-                      className="group flex items-start gap-2 rounded-md border border-transparent bg-card/60 px-2 py-1.5 hover:border-border"
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Item ${entry.title}. Pressione Enter para gerar de novo.`}
+                      onKeyDown={(e) => {
+                        if (busy) return;
+                        // Ignora se o foco está num botão interno (Enter ativa o próprio botão)
+                        if (e.target !== e.currentTarget) return;
+                        if (e.key === "Enter" || e.key.toLowerCase() === "g") {
+                          e.preventDefault();
+                          regenerateFromHistory(entry);
+                        }
+                      }}
+                      className="group flex items-start gap-2 rounded-md border border-transparent bg-card/60 px-2 py-1.5 outline-none hover:border-border focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/40"
                     >
                       {(() => {
                         const isDefault = history.isDefaultEntry(entry);
