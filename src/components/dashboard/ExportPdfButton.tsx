@@ -592,11 +592,45 @@ export const ExportPdfButton = ({
                       key={entry.id}
                       tabIndex={0}
                       role="button"
-                      aria-label={`Item ${entry.title}. Pressione Enter para gerar de novo.`}
+                      aria-label={`Item ${entry.title}. Setas para navegar, Enter ou G para gerar de novo.`}
                       onKeyDown={(e) => {
-                        if (busy) return;
-                        // Ignora se o foco está num botão interno (Enter ativa o próprio botão)
+                        // Ignora se o foco está num botão interno
                         if (e.target !== e.currentTarget) return;
+
+                        const li = e.currentTarget;
+                        const ul = li.parentElement;
+                        if (!ul) return;
+                        const items = Array.from(
+                          ul.querySelectorAll<HTMLLIElement>(":scope > li[tabindex='0']"),
+                        );
+                        const idx = items.indexOf(li);
+
+                        const focusAt = (i: number) => {
+                          const target = items[Math.max(0, Math.min(items.length - 1, i))];
+                          target?.focus();
+                          target?.scrollIntoView({ block: "nearest" });
+                        };
+
+                        switch (e.key) {
+                          case "ArrowDown":
+                            e.preventDefault();
+                            focusAt(idx + 1);
+                            return;
+                          case "ArrowUp":
+                            e.preventDefault();
+                            focusAt(idx - 1);
+                            return;
+                          case "Home":
+                            e.preventDefault();
+                            focusAt(0);
+                            return;
+                          case "End":
+                            e.preventDefault();
+                            focusAt(items.length - 1);
+                            return;
+                        }
+
+                        if (busy) return;
                         if (e.key === "Enter" || e.key.toLowerCase() === "g") {
                           e.preventDefault();
                           regenerateFromHistory(entry);
