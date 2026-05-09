@@ -9,7 +9,7 @@ interface Props {
 
 export const StalledTable = ({ travados, onRowClick }: Props) => {
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm-soft">
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm-soft sm:p-6">
       <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10">
@@ -28,8 +28,8 @@ export const StalledTable = ({ travados, onRowClick }: Props) => {
           {travados.length} críticos
         </span>
       </div>
-      <div className="overflow-hidden rounded-xl border border-border">
-        <table className="w-full text-sm">
+      <div className="-mx-1 overflow-x-auto rounded-xl border border-border sm:mx-0">
+        <table className="w-full min-w-[560px] text-sm">
           <thead className="bg-muted/50">
             <tr className="font-subtitle text-xs uppercase tracking-wider text-muted-foreground">
               <th className="px-4 py-3 text-left">Restaurante</th>

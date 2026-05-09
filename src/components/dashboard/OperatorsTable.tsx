@@ -10,7 +10,7 @@ interface Props {
 
 export const OperatorsTable = ({ operadores, onOperatorClick }: Props) => {
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm-soft">
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm-soft sm:p-6">
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h2 className="font-display text-lg font-semibold text-secondary">
