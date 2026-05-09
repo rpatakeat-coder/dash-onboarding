@@ -1,5 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { paginateCanvas } from "@/lib/pdfPagination";
 import {
   addCoverPage,
@@ -9,7 +13,7 @@ import {
   type SectionAnchor,
 } from "@/lib/pdfBranding";
 import logoTakeat from "@/assets/logo-takeat.png";
-import { FileDown, Loader2 } from "lucide-react";
+import { FileDown, Loader2, Settings2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export interface PdfSummaryItem {
@@ -22,16 +26,44 @@ interface Props {
   targetId?: string;
   summary?: PdfSummaryItem[];
   filename?: string;
-  /** Título exibido na capa do PDF. */
+  /** Título sugerido (editável no modal). */
   title?: string;
-  /** Subtítulo exibido sob o título da capa. */
+  /** Subtítulo sugerido (editável no modal). */
   subtitle?: string;
 }
 
-/**
- * Carrega uma imagem importada do bundle como data-URL (necessário para
- * jsPDF.addImage funcionar offline e para a marca d'água).
- */
+interface ExportConfig {
+  title: string;
+  subtitle: string;
+  period: string;
+  filtersText: string; // multiline "Label: valor"
+  includeCover: boolean;
+  includeToc: boolean;
+  includeWatermark: boolean;
+  includeFooter: boolean;
+}
+
+const DEFAULT_TITLE = "Painel de Operações — Onboarding Takeat";
+const DEFAULT_SUBTITLE =
+  "Visão consolidada de KPIs, funil, SLA e performance dos ativadores.";
+
+const summaryToText = (summary: PdfSummaryItem[]) =>
+  summary.map((s) => `${s.label}: ${s.value}`).join("\n");
+
+const parseFiltersText = (text: string): PdfSummaryItem[] =>
+  text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const idx = line.indexOf(":");
+      if (idx === -1) return { label: line, value: "" };
+      return {
+        label: line.slice(0, idx).trim(),
+        value: line.slice(idx + 1).trim(),
+      };
+    });
+
 const loadImageAsDataUrl = async (src: string): Promise<string> => {
   if (src.startsWith("data:")) return src;
   const res = await fetch(src);
@@ -44,11 +76,6 @@ const loadImageAsDataUrl = async (src: string): Promise<string> => {
   });
 };
 
-/**
- * Coleta âncoras de seção a partir do DOM capturado. Para cada `<section>`
- * com `data-pdf-title` (ou primeiro `<h3>` interno), grava o título + a
- * posição Y em coordenadas do canvas html2canvas.
- */
 const collectSectionAnchors = (
   el: HTMLElement,
   canvas: HTMLCanvasElement,
@@ -66,7 +93,6 @@ const collectSectionAnchors = (
     const canvasY = Math.max(0, Math.round((r.top - elRect.top) * ratio));
     out.push({ title, canvasY });
   });
-  // Dedup por título (alguns wrappers internos repetem o h3) — fica o primeiro
   const seen = new Set<string>();
   return out.filter((a) => {
     if (seen.has(a.title)) return false;
@@ -79,13 +105,45 @@ export const ExportPdfButton = ({
   targetId = "dashboard-pdf-root",
   summary = [],
   filename = "operacoes",
-  title = "Painel de Operações — Onboarding Takeat",
-  subtitle = "Visão consolidada de KPIs, funil, SLA e performance dos ativadores.",
+  title = DEFAULT_TITLE,
+  subtitle = DEFAULT_SUBTITLE,
 }: Props) => {
   const [busy, setBusy] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
   const [preview, setPreview] = useState<{ url: string; pages: number; name: string } | null>(null);
 
-  const handle = async () => {
+  const initialPeriod = useMemo(
+    () => summary.find((s) => /per[ií]odo/i.test(s.label))?.value ?? "",
+    [summary],
+  );
+
+  const [config, setConfig] = useState<ExportConfig>(() => ({
+    title,
+    subtitle,
+    period: initialPeriod,
+    filtersText: summaryToText(summary),
+    includeCover: true,
+    includeToc: true,
+    includeWatermark: true,
+    includeFooter: true,
+  }));
+
+  // Sincroniza valores quando o usuário reabre o modal (props podem ter mudado)
+  useEffect(() => {
+    if (!configOpen) return;
+    setConfig((prev) => ({
+      ...prev,
+      title: prev.title || title,
+      subtitle: prev.subtitle || subtitle,
+      period: prev.period || initialPeriod,
+      filtersText: prev.filtersText || summaryToText(summary),
+    }));
+  }, [configOpen, title, subtitle, initialPeriod, summary]);
+
+  const update = <K extends keyof ExportConfig>(key: K, value: ExportConfig[K]) =>
+    setConfig((prev) => ({ ...prev, [key]: value }));
+
+  const runExport = async (cfg: ExportConfig) => {
     const el = document.getElementById(targetId);
     if (!el) {
       toast({
@@ -167,33 +225,42 @@ export const ExportPdfButton = ({
       const usableW = pageW - margin * 2;
 
       pdf.setProperties({
-        title,
-        subject: subtitle,
+        title: cfg.title,
+        subject: cfg.subtitle,
         author: "Takeat",
         creator: "Takeat Dashboard",
       });
 
-      // ===== Página 1: Capa =====
-      addCoverPage(pdf, {
-        title,
-        subtitle,
-        period: summary.find((s) => /per[ií]odo/i.test(s.label))?.value,
-        filters: summary,
-        logoDataUrl,
-      });
+      const filters = parseFiltersText(cfg.filtersText);
+      const skipPages: number[] = [];
+      let tocPageNumber: number | null = null;
 
-      // ===== Página 2: Sumário (placeholder; preenchido depois) =====
-      pdf.addPage();
-      const tocPageNumber = pdf.getNumberOfPages();
+      // ===== Capa (opcional) =====
+      if (cfg.includeCover) {
+        addCoverPage(pdf, {
+          title: cfg.title,
+          subtitle: cfg.subtitle,
+          period: cfg.period || undefined,
+          filters,
+          logoDataUrl,
+        });
+        skipPages.push(pdf.getNumberOfPages());
+      }
 
-      // ===== Páginas 3+: Conteúdo paginado =====
-      pdf.addPage();
+      // ===== Sumário (opcional, placeholder) =====
+      if (cfg.includeToc) {
+        if (cfg.includeCover) pdf.addPage();
+        tocPageNumber = pdf.getNumberOfPages();
+        skipPages.push(tocPageNumber);
+      }
+
+      // ===== Conteúdo paginado =====
+      if (cfg.includeCover || cfg.includeToc) pdf.addPage();
       const firstContentPage = pdf.getNumberOfPages();
 
       const pxPerPt = canvas.width / usableW;
       const fullPagePx = Math.floor((pageH - margin * 2) * pxPerPt);
 
-      // Coleta candidatos de quebra segura
       const elRect = el.getBoundingClientRect();
       const domToCanvas = canvas.height / el.scrollHeight;
       const breakSelector =
@@ -209,7 +276,6 @@ export const ExportPdfButton = ({
       });
       const breaks = Array.from(breakSet).sort((a, b) => a - b);
 
-      // Sem header de conteúdo: primeira página de conteúdo já usa full page
       const slices = paginateCanvas({
         canvasHeight: canvas.height,
         breaks,
@@ -217,18 +283,17 @@ export const ExportPdfButton = ({
         fullPagePx,
       });
 
-      // Coleta âncoras de seção para sumário/outline
       const sections = collectSectionAnchors(el, canvas);
-      const anchors: SectionAnchor[] = [];
       const findPageForCanvasY = (y: number) => {
         for (let i = 0; i < slices.length; i++) {
           if (y >= slices[i].start && y < slices[i].end) return firstContentPage + i;
         }
         return firstContentPage + slices.length - 1;
       };
-      for (const s of sections) {
-        anchors.push({ title: s.title, page: findPageForCanvasY(s.canvasY) });
-      }
+      const anchors: SectionAnchor[] = sections.map((s) => ({
+        title: s.title,
+        page: findPageForCanvasY(s.canvasY),
+      }));
 
       slices.forEach((slice, pageIdx) => {
         const sliceHpx = slice.end - slice.start;
@@ -254,19 +319,24 @@ export const ExportPdfButton = ({
         pdf.addImage(data, "JPEG", margin, margin, usableW, sliceHpt);
       });
 
-      // ===== Finaliza: sumário, marca d'água + rodapé, outline =====
-      addTocPage(pdf, anchors, tocPageNumber);
+      // ===== Finaliza =====
+      if (cfg.includeToc && tocPageNumber !== null) {
+        addTocPage(pdf, anchors, tocPageNumber);
+      }
       addOutline(pdf, anchors);
-      stampPagesWithBranding(pdf, {
-        logoDataUrl,
-        skipPages: [1, tocPageNumber],
-      });
+      if (cfg.includeFooter || cfg.includeWatermark) {
+        stampPagesWithBranding(pdf, {
+          logoDataUrl: cfg.includeWatermark ? logoDataUrl : undefined,
+          skipPages,
+        });
+      }
 
       const totalPages = pdf.getNumberOfPages();
       const stamp = new Date().toISOString().slice(0, 10);
       const blob = pdf.output("blob") as Blob;
       const url = URL.createObjectURL(blob);
       setPreview({ url, pages: totalPages, name: `${filename}_${stamp}.pdf` });
+      setConfigOpen(false);
     } catch (err) {
       console.error("[ExportPDF]", err);
       toast({
@@ -307,7 +377,7 @@ export const ExportPdfButton = ({
   return (
     <>
       <button
-        onClick={handle}
+        onClick={() => setConfigOpen(true)}
         disabled={busy}
         className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-40"
         title="Exportar dashboard em PDF"
@@ -320,6 +390,137 @@ export const ExportPdfButton = ({
         {busy ? "Gerando…" : "Exportar PDF"}
       </button>
 
+      {/* === Modal de configuração === */}
+      <Dialog open={configOpen} onOpenChange={(o) => !busy && setConfigOpen(o)}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-display text-base">
+              <Settings2 className="h-4 w-4" />
+              Configurar exportação
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-2">
+            <div className="grid gap-1.5">
+              <Label htmlFor="pdf-title" className="text-xs">Título do relatório</Label>
+              <Input
+                id="pdf-title"
+                value={config.title}
+                onChange={(e) => update("title", e.target.value)}
+                placeholder={DEFAULT_TITLE}
+              />
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label htmlFor="pdf-subtitle" className="text-xs">Subtítulo</Label>
+              <Input
+                id="pdf-subtitle"
+                value={config.subtitle}
+                onChange={(e) => update("subtitle", e.target.value)}
+                placeholder={DEFAULT_SUBTITLE}
+              />
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label htmlFor="pdf-period" className="text-xs">Período coberto</Label>
+              <Input
+                id="pdf-period"
+                value={config.period}
+                onChange={(e) => update("period", e.target.value)}
+                placeholder="Ex.: 01/05/2026 — 09/05/2026"
+              />
+            </div>
+
+            <div className="grid gap-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="pdf-filters" className="text-xs">
+                  Filtros aplicados
+                </Label>
+                <span className="text-[10px] text-muted-foreground">
+                  Um por linha · formato <code>Rótulo: valor</code>
+                </span>
+              </div>
+              <Textarea
+                id="pdf-filters"
+                value={config.filtersText}
+                onChange={(e) => update("filtersText", e.target.value)}
+                rows={4}
+                className="font-mono text-xs"
+                placeholder={"Período: Mês\nOperador: Maria"}
+              />
+            </div>
+
+            <div className="grid gap-3 rounded-lg border border-border bg-muted/40 p-3">
+              <div className="text-xs font-semibold text-muted-foreground">
+                Componentes do PDF
+              </div>
+              {[
+                {
+                  key: "includeCover" as const,
+                  label: "Página de capa",
+                  hint: "Logo, título, período e filtros",
+                },
+                {
+                  key: "includeToc" as const,
+                  label: "Sumário com âncoras",
+                  hint: "Lista clicável de seções",
+                },
+                {
+                  key: "includeWatermark" as const,
+                  label: "Marca d'água Takeat",
+                  hint: "Logo diagonal em todas as páginas",
+                },
+                {
+                  key: "includeFooter" as const,
+                  label: "Rodapé com numeração",
+                  hint: "Página X de Y em todas as folhas",
+                },
+              ].map((opt) => (
+                <div key={opt.key} className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor={`pdf-${opt.key}`}
+                      className="text-xs font-medium"
+                    >
+                      {opt.label}
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground">{opt.hint}</p>
+                  </div>
+                  <Switch
+                    id={`pdf-${opt.key}`}
+                    checked={config[opt.key]}
+                    onCheckedChange={(v) => update(opt.key, v)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <button
+              onClick={() => setConfigOpen(false)}
+              disabled={busy}
+              className="rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-40"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => runExport(config)}
+              disabled={busy}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 font-subtitle text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40"
+            >
+              {busy ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <FileDown className="h-3 w-3" />
+              )}
+              {busy ? "Gerando…" : "Gerar prévia"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* === Modal de prévia === */}
       <Dialog open={!!preview} onOpenChange={(o) => !o && closePreview()}>
         <DialogContent className="max-w-5xl p-0 sm:max-w-[min(95vw,1100px)]">
           <DialogHeader className="px-6 pt-5">
