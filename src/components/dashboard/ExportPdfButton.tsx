@@ -13,7 +13,7 @@ import {
   type SectionAnchor,
 } from "@/lib/pdfBranding";
 import logoTakeat from "@/assets/logo-takeat.png";
-import { Clock, FileDown, History, Loader2, RotateCcw, Settings2, Star, Trash2 } from "lucide-react";
+import { Clock, FileDown, History, Loader2, Play, RotateCcw, Settings2, Star, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useExportHistory, type ExportHistoryEntry } from "@/hooks/useExportHistory";
 
@@ -129,6 +129,25 @@ export const ExportPdfButton = ({
       title: "Configuração restaurada",
       description: "Ajuste o que precisar e clique em Gerar prévia.",
     });
+  };
+
+  const regenerateFromHistory = (entry: ExportHistoryEntry) => {
+    const cfg: ExportConfig = {
+      title: entry.title,
+      subtitle: entry.subtitle,
+      period: entry.period,
+      filtersText: entry.filtersText,
+      includeCover: entry.includeCover,
+      includeToc: entry.includeToc,
+      includeWatermark: entry.includeWatermark,
+      includeFooter: entry.includeFooter,
+    };
+    setConfig(cfg);
+    toast({
+      title: "Gerando novamente…",
+      description: "Reaproveitando a configuração desta exportação.",
+    });
+    void runExport(cfg);
   };
 
   const initialPeriod = useMemo(
@@ -624,8 +643,22 @@ export const ExportPdfButton = ({
                       </button>
                       <button
                         type="button"
+                        onClick={() => regenerateFromHistory(entry)}
+                        disabled={busy}
+                        title="Gerar de novo com esta configuração"
+                        aria-label="Gerar de novo com esta configuração"
+                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-primary disabled:opacity-40"
+                      >
+                        {busy ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Play className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => restoreFromHistory(entry)}
-                        title="Restaurar configuração"
+                        title="Restaurar configuração (sem gerar)"
                         aria-label="Restaurar configuração desta exportação"
                         className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-primary"
                       >
