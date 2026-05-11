@@ -13,7 +13,7 @@ import {
 import { METAS } from "@/lib/metas";
 
 const slaOf = (r: DashRow) => {
-  const n = parseFloat(String(r.sla_dias ?? "").replace(",", "."));
+  const n = parseFloat(String(r.sla_dias_etapa ?? "").replace(",", "."));
   return Number.isFinite(n) ? n : 0;
 };
 const mrrOf = (r: DashRow) =>

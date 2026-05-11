@@ -66,7 +66,7 @@ export const EstoqueModal = ({ open, onOpenChange, rows }: Props) => {
           etapa: r.etapa_negocio?.trim() || "—",
           ativador: r.agente_ativacao?.trim() || "—",
           perfil: perfilKey,
-          sla: toNum(r.sla_dias),
+          sla: toNum(r.sla_dias_etapa),
           mrr: toNum(r.mrr),
         };
       }),

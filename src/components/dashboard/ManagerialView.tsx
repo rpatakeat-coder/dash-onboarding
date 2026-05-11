@@ -127,7 +127,7 @@ export const ManagerialView = ({ rows, totalRows }: Props) => {
       0,
     );
     const criticos = filteredRows.filter((r) => {
-      const n = parseFloat(String(r.sla_dias ?? "").replace(",", "."));
+      const n = parseFloat(String(r.sla_dias_etapa ?? "").replace(",", "."));
       return Number.isFinite(n) && n > 30;
     }).length;
     const operadoresN = operadores.length;

@@ -132,7 +132,7 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
   }, [data, query]);
 
   const slaOf = (r: DashRow) => {
-    const n = parseFloat(String(r.sla_dias ?? "").replace(",", "."));
+    const n = parseFloat(String(r.sla_dias_etapa ?? "").replace(",", "."));
     return Number.isFinite(n) ? n : 0;
   };
 

@@ -7,7 +7,9 @@ export interface DashRow {
   perfil_cliente: string | null;
   mrr: string | null;
   agente_ativacao: string | null;
-  sla_dias: string | null;
+  /** SLA (dias) na etapa atual — vem de `sla_dias_etapa` na tabela. */
+  sla_dias_etapa: string | null;
+  /** SLA (dias) desde a criação do deal — vem de `sla_dias_criacao` na tabela. */
   sla_dias_criacao: string | null;
   data_criacao: string | null;
   data_entrada_fase: string | null;
@@ -133,7 +135,7 @@ function buildOperadores(rows: DashRow[]): OperatorStat[] {
       ativos: 0, mrr: 0, soma: 0, travados: 0,
       bands: emptyBands(), bandsMrr: emptyBands(), clientes: [],
     };
-    const d = toNum(r.sla_dias);
+    const d = toNum(r.sla_dias_etapa);
     const m = toNum(r.mrr);
     const band = slaBand(d);
     cur.ativos += 1;
@@ -248,7 +250,7 @@ export function computeFiltered(rows: DashRow[]): FilteredData {
     cliente: r.nome_negocio?.trim() || "—",
     ativador: r.agente_ativacao?.trim() || "—",
     etapa: r.etapa_negocio?.trim() || "—",
-    dias: toNum(r.sla_dias),
+    dias: toNum(r.sla_dias_etapa),
   }));
 
   const criticos = allMapped
@@ -259,13 +261,13 @@ export function computeFiltered(rows: DashRow[]): FilteredData {
   const mrrByDeal = new Map<number, number>();
   rows.forEach((r) => mrrByDeal.set(r.id_deal, toNum(r.mrr)));
   const topMrrTravado = rows
-    .filter((r) => toNum(r.sla_dias) > TRAVADO_DIAS)
+    .filter((r) => toNum(r.sla_dias_etapa) > TRAVADO_DIAS)
     .map((r) => ({
       id: r.id_deal,
       cliente: r.nome_negocio?.trim() || "—",
       ativador: r.agente_ativacao?.trim() || "—",
       etapa: r.etapa_negocio?.trim() || "—",
-      dias: toNum(r.sla_dias),
+      dias: toNum(r.sla_dias_etapa),
       mrr: mrrByDeal.get(r.id_deal) ?? 0,
     }))
     .sort((a, b) => b.mrr - a.mrr)
@@ -321,11 +323,11 @@ export function computePeriodSummary(rows: DashRow[]): PeriodSummary {
 
 export function computeSlaKpis(rows: DashRow[]): SlaKpis {
   const total = rows.length;
-  const dias = rows.map((r) => toNum(r.sla_dias));
+  const dias = rows.map((r) => toNum(r.sla_dias_etapa));
   const diasCriacao = rows.map((r) => toNum(r.sla_dias_criacao));
   const slaMedio = dias.length ? dias.reduce((a, b) => a + b, 0) / dias.length : 0;
   const slaP75 = percentile(diasCriacao, 0.75);
-  const noPrazoCount = rows.filter((r) => toNum(r.sla_dias) <= SLA_PRAZO).length;
+  const noPrazoCount = rows.filter((r) => toNum(r.sla_dias_etapa) <= SLA_PRAZO).length;
   const estouradoCount = total - noPrazoCount;
   const noPrazo = total ? (noPrazoCount / total) * 100 : 0;
   const estourado = total ? (estouradoCount / total) * 100 : 0;
@@ -335,14 +337,14 @@ export function computeSlaKpis(rows: DashRow[]): SlaKpis {
 function aggregate(rows: DashRow[]): DashData {
   const total = rows.length;
   const mrrTotal = rows.reduce((s, r) => s + toNum(r.mrr), 0);
-  const dias = rows.map((r) => toNum(r.sla_dias));
+  const dias = rows.map((r) => toNum(r.sla_dias_etapa));
   const tempoMedioFase = dias.length ? dias.reduce((a, b) => a + b, 0) / dias.length : 0;
-  const travados = rows.filter((r) => toNum(r.sla_dias) > TRAVADO_DIAS).length;
+  const travados = rows.filter((r) => toNum(r.sla_dias_etapa) > TRAVADO_DIAS).length;
 
   // SLA
   const slaMedio = tempoMedioFase;
   const slaP75 = percentile(rows.map((r) => toNum(r.sla_dias_criacao)), 0.75);
-  const noPrazoCount = rows.filter((r) => toNum(r.sla_dias) <= SLA_PRAZO).length;
+  const noPrazoCount = rows.filter((r) => toNum(r.sla_dias_etapa) <= SLA_PRAZO).length;
   const estouradoCount = total - noPrazoCount;
   const noPrazo = total ? (noPrazoCount / total) * 100 : 0;
   const estourado = total ? (estouradoCount / total) * 100 : 0;
@@ -407,7 +409,7 @@ function aggregate(rows: DashRow[]): DashData {
     cliente: r.nome_negocio?.trim() || "—",
     ativador: r.agente_ativacao?.trim() || "—",
     etapa: r.etapa_negocio?.trim() || "—",
-    dias: toNum(r.sla_dias),
+    dias: toNum(r.sla_dias_etapa),
   }));
 
   const travadosLista = allMapped
@@ -439,13 +441,13 @@ function aggregate(rows: DashRow[]): DashData {
   const mrrByDeal = new Map<number, number>();
   rows.forEach((r) => mrrByDeal.set(r.id_deal, toNum(r.mrr)));
   const topMrrTravado = rows
-    .filter((r) => toNum(r.sla_dias) > TRAVADO_DIAS)
+    .filter((r) => toNum(r.sla_dias_etapa) > TRAVADO_DIAS)
     .map((r) => ({
       id: r.id_deal,
       cliente: r.nome_negocio?.trim() || "—",
       ativador: r.agente_ativacao?.trim() || "—",
       etapa: r.etapa_negocio?.trim() || "—",
-      dias: toNum(r.sla_dias),
+      dias: toNum(r.sla_dias_etapa),
       mrr: mrrByDeal.get(r.id_deal) ?? 0,
     }))
     .sort((a, b) => b.mrr - a.mrr)
