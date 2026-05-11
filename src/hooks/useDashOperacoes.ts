@@ -7,7 +7,9 @@ export interface DashRow {
   perfil_cliente: string | null;
   mrr: string | null;
   agente_ativacao: string | null;
-  sla_dias: string | null;
+  /** SLA (dias) na etapa atual — vem de `sla_dias_etapa` na tabela. */
+  sla_dias_etapa: string | null;
+  /** SLA (dias) desde a criação do deal — vem de `sla_dias_criacao` na tabela. */
   sla_dias_criacao: string | null;
   data_criacao: string | null;
   data_entrada_fase: string | null;
