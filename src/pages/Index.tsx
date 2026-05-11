@@ -628,7 +628,7 @@ const Index = () => {
           )}
         </div>
 
-        <Tabs defaultValue="exec" className="space-y-6">
+        <Tabs value={tab} onValueChange={setTab} className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="exec" className="gap-2">
               <LayoutDashboard className="h-4 w-4" /> Visão executiva
