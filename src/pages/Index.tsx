@@ -619,6 +619,17 @@ const Index = () => {
           )}
         </div>
 
+        <Tabs defaultValue="exec" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="exec" className="gap-2">
+              <LayoutDashboard className="h-4 w-4" /> Visão executiva
+            </TabsTrigger>
+            <TabsTrigger value="gestao" className="gap-2">
+              <Users2 className="h-4 w-4" /> Gestão
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="exec" className="space-y-0">
         {/* Destaques automáticos */}
         {data && opData.operadores.length > 0 && (
           <section className="mb-8">
