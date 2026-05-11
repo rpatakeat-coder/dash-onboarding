@@ -8,6 +8,7 @@ import {
   type DashRow,
   type SlaBand,
 } from "@/hooks/useDashOperacoes";
+import { InfoTooltip } from "./InfoTooltip";
 
 interface Props {
   rows: DashRow[];
