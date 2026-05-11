@@ -56,16 +56,26 @@ export const MainNav = ({ className, orientation = "horizontal", onNavigate }: P
             title={title}
             onClick={onNavigate}
             style={vertical ? { animationDelay: `${idx * 60}ms`, animationFillMode: "both" } : undefined}
+            aria-current={active ? "page" : undefined}
             className={cn(
-              "inline-flex shrink-0 items-center gap-2 rounded-lg font-subtitle font-medium transition-all duration-200 hover:translate-x-0.5",
+              "relative inline-flex shrink-0 items-center gap-2 rounded-lg font-subtitle font-medium transition-all duration-200 hover:translate-x-0.5",
               vertical ? "w-full px-3 py-2.5 text-sm animate-fade-in" : "px-3 py-1.5 text-xs",
               active
-                ? "bg-primary/10 text-primary"
+                ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/30 hover:translate-x-0"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
             <Icon className={vertical ? "h-4 w-4" : "h-3.5 w-3.5"} />
             <span>{label}</span>
+            {active && (
+              <span
+                aria-hidden
+                className={cn(
+                  "absolute rounded-full bg-primary-foreground/90",
+                  vertical ? "left-0 top-1/2 h-5 w-1 -translate-y-1/2" : "-bottom-1 left-2 right-2 h-0.5",
+                )}
+              />
+            )}
           </NavLink>
         );
       })}
