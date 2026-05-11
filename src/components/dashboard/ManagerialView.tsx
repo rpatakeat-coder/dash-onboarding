@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Search, X, Users, AlertTriangle, TrendingUp, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -44,7 +45,25 @@ export const ManagerialView = ({ rows, totalRows }: Props) => {
   const [selectedNome, setSelectedNome] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [bandFilter, setBandFilter] = useState<Set<SlaBand>>(new Set());
-  const [p75Filter, setP75Filter] = useState<P75Filter>("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [p75Filter, setP75Filter] = useState<P75Filter>(() => {
+    const v = searchParams.get("p75");
+    return v === "acima" || v === "abaixo" ? v : "all";
+  });
+  const hydratedP75 = useRef(false);
+  useEffect(() => {
+    if (!hydratedP75.current) {
+      hydratedP75.current = true;
+      return;
+    }
+    const next = new URLSearchParams(searchParams);
+    if (p75Filter === "all") next.delete("p75");
+    else next.set("p75", p75Filter);
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p75Filter]);
 
   // P75 do SLA desde a criação, calculado sobre o recorte de período
   const { p75Criacao, byPeriod } = useMemo(() => {
