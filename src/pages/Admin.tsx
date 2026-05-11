@@ -135,6 +135,13 @@ const AdminUsers = () => {
       setBusyId(null);
       if (error) return toast.error("Erro ao remover admin", { description: error.message });
       toast.success(`${u.full_name || "Usuário"} não é mais admin`);
+      void logAudit({
+        action: "role.remove_admin",
+        entity_type: "user_role",
+        entity_id: u.id,
+        summary: `Removeu admin de ${u.full_name || u.id}`,
+        metadata: { target_user_id: u.id, target_name: u.full_name },
+      });
     } else {
       const { error } = await supabase
         .from("user_roles")
@@ -142,6 +149,13 @@ const AdminUsers = () => {
       setBusyId(null);
       if (error) return toast.error("Erro ao promover", { description: error.message });
       toast.success(`${u.full_name || "Usuário"} promovido a admin`);
+      void logAudit({
+        action: "role.grant_admin",
+        entity_type: "user_role",
+        entity_id: u.id,
+        summary: `Promoveu ${u.full_name || u.id} a admin`,
+        metadata: { target_user_id: u.id, target_name: u.full_name },
+      });
     }
     await load();
   };
