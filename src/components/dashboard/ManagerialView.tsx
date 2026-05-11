@@ -34,6 +34,8 @@ interface Props {
   totalRows: number;
 }
 
+type P75Filter = "all" | "acima" | "abaixo";
+
 export const ManagerialView = ({ rows, totalRows }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("tudo");
   const [mrrMin, setMrrMin] = useState("");
@@ -42,19 +44,48 @@ export const ManagerialView = ({ rows, totalRows }: Props) => {
   const [selectedNome, setSelectedNome] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [bandFilter, setBandFilter] = useState<Set<SlaBand>>(new Set());
+  const [p75Filter, setP75Filter] = useState<P75Filter>("all");
+
+  // P75 do SLA desde a criação, calculado sobre o recorte de período
+  const { p75Criacao, byPeriod } = useMemo(() => {
+    const byPeriod = filterByPeriod(rows, period);
+    const dias = byPeriod
+      .map((r) => parseFloat(String(r.sla_dias_criacao ?? "").replace(",", ".")))
+      .filter((n) => Number.isFinite(n))
+      .sort((a, b) => a - b);
+    const idx = dias.length ? Math.min(dias.length - 1, Math.floor(0.75 * dias.length)) : 0;
+    return { p75Criacao: dias.length ? dias[idx] : 0, byPeriod };
+  }, [rows, period]);
+
+  const p75Counts = useMemo(() => {
+    let acima = 0, abaixo = 0;
+    for (const r of byPeriod) {
+      const n = parseFloat(String(r.sla_dias_criacao ?? "").replace(",", "."));
+      if (!Number.isFinite(n)) continue;
+      if (n > p75Criacao) acima++;
+      else abaixo++;
+    }
+    return { acima, abaixo, todos: byPeriod.length };
+  }, [byPeriod, p75Criacao]);
 
   const filteredRows = useMemo(() => {
-    const byPeriod = filterByPeriod(rows, period);
     const min = toNum(mrrMin);
     const max = toNum(mrrMax);
-    if (min === null && max === null) return byPeriod;
     return byPeriod.filter((r) => {
-      const m = parseFloat(String(r.mrr ?? "").replace(",", ".")) || 0;
-      if (min !== null && m < min) return false;
-      if (max !== null && m > max) return false;
+      if (min !== null || max !== null) {
+        const m = parseFloat(String(r.mrr ?? "").replace(",", ".")) || 0;
+        if (min !== null && m < min) return false;
+        if (max !== null && m > max) return false;
+      }
+      if (p75Filter !== "all") {
+        const n = parseFloat(String(r.sla_dias_criacao ?? "").replace(",", "."));
+        if (!Number.isFinite(n)) return false;
+        if (p75Filter === "acima" && !(n > p75Criacao)) return false;
+        if (p75Filter === "abaixo" && !(n <= p75Criacao)) return false;
+      }
       return true;
     });
-  }, [rows, period, mrrMin, mrrMax]);
+  }, [byPeriod, mrrMin, mrrMax, p75Filter, p75Criacao]);
 
   const periodCounts = useMemo<Partial<Record<PeriodKey, number>>>(() => {
     const periodos: PeriodKey[] = ["tudo", "hoje", "semana", "mes"];
