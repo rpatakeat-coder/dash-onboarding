@@ -36,6 +36,7 @@ const Card = ({
   deltaLoading,
   currentRange,
   previousRange,
+  tooltip,
 }: {
   label: string;
   value: string;
@@ -52,6 +53,7 @@ const Card = ({
   deltaLoading?: boolean;
   currentRange?: DateRange;
   previousRange?: DateRange;
+  tooltip?: string;
 }) => {
   const ring = {
     default: "border-border",
