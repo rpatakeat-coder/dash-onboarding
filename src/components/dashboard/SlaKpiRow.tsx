@@ -190,6 +190,7 @@ export const SlaKpiRow = ({
           label="% no prazo (≤30d)"
           value={fmtPct(noPrazo)}
           hint={`${noPrazoCount} clientes`}
+          tooltip="% de deals com sla_dias_etapa ≤ 30 (dentro do prazo na etapa atual)."
           tone="success"
           delta={deltas?.noPrazo}
           deltaUnit="pp"
