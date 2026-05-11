@@ -65,9 +65,12 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
     return load();
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     applyTheme(prefs.theme);
     applyDensity(prefs.density);
+  }, [prefs.theme, prefs.density]);
+
+  useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
   }, [prefs]);
 
@@ -79,17 +82,22 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
     return () => mq.removeEventListener("change", fn);
   }, [prefs.theme]);
 
+  const updateTheme = (theme: ThemeMode) => {
+    applyTheme(theme); // aplica sincronamente para feedback instantâneo
+    setPrefs((p) => ({ ...p, theme }));
+  };
+
   const value: Ctx = {
     ...prefs,
-    setTheme: (theme) => setPrefs((p) => ({ ...p, theme })),
+    setTheme: updateTheme,
     setDensity: (density) => setPrefs((p) => ({ ...p, density })),
     setHomeRoute: (homeRoute) => setPrefs((p) => ({ ...p, homeRoute })),
     setNotif: (n) => setPrefs((p) => ({ ...p, notif: { ...p.notif, ...n } })),
-    cycleTheme: () =>
-      setPrefs((p) => ({
-        ...p,
-        theme: p.theme === "light" ? "dark" : p.theme === "dark" ? "system" : "light",
-      })),
+    cycleTheme: () => {
+      const next: ThemeMode =
+        prefs.theme === "light" ? "dark" : prefs.theme === "dark" ? "system" : "light";
+      updateTheme(next);
+    },
   };
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;
