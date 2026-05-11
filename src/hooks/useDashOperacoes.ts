@@ -341,7 +341,7 @@ function aggregate(rows: DashRow[]): DashData {
 
   // SLA
   const slaMedio = tempoMedioFase;
-  const slaP75 = percentile(dias, 0.75);
+  const slaP75 = percentile(rows.map((r) => toNum(r.sla_dias_criacao)), 0.75);
   const noPrazoCount = rows.filter((r) => toNum(r.sla_dias) <= SLA_PRAZO).length;
   const estouradoCount = total - noPrazoCount;
   const noPrazo = total ? (noPrazoCount / total) * 100 : 0;
