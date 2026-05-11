@@ -49,6 +49,7 @@ export const TrendChart = () => {
         <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
           Tendência (últimos snapshots)
         </h3>
+        <InfoTooltip text="Snapshots diários: SLA médio, % no prazo e críticos derivam de sla_dias_etapa (dias na etapa atual)." />
         <span className="ml-auto font-small text-[10px] text-muted-foreground">
           {snaps.length} pontos
         </span>
