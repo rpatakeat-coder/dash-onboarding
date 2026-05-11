@@ -786,6 +786,13 @@ const Index = () => {
             }}
           />
         </section>
+          </TabsContent>
+
+          <TabsContent value="gestao" className="space-y-0">
+            <ManagerialView rows={rows} totalRows={allRows.length} />
+          </TabsContent>
+        </Tabs>
+
 
         <footer className="pt-4 text-center font-small text-xs text-muted-foreground">
           Takeat · Painel interno do time de Operações
