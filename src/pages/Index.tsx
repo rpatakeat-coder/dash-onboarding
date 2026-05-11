@@ -88,6 +88,13 @@ const Index = () => {
     else next.delete("tab");
     setSearchParams(next, { replace: true });
   };
+  useEffect(() => {
+    if (tab === "gestao") {
+      document.getElementById("dashboard-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [tab]);
 
   useEffect(() => {
     const handler = (e: Event) => {
