@@ -112,9 +112,12 @@ export const Highlights = ({ rows, operadores }: Props) => {
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="font-subtitle text-[11px] uppercase tracking-widest opacity-80">
-                {c.label}
-              </p>
+              <div className="flex items-center gap-1.5">
+                <p className="font-subtitle text-[11px] uppercase tracking-widest opacity-80">
+                  {c.label}
+                </p>
+                {c.tooltip && <InfoTooltip text={c.tooltip} />}
+              </div>
               <p className="mt-1 truncate font-display text-lg font-bold">{c.value}</p>
               <p className="mt-1 font-small text-xs opacity-80">{c.hint}</p>
             </div>
