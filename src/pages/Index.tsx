@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { X, UserCheck, LayoutDashboard, Users2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -79,6 +80,14 @@ const Index = () => {
   const [estoqueOpen, setEstoqueOpen] = useState(false);
   const [operatorOpen, setOperatorOpen] = useState(false);
   const [selectedOperator, setSelectedOperator] = useState<OperatorStat | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab") === "gestao" ? "gestao" : "exec";
+  const setTab = (v: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (v === "gestao") next.set("tab", "gestao");
+    else next.delete("tab");
+    setSearchParams(next, { replace: true });
+  };
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -619,7 +628,7 @@ const Index = () => {
           )}
         </div>
 
-        <Tabs defaultValue="exec" className="space-y-6">
+        <Tabs value={tab} onValueChange={setTab} className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="exec" className="gap-2">
               <LayoutDashboard className="h-4 w-4" /> Visão executiva
