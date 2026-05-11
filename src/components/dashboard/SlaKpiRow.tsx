@@ -85,9 +85,12 @@ const Card = ({
         interactive && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
       )}
     >
-      <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
-        {label}
-      </p>
+      <div className="flex items-center gap-1.5">
+        <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+          {label}
+        </p>
+        {tooltip && <InfoTooltip text={tooltip} />}
+      </div>
       <p className={cn("mt-2 font-numeric text-4xl font-bold leading-none", valueColor[tone ?? "default"])}>
         {value}
         {unit && <span className="ml-1 text-base font-semibold text-muted-foreground">{unit}</span>}
