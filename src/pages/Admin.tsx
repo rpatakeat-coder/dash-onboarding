@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { logAudit } from "@/lib/audit";
+import { z } from "zod";
 
 interface AdminUser {
   id: string;
