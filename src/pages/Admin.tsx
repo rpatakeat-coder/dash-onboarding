@@ -57,10 +57,12 @@ const Admin = () => {
             <TabsTrigger value="users" className="gap-1.5"><Users className="h-3.5 w-3.5" />Usuários</TabsTrigger>
             <TabsTrigger value="operadores" className="gap-1.5"><UserCog className="h-3.5 w-3.5" />Operadores</TabsTrigger>
             <TabsTrigger value="config" className="gap-1.5"><SettingsIcon className="h-3.5 w-3.5" />Configurações</TabsTrigger>
+            <TabsTrigger value="auditoria" className="gap-1.5"><History className="h-3.5 w-3.5" />Auditoria</TabsTrigger>
           </TabsList>
           <TabsContent value="users" className="mt-4"><AdminUsers /></TabsContent>
           <TabsContent value="operadores" className="mt-4"><AdminOperadores /></TabsContent>
           <TabsContent value="config" className="mt-4"><AdminConfig /></TabsContent>
+          <TabsContent value="auditoria" className="mt-4"><AdminAuditoria /></TabsContent>
         </Tabs>
       </main>
     </div>
