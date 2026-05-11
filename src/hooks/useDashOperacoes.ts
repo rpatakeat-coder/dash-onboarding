@@ -322,8 +322,9 @@ export function computePeriodSummary(rows: DashRow[]): PeriodSummary {
 export function computeSlaKpis(rows: DashRow[]): SlaKpis {
   const total = rows.length;
   const dias = rows.map((r) => toNum(r.sla_dias));
+  const diasCriacao = rows.map((r) => toNum(r.sla_dias_criacao));
   const slaMedio = dias.length ? dias.reduce((a, b) => a + b, 0) / dias.length : 0;
-  const slaP75 = percentile(dias, 0.75);
+  const slaP75 = percentile(diasCriacao, 0.75);
   const noPrazoCount = rows.filter((r) => toNum(r.sla_dias) <= SLA_PRAZO).length;
   const estouradoCount = total - noPrazoCount;
   const noPrazo = total ? (noPrazoCount / total) * 100 : 0;
