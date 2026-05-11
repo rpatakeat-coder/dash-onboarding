@@ -474,12 +474,10 @@ const AdminConfig = () => {
 
   const save = async () => {
     setSaving(true);
-    const payload = {
-      key: "metas",
-      value: form as unknown as Record<string, unknown>,
-      updated_by: user?.id ?? null,
-    };
-    const { error } = await supabase.from("app_settings").upsert(payload, { onConflict: "key" });
+    const { error } = await supabase.from("app_settings").upsert(
+      { key: "metas", value: form as never, updated_by: user?.id ?? null },
+      { onConflict: "key" },
+    );
     setSaving(false);
     if (error) return toast.error("Erro ao salvar metas", { description: error.message });
 
