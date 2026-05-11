@@ -20,6 +20,7 @@ interface HighlightCard {
   hint: string;
   Icon: typeof Sparkles;
   tone: "danger" | "warning" | "primary" | "neutral";
+  tooltip?: string;
 }
 
 const TONE: Record<HighlightCard["tone"], string> = {
