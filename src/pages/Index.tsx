@@ -88,6 +88,13 @@ const Index = () => {
     else next.delete("tab");
     setSearchParams(next, { replace: true });
   };
+  useEffect(() => {
+    if (tab === "gestao") {
+      document.getElementById("dashboard-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [tab]);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -628,6 +635,7 @@ const Index = () => {
           )}
         </div>
 
+        <div id="dashboard-tabs" className="scroll-mt-4" />
         <Tabs value={tab} onValueChange={setTab} className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="exec" className="gap-2">
