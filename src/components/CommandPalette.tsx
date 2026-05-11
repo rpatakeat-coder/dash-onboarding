@@ -179,129 +179,156 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
         value={query}
         onValueChange={setQuery}
       />
-      <div className="flex flex-wrap items-center gap-1.5 border-b border-border px-3 py-2">
-        {SCOPES.map((s) => {
-          const Icon = s.icon;
-          const active = scope === s.id;
-          return (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => setScope(s.id)}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-subtitle text-[11px] font-medium transition",
-                active
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-card text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <Icon className="h-3 w-3" />
-              {s.label}
-            </button>
-          );
-        })}
-        {showPeriodChips && (
-          <>
-            <span className="mx-1 h-4 w-px bg-border" />
-            <span className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
-              Período
-            </span>
-            {PERIODS.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setPeriod(p.id)}
-                className={cn(
-                  "rounded-full border px-2 py-0.5 font-numeric text-[10px] transition",
-                  period === p.id
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border bg-card text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {p.label}
-              </button>
-            ))}
-          </>
-        )}
-        {showPeriodChips && (
-          <div className="flex w-full flex-wrap items-center gap-1.5">
-            <span className="mx-1 h-4 w-px bg-border" />
-            <span className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
-              SLA
-            </span>
-            {BANDS.map((b) => {
-              const active = bands.has(b);
-              return (
-                <button
-                  key={b}
-                  type="button"
-                  onClick={() =>
-                    setBands((prev) => {
-                      const next = new Set(prev);
-                      next.has(b) ? next.delete(b) : next.add(b);
-                      return next;
-                    })
-                  }
-                  className={cn(
-                    "rounded-full border px-2 py-0.5 font-subtitle text-[10px] transition",
-                    active
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {SLA_BAND_META[b].label}
-                </button>
-              );
-            })}
-            {allStages.length > 0 && (
-              <>
-                <span className="mx-1 h-4 w-px bg-border" />
-                <span className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Etapa
-                </span>
-                <div className="flex max-w-full flex-wrap gap-1 overflow-x-auto">
-                  {allStages.map((s) => {
-                    const active = stages.has(s);
+      <div className="border-b border-border bg-muted/30 px-4 py-3">
+        <div
+          className={cn(
+            "grid gap-x-5 gap-y-3",
+            showPeriodChips ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" : "grid-cols-1",
+          )}
+        >
+          {/* Escopo */}
+          <div className="space-y-1.5">
+            <label className="block font-subtitle text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Escopo
+            </label>
+            <div className="flex flex-wrap gap-1">
+              {SCOPES.map((s) => {
+                const Icon = s.icon;
+                const active = scope === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setScope(s.id)}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-subtitle text-[11px] font-medium transition",
+                      active
+                        ? "border-primary/40 bg-primary/10 text-primary"
+                        : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:text-foreground",
+                    )}
+                  >
+                    <Icon className="h-3 w-3" />
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {showPeriodChips && (
+            <>
+              {/* Período */}
+              <div className="space-y-1.5">
+                <label className="block font-subtitle text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Período
+                </label>
+                <div className="flex flex-wrap gap-1">
+                  {PERIODS.map((p) => {
+                    const active = period === p.id;
                     return (
                       <button
-                        key={s}
+                        key={p.id}
                         type="button"
-                        onClick={() =>
-                          setStages((prev) => {
-                            const next = new Set(prev);
-                            next.has(s) ? next.delete(s) : next.add(s);
-                            return next;
-                          })
-                        }
+                        onClick={() => setPeriod(p.id)}
                         className={cn(
-                          "max-w-[180px] truncate rounded-full border px-2 py-0.5 font-subtitle text-[10px] transition",
+                          "rounded-full border px-2 py-0.5 font-numeric text-[11px] transition",
                           active
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border bg-card text-muted-foreground hover:text-foreground",
+                            ? "border-primary/40 bg-primary/10 text-primary"
+                            : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:text-foreground",
                         )}
-                        title={s}
                       >
-                        {s}
+                        {p.label}
                       </button>
                     );
                   })}
                 </div>
-              </>
-            )}
-            {(stages.size > 0 || bands.size > 0) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setStages(new Set());
-                  setBands(new Set());
-                }}
-                className="ml-auto rounded-full border border-border bg-card px-2 py-0.5 font-subtitle text-[10px] text-muted-foreground hover:text-destructive"
-              >
-                Limpar
-              </button>
-            )}
-          </div>
-        )}
+              </div>
+
+              {/* SLA */}
+              <div className="space-y-1.5">
+                <label className="block font-subtitle text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  SLA
+                </label>
+                <div className="flex flex-wrap gap-1">
+                  {BANDS.map((b) => {
+                    const active = bands.has(b);
+                    return (
+                      <button
+                        key={b}
+                        type="button"
+                        onClick={() =>
+                          setBands((prev) => {
+                            const next = new Set(prev);
+                            next.has(b) ? next.delete(b) : next.add(b);
+                            return next;
+                          })
+                        }
+                        className={cn(
+                          "rounded-full border px-2 py-0.5 font-subtitle text-[11px] transition",
+                          active
+                            ? "border-primary/40 bg-primary/10 text-primary"
+                            : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:text-foreground",
+                        )}
+                      >
+                        {SLA_BAND_META[b].label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Etapa */}
+              {allStages.length > 0 && (
+                <div className="space-y-1.5 lg:col-span-1 sm:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block font-subtitle text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Etapa
+                    </label>
+                    {(stages.size > 0 || bands.size > 0) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStages(new Set());
+                          setBands(new Set());
+                        }}
+                        className="font-subtitle text-[10px] text-muted-foreground hover:text-destructive"
+                      >
+                        Limpar
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex max-h-16 flex-wrap gap-1 overflow-y-auto pr-1">
+                    {allStages.map((s) => {
+                      const active = stages.has(s);
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() =>
+                            setStages((prev) => {
+                              const next = new Set(prev);
+                              next.has(s) ? next.delete(s) : next.add(s);
+                              return next;
+                            })
+                          }
+                          className={cn(
+                            "max-w-[160px] truncate rounded-full border px-2 py-0.5 font-subtitle text-[11px] transition",
+                            active
+                              ? "border-primary/40 bg-primary/10 text-primary"
+                              : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:text-foreground",
+                          )}
+                          title={s}
+                        >
+                          {s}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
       <CommandList>
         <CommandEmpty>Nenhum resultado.</CommandEmpty>
