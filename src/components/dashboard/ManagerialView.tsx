@@ -165,7 +165,7 @@ export const ManagerialView = ({ rows, totalRows }: Props) => {
       return n;
     });
 
-  const hasLocalFilters = period !== "tudo" || !!mrrMin || !!mrrMax;
+  const hasLocalFilters = period !== "tudo" || !!mrrMin || !!mrrMax || p75Filter !== "all";
 
   return (
     <div className="space-y-6">
@@ -208,6 +208,37 @@ export const ManagerialView = ({ rows, totalRows }: Props) => {
             />
           </div>
 
+          <div className="flex items-center gap-2">
+            <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+              P75 SLA criação
+            </span>
+            <span className="font-numeric text-xs font-semibold tabular-nums text-foreground">
+              {Math.round(p75Criacao)}d
+            </span>
+            {(
+              [
+                { k: "all", label: "Todos", count: p75Counts.todos },
+                { k: "acima", label: `> ${Math.round(p75Criacao)}d`, count: p75Counts.acima },
+                { k: "abaixo", label: `≤ ${Math.round(p75Criacao)}d`, count: p75Counts.abaixo },
+              ] as { k: P75Filter; label: string; count: number }[]
+            ).map(({ k, label, count }) => (
+              <button
+                key={k}
+                onClick={() => setP75Filter(k)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 font-subtitle text-xs transition",
+                  p75Filter === k
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-muted-foreground hover:text-foreground",
+                )}
+                aria-pressed={p75Filter === k}
+              >
+                {label}
+                <span className="font-numeric tabular-nums opacity-80">{count}</span>
+              </button>
+            ))}
+          </div>
+
           <div className="ml-auto flex items-center gap-2">
             <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
               Ordenar por
@@ -241,6 +272,7 @@ export const ManagerialView = ({ rows, totalRows }: Props) => {
                 setPeriod("tudo");
                 setMrrMin("");
                 setMrrMax("");
+                setP75Filter("all");
               }}
               className="rounded-lg px-2 py-1 font-subtitle text-xs text-muted-foreground hover:text-destructive"
             >
