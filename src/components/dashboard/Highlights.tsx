@@ -1,5 +1,6 @@
 import { Sparkles, TrendingDown, AlertOctagon, Users } from "lucide-react";
 import { fmtBRL, type DashRow, type OperatorStat } from "@/hooks/useDashOperacoes";
+import { InfoTooltip } from "./InfoTooltip";
 
 interface Props {
   rows: DashRow[];
