@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 
 export type ThemeMode = "light" | "dark" | "system";
 export type Density = "comfortable" | "compact";
