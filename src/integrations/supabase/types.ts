@@ -293,6 +293,24 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_control: {
+        Row: {
+          last_run_at: string
+          sync_name: string
+          updated_at: string
+        }
+        Insert: {
+          last_run_at: string
+          sync_name: string
+          updated_at?: string
+        }
+        Update: {
+          last_run_at?: string
+          sync_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
