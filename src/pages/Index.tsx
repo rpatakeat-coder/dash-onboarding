@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { X, UserCheck } from "lucide-react";
+import { X, UserCheck, LayoutDashboard, Users2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ManagerialView } from "@/components/dashboard/ManagerialView";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { OperatorsTable } from "@/components/dashboard/OperatorsTable";
@@ -617,6 +619,17 @@ const Index = () => {
           )}
         </div>
 
+        <Tabs defaultValue="exec" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="exec" className="gap-2">
+              <LayoutDashboard className="h-4 w-4" /> Visão executiva
+            </TabsTrigger>
+            <TabsTrigger value="gestao" className="gap-2">
+              <Users2 className="h-4 w-4" /> Gestão
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="exec" className="space-y-0">
         {/* Destaques automáticos */}
         {data && opData.operadores.length > 0 && (
           <section className="mb-8">
@@ -773,6 +786,13 @@ const Index = () => {
             }}
           />
         </section>
+          </TabsContent>
+
+          <TabsContent value="gestao" className="space-y-0">
+            <ManagerialView rows={rows} totalRows={allRows.length} />
+          </TabsContent>
+        </Tabs>
+
 
         <footer className="pt-4 text-center font-small text-xs text-muted-foreground">
           Takeat · Painel interno do time de Operações
