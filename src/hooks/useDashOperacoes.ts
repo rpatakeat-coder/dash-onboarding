@@ -8,6 +8,7 @@ export interface DashRow {
   mrr: string | null;
   agente_ativacao: string | null;
   sla_dias: string | null;
+  sla_dias_criacao: string | null;
   data_criacao: string | null;
   data_entrada_fase: string | null;
   etapa_negocio: string | null;
