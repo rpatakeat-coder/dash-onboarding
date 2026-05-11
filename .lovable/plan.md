@@ -1,112 +1,129 @@
-# Roadmap de evolução do Export de PDF
+# Roadmap de evolução do Painel
 
-Você escolheu muito — vou organizar em **4 fases independentes** que podem ser entregues uma por vez. Cada fase é executável sozinha e termina com o app funcionando.
+Selecionado: IA com **sua própria API** (não Lovable AI), previsão de churn/atraso, metas e gamificação, comparativo histórico avançado, auditoria/versionamento, painel admin com roles, integrações, onboarding guiado, busca e filtros salvos.
 
----
-
-## Fase 1 — Identidade visual e navegação no PDF
-
-Foco: deixar o PDF com cara de relatório oficial Takeat.
-
-- **Página de capa** (1ª folha do PDF): logo Takeat centralizado, título do relatório, período coberto, nome do usuário que gerou e data/hora.
-- **Marca d'água** sutil em diagonal em todas as páginas internas (logo Takeat ~8% opacidade).
-- **Rodapé padrão**: "Takeat · Painel de Operações" à esquerda, "Página X de Y" à direita, linha divisória fina.
-- **Sumário com âncoras clicáveis**: 2ª página lista as seções (KPIs, Funil, Tendência, Operadores, SLA, Estoque…) com número da página. Clicar no item pula para a seção (jsPDF suporta `link`/`outline`).
-- **Outline lateral do PDF**: cada seção registrada no painel de bookmarks do leitor PDF.
-
-**Onde toca:** apenas `ExportPdfButton.tsx` + 1 helper novo `src/lib/pdfBranding.ts` (cover, watermark, footer, outline).
+Organizado em **5 fases independentes**. Cada fase entrega valor sozinha.
 
 ---
 
-## Fase 2 — A4 inteligente e acessibilidade
+## Fase A — Inteligência no dashboard (sua API de IA)
 
-Foco: PDFs que não cortam tabelas largas e são utilizáveis por leitores de tela.
+Foco: insights automáticos usando uma API externa que você já tem (ex.: OpenAI, Anthropic, Groq, Azure OpenAI, sua própria).
 
-- **Modo paisagem automático para tabelas largas**: detectar elementos com `data-pdf-landscape` ou tabelas cuja largura natural > A4 portrait, renderizá-las separadamente em páginas landscape e voltar ao portrait depois.
-- **Camada de texto selecionável**: além da imagem do html2canvas, sobrepor texto invisível extraído do DOM nas posições certas, para que copiar/colar e busca (Ctrl+F) funcionem dentro do PDF.
-- **Tags de acessibilidade básicas**: título do documento, idioma `pt-BR`, autor e assunto via `pdf.setProperties()`.
-- **Conformidade PDF/A-2b** (arquivamento): forçar embed de fontes, perfil de cor sRGB e metadados XMP.
+- **Edge Function `ai-insights`** no Supabase recebe `{ rows, operadores, periodo }` e devolve:
+  - Resumo executivo do dia (3–5 bullets).
+  - Explicação automática de variações fortes de KPI (vs. snapshot anterior).
+  - Sugestão de ação por operador com mais críticos.
+- Chave guardada como **secret** (`AI_PROVIDER_API_KEY` + `AI_PROVIDER_BASE_URL` + `AI_MODEL`). Nada vaza pro frontend.
+- Card "Insights da IA" no topo do dashboard com botão **Gerar análise** + estado de loading + cache de 10 min por sessão.
+- Botão "Explicar este KPI" em cada `KpiCard` → modal com explicação contextual.
 
-**Onde toca:** `ExportPdfButton.tsx`, `pdfPagination.ts` (ramo landscape), novo `src/lib/pdfAccessibility.ts`.
+**Antes de começar preciso saber:** qual provedor (OpenAI / Anthropic / outro) e o `base URL` + nome do modelo.
 
-> Observação: PDF/A completo costuma exigir `pdfjs-dist` ou pós-processamento. Vou validar se dá para fazer só com `jsPDF` ou se precisa de uma lib auxiliar (`pdf-lib`) — confirmo no início da fase.
-
----
-
-## Fase 3 — UX da exportação (modal + persistência + compartilhamento)
-
-Foco: dar ao usuário controle e histórico.
-
-- **Modal de configuração antes de gerar** (substitui o clique direto):
-  - Checkboxes para incluir/excluir: Capa, Sumário, KPIs, Funil, Tendência, Operadores, SLA, Estoque, Tabelas detalhadas.
-  - Toggle "Incluir filtros aplicados no resumo".
-  - Toggle "Modo paisagem para tabelas largas".
-  - Botão **Gerar prévia** → continua usando o modal de preview já existente.
-- **Histórico de exports** (Supabase):
-  - Nova tabela `pdf_exports` (id, user_id, filename, page_count, sections jsonb, storage_path, public_url, expires_at, created_at) com RLS via `has_role` e `user_id = auth.uid()`.
-  - Bucket Storage privado `pdf-exports` com policy de leitura própria.
-  - Após gerar, salva o blob no bucket e cria a linha de histórico.
-  - Painel "Últimas exportações" no modal: lista 10 mais recentes com botão Baixar / Compartilhar / Excluir.
-- **Compartilhar link público**:
-  - Botão "Gerar link público" cria signed URL (ex.: 7 dias) via `storage.from(...).createSignedUrl`.
-  - Modal mostra URL com botão Copiar e contador de expiração.
-  - Permite revogar (remove arquivo do bucket → URL invalida).
-
-**Onde toca:**
-- Novo `ExportPdfDialog.tsx` (substitui clique direto pelo modal de configuração).
-- Novo `useExportHistory.ts` (hook Supabase).
-- Migração SQL: tabela + bucket + policies.
-- `ExportPdfButton.tsx` orquestra o fluxo.
-
-```text
-[Botão Exportar] → [Modal Config + Histórico] → [Gerar] → [Preview] → [Salvar + Compartilhar]
-```
+**Toca em:** `supabase/functions/ai-insights/index.ts` (novo), `src/components/dashboard/AiInsightsCard.tsx` (novo), `KpiCard.tsx` (botão explicar), `Index.tsx`.
 
 ---
 
-## Fase 4 — Cobertura completa de testes
+## Fase B — Análise avançada
 
-Foco: blindar tudo que foi construído.
+### B1 · Previsão de churn/atraso de SLA
+- Heurística inicial 100% client-side: combina dias parado, etapa, perfil, histórico do operador → score 0–100.
+- Coluna "Risco previsto" no `RiskRanking` + filtro "Top 20 em risco".
+- Opção de **upgrade**: enviar batch para sua API de IA classificar (mesma edge function).
 
-- **Testes do CSV** (`ExportCsvButton.test.ts`): formatação BR (`1.234,56`), escape de aspas/vírgulas/quebra de linha, paridade de colunas com o que está visível na tela, respeito a filtros aplicados.
-- **Testes E2E com Playwright**:
-  - Carrega a home, clica em "Exportar PDF", marca/desmarca seções no modal, clica Gerar.
-  - Aguarda modal de preview, valida que o `<iframe>` recebeu blob URL.
-  - Captura o blob via `page.evaluate` e valida assinatura `%PDF-` e contagem de páginas via `pdf-parse`.
-  - Roda em 3 viewports (390, 820, 1400) e 2 zooms do browser.
-- **Regressão visual do PDF**: pipeline que renderiza o PDF gerado em PNG por página (via `pdfjs-dist` headless) e compara com snapshot baseline usando `pixelmatch` com tolerância 0.5%. Comita os PNGs em `tests/__pdf_snapshots__/`.
-- **Performance/memória**: stress test que injeta dashboard com 10.000 linhas de tabela, mede tempo de geração e pico de memória (`performance.memory` no Chromium); falha se > 8 s ou > 500 MB.
+### B2 · Metas e gamificação
+- Nova tabela `metas_operador` (operador, mes_referencia, meta_ativacoes, meta_sla_medio, meta_mrr_destravado).
+- Barra de progresso por operador no `OperatorsTable`.
+- **Ranking semanal** com pódio + badges ("Zero crítico 7d", "Maior MRR destravado", "Streak de 5 dias").
+- Notificação quando bater meta.
 
-**Onde toca:**
-- `src/components/dashboard/ExportCsvButton.test.ts` (novo).
-- `tests/e2e/export-pdf.spec.ts` (novo, Playwright).
-- `tests/visual/pdf-regression.spec.ts` (novo).
-- `playwright.config.ts` (novo) e dependências `@playwright/test`, `pdfjs-dist`, `pixelmatch`, `pdf-parse`.
+### B3 · Comparativo histórico avançado
+- Heatmap cohort: mês de entrada × dias até ativação.
+- Waterfall MRR: entrou → ativou → travou → destravou → perdeu.
+- Sparkline em cada KPI mostrando últimos 30 dias (usa `dash_operacoes_snapshots`).
+
+### B4 · Auditoria e versionamento
+- Nova tabela `dash_operacoes_audit` (id_deal, campo, valor_anterior, valor_novo, changed_at).
+- Trigger SQL captura mudanças de `etapa_negocio`, `agente_ativacao`, `sla_dias`.
+- Tela "Histórico do deal" no `DealDrawer` com timeline.
+- Diff entre datas: "o que mudou entre 01/05 e 11/05?".
+
+**Toca em:** migrações SQL (3 tabelas + trigger), `src/lib/risk.ts`, `RiskRanking.tsx`, `OperatorsTable.tsx`, `DealDrawer.tsx`, novos componentes `MetaProgress`, `CohortHeatmap`, `MrrWaterfall`, `DealAuditTimeline`.
 
 ---
 
-## Ordem sugerida de entrega
+## Fase C — Painel admin com roles
 
-1. **Fase 1** (1 PR, ~1 sessão) — ganho visual imediato, baixo risco.
-2. **Fase 3** (modal + histórico + share) — maior ganho de UX percebida.
-3. **Fase 2** (landscape + acessibilidade) — qualidade técnica.
-4. **Fase 4** (testes E2E + visual + perf) — depende das outras estarem prontas para os snapshots fazerem sentido.
+- Já existe `user_roles` + `has_role`. Falta a UI.
+- Nova rota `/admin` protegida por `has_role(uid,'admin')`.
+- Telas:
+  - **Usuários**: lista de `profiles`, botão promover/remover admin, último login.
+  - **Operadores**: CRUD de `vendedores` (já existe a tabela), upload de avatar.
+  - **Metas**: editor das metas mensais (Fase B2).
+  - **Configurações**: limites de SLA por banda, perfis críticos, modelo de IA padrão.
+- `MainNav` mostra item "Admin" só para admins.
+
+**Toca em:** `src/pages/Admin.tsx` + subpáginas, `App.tsx` (rota), `MainNav.tsx`, hook `useIsAdmin`.
+
+---
+
+## Fase D — Integrações e onboarding
+
+### D1 · Integrações
+- **Webhook HubSpot → Supabase** (edge function `hubspot-webhook`) para atualizar `dash_operacoes` em tempo real, em vez de polling.
+- **Export para Google Sheets**: edge function gera planilha e devolve link (via Google Sheets API com sua chave).
+- **Envio automático do PDF por e-mail**: cron diário pega o PDF mais recente e envia para lista configurada (Resend ou seu SMTP).
+
+### D2 · Busca e filtros salvos
+- Nova tabela `saved_views` (user_id, nome, filtros jsonb, is_pinned, created_at).
+- Botão "Salvar visão atual" ao lado dos filtros → captura URL params.
+- Sidebar "Minhas visões" com pinned no topo.
+- Cada visão tem URL compartilhável (`/?view=<id>`).
+
+### D3 · Onboarding guiado
+- Lib `driver.js` ou `react-joyride`.
+- Tour de 6 passos no primeiro login: KPIs → Funil → Operadores → SLA → Filtros → Export PDF.
+- Tooltips contextuais com `?` ao lado de termos (SLA, MRR destravado, Crítico).
+- Central de ajuda em `/ajuda` com FAQ + glossário.
+- Flag `onboarding_completed` em `profiles`.
+
+**Toca em:** `supabase/functions/hubspot-webhook/`, `export-sheets/`, `email-pdf/`, migração `saved_views`, novos componentes `SavedViewsMenu`, `OnboardingTour`, `HelpCenter`.
+
+---
+
+## Fase E — Continuidade do Export PDF (do plano antigo)
+
+Manter o que já estava planejado em `.lovable/plan.md`: Fase 2 (landscape + acessibilidade), Fase 3 (modal + histórico + share), Fase 4 (testes E2E + visual).
+
+---
+
+## Ordem sugerida
+
+1. **Fase A** — IA com sua API (maior wow, baixo risco). Preciso só do provedor + modelo.
+2. **Fase C** — Admin (destrava metas e configurações das outras fases).
+3. **Fase B** — Análise avançada (B2 metas → B1 risco → B3 histórico → B4 auditoria).
+4. **Fase D** — Integrações + filtros salvos + onboarding.
+5. **Fase E** — Fechar o Export PDF.
 
 ---
 
 ## Detalhes técnicos importantes
 
-- **Outline do jsPDF**: `pdf.outline.add(null, "Funil", { pageNumber: 3 })` — registra após `addPage()` correspondente.
-- **Marca d'água**: aplicar dentro do loop de `slices.forEach` antes do `addImage` da página, com `pdf.saveGraphicsState()` + `setGState({opacity: 0.08})` + `addImage(logo, ...)` + `restoreGraphicsState()`.
-- **Capa**: gerar antes do loop principal, `pdf.addPage()` antes da 1ª slice (ajustar `totalPages` e numeração).
-- **Texto selecionável**: percorrer nodes de texto do DOM, calcular posição em pt via `getBoundingClientRect()` + `pxPerPt`, usar `pdf.text(..., { renderingMode: 'invisible' })`.
-- **Storage policy** (bucket privado):
-  ```sql
-  create policy "users read own exports"
-    on storage.objects for select
-    using (bucket_id = 'pdf-exports' and owner = auth.uid());
+- **Sua API de IA na edge function**:
+  ```ts
+  const r = await fetch(`${Deno.env.get('AI_PROVIDER_BASE_URL')}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${Deno.env.get('AI_PROVIDER_API_KEY')}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ model: Deno.env.get('AI_MODEL'), messages, temperature: 0.2 }),
+  });
   ```
-- **Histórico** usa `user_roles`/`has_role` para admin ver tudo (opcional).
-- **Playwright**: rodar contra `vite preview` em CI; mock do `useDashOperacoes` com fixture estável para snapshots determinísticos.
+  Funciona com qualquer provedor compatível com a API da OpenAI (OpenAI, Groq, Together, Azure, vLLM próprio, OpenRouter, etc.). Se for Anthropic puro, ajusto o adapter.
+- **Roles**: já está pronto, só consumir `has_role` via RPC ou via policy nas novas tabelas.
+- **Auditoria**: trigger `AFTER UPDATE ON dash_operacoes` grava em `dash_operacoes_audit` quando colunas relevantes mudam.
+- **Saved views**: filtros já vivem na URL (`useUrlSets`), então persistir é serializar `location.search`.
+- **Onboarding**: `react-joyride` é leve e combina com Tailwind.
 
-Quer que eu comece pela **Fase 1** (capa + marca d'água + sumário + outline) assim que aprovar?
+Qual fase você quer atacar primeiro? Se for a **Fase A**, me diga o provedor de IA e o modelo que vamos usar.
