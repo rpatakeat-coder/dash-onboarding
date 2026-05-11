@@ -452,4 +452,136 @@ const AdminConfig = () => {
   );
 };
 
+// ============ AUDITORIA ============
+interface AuditRow {
+  id: string;
+  user_id: string | null;
+  user_name: string | null;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  summary: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
+const ENTITY_LABEL: Record<string, string> = {
+  operador: "Operador",
+  meta: "Meta",
+  config: "Configuração",
+  user_role: "Papel de usuário",
+  outro: "Outro",
+};
+
+const AdminAuditoria = () => {
+  const today = new Date().toISOString().slice(0, 10);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
+  const [from, setFrom] = useState(sevenDaysAgo);
+  const [to, setTo] = useState(today);
+  const [entity, setEntity] = useState<string>("all");
+  const [rows, setRows] = useState<AuditRow[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    let q = supabase
+      .from("audit_logs")
+      .select("id, user_id, user_name, action, entity_type, entity_id, summary, metadata, created_at")
+      .gte("created_at", `${from}T00:00:00`)
+      .lte("created_at", `${to}T23:59:59`)
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (entity !== "all") q = q.eq("entity_type", entity);
+    const { data, error } = await q;
+    setLoading(false);
+    if (error) return toast.error("Erro ao carregar auditoria", { description: error.message });
+    setRows((data as unknown as AuditRow[]) ?? []);
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-border bg-card p-3">
+        <div className="flex flex-col gap-1">
+          <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">De</label>
+          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-[150px]" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">Até</label>
+          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-[150px]" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">Entidade</label>
+          <select
+            value={entity}
+            onChange={(e) => setEntity(e.target.value)}
+            className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+          >
+            <option value="all">Todas</option>
+            <option value="operador">Operador</option>
+            <option value="meta">Meta</option>
+            <option value="config">Configuração</option>
+            <option value="user_role">Papel de usuário</option>
+          </select>
+        </div>
+        <Button onClick={load} disabled={loading} className="gap-1.5">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          Filtrar
+        </Button>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-border bg-muted/40 text-left">
+              <tr>
+                <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Quando</th>
+                <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Quem</th>
+                <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Entidade</th>
+                <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Ação</th>
+                <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Detalhes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr><td colSpan={5} className="px-4 py-10 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" /></td></tr>
+              )}
+              {!loading && rows.length === 0 && (
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Nenhum registro no período.</td></tr>
+              )}
+              {!loading && rows.map((r) => (
+                <tr key={r.id} className="border-b border-border/50 align-top last:border-0">
+                  <td className="whitespace-nowrap px-4 py-3 font-numeric text-xs text-muted-foreground">
+                    {new Date(r.created_at).toLocaleString("pt-BR")}
+                  </td>
+                  <td className="px-4 py-3 text-foreground">{r.user_name || <span className="text-muted-foreground">—</span>}</td>
+                  <td className="px-4 py-3">
+                    <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-xs">
+                      {ENTITY_LABEL[r.entity_type] ?? r.entity_type}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3"><code className="rounded bg-muted px-1.5 py-0.5 text-xs">{r.action}</code></td>
+                  <td className="px-4 py-3 text-foreground">
+                    <div>{r.summary}</div>
+                    {r.metadata && Object.keys(r.metadata).length > 0 && (
+                      <details className="mt-1">
+                        <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">metadata</summary>
+                        <pre className="mt-1 max-w-xl overflow-x-auto rounded bg-muted/50 p-2 text-[11px] leading-snug">{JSON.stringify(r.metadata, null, 2)}</pre>
+                      </details>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default Admin;
