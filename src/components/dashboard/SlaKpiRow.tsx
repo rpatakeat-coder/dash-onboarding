@@ -175,6 +175,7 @@ export const SlaKpiRow = ({
           value={Math.round(slaMedio).toString()}
           unit="dias"
           hint="média do estoque"
+          tooltip="Média de sla_dias_etapa (dias na etapa atual) entre todos os deals do estoque."
           delta={deltas?.slaMedio}
           deltaUnit="d"
           deltaDecimals={1}
