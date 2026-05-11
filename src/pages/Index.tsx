@@ -80,6 +80,14 @@ const Index = () => {
   const [estoqueOpen, setEstoqueOpen] = useState(false);
   const [operatorOpen, setOperatorOpen] = useState(false);
   const [selectedOperator, setSelectedOperator] = useState<OperatorStat | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab") === "gestao" ? "gestao" : "exec";
+  const setTab = (v: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (v === "gestao") next.set("tab", "gestao");
+    else next.delete("tab");
+    setSearchParams(next, { replace: true });
+  };
 
   useEffect(() => {
     const handler = (e: Event) => {
