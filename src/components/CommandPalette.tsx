@@ -62,6 +62,9 @@ const norm = (s: string) =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
+const ITEM_CLS =
+  "rounded-lg border-l-2 border-l-transparent data-[selected=true]:border-l-primary data-[selected=true]:bg-primary/10 data-[selected=true]:text-foreground";
+
 const scoreMatch = (haystack: string, q: string): number => {
   if (!q) return 1;
   const h = norm(haystack);
