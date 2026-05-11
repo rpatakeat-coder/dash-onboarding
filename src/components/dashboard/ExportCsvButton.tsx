@@ -13,7 +13,7 @@ const COLS: Array<[keyof DashRow, string]> = [
   ["agente_ativacao", "Ativador"],
   ["perfil_cliente", "Perfil"],
   ["etapa_negocio", "Etapa"],
-  ["sla_dias", "SLA (dias)"],
+  ["sla_dias_etapa", "SLA (dias)"],
   ["mrr", "MRR"],
   ["data_criacao", "Criado em"],
   ["data_entrada_fase", "Entrou na fase"],
