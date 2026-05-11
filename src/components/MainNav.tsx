@@ -13,6 +13,7 @@ interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { to: "/", label: "Visão geral", icon: LayoutDashboard },
+  { to: "/?tab=gestao", label: "Gestão", icon: Users2, title: "Visão gerencial por operador" },
   { to: "/minha-carteira", label: "Minha carteira", icon: Briefcase },
   { to: "/tv", label: "Modo TV", icon: TvIcon, title: "Tela cheia para TV da operação" },
   { to: "/admin", label: "Admin", icon: Shield, title: "Painel de administração", adminOnly: true },
