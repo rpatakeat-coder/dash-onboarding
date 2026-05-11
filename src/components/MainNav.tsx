@@ -1,18 +1,21 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Briefcase, Tv as TvIcon, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, Briefcase, Tv as TvIcon, Shield, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 interface NavItem {
   to: string;
   label: string;
   icon: LucideIcon;
   title?: string;
+  adminOnly?: boolean;
 }
 
 export const NAV_ITEMS: NavItem[] = [
   { to: "/", label: "Visão geral", icon: LayoutDashboard },
   { to: "/minha-carteira", label: "Minha carteira", icon: Briefcase },
   { to: "/tv", label: "Modo TV", icon: TvIcon, title: "Tela cheia para TV da operação" },
+  { to: "/admin", label: "Admin", icon: Shield, title: "Painel de administração", adminOnly: true },
 ];
 
 interface Props {
@@ -23,6 +26,8 @@ interface Props {
 
 export const MainNav = ({ className, orientation = "horizontal", onNavigate }: Props) => {
   const vertical = orientation === "vertical";
+  const { isAdmin } = useIsAdmin();
+  const items = NAV_ITEMS.filter((i) => !i.adminOnly || isAdmin);
   return (
     <nav
       aria-label="Navegação principal"
@@ -34,7 +39,7 @@ export const MainNav = ({ className, orientation = "horizontal", onNavigate }: P
         className,
       )}
     >
-      {NAV_ITEMS.map(({ to, label, icon: Icon, title }, idx) => (
+      {items.map(({ to, label, icon: Icon, title }, idx) => (
         <NavLink
           key={to}
           to={to}

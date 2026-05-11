@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound.tsx";
 import AuthPage from "./pages/Auth.tsx";
 import MinhaCarteira from "./pages/MinhaCarteira.tsx";
 import Tv from "./pages/Tv.tsx";
+import Admin from "./pages/Admin.tsx";
 import { DealDrawerProvider } from "./contexts/DealDrawer";
 import { PreferencesProvider } from "./contexts/PreferencesContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
@@ -28,6 +29,7 @@ const Shell = () => {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/minha-carteira" element={<MinhaCarteira />} />
         <Route path="/tv" element={<Tv />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <CommandPalette onOpenPreferences={() => setPrefsOpen(true)} />
