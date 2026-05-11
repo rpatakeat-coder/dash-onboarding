@@ -457,7 +457,7 @@ const validateMetas = (v: MetasValues): MetasErrors => {
   const errs: MetasErrors = {};
   for (const issue of res.error.issues) {
     const k = issue.path[0] as keyof MetasValues | undefined;
-    if (k && !errs[k]) errs[k] = issue.message;
+    if (typeof k === "string" && !errs[k]) errs[k] = issue.message;
   }
   return errs;
 };
