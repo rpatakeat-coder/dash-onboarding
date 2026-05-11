@@ -183,6 +183,35 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
         onValueChange={setQuery}
       />
       <div className="border-b border-border bg-muted/30 px-4 py-3">
+        {(() => {
+          const hasFilters =
+            scope !== "all" || period !== "tudo" || stages.size > 0 || bands.size > 0;
+          return (
+            <div className="mb-2 flex items-center justify-between">
+              <span className="font-subtitle text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Filtros
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setScope("all");
+                  setPeriod("tudo");
+                  setStages(new Set());
+                  setBands(new Set());
+                }}
+                disabled={!hasFilters}
+                className={cn(
+                  "rounded-md border border-border bg-card px-2 py-0.5 font-subtitle text-[10px] uppercase tracking-wider transition",
+                  hasFilters
+                    ? "text-muted-foreground hover:border-destructive/40 hover:text-destructive"
+                    : "cursor-not-allowed text-muted-foreground/40",
+                )}
+              >
+                Limpar tudo
+              </button>
+            </div>
+          );
+        })()}
         <div
           className={cn(
             "grid gap-x-5 gap-y-3",
