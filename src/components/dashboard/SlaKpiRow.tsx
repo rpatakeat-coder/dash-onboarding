@@ -3,6 +3,7 @@ import { fmtPct } from "@/hooks/useDashOperacoes";
 import type { SnapshotDeltas, DeltaWindow } from "@/hooks/useSnapshotDeltas";
 import { KpiDeltaBadge } from "./KpiDeltaBadge";
 import type { KpiDelta, DateRange } from "@/hooks/useSnapshotDeltas";
+import { InfoTooltip } from "./InfoTooltip";
 
 interface Props {
   total: number;
