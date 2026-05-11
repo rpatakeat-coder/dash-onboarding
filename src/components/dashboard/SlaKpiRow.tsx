@@ -159,7 +159,7 @@ export const SlaKpiRow = ({
           label="P75 SLA"
           value={Math.round(slaP75).toString()}
           unit="dias"
-          hint="75% dos clientes"
+          hint="desde a criação do deal"
           tone="warning"
         />
         <Card
