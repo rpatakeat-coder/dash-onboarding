@@ -8,6 +8,7 @@ import {
   type DashRow,
   type SlaBand,
 } from "@/hooks/useDashOperacoes";
+import { InfoTooltip } from "./InfoTooltip";
 
 interface Props {
   rows: DashRow[];
@@ -69,9 +70,12 @@ export const PerfilSlaPanel = ({ rows }: Props) => {
           <Layers className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h2 className="font-display text-lg font-semibold text-secondary">
-            SLA por perfil de cliente
-          </h2>
+          <div className="flex items-center gap-1.5">
+            <h2 className="font-display text-lg font-semibold text-secondary">
+              SLA por perfil de cliente
+            </h2>
+            <InfoTooltip text="Todos os cálculos (SLA médio e faixas crítico/atenção/alerta/saudável) usam sla_dias_etapa — dias na etapa atual." />
+          </div>
           <p className="font-small text-xs text-muted-foreground">
             Distribuição de SLA por porte (P / M / G / GG)
           </p>

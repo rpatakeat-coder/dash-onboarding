@@ -3,6 +3,7 @@ import { fmtPct } from "@/hooks/useDashOperacoes";
 import type { SnapshotDeltas, DeltaWindow } from "@/hooks/useSnapshotDeltas";
 import { KpiDeltaBadge } from "./KpiDeltaBadge";
 import type { KpiDelta, DateRange } from "@/hooks/useSnapshotDeltas";
+import { InfoTooltip } from "./InfoTooltip";
 
 interface Props {
   total: number;
@@ -35,6 +36,7 @@ const Card = ({
   deltaLoading,
   currentRange,
   previousRange,
+  tooltip,
 }: {
   label: string;
   value: string;
@@ -51,6 +53,7 @@ const Card = ({
   deltaLoading?: boolean;
   currentRange?: DateRange;
   previousRange?: DateRange;
+  tooltip?: string;
 }) => {
   const ring = {
     default: "border-border",
@@ -82,9 +85,12 @@ const Card = ({
         interactive && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
       )}
     >
-      <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
-        {label}
-      </p>
+      <div className="flex items-center gap-1.5">
+        <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+          {label}
+        </p>
+        {tooltip && <InfoTooltip text={tooltip} />}
+      </div>
       <p className={cn("mt-2 font-numeric text-4xl font-bold leading-none", valueColor[tone ?? "default"])}>
         {value}
         {unit && <span className="ml-1 text-base font-semibold text-muted-foreground">{unit}</span>}
@@ -144,6 +150,7 @@ export const SlaKpiRow = ({
           label="Estoque total"
           value={total.toLocaleString("pt-BR")}
           hint="clientes em onboarding"
+          tooltip="Contagem de deals ativos no estoque. Não usa SLA."
           onClick={onEstoqueClick}
           delta={deltas?.total}
           deltaUnit=""
@@ -161,12 +168,14 @@ export const SlaKpiRow = ({
           unit="dias"
           hint="desde a criação do deal"
           tone="warning"
+          tooltip="Percentil 75 calculado sobre sla_dias_criacao (dias desde a criação do deal). 75% dos deals estão abaixo deste valor."
         />
         <Card
           label="SLA médio"
           value={Math.round(slaMedio).toString()}
           unit="dias"
           hint="média do estoque"
+          tooltip="Média de sla_dias_etapa (dias na etapa atual) entre todos os deals do estoque."
           delta={deltas?.slaMedio}
           deltaUnit="d"
           deltaDecimals={1}
@@ -181,6 +190,7 @@ export const SlaKpiRow = ({
           label="% no prazo (≤30d)"
           value={fmtPct(noPrazo)}
           hint={`${noPrazoCount} clientes`}
+          tooltip="% de deals com sla_dias_etapa ≤ 30 (dentro do prazo na etapa atual)."
           tone="success"
           delta={deltas?.noPrazo}
           deltaUnit="pp"
@@ -196,6 +206,7 @@ export const SlaKpiRow = ({
           label="SLA estourado (>30d)"
           value={fmtPct(estourado)}
           hint={`${estouradoCount} clientes — ação`}
+          tooltip="% de deals com sla_dias_etapa > 30 (estourados na etapa atual)."
           tone="danger"
           delta={deltas?.estourado}
           deltaUnit="pp"

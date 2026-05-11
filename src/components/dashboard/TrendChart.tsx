@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { InfoTooltip } from "./InfoTooltip";
 
 interface Snap {
   snapshot_date: string;
@@ -48,6 +49,7 @@ export const TrendChart = () => {
         <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
           Tendência (últimos snapshots)
         </h3>
+        <InfoTooltip text="Snapshots diários: SLA médio, % no prazo e críticos derivam de sla_dias_etapa (dias na etapa atual)." />
         <span className="ml-auto font-small text-[10px] text-muted-foreground">
           {snaps.length} pontos
         </span>

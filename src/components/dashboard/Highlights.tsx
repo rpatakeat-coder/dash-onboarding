@@ -1,5 +1,6 @@
 import { Sparkles, TrendingDown, AlertOctagon, Users } from "lucide-react";
 import { fmtBRL, type DashRow, type OperatorStat } from "@/hooks/useDashOperacoes";
+import { InfoTooltip } from "./InfoTooltip";
 
 interface Props {
   rows: DashRow[];
@@ -19,6 +20,7 @@ interface HighlightCard {
   hint: string;
   Icon: typeof Sparkles;
   tone: "danger" | "warning" | "primary" | "neutral";
+  tooltip?: string;
 }
 
 const TONE: Record<HighlightCard["tone"], string> = {
@@ -69,6 +71,7 @@ export const Highlights = ({ rows, operadores }: Props) => {
       hint: `${topCritico.bands.critico} deals >30d · ${fmtBRL(topCritico.bandsMrr.critico)} em risco`,
       Icon: AlertOctagon,
       tone: "danger",
+      tooltip: "Críticos = sla_dias_etapa > 30 (dias na etapa atual).",
     });
   }
   if (topEtapa && topEtapa[1] > 0) {
@@ -78,6 +81,7 @@ export const Highlights = ({ rows, operadores }: Props) => {
       hint: `${fmtBRL(topEtapa[1])} parados há mais de 7 dias`,
       Icon: TrendingDown,
       tone: "warning",
+      tooltip: "Soma de MRR de deals com sla_dias_etapa > 7 por etapa.",
     });
   }
   if (piorPerfil) {
@@ -87,6 +91,7 @@ export const Highlights = ({ rows, operadores }: Props) => {
       hint: `SLA médio ${piorPerfil.sla.toFixed(1)}d em ${piorPerfil.n} deals`,
       Icon: Users,
       tone: "primary",
+      tooltip: "Média de sla_dias_etapa por perfil de cliente (mín. 3 deals).",
     });
   }
   cards.push({
@@ -95,6 +100,7 @@ export const Highlights = ({ rows, operadores }: Props) => {
     hint: `${operadores.length} ativadores responsáveis`,
     Icon: Sparkles,
     tone: "neutral",
+    tooltip: "Contagem total de deals ativos. Não usa SLA.",
   });
 
   return (
@@ -106,9 +112,12 @@ export const Highlights = ({ rows, operadores }: Props) => {
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="font-subtitle text-[11px] uppercase tracking-widest opacity-80">
-                {c.label}
-              </p>
+              <div className="flex items-center gap-1.5">
+                <p className="font-subtitle text-[11px] uppercase tracking-widest opacity-80">
+                  {c.label}
+                </p>
+                {c.tooltip && <InfoTooltip text={c.tooltip} />}
+              </div>
               <p className="mt-1 truncate font-display text-lg font-bold">{c.value}</p>
               <p className="mt-1 font-small text-xs opacity-80">{c.hint}</p>
             </div>
