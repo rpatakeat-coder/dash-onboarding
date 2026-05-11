@@ -427,13 +427,39 @@ const AdminOperadores = () => {
 };
 
 // ============ CONFIG ============
-interface MetasValues {
-  slaNoPrazo: number;
-  maxCritico: number;
-  tempoMedioMax: number;
-}
+const metasSchema = z.object({
+  slaNoPrazo: z
+    .number({ invalid_type_error: "Informe um número" })
+    .int("Use um número inteiro")
+    .min(0, "Mínimo 0%")
+    .max(100, "Máximo 100%"),
+  maxCritico: z
+    .number({ invalid_type_error: "Informe um número" })
+    .int("Use um número inteiro")
+    .min(0, "Mínimo 0%")
+    .max(100, "Máximo 100%"),
+  tempoMedioMax: z
+    .number({ invalid_type_error: "Informe um número" })
+    .int("Use um número inteiro")
+    .min(1, "Mínimo 1 dia")
+    .max(365, "Máximo 365 dias"),
+});
+
+type MetasValues = z.infer<typeof metasSchema>;
+type MetasErrors = Partial<Record<keyof MetasValues, string>>;
 
 const DEFAULT_METAS: MetasValues = { slaNoPrazo: 80, maxCritico: 10, tempoMedioMax: 18 };
+
+const validateMetas = (v: MetasValues): MetasErrors => {
+  const res = metasSchema.safeParse(v);
+  if (res.success) return {};
+  const errs: MetasErrors = {};
+  for (const issue of res.error.issues) {
+    const k = issue.path[0] as keyof MetasValues | undefined;
+    if (k && !errs[k]) errs[k] = issue.message;
+  }
+  return errs;
+};
 
 const AdminConfig = () => {
   const { user } = useAuth();
@@ -443,6 +469,7 @@ const AdminConfig = () => {
   const [existed, setExisted] = useState(false);
   const [original, setOriginal] = useState<MetasValues>(DEFAULT_METAS);
   const [form, setForm] = useState<MetasValues>(DEFAULT_METAS);
+  const [errors, setErrors] = useState<MetasErrors>({});
 
   const load = async () => {
     setLoading(true);
@@ -463,6 +490,7 @@ const AdminConfig = () => {
       setOriginal(DEFAULT_METAS);
       setForm(DEFAULT_METAS);
     }
+    setErrors({});
   };
 
   useEffect(() => { load(); }, []);
@@ -472,7 +500,22 @@ const AdminConfig = () => {
     form.maxCritico !== original.maxCritico ||
     form.tempoMedioMax !== original.tempoMedioMax;
 
+  const hasErrors = Object.keys(errors).length > 0;
+
+  const updateField = (k: keyof MetasValues, raw: string) => {
+    const v = raw === "" ? Number.NaN : Number(raw);
+    const next = { ...form, [k]: v };
+    setForm(next);
+    setErrors(validateMetas(next));
+  };
+
   const save = async () => {
+    const errs = validateMetas(form);
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) {
+      toast.error("Corrija os campos destacados antes de salvar.");
+      return;
+    }
     setSaving(true);
     const { error } = await supabase.from("app_settings").upsert(
       { key: "metas", value: form as never, updated_by: user?.id ?? null },
@@ -518,6 +561,7 @@ const AdminConfig = () => {
     setExisted(false);
     setOriginal(DEFAULT_METAS);
     setForm(DEFAULT_METAS);
+    setErrors({});
   };
 
   if (loading) return <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
@@ -540,24 +584,33 @@ const AdminConfig = () => {
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <MetaField
             label="% SLA no prazo (meta)"
-            hint="% mínimo de deals com SLA ≤ prazo"
+            hint="Inteiro entre 0 e 100"
             value={form.slaNoPrazo}
-            onChange={(v) => setForm((f) => ({ ...f, slaNoPrazo: v }))}
+            onChange={(raw) => updateField("slaNoPrazo", raw)}
             suffix="%"
+            min={0}
+            max={100}
+            error={errors.slaNoPrazo}
           />
           <MetaField
             label="% crítico máx."
-            hint="% máximo aceitável em faixa crítica"
+            hint="Inteiro entre 0 e 100"
             value={form.maxCritico}
-            onChange={(v) => setForm((f) => ({ ...f, maxCritico: v }))}
+            onChange={(raw) => updateField("maxCritico", raw)}
             suffix="%"
+            min={0}
+            max={100}
+            error={errors.maxCritico}
           />
           <MetaField
             label="Tempo médio máx."
-            hint="Dias máximos no funil por operador"
+            hint="Inteiro entre 1 e 365 dias"
             value={form.tempoMedioMax}
-            onChange={(v) => setForm((f) => ({ ...f, tempoMedioMax: v }))}
+            onChange={(raw) => updateField("tempoMedioMax", raw)}
             suffix="d"
+            min={1}
+            max={365}
+            error={errors.tempoMedioMax}
           />
         </div>
 
@@ -567,7 +620,7 @@ const AdminConfig = () => {
               {removing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Restaurar padrão
             </Button>
           )}
-          <Button onClick={save} disabled={!dirty || saving} className="gap-1.5">
+          <Button onClick={save} disabled={!dirty || saving || hasErrors} className="gap-1.5">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             {existed ? "Salvar alterações" : "Criar metas"}
           </Button>
@@ -585,19 +638,30 @@ const AdminConfig = () => {
 };
 
 const MetaField = ({
-  label, hint, value, onChange, suffix,
+  label, hint, value, onChange, suffix, min, max, error,
 }: {
-  label: string; hint: string; value: number; onChange: (v: number) => void; suffix?: string;
+  label: string;
+  hint: string;
+  value: number;
+  onChange: (raw: string) => void;
+  suffix?: string;
+  min?: number;
+  max?: number;
+  error?: string;
 }) => (
   <label className="flex flex-col gap-1">
     <span className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
     <div className="relative">
       <Input
         type="number"
-        min={0}
-        value={Number.isFinite(value) ? value : 0}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="pr-8"
+        inputMode="numeric"
+        step={1}
+        min={min}
+        max={max}
+        value={Number.isFinite(value) ? value : ""}
+        onChange={(e) => onChange(e.target.value)}
+        aria-invalid={!!error}
+        className={`pr-8 ${error ? "border-destructive focus-visible:ring-destructive/40" : ""}`}
       />
       {suffix && (
         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
@@ -605,7 +669,11 @@ const MetaField = ({
         </span>
       )}
     </div>
-    <span className="text-[11px] text-muted-foreground">{hint}</span>
+    {error ? (
+      <span className="text-[11px] font-medium text-destructive">{error}</span>
+    ) : (
+      <span className="text-[11px] text-muted-foreground">{hint}</span>
+    )}
   </label>
 );
 
