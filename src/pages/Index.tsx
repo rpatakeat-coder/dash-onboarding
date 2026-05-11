@@ -49,7 +49,7 @@ const bandLabel = (b: SlaBand) => `${SLA_BAND_META[b].label} (${SLA_BAND_META[b]
 const bandFromLabel = (l: string): SlaBand =>
   (BAND_ORDER.find((b) => bandLabel(b) === l) as SlaBand) ?? "saudavel";
 const slaOf = (r: DashRow) => {
-  const n = parseFloat(String(r.sla_dias ?? "").replace(",", "."));
+  const n = parseFloat(String(r.sla_dias_etapa ?? "").replace(",", "."));
   return Number.isFinite(n) ? n : 0;
 };
 
@@ -327,7 +327,7 @@ const Index = () => {
     return {
       atencao: make((r) => ETAPAS_ATENCAO.has(r.etapa_negocio?.trim() || "")),
       critico: make((r) => {
-        const n = parseFloat(String(r.sla_dias ?? "").replace(",", "."));
+        const n = parseFloat(String(r.sla_dias_etapa ?? "").replace(",", "."));
         return Number.isFinite(n) && n > 30;
       }),
       operadores: make(() => true),

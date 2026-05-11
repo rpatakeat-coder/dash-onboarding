@@ -61,7 +61,7 @@ const ETAPAS_CRITICAS = new Set([
 
 function suggestActions(deal: DashRow, lastMeeting: Date | null, lastCall: Date | null) {
   const out: string[] = [];
-  const sla = num(deal.sla_dias);
+  const sla = num(deal.sla_dias_etapa);
   const mrr = num(deal.mrr);
   const etapa = (deal.etapa_negocio ?? "").trim();
   if (sla > 60 && ETAPAS_CRITICAS.has(etapa)) {
@@ -149,7 +149,7 @@ export const DealDrawer = ({ deal, onClose }: Props) => {
   }, [reunioes]);
 
   const sugestoes = deal ? suggestActions(deal, lastMeeting, lastCall) : [];
-  const sla = deal ? num(deal.sla_dias) : 0;
+  const sla = deal ? num(deal.sla_dias_etapa) : 0;
   const meta = SLA_BAND_META[slaBand(sla)];
   const diasNaFase = deal ? daysBetween(deal.data_entrada_fase, new Date().toISOString()) : null;
   const diasTotal = deal ? daysBetween(deal.data_criacao, new Date().toISOString()) : null;
