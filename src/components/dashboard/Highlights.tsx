@@ -71,6 +71,7 @@ export const Highlights = ({ rows, operadores }: Props) => {
       hint: `${topCritico.bands.critico} deals >30d · ${fmtBRL(topCritico.bandsMrr.critico)} em risco`,
       Icon: AlertOctagon,
       tone: "danger",
+      tooltip: "Críticos = sla_dias_etapa > 30 (dias na etapa atual).",
     });
   }
   if (topEtapa && topEtapa[1] > 0) {
@@ -80,6 +81,7 @@ export const Highlights = ({ rows, operadores }: Props) => {
       hint: `${fmtBRL(topEtapa[1])} parados há mais de 7 dias`,
       Icon: TrendingDown,
       tone: "warning",
+      tooltip: "Soma de MRR de deals com sla_dias_etapa > 7 por etapa.",
     });
   }
   if (piorPerfil) {
@@ -89,6 +91,7 @@ export const Highlights = ({ rows, operadores }: Props) => {
       hint: `SLA médio ${piorPerfil.sla.toFixed(1)}d em ${piorPerfil.n} deals`,
       Icon: Users,
       tone: "primary",
+      tooltip: "Média de sla_dias_etapa por perfil de cliente (mín. 3 deals).",
     });
   }
   cards.push({
@@ -97,6 +100,7 @@ export const Highlights = ({ rows, operadores }: Props) => {
     hint: `${operadores.length} ativadores responsáveis`,
     Icon: Sparkles,
     tone: "neutral",
+    tooltip: "Contagem total de deals ativos. Não usa SLA.",
   });
 
   return (
