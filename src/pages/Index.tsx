@@ -628,6 +628,7 @@ const Index = () => {
           )}
         </div>
 
+        <div id="dashboard-tabs" className="scroll-mt-4" />
         <Tabs value={tab} onValueChange={setTab} className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="exec" className="gap-2">
