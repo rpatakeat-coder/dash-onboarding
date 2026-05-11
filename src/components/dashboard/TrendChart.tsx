@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { InfoTooltip } from "./InfoTooltip";
 
 interface Snap {
   snapshot_date: string;
