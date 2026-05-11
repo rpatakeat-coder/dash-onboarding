@@ -468,7 +468,7 @@ export function useDashOperacoes() {
         .select("*")
         .limit(2000);
       if (error) throw error;
-      return aggregate((data ?? []) as DashRow[]);
+      return aggregate((data ?? []) as unknown as DashRow[]);
     },
     refetchInterval: 60_000,
   });
