@@ -150,6 +150,7 @@ export const SlaKpiRow = ({
           label="Estoque total"
           value={total.toLocaleString("pt-BR")}
           hint="clientes em onboarding"
+          tooltip="Contagem de deals ativos no estoque. Não usa SLA."
           onClick={onEstoqueClick}
           delta={deltas?.total}
           deltaUnit=""
