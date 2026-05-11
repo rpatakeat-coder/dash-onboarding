@@ -206,6 +206,7 @@ export const SlaKpiRow = ({
           label="SLA estourado (>30d)"
           value={fmtPct(estourado)}
           hint={`${estouradoCount} clientes — ação`}
+          tooltip="% de deals com sla_dias_etapa > 30 (estourados na etapa atual)."
           tone="danger"
           delta={deltas?.estourado}
           deltaUnit="pp"
