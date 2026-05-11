@@ -168,6 +168,7 @@ export const SlaKpiRow = ({
           unit="dias"
           hint="desde a criação do deal"
           tone="warning"
+          tooltip="Percentil 75 calculado sobre sla_dias_criacao (dias desde a criação do deal). 75% dos deals estão abaixo deste valor."
         />
         <Card
           label="SLA médio"
