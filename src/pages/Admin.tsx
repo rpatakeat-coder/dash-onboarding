@@ -263,10 +263,21 @@ const AdminOperadores = () => {
     const nome = novo.trim();
     if (!nome) return;
     setAdding(true);
-    const { error } = await supabase.from("vendedores").insert({ nome });
+    const { data: inserted, error } = await supabase
+      .from("vendedores")
+      .insert({ nome })
+      .select("id")
+      .maybeSingle();
     setAdding(false);
     if (error) return toast.error("Erro ao adicionar", { description: error.message });
     toast.success(`Operador "${nome}" adicionado`);
+    void logAudit({
+      action: "operador.create",
+      entity_type: "operador",
+      entity_id: inserted?.id,
+      summary: `Adicionou operador "${nome}"`,
+      metadata: { nome },
+    });
     setNovo("");
     await load();
   };
@@ -274,9 +285,17 @@ const AdminOperadores = () => {
   const saveEdit = async (id: string) => {
     const nome = editNome.trim();
     if (!nome) return;
+    const before = list.find((v) => v.id === id);
     const { error } = await supabase.from("vendedores").update({ nome }).eq("id", id);
     if (error) return toast.error("Erro ao salvar", { description: error.message });
     toast.success("Operador atualizado");
+    void logAudit({
+      action: "operador.rename",
+      entity_type: "operador",
+      entity_id: id,
+      summary: `Renomeou "${before?.nome ?? "?"}" → "${nome}"`,
+      metadata: { from: before?.nome, to: nome },
+    });
     setEditId(null);
     await load();
   };
@@ -288,9 +307,17 @@ const AdminOperadores = () => {
     if (upErr) return toast.error("Erro no upload", { description: upErr.message });
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
     const url = `${data.publicUrl}?v=${Date.now()}`;
+    const before = list.find((v) => v.id === id);
     const { error } = await supabase.from("vendedores").update({ avatar_url: url }).eq("id", id);
     if (error) return toast.error("Erro ao salvar avatar", { description: error.message });
     toast.success("Avatar atualizado");
+    void logAudit({
+      action: "operador.avatar_update",
+      entity_type: "operador",
+      entity_id: id,
+      summary: `Atualizou avatar de "${before?.nome ?? id}"`,
+      metadata: { file_name: file.name, file_size: file.size },
+    });
     await load();
   };
 
