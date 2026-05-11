@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { X, UserCheck } from "lucide-react";
+import { X, UserCheck, LayoutDashboard, Users2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ManagerialView } from "@/components/dashboard/ManagerialView";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { OperatorsTable } from "@/components/dashboard/OperatorsTable";
