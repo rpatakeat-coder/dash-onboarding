@@ -427,30 +427,187 @@ const AdminOperadores = () => {
 };
 
 // ============ CONFIG ============
+interface MetasValues {
+  slaNoPrazo: number;
+  maxCritico: number;
+  tempoMedioMax: number;
+}
+
+const DEFAULT_METAS: MetasValues = { slaNoPrazo: 80, maxCritico: 10, tempoMedioMax: 18 };
+
 const AdminConfig = () => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [existed, setExisted] = useState(false);
+  const [original, setOriginal] = useState<MetasValues>(DEFAULT_METAS);
+  const [form, setForm] = useState<MetasValues>(DEFAULT_METAS);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "metas")
+      .maybeSingle();
+    setLoading(false);
+    if (error) return toast.error("Erro ao carregar metas", { description: error.message });
+    if (data) {
+      const v = { ...DEFAULT_METAS, ...(data.value as Partial<MetasValues>) };
+      setOriginal(v);
+      setForm(v);
+      setExisted(true);
+    } else {
+      setExisted(false);
+      setOriginal(DEFAULT_METAS);
+      setForm(DEFAULT_METAS);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const dirty =
+    form.slaNoPrazo !== original.slaNoPrazo ||
+    form.maxCritico !== original.maxCritico ||
+    form.tempoMedioMax !== original.tempoMedioMax;
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await supabase.from("app_settings").upsert(
+      { key: "metas", value: form as never, updated_by: user?.id ?? null },
+      { onConflict: "key" },
+    );
+    setSaving(false);
+    if (error) return toast.error("Erro ao salvar metas", { description: error.message });
+
+    const action = existed ? "meta.update" : "meta.create";
+    const changes: Record<string, { from: number; to: number }> = {};
+    (Object.keys(form) as (keyof MetasValues)[]).forEach((k) => {
+      if (form[k] !== original[k]) changes[k] = { from: original[k], to: form[k] };
+    });
+    void logAudit({
+      action,
+      entity_type: "meta",
+      entity_id: "metas",
+      summary: existed
+        ? `Atualizou metas (${Object.keys(changes).join(", ") || "sem diff"})`
+        : "Criou metas iniciais",
+      metadata: existed ? { changes } : { value: form },
+    });
+    toast.success("Metas salvas");
+    setOriginal(form);
+    setExisted(true);
+  };
+
+  const remove = async () => {
+    if (!existed) return;
+    if (!confirm("Remover as metas configuradas? Os valores padrão voltam a vigorar.")) return;
+    setRemoving(true);
+    const { error } = await supabase.from("app_settings").delete().eq("key", "metas");
+    setRemoving(false);
+    if (error) return toast.error("Erro ao remover metas", { description: error.message });
+    void logAudit({
+      action: "meta.delete",
+      entity_type: "meta",
+      entity_id: "metas",
+      summary: "Removeu metas (voltou ao padrão)",
+      metadata: { previous: original },
+    });
+    toast.success("Metas removidas");
+    setExisted(false);
+    setOriginal(DEFAULT_METAS);
+    setForm(DEFAULT_METAS);
+  };
+
+  if (loading) return <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
+
   return (
     <div className="space-y-3">
       <div className="rounded-2xl border border-border bg-card p-5">
-        <h3 className="font-display text-base font-semibold text-secondary">Metas mensais</h3>
-        <p className="mt-1 font-small text-sm text-muted-foreground">
-          Edição de metas por operador será liberada na <span className="font-medium">Fase B2 — Metas e gamificação</span>.
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="font-display text-base font-semibold text-secondary">Metas operacionais</h3>
+            <p className="mt-1 font-small text-sm text-muted-foreground">
+              Define os pactos do time de onboarding. Alterações são auditadas.
+            </p>
+          </div>
+          <span className={`rounded-full border px-2 py-0.5 text-xs ${existed ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-muted text-muted-foreground"}`}>
+            {existed ? "Personalizadas" : "Padrão"}
+          </span>
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <MetaField
+            label="% SLA no prazo (meta)"
+            hint="% mínimo de deals com SLA ≤ prazo"
+            value={form.slaNoPrazo}
+            onChange={(v) => setForm((f) => ({ ...f, slaNoPrazo: v }))}
+            suffix="%"
+          />
+          <MetaField
+            label="% crítico máx."
+            hint="% máximo aceitável em faixa crítica"
+            value={form.maxCritico}
+            onChange={(v) => setForm((f) => ({ ...f, maxCritico: v }))}
+            suffix="%"
+          />
+          <MetaField
+            label="Tempo médio máx."
+            hint="Dias máximos no funil por operador"
+            value={form.tempoMedioMax}
+            onChange={(v) => setForm((f) => ({ ...f, tempoMedioMax: v }))}
+            suffix="d"
+          />
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+          {existed && (
+            <Button variant="ghost" onClick={remove} disabled={removing || saving} className="gap-1.5 text-destructive hover:text-destructive">
+              {removing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Restaurar padrão
+            </Button>
+          )}
+          <Button onClick={save} disabled={!dirty || saving} className="gap-1.5">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            {existed ? "Salvar alterações" : "Criar metas"}
+          </Button>
+        </div>
       </div>
+
       <div className="rounded-2xl border border-border bg-card p-5">
         <h3 className="font-display text-base font-semibold text-secondary">Limites de SLA</h3>
         <p className="mt-1 font-small text-sm text-muted-foreground">
-          Os limites das bandas (saudável / atenção / alerta / crítico) hoje vivem em <code className="rounded bg-muted px-1 py-0.5 text-xs">src/lib/risk.ts</code>. Em uma próxima fase moveremos para configuração no banco.
-        </p>
-      </div>
-      <div className="rounded-2xl border border-border bg-card p-5">
-        <h3 className="font-display text-base font-semibold text-secondary">Modelo de IA padrão</h3>
-        <p className="mt-1 font-small text-sm text-muted-foreground">
-          Configuração disponível na <span className="font-medium">Fase A — Inteligência no dashboard</span>.
+          As bandas (saudável / atenção / alerta / crítico) hoje vivem em <code className="rounded bg-muted px-1 py-0.5 text-xs">src/lib/risk.ts</code>. Quando movermos para o banco, as alterações também serão auditadas.
         </p>
       </div>
     </div>
   );
 };
+
+const MetaField = ({
+  label, hint, value, onChange, suffix,
+}: {
+  label: string; hint: string; value: number; onChange: (v: number) => void; suffix?: string;
+}) => (
+  <label className="flex flex-col gap-1">
+    <span className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+    <div className="relative">
+      <Input
+        type="number"
+        min={0}
+        value={Number.isFinite(value) ? value : 0}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="pr-8"
+      />
+      {suffix && (
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+          {suffix}
+        </span>
+      )}
+    </div>
+    <span className="text-[11px] text-muted-foreground">{hint}</span>
+  </label>
+);
 
 // ============ AUDITORIA ============
 interface AuditRow {
