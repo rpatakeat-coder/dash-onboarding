@@ -6,11 +6,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 const AuthPage = () => {
-  const { session, signIn, signUp, loading } = useAuth();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const { session, signIn, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
   const nav = useNavigate();
   const location = useLocation();
@@ -29,17 +27,11 @@ const AuthPage = () => {
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const { error } =
-      mode === "login"
-        ? await signIn(email, password)
-        : await signUp(email, password, fullName.trim());
+    const { error } = await signIn(email, password);
     setBusy(false);
     if (error) {
       toast.error(error);
       return;
-    }
-    if (mode === "signup") {
-      toast.success("Conta criada — verifique seu e-mail se necessário.");
     }
     nav(safeRedirect, { replace: true });
   };
@@ -51,26 +43,11 @@ const AuthPage = () => {
         className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-card p-8 shadow-xl"
       >
         <div>
-          <h1 className="font-display text-2xl font-bold text-secondary">
-            {mode === "login" ? "Entrar" : "Criar conta"}
-          </h1>
+          <h1 className="font-display text-2xl font-bold text-secondary">Entrar</h1>
           <p className="mt-1 font-subtitle text-sm text-muted-foreground">
             Painel Operações Takeat
           </p>
         </div>
-        {mode === "signup" && (
-          <div>
-            <label className="font-subtitle text-xs text-muted-foreground">
-              Nome completo (deve bater com o agente de ativação)
-            </label>
-            <Input
-              required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Ex.: Maria Silva"
-            />
-          </div>
-        )}
         <div>
           <label className="font-subtitle text-xs text-muted-foreground">E-mail</label>
           <Input
@@ -91,15 +68,11 @@ const AuthPage = () => {
           />
         </div>
         <Button type="submit" className="w-full" disabled={busy}>
-          {busy ? "Aguarde…" : mode === "login" ? "Entrar" : "Criar conta"}
+          {busy ? "Aguarde…" : "Entrar"}
         </Button>
-        <button
-          type="button"
-          onClick={() => setMode(mode === "login" ? "signup" : "login")}
-          className="w-full text-center font-subtitle text-xs text-muted-foreground hover:text-primary"
-        >
-          {mode === "login" ? "Não tenho conta — criar" : "Já tenho conta — entrar"}
-        </button>
+        <p className="text-center font-subtitle text-xs text-muted-foreground">
+          Acesso somente por convite. Fale com o administrador.
+        </p>
       </form>
     </div>
   );
