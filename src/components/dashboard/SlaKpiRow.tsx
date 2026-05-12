@@ -180,7 +180,7 @@ export const SlaKpiRow = ({
           showDelta
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
-          previousRange={deltas?.previousDaysRange}
+          previousRange={deltas?.previousRange}
           onExplain={onExplain && (() => onExplain({
             kpiName: "Estoque total",
             valorAtual: total,
@@ -215,7 +215,7 @@ export const SlaKpiRow = ({
           showDelta
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
-          previousRange={deltas?.previousDaysRange}
+          previousRange={deltas?.previousRange}
           onExplain={onExplain && (() => onExplain({
             kpiName: "SLA médio (dias na etapa)",
             valorAtual: `${Math.round(slaMedio)} dias`,
@@ -237,7 +237,7 @@ export const SlaKpiRow = ({
           showDelta
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
-          previousRange={deltas?.previousDaysRange}
+          previousRange={deltas?.previousRange}
           onExplain={onExplain && (() => onExplain({
             kpiName: "% no prazo (≤30 dias na etapa)",
             valorAtual: fmtPct(noPrazo),
@@ -259,7 +259,7 @@ export const SlaKpiRow = ({
           showDelta
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
-          previousRange={deltas?.previousDaysRange}
+          previousRange={deltas?.previousRange}
           onExplain={onExplain && (() => onExplain({
             kpiName: "% SLA estourado (>30 dias)",
             valorAtual: fmtPct(estourado),
