@@ -117,6 +117,7 @@ const AdminOperators = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [delId, setDelId] = useState<string | null>(null);
+  const [inviteLink, setInviteLink] = useState<{ email: string; link: string } | null>(null);
   const [form, setForm] = useState({ email: "", full_name: "", role: "user" as "admin" | "user", agente_ativacao: "" });
 
   const load = async () => {
@@ -153,12 +154,22 @@ const AdminOperators = () => {
       const msg = (data as { error?: string })?.error || error?.message;
       return toast.error("Erro ao convidar", { description: typeof msg === "string" ? msg : "falha desconhecida" });
     }
-    toast.success(`Convite enviado para ${form.email}`);
+    const link = (data as { action_link?: string })?.action_link ?? null;
+    toast.success(`Convite gerado para ${form.email}`);
+    if (link) {
+      try {
+        await navigator.clipboard.writeText(link);
+        toast.success("Link copiado para a área de transferência");
+      } catch {
+        /* ignore clipboard errors */
+      }
+      setInviteLink({ email: form.email.trim(), link });
+    }
     void logAudit({
       action: "operator.invite",
       entity_type: "user_role",
       entity_id: form.email,
-      summary: `Convidou ${form.email} (${form.role}) — agente ${form.agente_ativacao}`,
+      summary: `Convidou ${form.email} (${form.role}) — agente ${form.agente_ativacao || "—"}`,
       metadata: { email: form.email, role: form.role, agente_ativacao: form.agente_ativacao },
     });
     setForm({ email: "", full_name: "", role: "user", agente_ativacao: "" });
@@ -245,6 +256,35 @@ const AdminOperators = () => {
             Enviar convite
           </Button>
         </div>
+        {inviteLink && (
+          <div className="mt-4 rounded-xl border border-primary/30 bg-primary/5 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-small text-xs text-muted-foreground">
+                Link de convite para <span className="font-medium text-foreground">{inviteLink.email}</span>
+              </p>
+              <div className="flex gap-1.5">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(inviteLink.link);
+                      toast.success("Link copiado");
+                    } catch {
+                      toast.error("Não foi possível copiar");
+                    }
+                  }}
+                >
+                  Copiar
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setInviteLink(null)}>Fechar</Button>
+              </div>
+            </div>
+            <code className="mt-2 block max-w-full overflow-x-auto whitespace-nowrap rounded bg-background px-2 py-1.5 text-[11px] text-foreground">
+              {inviteLink.link}
+            </code>
+          </div>
+        )}
       </div>
 
       <div className="rounded-2xl border border-border bg-card">

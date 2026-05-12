@@ -51,17 +51,21 @@ Deno.serve(async (req) => {
     const origin = req.headers.get("origin") ?? "";
     const redirectTo = origin ? `${origin}/auth` : undefined;
 
-    const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
-      data: { full_name: full_name ?? "" },
-      redirectTo,
+    const { data: invited, error: inviteErr } = await admin.auth.admin.generateLink({
+      type: "invite",
+      email,
+      options: {
+        data: { full_name: full_name ?? "" },
+        redirectTo,
+      },
     });
     if (inviteErr || !invited.user) return json({ error: inviteErr?.message ?? "invite_failed" }, 400);
 
     const newUserId = invited.user.id;
+    const action_link = invited.properties?.action_link ?? null;
 
     const agente = agente_ativacao ?? null;
 
-    // Ensure profile exists
     await admin.from("profiles").upsert(
       { id: newUserId, full_name: full_name ?? "", agente_ativacao: agente },
       { onConflict: "id" },
@@ -75,7 +79,28 @@ Deno.serve(async (req) => {
       );
     if (roleInsertErr) return json({ error: roleInsertErr.message }, 500);
 
-    return json({ ok: true, user_id: newUserId });
+    try {
+      await fetch("https://webhook.takeat.cloud/webhook/430412b2-607c-424c-bc7b-d6e785bbd0c1", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: "operator.invited",
+          user_id: newUserId,
+          email,
+          full_name: full_name ?? null,
+          role,
+          agente_ativacao: agente,
+          action_link,
+          invited_by: userData.user.id,
+          invited_by_email: userData.user.email ?? null,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+    } catch (e) {
+      console.error("webhook_failed", (e as Error).message);
+    }
+
+    return json({ ok: true, user_id: newUserId, action_link });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }
