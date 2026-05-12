@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { MacroEstoque } from "@/components/dashboard/MacroEstoque";
 import { MacroMovimento } from "@/components/dashboard/MacroMovimento";
+import { MacroFilters } from "@/components/dashboard/MacroFilters";
 import { CarteiraPorAtivador } from "@/components/dashboard/CarteiraPorAtivador";
 import { DealsTable } from "@/components/dashboard/DealsTable";
 import { RefreshDataButton } from "@/components/dashboard/RefreshDataButton";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
-import { useDashOperacoes } from "@/hooks/useDashOperacoes";
+import { useDashOperacoes, type PerfilStat } from "@/hooks/useDashOperacoes";
 
 const Index = () => {
   const { data, isLoading, error } = useDashOperacoes();
