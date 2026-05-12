@@ -68,10 +68,25 @@ export const AiInsightsCard = ({
   const [insightType, setInsightType] = useState<InsightType>("executive");
   const [focus, setFocus] = useState("");
   const [appliedFocus, setAppliedFocus] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const { getTemplate, isCustom } = useAiPromptTemplates();
+  const effectiveTemplate = getTemplate(insightType);
+  const customized = isCustom(insightType);
+
+  // Hash template into cache key so editing the prompt invalidates the cache.
+  const templateHash = useMemo(() => {
+    let h = 0;
+    for (let i = 0; i < effectiveTemplate.length; i++) {
+      h = ((h << 5) - h + effectiveTemplate.charCodeAt(i)) | 0;
+    }
+    return Math.abs(h).toString(36);
+  }, [effectiveTemplate]);
 
   const cacheKey = useMemo(
-    () => `dashboard:${insightType}:${appliedFocus || "_"}:${scopeKey ?? "default"}`,
-    [insightType, appliedFocus, scopeKey],
+    () =>
+      `dashboard:${insightType}:${templateHash}:${appliedFocus || "_"}:${scopeKey ?? "default"}`,
+    [insightType, templateHash, appliedFocus, scopeKey],
   );
 
   const { data, isLoading, error, generate, lastGeneratedAt } = useAiInsights<{
@@ -81,6 +96,7 @@ export const AiInsightsCard = ({
     snapshotAnterior?: Record<string, string | number>;
     insightType: InsightType;
     focus?: string;
+    template?: string;
   }>("dashboard", cacheKey);
 
   const onGenerate = (force = false) => {
@@ -93,6 +109,7 @@ export const AiInsightsCard = ({
         snapshotAnterior,
         insightType,
         focus: focus.trim() || undefined,
+        template: customized ? effectiveTemplate : undefined,
       },
       { force },
     );
