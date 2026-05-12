@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Loader2, Sparkles, AlertCircle } from "lucide-react";
+import { Loader2, Sparkles, AlertCircle, Copy, Check, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useAiInsights } from "@/hooks/useAiInsights";
+import { toast } from "@/hooks/use-toast";
 
 export interface ExplainKpiTarget {
   kpiName: string;
