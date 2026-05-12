@@ -778,29 +778,31 @@ const Index = () => {
         )}
 
         {/* Performance por ativador */}
-        <section className="mb-8">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                Performance por ativador
-              </h3>
-              <ScopeBadge
-                scope={scopeCounts.operadores.scope}
-                destaque={scopeCounts.operadores.destaque}
-                destaqueLabel="ativadores"
-                total={allRows.length}
-              />
+        {isAdmin && (
+          <section className="mb-8">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                  Performance por ativador
+                </h3>
+                <ScopeBadge
+                  scope={scopeCounts.operadores.scope}
+                  destaque={scopeCounts.operadores.destaque}
+                  destaqueLabel="ativadores"
+                  total={allRows.length}
+                />
+              </div>
+              <PeriodFilter value={opPeriod} onChange={setOpPeriod} counts={countsBy.operadores} />
             </div>
-            <PeriodFilter value={opPeriod} onChange={setOpPeriod} counts={countsBy.operadores} />
-          </div>
-          <OperatorsTable
-            operadores={opData.operadores}
-            onOperatorClick={(op) => {
-              setSelectedOperator(op);
-              setOperatorOpen(true);
-            }}
-          />
-        </section>
+            <OperatorsTable
+              operadores={opData.operadores}
+              onOperatorClick={(op) => {
+                setSelectedOperator(op);
+                setOperatorOpen(true);
+              }}
+            />
+          </section>
+        )}
 
         {/* Travados */}
         <section className="mb-8">
