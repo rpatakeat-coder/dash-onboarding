@@ -274,6 +274,11 @@ export const AiInsightsCard = ({
           </div>
         )}
       </div>
+      <AiPromptSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        initialType={insightType}
+      />
     </section>
   );
 };
