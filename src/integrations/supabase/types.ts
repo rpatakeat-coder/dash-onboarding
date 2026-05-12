@@ -356,24 +356,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_roles: {
-        Row: {
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_roles_operations: {
         Row: {
           agente_ativacao: string | null
@@ -525,23 +507,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      list_admin_users: {
-        Args: never
-        Returns: {
-          avatar_url: string
-          created_at: string
-          full_name: string
-          id: string
-          roles: string[]
-        }[]
-      }
       match_documents: {
         Args: { filter?: Json; match_count?: number; query_embedding: string }
         Returns: {
@@ -566,7 +531,6 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user"
       operations_role: "admin" | "user"
     }
     CompositeTypes: {
@@ -695,7 +659,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
       operations_role: ["admin", "user"],
     },
   },
