@@ -53,6 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     session,
     user: session?.user ?? null,
     fullName,
+    agenteAtivacao,
     loading,
     signIn: async (email, password) => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
