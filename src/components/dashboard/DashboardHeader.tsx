@@ -38,12 +38,12 @@ export const DashboardHeader = () => {
           {/* Brand */}
           <div className="flex items-center gap-3">
             <img src={logo} alt="Takeat" className="h-9 w-auto" />
-            <div className="hidden h-8 w-px bg-border md:block" />
-            <div className="hidden md:block">
+            <div className="h-8 w-px bg-border" />
+            <div>
               <p className="font-subtitle text-[10px] uppercase tracking-widest text-muted-foreground leading-tight">
                 Painel de Operações
               </p>
-              <h1 className="flex items-center gap-2 font-display text-base font-semibold text-secondary leading-tight">
+              <h1 className="flex items-center gap-2 font-display text-sm font-semibold text-secondary leading-tight sm:text-base">
                 Onboarding
                 <span className="rounded border border-border bg-muted px-1.5 py-0.5 font-subtitle text-[10px] font-medium uppercase tracking-wider text-muted-foreground" title="Versão do app">
                   v{APP_VERSION}
