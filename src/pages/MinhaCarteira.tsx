@@ -23,16 +23,16 @@ const PESO_BAND: Record<string, number> = {
 };
 
 const MinhaCarteira = () => {
-  const { session, fullName, loading } = useAuth();
+  const { session, fullName, agenteAtivacao, loading } = useAuth();
   const { data } = useDashOperacoes();
   const allRows = data?.rows ?? [];
 
+  const myAgente = (agenteAtivacao ?? fullName ?? "").trim();
   const myRows = useMemo(() => {
-    if (!fullName) return [];
-    const norm = (s: string) => s.trim().toLowerCase();
-    const me = norm(fullName);
-    return allRows.filter((r) => norm(r.agente_ativacao ?? "") === me);
-  }, [allRows, fullName]);
+    if (!myAgente) return [];
+    const me = myAgente.toLowerCase();
+    return allRows.filter((r) => (r.agente_ativacao?.trim().toLowerCase() ?? "") === me);
+  }, [allRows, myAgente]);
 
   const kpis = useMemo(() => {
     const total = myRows.length;
