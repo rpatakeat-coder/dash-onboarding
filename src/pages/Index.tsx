@@ -724,7 +724,7 @@ const Index = () => {
         {data && opData.operadores.length > 0 && (
           <section className="mb-8">
             <Highlights
-              rows={rows}
+              rows={personalRows}
               operadores={opData.operadores}
               hideOperatorIdentity={!isAdmin}
             />
