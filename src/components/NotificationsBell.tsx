@@ -10,7 +10,7 @@ const KIND_LABEL: Record<string, string> = {
 };
 
 export const NotificationsBell = () => {
-  const { items, unreadCount, markRead, markAllRead, clear } = useNotifications();
+  const { items, unreadCount, isRead, markRead, markAllRead, clear } = useNotifications();
 
   return (
     <Popover>
