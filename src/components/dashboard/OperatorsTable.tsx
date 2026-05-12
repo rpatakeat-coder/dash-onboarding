@@ -48,12 +48,24 @@ export const OperatorsTable = ({ operadores, onOperatorClick, contextoOperacao, 
                 }
               }}
               className={cn(
-                "space-y-2 rounded-xl border p-3 transition",
+                "group relative space-y-2 rounded-xl border p-3 transition",
                 hasCriticos ? "border-destructive/30" : "border-transparent",
                 interactive && "cursor-pointer hover:border-primary/40 hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
               )}
             >
-              <div className="flex items-center justify-between gap-3 text-sm">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setAiTarget(op);
+                }}
+                className="absolute right-2 top-2 z-10 inline-flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-muted-foreground opacity-0 transition hover:border-primary/30 hover:bg-primary/10 hover:text-primary group-hover:opacity-100 focus:opacity-100"
+                title="Analisar este operador com IA"
+                aria-label="Analisar este operador com IA"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+              </button>
+              <div className="flex items-center justify-between gap-3 pr-8 text-sm">
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="font-numeric text-xs font-bold text-muted-foreground w-5 shrink-0">
                     {String(i + 1).padStart(2, "0")}
