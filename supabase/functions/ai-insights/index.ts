@@ -52,6 +52,7 @@ const DashboardPayload = z.object({
     snapshotAnterior: z.record(z.union([z.string(), z.number()])).optional(),
     insightType: InsightType,
     focus: z.string().max(500).optional(),
+    template: z.string().max(4000).optional(),
   }),
 });
 
