@@ -108,7 +108,10 @@ export const DashboardHeader = () => {
           </div>
         </div>
 
-        {/* Tier 2: Navigation · Status */}
+        {/* Tier 2: Navigation · Status (mobile = expandable nav, desktop = horizontal) */}
+        <div className="py-2 md:hidden">
+          <MobileMainNav />
+        </div>
         <div className="hidden items-center justify-between gap-4 py-2 md:flex">
           <MainNav />
           <div className="text-right">
