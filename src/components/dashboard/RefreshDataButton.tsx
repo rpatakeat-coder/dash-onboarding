@@ -13,7 +13,12 @@ export const RefreshDataButton = () => {
   const handle = async () => {
     setLoading(true);
     try {
-      await fetch(WEBHOOK_URL, { method: "POST", mode: "no-cors" });
+      await fetch(WEBHOOK_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event: "atualizar_dados" }),
+      });
       toast({
         title: "Atualização disparada",
         description: "Webhook acionado. Os dados serão recarregados em instantes.",
