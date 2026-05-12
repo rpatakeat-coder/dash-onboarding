@@ -29,6 +29,7 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
   const { data, isLoading, error, generate, versions, activeIndex, selectVersion, lastGeneratedAt } =
     useAiInsights<ExplainKpiTarget>("kpi", cacheKey);
   const [copied, setCopied] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
 
   useEffect(() => {
     if (open && target && !data && !isLoading) {
