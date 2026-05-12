@@ -33,6 +33,20 @@
   </head>
 
   <body>
+    <script>
+      // Aplica o tema salvo antes da pintura para evitar flash
+      (function () {
+        try {
+          var raw = localStorage.getItem("prefs:v1");
+          var theme = raw ? (JSON.parse(raw).theme || "system") : "system";
+          var isDark =
+            theme === "dark" ||
+            (theme === "system" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          if (isDark) document.documentElement.classList.add("dark");
+        } catch (_) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
