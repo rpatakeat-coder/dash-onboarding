@@ -34,12 +34,12 @@ export const DashboardHeader = () => {
     <header className="border-b border-border bg-card/60 backdrop-blur-sm">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 md:px-10">
         {/* Tier 1: Brand · Search · Actions + User */}
-        <div className="flex items-center justify-between gap-4 border-b border-border/60 py-3 sm:py-4">
+        <div className="flex items-center justify-between gap-2 border-b border-border/60 py-3 sm:gap-4 sm:py-4">
           {/* Brand */}
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="Takeat" className="h-9 w-auto" />
-            <div className="h-8 w-px bg-border" />
-            <div>
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <img src={logo} alt="Takeat" className="h-8 w-auto sm:h-9" />
+            <div className="hidden h-8 w-px bg-border sm:block" />
+            <div className="hidden min-w-0 sm:block">
               <p className="font-subtitle text-[10px] uppercase tracking-widest text-muted-foreground leading-tight">
                 Painel de Operações
               </p>
@@ -52,7 +52,7 @@ export const DashboardHeader = () => {
             </div>
           </div>
 
-          {/* Central search */}
+          {/* Central search (desktop only — mobile uses Tier 2 search button) */}
           <div className="hidden flex-1 max-w-md md:block">
             <button
               type="button"
@@ -70,7 +70,7 @@ export const DashboardHeader = () => {
           </div>
 
           {/* Actions cluster + user */}
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <div className="flex items-center gap-0.5 rounded-lg border border-border bg-card/60 p-0.5">
               <NotificationsBell />
               <ThemeToggle />
@@ -85,16 +85,19 @@ export const DashboardHeader = () => {
               </button>
             </div>
             {session ? (
-              <div className="flex items-center gap-2 border-l border-border pl-2">
-                <span className="hidden items-center gap-1.5 font-subtitle text-xs font-medium text-foreground sm:inline-flex">
+              <div className="flex items-center gap-2 sm:border-l sm:border-border sm:pl-2">
+                <span className="hidden items-center gap-1.5 font-subtitle text-xs font-medium text-foreground lg:inline-flex">
                   <User className="h-3 w-3 text-muted-foreground" />
                   <span className="max-w-[140px] truncate">{fullName || session.user.email}</span>
                 </span>
                 <button
                   onClick={handleSignOut}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs text-muted-foreground transition hover:border-destructive/40 hover:text-destructive"
+                  aria-label="Sair da conta"
+                  title="Sair"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card p-2 font-subtitle text-xs text-muted-foreground transition hover:border-destructive/40 hover:text-destructive sm:px-3 sm:py-1.5"
                 >
-                  <LogOut className="h-3 w-3" /> Sair
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Sair</span>
                 </button>
               </div>
             ) : (
@@ -108,9 +111,20 @@ export const DashboardHeader = () => {
           </div>
         </div>
 
-        {/* Tier 2: Navigation · Status (mobile = expandable nav, desktop = horizontal) */}
-        <div className="py-2 md:hidden">
-          <MobileMainNav />
+        {/* Tier 2: Navigation · Status (mobile = expandable nav + search, desktop = horizontal nav) */}
+        <div className="flex items-center gap-2 py-2 md:hidden">
+          <div className="flex-1">
+            <MobileMainNav />
+          </div>
+          <button
+            type="button"
+            onClick={openPalette}
+            aria-label="Abrir busca global"
+            title="Buscar"
+            className="inline-flex shrink-0 items-center justify-center rounded-lg border border-border bg-card/60 p-2 text-muted-foreground transition hover:text-foreground"
+          >
+            <Search className="h-4 w-4" />
+          </button>
         </div>
         <div className="hidden items-center justify-between gap-4 py-2 md:flex">
           <MainNav />
