@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
@@ -18,7 +18,6 @@ interface Props {
 export const PreferencesDialog = ({ open, onOpenChange }: Props) => {
   const p = usePreferences();
   const { user, fullName } = useAuth();
-  const fileRef = useRef<HTMLInputElement>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -27,9 +26,6 @@ export const PreferencesDialog = ({ open, onOpenChange }: Props) => {
     supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle()
       .then(({ data }) => setAvatarUrl(data?.avatar_url ?? null));
   }, [open, user]);
-
-  const onPickFile = () => fileRef.current?.click();
-
   const handleUpload = async (file: File) => {
     if (!user) return;
     if (!file.type.startsWith("image/")) return toast.error("Selecione uma imagem");
@@ -40,8 +36,10 @@ export const PreferencesDialog = ({ open, onOpenChange }: Props) => {
     const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
       upsert: true,
       cacheControl: "3600",
+      contentType: file.type || "image/png",
     });
     if (upErr) {
+      console.error("[avatar] upload error", upErr);
       setUploading(false);
       return toast.error("Erro ao enviar", { description: upErr.message });
     }
@@ -90,22 +88,22 @@ export const PreferencesDialog = ({ open, onOpenChange }: Props) => {
                 <p className="text-sm font-medium text-foreground">{fullName || "Sem nome"}</p>
                 <p className="text-xs text-muted-foreground">PNG/JPG até 5MB</p>
               </div>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) void handleUpload(f);
-                  e.target.value = "";
-                }}
-              />
               <div className="flex flex-col gap-1.5">
-                <Button size="sm" variant="outline" disabled={uploading} onClick={onPickFile} className="gap-1.5">
+                <label className={`inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-muted ${uploading ? "pointer-events-none opacity-60" : ""}`}>
                   {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                   Enviar
-                </Button>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    className="sr-only"
+                    disabled={uploading}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) void handleUpload(f);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
                 {avatarUrl && (
                   <Button size="sm" variant="ghost" disabled={uploading} onClick={handleRemove} className="gap-1.5 text-destructive hover:text-destructive">
                     <Trash2 className="h-3.5 w-3.5" /> Remover
