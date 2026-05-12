@@ -311,7 +311,7 @@ const AdminUsers = () => {
               );
             })}
             {users.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">Nenhum usuário encontrado.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Nenhum usuário encontrado.</td></tr>
             )}
           </tbody>
         </table>
