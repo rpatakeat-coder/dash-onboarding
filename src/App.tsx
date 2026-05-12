@@ -11,6 +11,7 @@ import AuthPage from "./pages/Auth.tsx";
 import MinhaCarteira from "./pages/MinhaCarteira.tsx";
 import Tv from "./pages/Tv.tsx";
 import Admin from "./pages/Admin.tsx";
+import SetPassword from "./pages/SetPassword.tsx";
 import { DealDrawerProvider } from "./contexts/DealDrawer";
 import { PreferencesProvider } from "./contexts/PreferencesContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
@@ -31,6 +32,7 @@ const Shell = () => {
       <PageTransition>
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/set-password" element={<SetPassword />} />
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/minha-carteira" element={<ProtectedRoute><MinhaCarteira /></ProtectedRoute>} />
           <Route path="/tv" element={<ProtectedRoute><Tv /></ProtectedRoute>} />
