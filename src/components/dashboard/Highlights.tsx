@@ -66,7 +66,7 @@ export const Highlights = ({ rows, operadores, hideOperatorIdentity }: Props) =>
   const totalAtivos = rows.length;
 
   const cards: HighlightCard[] = [];
-  if (topCritico && topCritico.bands.critico > 0) {
+  if (topCritico && topCritico.bands.critico > 0 && !hideOperatorIdentity) {
     cards.push({
       label: "Operador com mais críticos",
       value: topCritico.nome,
