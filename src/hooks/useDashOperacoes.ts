@@ -302,6 +302,62 @@ export interface SlaKpis {
   estouradoCount: number;
 }
 
+/** KPIs de SLA por DATA DE CRIAÇÃO (não por etapa). */
+export interface SlaCriacaoKpis {
+  total: number;
+  p75: number;
+  media: number;
+  pctAcima30: number;
+  pctAbaixo30: number;
+  countAcima30: number;
+  countAbaixo30: number;
+}
+
+export function computeSlaCriacaoKpis(rows: DashRow[]): SlaCriacaoKpis {
+  const total = rows.length;
+  const dias = rows.map((r) => toNum(r.sla_dias_criacao));
+  const media = dias.length ? dias.reduce((a, b) => a + b, 0) / dias.length : 0;
+  const p75 = percentile(dias, 0.75);
+  const countAcima30 = dias.filter((d) => d > 30).length;
+  const countAbaixo30 = total - countAcima30;
+  const pctAcima30 = total ? (countAcima30 / total) * 100 : 0;
+  const pctAbaixo30 = total ? (countAbaixo30 / total) * 100 : 0;
+  return { total, p75, media, pctAcima30, pctAbaixo30, countAcima30, countAbaixo30 };
+}
+
+/** Conta deals criados HOJE (data_criacao no dia corrente). */
+export function countNovosHoje(rows: DashRow[]): number {
+  const start = startOfDay(new Date());
+  const end = new Date(start); end.setDate(end.getDate() + 1);
+  return rows.filter((r) => {
+    const d = parseDate(r.data_criacao);
+    return d && d >= start && d < end;
+  }).length;
+}
+
+/** Soma de MRR de deals em "Acompanhamento" criados no período + contagem. */
+export function mrrAtivadoNoPeriodo(rows: DashRow[], start: Date, end: Date) {
+  const filtered = rows.filter((r) => {
+    if (r.etapa_negocio?.trim() !== ETAPA_ATIVADO) return false;
+    const d = parseDate(r.data_criacao);
+    return d && d >= start && d < end;
+  });
+  const mrr = filtered.reduce((s, r) => s + toNum(r.mrr), 0);
+  return { count: filtered.length, mrr };
+}
+
+export function getPeriodRanges() {
+  const now = new Date();
+  const todayStart = startOfDay(now);
+  const tomorrow = new Date(todayStart); tomorrow.setDate(tomorrow.getDate() + 1);
+  const weekStart = startOfWeek(now);
+  const nextWeek = new Date(weekStart); nextWeek.setDate(nextWeek.getDate() + 7);
+  const monthStart = startOfMonth(now);
+  const nextMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1);
+  const lastMonthStart = new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1);
+  return { todayStart, tomorrow, weekStart, nextWeek, monthStart, nextMonth, lastMonthStart };
+}
+
 export interface PeriodSummary {
   novos: number;
   ativados: number;

@@ -1,68 +1,119 @@
-# Mais profundidade no Insights da IA
+## Objetivo
 
-Três recursos novos, todos no painel de Insights e no modal "Explicar KPI". Sem mudanças de schema — tudo aproveita a edge function `ai-insights` e o histórico de versões já existente em sessionStorage.
+Substituir o dashboard atual (`/`) por uma visão enxuta dividida em **dois blocos**:
 
-## 1. Comparar duas versões lado a lado
+1. **Macros** — quadros agregados (estoque, perfis, SLA, novos, ativações, carteira por ativador).
+2. **Lista linha-a-linha** — tabela filtrável (SLA, fase, ativador, perfil).
 
-**O que muda na UI**
-- No `AiInsightsCard` e no `ExplainKpiDialog`, quando houver 2+ versões no histórico, surge o botão **"Comparar"** ao lado do seletor de versões.
-- Abre um diálogo amplo (`max-w-5xl`) com duas colunas:
-  - Esquerda: versão âncora (default = mais antiga visível).
-  - Direita: versão comparada (default = mais nova/atual).
-- Cada coluna mostra: timestamp, modelo, foco aplicado (se houver), conteúdo em Markdown.
-- Acima das colunas, dois `Select` permitem trocar quais versões comparar.
-- Toggle **"Realçar diferenças"** que aplica `diff` por linha (verde = adicionado, vermelho = removido) usando a lib `diff` (~10kb). Quando desligado, exibe markdown puro lado a lado.
-- Em telas estreitas (<768px), as colunas viram tabs.
+A página antiga (Highlights, Heatmap, RiskRanking, ManagerialView, Trend, Funnel etc.) será removida da rota `/`. Os componentes ficam no projeto para reuso futuro, mas saem do `Index.tsx`.
 
-**Onde toca**
-- Novo: `src/components/dashboard/AiVersionsCompareDialog.tsx`.
-- Editar: `AiInsightsCard.tsx` e `ExplainKpiDialog.tsx` (ler `versions` do hook, abrir o diálogo).
-- Dependência nova: `diff`.
+---
 
-## 2. Modal de análise focada por operador
+## Bloco 1 — Quadros macro
 
-**O que muda na UI**
-- `OperatorsTable.tsx` ganha um botão Sparkles em cada linha (mesmo padrão do `KpiCard`), visível em hover, com `aria-label="Analisar operador com IA"`.
-- Clicar abre `OperatorInsightDialog` (novo), que reusa `useAiInsights` em modo `"dashboard"` com:
-  - `insightType` fixo em `"operators"`.
-  - `operadores` reduzido a apenas o operador clicado.
-  - `kpis` enviados são os do operador (ativos, críticos, sla médio, mrr) + um resumo agregado da operação para contexto.
-  - `cacheKey` próprio: `dashboard:operator:<nome>:<scopeKey>` — não polui o cache do painel principal.
-- Layout do modal: cabeçalho com nome do operador, badges (ativos / críticos / SLA), conteúdo gerado pela IA, mesmos botões de **Regenerar / Copiar / Exportar** (item 3) e o seletor de **Histórico** já existente.
+### Linha A — Estoque
+- **Total em estoque** (count de `dash_operacoes`).
+- **Distribuição P / M / G / GG** — quantidade + % (já existe via `perfis`, manter).
 
-**Onde toca**
-- Novo: `src/components/dashboard/OperatorInsightDialog.tsx`.
-- Editar: `OperatorsTable.tsx` (botão + estado do dialog), `Index.tsx` se precisar passar contexto agregado.
-- Edge function `ai-insights`: já aceita `insightType: "operators"`, sem alteração de schema. Apenas garantir que o prompt funciona bem com 1 único operador no payload (ele já não inventa nomes).
+### Linha B — SLA do estoque (criação)
+- **P75 (dias)** sobre `sla_dias_criacao`.
+- **Média (dias)** sobre `sla_dias_criacao`.
+- **% SLA > 30 dias** e **% SLA ≤ 30 dias** (sobre `sla_dias_criacao`, não mais sobre `sla_dias_etapa`).
+- ⚠️ Sem desconto de pausa nesta primeira entrega — ver seção "Pendência: desconto de pausados".
 
-## 3. Exportar insight em PDF e Markdown
+### Linha C — Movimento
+- **Novos clientes hoje** (criados hoje).
+- **MRR ativado hoje** (R$ + nº de deals que estão em `Acompanhamento` criados hoje).
+- **MRR ativado semana** (R$ + nº).
+- **MRR ativado mês atual** (R$ + nº).
+- **MRR ativado mês anterior** (R$ + nº).
+- Conforme escolhido: **só valores absolutos**, sem percentual.
 
-**O que muda na UI**
-- Novo componente utilitário `AiExportMenu` (DropdownMenu com 3 itens: "Copiar como Markdown", "Baixar .md", "Baixar PDF").
-- Aparece no rodapé/cabeçalho de:
-  - `AiInsightsCard` (substitui o botão "Atualizar" duplicado por um menu próprio).
-  - `ExplainKpiDialog`.
-  - `OperatorInsightDialog`.
-  - `AiVersionsCompareDialog` (exporta as 2 versões num único arquivo).
+### Linha D — Carteira por ativador
+- Lista compacta: nome do ativador + nº de clientes em carteira.
+- Ordenada por carteira desc.
+- Para usuário ativador (não-admin): só aparece a própria linha (já garantido por RLS).
 
-**Como geramos**
-- **Markdown**: serializa cabeçalho (título, escopo, timestamp, modelo, foco) + conteúdo. Para comparação, dois blocos `## Versão A` / `## Versão B`.
-- **PDF**: usar `jspdf` + `html2canvas` (já presentes no projeto pelo `ExportPdfButton.tsx`). Renderizamos um nó oculto com o markdown convertido (via `react-markdown` + `renderToString`) e a marca Takeat do `pdfBranding.ts`. Mantemos uma página A4, header com logo + título "Insights da IA — {tipo}", footer com data/hora.
+---
 
-**Onde toca**
-- Novo: `src/components/dashboard/AiExportMenu.tsx`, `src/lib/aiInsightExport.ts` (helpers `toMarkdown`, `toPdf`).
-- Editar: os três componentes acima para incluir o menu.
-- Sem dependências novas (jspdf, html2canvas e react-markdown já existem).
+## Bloco 2 — Lista linha-a-linha
 
-## Detalhes técnicos comuns
+Tabela única substituindo as listas espalhadas (Stalled, RiskRanking etc.).
 
-- Histórico já é mantido por `useAiInsights` (até 5 versões/`cacheKey`, TTL 10 min). Os recursos 1 e 3 só consomem; o recurso 2 cria suas próprias `cacheKey`s.
-- Auditoria: cada exportação registra entrada em `audit_logs` via `src/lib/audit.ts` (`action: "ai_insights_exported"`, metadata com `format` e `mode`). Sem nova RLS — política de insert existente cobre.
-- Rate limit da edge function permanece em 10 req/min/usuário; os novos modais reaproveitam cache antes de chamar a IA.
-- Acessibilidade: todos os botões com `aria-label`, modais com foco inicial no botão primário, navegação por teclado nas tabs do compare.
+**Colunas**:
+- Nome do negócio (`nome_negocio`) — clicável, abre o `DealDrawer` existente.
+- Etapa (`etapa_negocio`).
+- SLA criação (`sla_dias_criacao`) — com badge de cor por faixa.
+- SLA fase (`sla_dias_etapa`) — com badge de cor por faixa.
+- Ativador (`agente_ativacao`).
+- Perfil (`perfil_cliente`, normalizado P/M/G/GG).
+- MRR (mantém para contexto).
 
-## Fora do escopo (para iteração futura)
+**Filtros (multi-select, chips, igual ao padrão atual)**:
+- SLA: faixas Crítico / Atenção / Alerta / Saudável (aplicado ao `sla_dias_etapa`).
+- Fase: lista de `etapa_negocio` distintos.
+- Ativador: lista de `agente_ativacao` distintos (para ativador não-admin, pré-fixado nele mesmo).
+- Perfil: P / M / G / GG.
 
-- Sincronizar histórico no Supabase (hoje fica em sessionStorage).
-- Diff semântico (comparação por trecho ao invés de por linha).
-- Exportar análise consolidada de vários operadores em um único PDF.
+**Extras**:
+- Busca por nome do negócio.
+- Ordenação por qualquer coluna.
+- Paginação client-side (50/página) ou scroll virtualizado se passar de ~500 linhas.
+- Botão "Exportar CSV" reaproveitando `ExportCsvButton`.
+
+---
+
+## Estrutura técnica
+
+**Arquivos novos**
+- `src/components/dashboard/MacroEstoque.tsx` — Linhas A + B.
+- `src/components/dashboard/MacroMovimento.tsx` — Linha C (hoje/semana/mês/mês ant.).
+- `src/components/dashboard/CarteiraPorAtivador.tsx` — Linha D.
+- `src/components/dashboard/DealsTable.tsx` — Bloco 2 com filtros + tabela.
+
+**Arquivos editados**
+- `src/pages/Index.tsx` — reescrito: header + Bloco 1 + Bloco 2. Mantém `useDashOperacoes`, `useAtivadorScope`, `DealDrawer`, `EstoqueModal` (para drill do total).
+- `src/hooks/useDashOperacoes.ts` — adicionar:
+  - `slaP75Criacao`, `slaMedioCriacao` (sobre `sla_dias_criacao`).
+  - `pctAcima30Criacao`, `pctAbaixo30Criacao`.
+  - Manter os campos antigos para não quebrar referências em componentes não removidos.
+
+**Arquivos removidos do `Index.tsx` (componentes ficam em disco)**
+- `Highlights`, `BottleneckHeatmap`, `RankingTable`, `PerfilSlaPanel`, `RiskRanking`, `TrendChart`, `FunnelChart`, `AttentionPoints`, `SlaCritico`, `StalledTable`, `PeriodCompare`, `ManagerialView`, `AiInsightsCard`.
+- A aba "Gestão" (admin) também sai — se quiser preservar, me avise antes de implementar.
+
+---
+
+## Pendência: desconto de pausados (P75 / média)
+
+Você pediu para o SLA de criação descontar o tempo em que o card morou em **Processo Pausado**. **Hoje isso não é possível** porque:
+
+- A tabela `dash_operacoes` guarda só o snapshot atual (`sla_dias_criacao`, `sla_dias_etapa`, `etapa_negocio`).
+- Não existe histórico de transições de etapa nem campo "dias acumulados em pausa".
+
+**Para implementar de verdade** seria necessário um destes caminhos (escolher depois):
+
+1. **Sincronizar do HubSpot** o histórico da propriedade `dealstage` (eventos de mudança de etapa) para uma nova tabela `dash_operacoes_historico (id_deal, etapa, entrou_em, saiu_em)`. Aí calculamos `dias_em_pausa` por deal e fazemos `sla_ajustado = sla_dias_criacao - dias_em_pausa`.
+2. **Adicionar uma coluna `dias_pausado`** na própria `dash_operacoes`, alimentada pelo n8n a partir do HubSpot (mais simples, sem nova tabela).
+
+Nesta entrega vou usar `sla_dias_criacao` cru e deixar uma nota visível no card de SLA ("não desconta tempo em pausa — pendente histórico"). Quando você decidir o caminho 1 ou 2, faço a segunda etapa.
+
+---
+
+## Resumo do que muda visualmente
+
+```text
+ANTES (/)                          DEPOIS (/)
+─────────────────                  ─────────────────
+Header + filtros                   Header + filtros
+SlaKpiRow                          ── Bloco 1: Macros ──
+Highlights (4 cards)                 Estoque total + P/M/G/GG
+PeriodGrids                          P75 + Média + %>30 + %≤30
+Funnel + Operadores                  Novos hoje
+Heatmap + Ranking                    MRR ativado H/S/M/M-1
+PerfilSlaPanel                       Carteira por ativador
+RiskRanking + Trend                ── Bloco 2: Lista ──
+AttentionPoints + SlaCritico         Filtros (SLA/Fase/Ativador/Perfil)
+ManagerialView (aba admin)           Tabela linha-a-linha + export
+AiInsightsCard
+```
