@@ -90,22 +90,22 @@ export const PreferencesDialog = ({ open, onOpenChange }: Props) => {
                 <p className="text-sm font-medium text-foreground">{fullName || "Sem nome"}</p>
                 <p className="text-xs text-muted-foreground">PNG/JPG até 5MB</p>
               </div>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) void handleUpload(f);
-                  e.target.value = "";
-                }}
-              />
               <div className="flex flex-col gap-1.5">
-                <Button size="sm" variant="outline" disabled={uploading} onClick={onPickFile} className="gap-1.5">
+                <label className={`inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-muted ${uploading ? "pointer-events-none opacity-60" : ""}`}>
                   {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                   Enviar
-                </Button>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    className="sr-only"
+                    disabled={uploading}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) void handleUpload(f);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
                 {avatarUrl && (
                   <Button size="sm" variant="ghost" disabled={uploading} onClick={handleRemove} className="gap-1.5 text-destructive hover:text-destructive">
                     <Trash2 className="h-3.5 w-3.5" /> Remover
