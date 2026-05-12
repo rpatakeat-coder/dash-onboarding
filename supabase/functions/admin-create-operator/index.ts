@@ -2,12 +2,17 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3.23.8";
 
-const Body = z.object({
-  email: z.string().email(),
-  agente_ativacao: z.string().min(1).max(120),
-  role: z.enum(["admin", "user"]).default("user"),
-  full_name: z.string().max(120).optional(),
-});
+const Body = z
+  .object({
+    email: z.string().email(),
+    agente_ativacao: z.string().min(1).max(120).optional(),
+    role: z.enum(["admin", "user"]).default("user"),
+    full_name: z.string().max(120).optional(),
+  })
+  .refine((v) => v.role === "admin" || (v.agente_ativacao && v.agente_ativacao.trim().length > 0), {
+    message: "agente_ativacao is required for non-admin users",
+    path: ["agente_ativacao"],
+  });
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -49,16 +54,18 @@ Deno.serve(async (req) => {
 
     const newUserId = invited.user.id;
 
+    const agente = agente_ativacao ?? null;
+
     // Ensure profile exists
     await admin.from("profiles").upsert(
-      { id: newUserId, full_name: full_name ?? "", agente_ativacao },
+      { id: newUserId, full_name: full_name ?? "", agente_ativacao: agente },
       { onConflict: "id" },
     );
 
     const { error: roleInsertErr } = await admin
       .from("user_roles_operations")
       .upsert(
-        { user_id: newUserId, role, agente_ativacao },
+        { user_id: newUserId, role, agente_ativacao: agente },
         { onConflict: "user_id" },
       );
     if (roleInsertErr) return json({ error: roleInsertErr.message }, 500);

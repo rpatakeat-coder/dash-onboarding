@@ -135,8 +135,9 @@ const AdminOperators = () => {
   useEffect(() => { load(); }, []);
 
   const invite = async () => {
-    if (!form.email.trim() || !form.agente_ativacao.trim()) {
-      return toast.error("Informe email e agente HubSpot");
+    if (!form.email.trim()) return toast.error("Informe o email");
+    if (form.role !== "admin" && !form.agente_ativacao.trim()) {
+      return toast.error("Informe o agente HubSpot");
     }
     setBusy(true);
     const { data, error } = await supabase.functions.invoke("admin-create-operator", {
@@ -144,7 +145,7 @@ const AdminOperators = () => {
         email: form.email.trim(),
         full_name: form.full_name.trim() || undefined,
         role: form.role,
-        agente_ativacao: form.agente_ativacao,
+        agente_ativacao: form.role === "admin" ? undefined : form.agente_ativacao,
       },
     });
     setBusy(false);
@@ -213,13 +214,16 @@ const AdminOperators = () => {
             />
           </div>
           <div>
-            <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">Agente HubSpot</label>
+            <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
+              Agente HubSpot{form.role === "admin" && <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">(não exigido)</span>}
+            </label>
             <select
               value={form.agente_ativacao}
               onChange={(e) => setForm((f) => ({ ...f, agente_ativacao: e.target.value }))}
-              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+              disabled={form.role === "admin"}
+              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm disabled:opacity-50"
             >
-              <option value="">Selecione…</option>
+              <option value="">{form.role === "admin" ? "—" : "Selecione…"}</option>
               {agentes.map((a) => <option key={a} value={a}>{a}</option>)}
             </select>
           </div>
