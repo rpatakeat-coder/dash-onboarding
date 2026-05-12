@@ -26,6 +26,8 @@ import { TrendChart } from "@/components/dashboard/TrendChart";
 import { SlaLegend } from "@/components/dashboard/SlaLegend";
 import { ExportCsvButton } from "@/components/dashboard/ExportCsvButton";
 import { ExportPdfButton } from "@/components/dashboard/ExportPdfButton";
+import { AiInsightsCard } from "@/components/dashboard/AiInsightsCard";
+import { ExplainKpiDialog, type ExplainKpiTarget } from "@/components/dashboard/ExplainKpiDialog";
 import { useUrlSets } from "@/hooks/useUrlSets";
 import { useDealDrawer } from "@/contexts/DealDrawer";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
@@ -83,6 +85,12 @@ const Index = () => {
   const [estoqueOpen, setEstoqueOpen] = useState(false);
   const [operatorOpen, setOperatorOpen] = useState(false);
   const [selectedOperator, setSelectedOperator] = useState<OperatorStat | null>(null);
+  const [explainTarget, setExplainTarget] = useState<ExplainKpiTarget | null>(null);
+  const [explainOpen, setExplainOpen] = useState(false);
+  const openExplain = (t: ExplainKpiTarget) => {
+    setExplainTarget(t);
+    setExplainOpen(true);
+  };
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("tab") === "gestao" && isAdmin ? "gestao" : "exec";
   const setTab = (v: string) => {
@@ -427,6 +435,48 @@ const Index = () => {
           </div>
         )}
 
+        {data && (
+          <AiInsightsCard
+            periodo={`KPIs: ${periodLabel(kpiPeriod)} · janela ${deltaWindow}d vs ${deltaWindow}d`}
+            kpis={{
+              estoque_total: kpiData.total,
+              sla_p75_dias: Math.round(kpiData.slaP75),
+              sla_medio_dias: Math.round(kpiData.slaMedio),
+              pct_no_prazo: Number(kpiData.noPrazo.toFixed(1)),
+              pct_sla_estourado: Number(kpiData.estourado.toFixed(1)),
+              clientes_no_prazo: kpiData.noPrazoCount,
+              clientes_estourados: kpiData.estouradoCount,
+            }}
+            snapshotAnterior={
+              deltas
+                ? {
+                    estoque_total: deltas.total?.previousDays ?? 0,
+                    sla_medio_dias: deltas.slaMedio?.previousDays ?? 0,
+                    pct_no_prazo: deltas.noPrazo?.previousDays ?? 0,
+                    pct_sla_estourado: deltas.estourado?.previousDays ?? 0,
+                  }
+                : undefined
+            }
+            operadores={opData.operadores.slice(0, 20).map((o) => ({
+              nome: o.nome,
+              ativos: o.ativos,
+              criticos: o.bands?.critico ?? 0,
+              slaMedio: Number((o.tempoMedio ?? 0).toFixed(1)),
+              mrr: o.mrr,
+            }))}
+            scopeKey={JSON.stringify({
+              kpiPeriod,
+              deltaWindow,
+              ativador: [...ativadorSel].sort(),
+              etapa: [...etapaSel].sort(),
+              band: [...bandSel].sort(),
+              perfil: [...perfilSel].sort(),
+              onlyMine,
+              total: kpiData.total,
+            })}
+          />
+        )}
+
         <SlaLegend className="mb-6" />
 
         {/* SLA / Estoque */}
@@ -459,6 +509,7 @@ const Index = () => {
             deltasLoading={deltasLoading}
             windowDays={deltaWindow}
             onChangeWindow={setDeltaWindow}
+            onExplain={openExplain}
           />
           <PeriodCompare
             title="Comparar SLA entre períodos"
@@ -483,6 +534,12 @@ const Index = () => {
           operador={selectedOperator}
           open={operatorOpen}
           onOpenChange={setOperatorOpen}
+        />
+
+        <ExplainKpiDialog
+          open={explainOpen}
+          onOpenChange={setExplainOpen}
+          target={explainTarget}
         />
 
         {/* Filtros globais (Ativador + Etapa) */}

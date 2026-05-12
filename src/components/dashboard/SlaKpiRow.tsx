@@ -1,9 +1,11 @@
+import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtPct } from "@/hooks/useDashOperacoes";
 import type { SnapshotDeltas, DeltaWindow } from "@/hooks/useSnapshotDeltas";
 import { KpiDeltaBadge } from "./KpiDeltaBadge";
 import type { KpiDelta, DateRange } from "@/hooks/useSnapshotDeltas";
 import { InfoTooltip } from "./InfoTooltip";
+import type { ExplainKpiTarget } from "./ExplainKpiDialog";
 
 interface Props {
   total: number;
@@ -18,6 +20,7 @@ interface Props {
   deltasLoading?: boolean;
   windowDays?: DeltaWindow;
   onChangeWindow?: (w: DeltaWindow) => void;
+  onExplain?: (target: ExplainKpiTarget) => void;
 }
 
 const Card = ({
@@ -37,6 +40,7 @@ const Card = ({
   currentRange,
   previousRange,
   tooltip,
+  onExplain,
 }: {
   label: string;
   value: string;
@@ -54,6 +58,7 @@ const Card = ({
   currentRange?: DateRange;
   previousRange?: DateRange;
   tooltip?: string;
+  onExplain?: () => void;
 }) => {
   const ring = {
     default: "border-border",
@@ -80,11 +85,25 @@ const Card = ({
       role={interactive ? "button" : undefined}
       tabIndex={interactive ? 0 : undefined}
       className={cn(
-        "rounded-2xl border bg-card p-5 shadow-sm-soft transition",
+        "group relative rounded-2xl border bg-card p-5 shadow-sm-soft transition",
         ring[tone ?? "default"],
         interactive && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
       )}
     >
+      {onExplain && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onExplain();
+          }}
+          className="pdf-hide absolute right-2.5 top-2.5 z-10 inline-flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-muted-foreground opacity-0 transition hover:border-primary/30 hover:bg-primary/10 hover:text-primary group-hover:opacity-100 focus:opacity-100"
+          title="Explicar este KPI com IA"
+          aria-label="Explicar este KPI com IA"
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+        </button>
+      )}
       <div className="flex items-center gap-1.5">
         <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
           {label}
@@ -117,9 +136,10 @@ const Card = ({
 
 export const SlaKpiRow = ({
   total, slaP75, slaMedio, noPrazo, noPrazoCount, estourado, estouradoCount, onEstoqueClick,
-  deltas, deltasLoading, windowDays = 7, onChangeWindow,
+  deltas, deltasLoading, windowDays = 7, onChangeWindow, onExplain,
 }: Props) => {
   const windowLabel = `vs ${windowDays}d antes`;
+  const ctx = `Janela de comparação: ${windowDays} dias vs ${windowDays} dias anteriores. Estoque total atual: ${total}.`;
   return (
     <section className="space-y-3">
       {onChangeWindow && (
@@ -161,6 +181,12 @@ export const SlaKpiRow = ({
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
           previousRange={deltas?.previousRange}
+          onExplain={onExplain && (() => onExplain({
+            kpiName: "Estoque total",
+            valorAtual: total,
+            valorAnterior: deltas?.total?.previousDays,
+            contexto: ctx,
+          }))}
         />
         <Card
           label="P75 SLA"
@@ -169,6 +195,11 @@ export const SlaKpiRow = ({
           hint="desde a criação do deal"
           tone="warning"
           tooltip="Percentil 75 calculado sobre sla_dias_criacao (dias desde a criação do deal). 75% dos deals estão abaixo deste valor."
+          onExplain={onExplain && (() => onExplain({
+            kpiName: "P75 SLA (dias desde criação)",
+            valorAtual: `${Math.round(slaP75)} dias`,
+            contexto: ctx,
+          }))}
         />
         <Card
           label="SLA médio"
@@ -185,6 +216,12 @@ export const SlaKpiRow = ({
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
           previousRange={deltas?.previousRange}
+          onExplain={onExplain && (() => onExplain({
+            kpiName: "SLA médio (dias na etapa)",
+            valorAtual: `${Math.round(slaMedio)} dias`,
+            valorAnterior: deltas?.slaMedio?.previousDays != null ? `${deltas.slaMedio.previousDays} dias` : undefined,
+            contexto: ctx,
+          }))}
         />
         <Card
           label="% no prazo (≤30d)"
@@ -201,6 +238,12 @@ export const SlaKpiRow = ({
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
           previousRange={deltas?.previousRange}
+          onExplain={onExplain && (() => onExplain({
+            kpiName: "% no prazo (≤30 dias na etapa)",
+            valorAtual: fmtPct(noPrazo),
+            valorAnterior: deltas?.noPrazo?.previousDays != null ? fmtPct(deltas.noPrazo.previousDays) : undefined,
+            contexto: `${ctx} ${noPrazoCount} clientes no prazo.`,
+          }))}
         />
         <Card
           label="SLA estourado (>30d)"
@@ -217,6 +260,12 @@ export const SlaKpiRow = ({
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
           previousRange={deltas?.previousRange}
+          onExplain={onExplain && (() => onExplain({
+            kpiName: "% SLA estourado (>30 dias)",
+            valorAtual: fmtPct(estourado),
+            valorAnterior: deltas?.estourado?.previousDays != null ? fmtPct(deltas.estourado.previousDays) : undefined,
+            contexto: `${ctx} ${estouradoCount} clientes estourados.`,
+          }))}
         />
       </div>
     </section>
