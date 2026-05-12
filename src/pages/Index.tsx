@@ -28,6 +28,7 @@ import { ExportCsvButton } from "@/components/dashboard/ExportCsvButton";
 import { ExportPdfButton } from "@/components/dashboard/ExportPdfButton";
 import { useUrlSets } from "@/hooks/useUrlSets";
 import { useDealDrawer } from "@/contexts/DealDrawer";
+import { useAtivadorScope } from "@/hooks/useAtivadorScope";
 import { useSnapshotDeltas, type DeltaWindow } from "@/hooks/useSnapshotDeltas";
 import {
   computeFiltered,
