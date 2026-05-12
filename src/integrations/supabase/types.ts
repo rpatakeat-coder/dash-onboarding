@@ -253,6 +253,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          agente_ativacao: string | null
           avatar_url: string | null
           created_at: string
           full_name: string | null
@@ -260,6 +261,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agente_ativacao?: string | null
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
@@ -267,6 +269,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agente_ativacao?: string | null
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
