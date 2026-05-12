@@ -114,8 +114,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Shorten via is.gd — tenta usar alias customizado "invite-acesso-XXXXX"
-    // (precisa ser único globalmente no is.gd; faz fallback para alias gerado).
+    // Shorten via is.gd — alias customizado "invite_acesso_XXXXX".
+    // OBS: is.gd só aceita [a-z0-9_] no shorturl (sem hífen).
     let short_link: string | null = null;
     const tryShorten = async (alias?: string) => {
       const params = new URLSearchParams({ format: "simple", url: action_link! });
@@ -125,10 +125,9 @@ Deno.serve(async (req) => {
       return r.ok && txt.startsWith("http") ? txt : null;
     };
     try {
-      // 5 tentativas com sufixo aleatório curto para evitar colisão
-      for (let i = 0; i < 5 && !short_link; i++) {
-        const suffix = Math.random().toString(36).slice(2, 7);
-        short_link = await tryShorten(`invite-acesso-${suffix}`);
+      for (let i = 0; i < 8 && !short_link; i++) {
+        const suffix = Math.random().toString(36).replace(/[^a-z0-9]/g, "").slice(0, 6);
+        short_link = await tryShorten(`invite_acesso_${suffix}`);
       }
       // Fallback: alias automático
       if (!short_link) short_link = await tryShorten();
