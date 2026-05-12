@@ -285,7 +285,7 @@ const Index = () => {
 
   const travadosLista = useMemo(() => {
     const TRAVADO_DIAS = 7;
-    return rows
+    return personalRows
       .map((r) => ({
         id: r.id_deal,
         cliente: r.nome_negocio?.trim() || "—",
@@ -296,7 +296,7 @@ const Index = () => {
       .filter((r) => r.dias > TRAVADO_DIAS)
       .sort((a, b) => b.dias - a.dias)
       .slice(0, 10);
-  }, [rows]);
+  }, [personalRows]);
 
   const scopeCounts = useMemo(() => {
     const ETAPAS_ATENCAO = new Set(["Pré-Cancelamento", "Inativo", "Pendências", "Processo Pausado"]);
