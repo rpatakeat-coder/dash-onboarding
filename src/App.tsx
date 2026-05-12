@@ -32,6 +32,7 @@ const Shell = () => {
       <PageTransition>
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/set-password" element={<SetPassword />} />
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/minha-carteira" element={<ProtectedRoute><MinhaCarteira /></ProtectedRoute>} />
           <Route path="/tv" element={<ProtectedRoute><Tv /></ProtectedRoute>} />
