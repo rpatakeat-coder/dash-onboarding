@@ -374,6 +374,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles_operations: {
+        Row: {
+          agente_ativacao: string | null
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["operations_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agente_ativacao?: string | null
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["operations_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agente_ativacao?: string | null
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["operations_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       Vendas: {
         Row: {
           id_seller: number
@@ -491,6 +518,13 @@ export type Database = {
     }
     Functions: {
       claim_first_admin: { Args: never; Returns: boolean }
+      has_operations_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["operations_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -533,6 +567,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      operations_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -661,6 +696,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      operations_role: ["admin", "user"],
     },
   },
 } as const
