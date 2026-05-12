@@ -94,9 +94,9 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
     setHomeRoute: (homeRoute) => setPrefs((p) => ({ ...p, homeRoute })),
     setNotif: (n) => setPrefs((p) => ({ ...p, notif: { ...p.notif, ...n } })),
     cycleTheme: () => {
-      const next: ThemeMode =
-        prefs.theme === "light" ? "dark" : prefs.theme === "dark" ? "system" : "light";
-      updateTheme(next);
+      const root = document.documentElement;
+      const isDark = root.classList.contains("dark");
+      updateTheme(isDark ? "light" : "dark");
     },
   };
 
