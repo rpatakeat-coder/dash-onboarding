@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ShieldOff, ArrowLeft, LogOut, ShieldCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,12 @@ export const AccessDenied = ({
   showClaimAdmin = false,
 }: AccessDeniedProps) => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth", { replace: true });
+  };
 
   const claim = async () => {
     setBusy(true);
@@ -69,7 +74,7 @@ export const AccessDenied = ({
           )}
 
           <Button
-            onClick={() => signOut()}
+            onClick={handleSignOut}
             variant="ghost"
             className="gap-2 text-muted-foreground"
           >
