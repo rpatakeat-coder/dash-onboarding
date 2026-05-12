@@ -149,7 +149,7 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
         )}
 
         {target && (
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button
               size="sm"
               variant="outline"
@@ -162,6 +162,19 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
                 <><Copy className="mr-1.5 h-3.5 w-3.5" /> Copiar texto</>
               )}
             </Button>
+            {data && (
+              <AiExportMenu
+                content={data.content}
+                auditContext={`kpi:${target.kpiName}`}
+                meta={{
+                  title: "Insights da IA — KPI",
+                  subtitle: target.kpiName,
+                  typeLabel: "Explicar KPI",
+                  model: data.model,
+                  generatedAt: lastGeneratedAt ?? Date.now(),
+                }}
+              />
+            )}
             <Button
               size="sm"
               variant="outline"
@@ -177,6 +190,16 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
           </div>
         )}
       </DialogContent>
+      {target && (
+        <AiVersionsCompareDialog
+          open={compareOpen}
+          onOpenChange={setCompareOpen}
+          versions={versions}
+          title="Explicar KPI"
+          subtitle={target.kpiName}
+          typeLabel="KPI"
+        />
+      )}
     </Dialog>
   );
 };
