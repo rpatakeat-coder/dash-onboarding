@@ -298,67 +298,23 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
       </div>
       <CommandList>
         <CommandEmpty>Nenhum resultado.</CommandEmpty>
-        <CommandGroup heading="Navegação">
-          {[
-            { to: "/", label: "Visão geral", Icon: LayoutDashboard },
-            { to: "/minha-carteira", label: "Minha carteira", Icon: Briefcase },
-            { to: "/tv", label: "Modo TV", Icon: TvIcon },
-          ]
-            .filter((p) => scoreMatch(p.label, query) > 0)
-            .map(({ to, label, Icon }) => (
+        {showOperators && (
+          <CommandGroup heading={`Operadores (${operators.length})`}>
+            {operators.map(({ op }: { op: OperatorStat }) => (
               <CommandItem
-                key={to}
-                value={`page ${label}`}
-                onSelect={() => run(() => navigate(to))}
+                key={op.nome}
+                value={`op ${op.nome}`}
+                onSelect={() =>
+                  run(() => window.dispatchEvent(new CustomEvent("open-operator", { detail: op })))
+                }
                 className={ITEM_CLS}
               >
-                <Icon className="mr-2 h-4 w-4" /> {label}
+                <User className="mr-2 h-4 w-4" />
+                <span className="flex-1">{op.nome}</span>
+                <span className="ml-2 text-xs text-muted-foreground">{op.ativos} ativos</span>
               </CommandItem>
             ))}
-        </CommandGroup>
-        {showOperators && (
-          <>
-            <CommandSeparator />
-            <CommandGroup heading={`Operadores (${operators.length})`}>
-              {operators.map(({ op }: { op: OperatorStat }) => (
-                <CommandItem
-                  key={op.nome}
-                  value={`op ${op.nome}`}
-                  onSelect={() =>
-                    run(() => window.dispatchEvent(new CustomEvent("open-operator", { detail: op })))
-                  }
-                  className={ITEM_CLS}
-                >
-                  <User className="mr-2 h-4 w-4" />
-                  <span className="flex-1">{op.nome}</span>
-                  <span className="ml-2 text-xs text-muted-foreground">{op.ativos} ativos</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </>
-        )}
-        {showDeals && (
-          <>
-            <CommandSeparator />
-            <CommandGroup heading={`Deals (${deals.length})`}>
-              {deals.map(({ d }: { d: DashRow }) => (
-                <CommandItem
-                  key={d.id_deal}
-                  value={`deal ${d.nome_negocio ?? d.id_deal}`}
-                  onSelect={() => run(() => openDeal(d))}
-                  className={ITEM_CLS}
-                >
-                  <Building2 className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="flex-1 truncate font-medium">
-                    {d.nome_negocio || `Deal ${d.id_deal}`}
-                  </span>
-                  <span className="ml-2 rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-subtitle text-[10px] text-muted-foreground">
-                    {d.etapa_negocio ?? "—"}
-                  </span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </>
+          </CommandGroup>
         )}
       </CommandList>
     </CommandDialog>
