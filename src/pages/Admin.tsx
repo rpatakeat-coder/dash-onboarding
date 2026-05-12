@@ -111,19 +111,53 @@ const AdminUsers = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [editAgenteId, setEditAgenteId] = useState<string | null>(null);
+  const [editAgenteValue, setEditAgenteValue] = useState("");
+  const [savingAgente, setSavingAgente] = useState(false);
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("list_admin_users");
+    const [{ data: usersData, error }, { data: profilesData }] = await Promise.all([
+      supabase.rpc("list_admin_users"),
+      supabase.from("profiles").select("id, agente_ativacao"),
+    ]);
     setLoading(false);
     if (error) {
       toast.error("Erro ao carregar usuários", { description: error.message });
       return;
     }
-    setUsers((data as AdminUser[]) ?? []);
+    const map = new Map<string, string | null>(
+      (profilesData ?? []).map((p) => [p.id, p.agente_ativacao]),
+    );
+    const merged = ((usersData as AdminUser[]) ?? []).map((u) => ({
+      ...u,
+      agente_ativacao: map.get(u.id) ?? null,
+    }));
+    setUsers(merged);
   };
 
   useEffect(() => { load(); }, []);
+
+  const saveAgente = async (u: AdminUser) => {
+    const value = editAgenteValue.trim() || null;
+    setSavingAgente(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ agente_ativacao: value })
+      .eq("id", u.id);
+    setSavingAgente(false);
+    if (error) return toast.error("Erro ao salvar", { description: error.message });
+    toast.success(value ? `Vinculado a "${value}"` : "Vínculo removido");
+    void logAudit({
+      action: "user.set_agente_ativacao",
+      entity_type: "user",
+      entity_id: u.id,
+      summary: `Definiu agente_ativacao de ${u.full_name || u.id} para ${value ?? "(nenhum)"}`,
+      metadata: { target_user_id: u.id, value },
+    });
+    setEditAgenteId(null);
+    await load();
+  };
 
   const toggleAdmin = async (u: AdminUser) => {
     const isAdmin = u.roles.includes("admin");
