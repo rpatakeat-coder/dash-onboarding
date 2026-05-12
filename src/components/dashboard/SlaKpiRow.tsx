@@ -136,9 +136,10 @@ const Card = ({
 
 export const SlaKpiRow = ({
   total, slaP75, slaMedio, noPrazo, noPrazoCount, estourado, estouradoCount, onEstoqueClick,
-  deltas, deltasLoading, windowDays = 7, onChangeWindow,
+  deltas, deltasLoading, windowDays = 7, onChangeWindow, onExplain,
 }: Props) => {
   const windowLabel = `vs ${windowDays}d antes`;
+  const ctx = `Janela de comparação: ${windowDays} dias vs ${windowDays} dias anteriores. Estoque total atual: ${total}.`;
   return (
     <section className="space-y-3">
       {onChangeWindow && (
