@@ -74,23 +74,64 @@ function buildSystemPrompt(): string {
   ].join(" ");
 }
 
-function buildDashboardPrompt(payload: z.infer<typeof DashboardPayload>["payload"]): string {
+type DashboardPayloadT = z.infer<typeof DashboardPayload>["payload"];
+
+const SECTIONS: Record<z.infer<typeof InsightType>, string> = {
+  executive: [
+    "## Resumo executivo",
+    "- 3 a 5 bullets curtos explicando o estado da operação e principais variações vs snapshot anterior. Quando houver delta relevante, explique a causa provável a partir dos dados.",
+    "",
+    "## Sugestões de ação por operador",
+    "- Liste até 5 operadores prioritários. Para cada um: **Nome** — ação recomendada concreta em 1 frase. Não invente operadores fora do payload.",
+  ].join("\n"),
+  risks: [
+    "## Riscos e alertas",
+    "- Liste 3 a 6 riscos prioritários (SLA estourado, concentração de carteira, queda de % no prazo, deals parados). Para cada risco: **Risco** — evidência nos dados — impacto estimado.",
+    "",
+    "## Mitigações imediatas",
+    "- Até 5 ações em ordem de prioridade. Cada uma: **Ação** — responsável sugerido (operador do payload, se aplicável) — prazo curto.",
+  ].join("\n"),
+  opportunities: [
+    "## Oportunidades de aceleração",
+    "- 3 a 5 oportunidades visíveis nos dados (operadores com folga de carteira, KPIs em alta sustentável, deals próximos de conversão). Para cada uma: **Oportunidade** — evidência — ganho potencial.",
+    "",
+    "## Próximos passos",
+    "- Até 4 ações práticas para capturar essas oportunidades nesta semana.",
+  ].join("\n"),
+  operators: [
+    "## Diagnóstico por operador",
+    "- Para cada operador relevante (até 8): **Nome** — leitura curta da carteira (ativos, críticos, SLA médio) — pontos fortes e fracos.",
+    "",
+    "## Ações recomendadas",
+    "- Para cada operador citado acima, 1 ação concreta priorizada. Formato: **Nome** — ação.",
+  ].join("\n"),
+  trends: [
+    "## Tendências observadas",
+    "- 3 a 5 bullets comparando KPIs atuais com o snapshot anterior. Destaque variações relevantes e padrões (melhora, piora, estabilidade).",
+    "",
+    "## Projeção e atenção",
+    "- 2 a 4 bullets com projeção qualitativa para os próximos dias e o que monitorar de perto. Não invente números futuros.",
+  ].join("\n"),
+};
+
+function buildDashboardPrompt(payload: DashboardPayloadT): string {
+  const type = payload.insightType ?? "executive";
   return [
     `Período analisado: ${payload.periodo ?? "atual"}.`,
+    `Tipo de análise solicitada: ${type}.`,
+    payload.focus ? `Foco adicional do usuário: ${payload.focus}` : "",
     `KPIs atuais:\n${JSON.stringify(payload.kpis, null, 2)}`,
     payload.snapshotAnterior
       ? `Snapshot anterior (referência):\n${JSON.stringify(payload.snapshotAnterior, null, 2)}`
       : "Sem snapshot anterior disponível.",
     `Top operadores (até 50):\n${JSON.stringify(payload.operadores, null, 2)}`,
     "",
-    "Gere a resposta em markdown com EXATAMENTE estas duas seções e nada mais:",
+    "Gere a resposta em markdown com EXATAMENTE estas seções e nada mais:",
     "",
-    "## Resumo executivo",
-    "- 3 a 5 bullets curtos explicando o estado da operação e as principais variações vs snapshot anterior. Quando houver delta relevante, explique a causa provável a partir dos dados.",
-    "",
-    "## Sugestões de ação por operador",
-    "- Liste até 5 operadores prioritários (os mais críticos/em risco). Para cada um: **Nome** — ação recomendada concreta em 1 frase. Não invente operadores que não estão no payload.",
-  ].join("\n");
+    SECTIONS[type],
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function buildKpiPrompt(payload: z.infer<typeof KpiPayload>["payload"]): string {
