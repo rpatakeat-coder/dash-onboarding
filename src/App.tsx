@@ -33,7 +33,6 @@ const Shell = () => {
         <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      </Routes>
       <CommandPalette onOpenPreferences={() => setPrefsOpen(true)} />
       <PreferencesDialog open={prefsOpen} onOpenChange={setPrefsOpen} />
     </PreferencesDialogContext.Provider>
