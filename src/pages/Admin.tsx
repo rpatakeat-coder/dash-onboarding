@@ -117,22 +117,34 @@ const AdminUsers = () => {
 
   const load = async () => {
     setLoading(true);
-    const [{ data: usersData, error }, { data: profilesData }] = await Promise.all([
-      supabase.rpc("list_admin_users"),
-      supabase.from("profiles").select("id, agente_ativacao"),
+    const [{ data: profilesData, error: pErr }, { data: opsData, error: oErr }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, created_at")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("user_roles_operations")
+        .select("user_id, role, agente_ativacao"),
     ]);
     setLoading(false);
-    if (error) {
-      toast.error("Erro ao carregar usuários", { description: error.message });
+    if (pErr || oErr) {
+      toast.error("Erro ao carregar usuários", { description: (pErr ?? oErr)?.message });
       return;
     }
-    const map = new Map<string, string | null>(
-      (profilesData ?? []).map((p) => [p.id, p.agente_ativacao]),
+    const opsMap = new Map<string, { role: string; agente_ativacao: string | null }>(
+      (opsData ?? []).map((o) => [o.user_id, { role: o.role, agente_ativacao: o.agente_ativacao }]),
     );
-    const merged = ((usersData as AdminUser[]) ?? []).map((u) => ({
-      ...u,
-      agente_ativacao: map.get(u.id) ?? null,
-    }));
+    const merged: AdminUser[] = (profilesData ?? []).map((p) => {
+      const op = opsMap.get(p.id);
+      return {
+        id: p.id,
+        full_name: p.full_name,
+        avatar_url: p.avatar_url,
+        created_at: p.created_at,
+        roles: op?.role === "admin" ? ["admin"] : op ? ["user"] : [],
+        agente_ativacao: op?.agente_ativacao ?? null,
+      };
+    });
     setUsers(merged);
   };
 
@@ -142,9 +154,11 @@ const AdminUsers = () => {
     const value = editAgenteValue.trim() || null;
     setSavingAgente(true);
     const { error } = await supabase
-      .from("profiles")
-      .update({ agente_ativacao: value })
-      .eq("id", u.id);
+      .from("user_roles_operations")
+      .upsert(
+        { user_id: u.id, agente_ativacao: value, role: u.roles.includes("admin") ? "admin" : "user" },
+        { onConflict: "user_id" },
+      );
     setSavingAgente(false);
     if (error) return toast.error("Erro ao salvar", { description: error.message });
     toast.success(value ? `Vinculado a "${value}"` : "Vínculo removido");
@@ -162,37 +176,27 @@ const AdminUsers = () => {
   const toggleAdmin = async (u: AdminUser) => {
     const isAdmin = u.roles.includes("admin");
     setBusyId(u.id);
-    if (isAdmin) {
-      const { error } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", u.id)
-        .eq("role", "admin");
-      setBusyId(null);
-      if (error) return toast.error("Erro ao remover admin", { description: error.message });
-      toast.success(`${u.full_name || "Usuário"} não é mais admin`);
-      void logAudit({
-        action: "role.remove_admin",
-        entity_type: "user_role",
-        entity_id: u.id,
-        summary: `Removeu admin de ${u.full_name || u.id}`,
-        metadata: { target_user_id: u.id, target_name: u.full_name },
-      });
-    } else {
-      const { error } = await supabase
-        .from("user_roles")
-        .insert({ user_id: u.id, role: "admin" });
-      setBusyId(null);
-      if (error) return toast.error("Erro ao promover", { description: error.message });
-      toast.success(`${u.full_name || "Usuário"} promovido a admin`);
-      void logAudit({
-        action: "role.grant_admin",
-        entity_type: "user_role",
-        entity_id: u.id,
-        summary: `Promoveu ${u.full_name || u.id} a admin`,
-        metadata: { target_user_id: u.id, target_name: u.full_name },
-      });
-    }
+    const newRole = isAdmin ? "user" : "admin";
+    const { error } = await supabase
+      .from("user_roles_operations")
+      .upsert(
+        { user_id: u.id, role: newRole, agente_ativacao: u.agente_ativacao ?? null },
+        { onConflict: "user_id" },
+      );
+    setBusyId(null);
+    if (error) return toast.error(isAdmin ? "Erro ao remover admin" : "Erro ao promover", { description: error.message });
+    toast.success(isAdmin
+      ? `${u.full_name || "Usuário"} não é mais admin`
+      : `${u.full_name || "Usuário"} promovido a admin`);
+    void logAudit({
+      action: isAdmin ? "role.remove_admin" : "role.grant_admin",
+      entity_type: "user_role",
+      entity_id: u.id,
+      summary: isAdmin
+        ? `Removeu admin de ${u.full_name || u.id}`
+        : `Promoveu ${u.full_name || u.id} a admin`,
+      metadata: { target_user_id: u.id, target_name: u.full_name },
+    });
     await load();
   };
 
