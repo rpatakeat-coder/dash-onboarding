@@ -180,11 +180,11 @@ export const SlaKpiRow = ({
           showDelta
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
-          previousRange={deltas?.previousRange}
+          previousRange={deltas?.previousDaysRange}
           onExplain={onExplain && (() => onExplain({
             kpiName: "Estoque total",
             valorAtual: total,
-            valorAnterior: deltas?.total?.previous,
+            valorAnterior: deltas?.total?.previousDays,
             contexto: ctx,
           }))}
         />
@@ -215,11 +215,11 @@ export const SlaKpiRow = ({
           showDelta
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
-          previousRange={deltas?.previousRange}
+          previousRange={deltas?.previousDaysRange}
           onExplain={onExplain && (() => onExplain({
             kpiName: "SLA médio (dias na etapa)",
             valorAtual: `${Math.round(slaMedio)} dias`,
-            valorAnterior: deltas?.slaMedio?.previous != null ? `${deltas.slaMedio.previous} dias` : undefined,
+            valorAnterior: deltas?.slaMedio?.previousDays != null ? `${deltas.slaMedio.previousDays} dias` : undefined,
             contexto: ctx,
           }))}
         />
@@ -237,11 +237,11 @@ export const SlaKpiRow = ({
           showDelta
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
-          previousRange={deltas?.previousRange}
+          previousRange={deltas?.previousDaysRange}
           onExplain={onExplain && (() => onExplain({
             kpiName: "% no prazo (≤30 dias na etapa)",
             valorAtual: fmtPct(noPrazo),
-            valorAnterior: deltas?.noPrazo?.previous != null ? fmtPct(deltas.noPrazo.previous) : undefined,
+            valorAnterior: deltas?.noPrazo?.previousDays != null ? fmtPct(deltas.noPrazo.previousDays) : undefined,
             contexto: `${ctx} ${noPrazoCount} clientes no prazo.`,
           }))}
         />
@@ -259,11 +259,11 @@ export const SlaKpiRow = ({
           showDelta
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
-          previousRange={deltas?.previousRange}
+          previousRange={deltas?.previousDaysRange}
           onExplain={onExplain && (() => onExplain({
             kpiName: "% SLA estourado (>30 dias)",
             valorAtual: fmtPct(estourado),
-            valorAnterior: deltas?.estourado?.previous != null ? fmtPct(deltas.estourado.previous) : undefined,
+            valorAnterior: deltas?.estourado?.previousDays != null ? fmtPct(deltas.estourado.previousDays) : undefined,
             contexto: `${ctx} ${estouradoCount} clientes estourados.`,
           }))}
         />
