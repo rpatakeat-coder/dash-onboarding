@@ -336,6 +336,15 @@ const AdminOperators = () => {
                     <td className="px-4 py-3 text-foreground">
                       {op.agente_ativacao || <span className="italic text-muted-foreground">—</span>}
                     </td>
+                    <td className="px-4 py-3">
+                      {op.last_sign_in_at ? (
+                        <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-500">Ativo</span>
+                      ) : op.email_confirmed_at ? (
+                        <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-500">Confirmado</span>
+                      ) : (
+                        <span className="rounded-full border border-muted-foreground/30 bg-muted px-2 py-0.5 text-xs text-muted-foreground">Pendente</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 font-numeric text-xs text-muted-foreground">
                       {new Date(op.created_at).toLocaleDateString("pt-BR")}
                     </td>
