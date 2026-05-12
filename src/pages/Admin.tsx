@@ -204,6 +204,39 @@ const AdminOperators = () => {
     await load();
   };
 
+  const resend = async (op: OperatorRow, channels: ("email" | "whatsapp" | "link_only")[]) => {
+    setResendId(op.user_id);
+    const { data, error } = await supabase.functions.invoke("admin-resend-invite", {
+      body: { user_id: op.user_id, channels },
+    });
+    setResendId(null);
+    if (error || (data as { error?: string })?.error) {
+      const msg = (data as { error?: string })?.error || error?.message;
+      return toast.error("Erro ao reenviar", { description: typeof msg === "string" ? msg : "falha desconhecida" });
+    }
+    const link =
+      (data as { short_link?: string })?.short_link ||
+      (data as { action_link?: string })?.action_link ||
+      null;
+    if (link) {
+      try { await navigator.clipboard.writeText(link); } catch { /* ignore */ }
+      setInviteLink({ email: op.email || op.user_id, link });
+    }
+    const labels: Record<string, string> = {
+      email: "Email enviado",
+      whatsapp: "WhatsApp acionado",
+      link_only: "Link copiado",
+    };
+    toast.success(channels.map((c) => labels[c]).join(" + "));
+    void logAudit({
+      action: "operator.invite_resend",
+      entity_type: "user_role",
+      entity_id: op.user_id,
+      summary: `Reenviou convite para ${op.email || op.user_id} via ${channels.join(", ")}`,
+      metadata: { email: op.email, channels },
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border bg-card p-4">
