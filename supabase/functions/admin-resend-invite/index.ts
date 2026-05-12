@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
       // 5 tentativas com sufixo aleatório curto para evitar colisão
       for (let i = 0; i < 5 && !short_link; i++) {
         const suffix = Math.random().toString(36).slice(2, 7);
-        short_link = await tryShorten(`acesso-dash-${suffix}`);
+        short_link = await tryShorten(`invite-acesso-${suffix}`);
       }
       // Fallback: alias automático
       if (!short_link) short_link = await tryShorten();
