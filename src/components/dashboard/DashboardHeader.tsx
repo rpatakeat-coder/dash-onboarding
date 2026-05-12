@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { LogIn, LogOut, Menu, Search, Settings, User } from "lucide-react";
 import logo from "@/assets/logo-takeat.png";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,8 +19,13 @@ export const DashboardHeader = () => {
     year: "numeric",
   });
   const { session, fullName, signOut } = useAuth();
+  const navigate = useNavigate();
   const [navOpen, setNavOpen] = useState(false);
   const prefsDialog = usePreferencesDialog();
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth", { replace: true });
+  };
   const isMac = typeof navigator !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
   const openPalette = () => {
     window.dispatchEvent(
@@ -123,7 +128,7 @@ export const DashboardHeader = () => {
                   {fullName || session.user.email}
                 </span>
                 <button
-                  onClick={() => signOut()}
+                  onClick={handleSignOut}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-destructive"
                 >
                   <LogOut className="h-3 w-3" /> Sair
