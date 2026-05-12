@@ -754,7 +754,7 @@ const Index = () => {
         </section>
 
         {/* Ranking de ativadores vs metas */}
-        {opData.operadores.length > 0 && (
+        {isAdmin && opData.operadores.length > 0 && (
           <section className="mb-8">
             <div className="mb-3 flex items-center gap-2">
               <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
