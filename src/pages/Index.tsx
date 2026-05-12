@@ -469,11 +469,6 @@ const Index = () => {
             onChangeWindow={setDeltaWindow}
             onExplain={openExplain}
           />
-            deltas={deltas}
-            deltasLoading={deltasLoading}
-            windowDays={deltaWindow}
-            onChangeWindow={setDeltaWindow}
-          />
           <PeriodCompare
             title="Comparar SLA entre períodos"
             caption="Escolha dois recortes do estoque atual para ver a diferença em cada KPI."
