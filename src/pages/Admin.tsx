@@ -301,27 +301,31 @@ const AdminOperators = () => {
               <p className="font-small text-xs text-muted-foreground">
                 Link de convite para <span className="font-medium text-foreground">{inviteLink.email}</span>
               </p>
-              <div className="flex gap-1.5">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(inviteLink.link);
-                      toast.success("Link copiado");
-                    } catch {
-                      toast.error("Não foi possível copiar");
-                    }
-                  }}
-                >
-                  Copiar
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setInviteLink(null)}>Fechar</Button>
-              </div>
+              <Button size="sm" variant="ghost" onClick={() => setInviteLink(null)}>
+                Fechar
+              </Button>
             </div>
-            <code className="mt-2 block max-w-full overflow-x-auto whitespace-nowrap rounded bg-background px-2 py-1.5 text-[11px] text-foreground">
-              {inviteLink.link}
-            </code>
+            <div className="mt-2 flex items-stretch gap-2">
+              <code className="flex-1 break-all rounded bg-background px-2 py-1.5 text-[11px] text-foreground">
+                {inviteLink.link}
+              </code>
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(inviteLink.link);
+                    toast.success("Link copiado");
+                  } catch {
+                    toast.error("Não foi possível copiar");
+                  }
+                }}
+              >
+                <Copy className="mr-1.5 h-3.5 w-3.5" />
+                Copiar
+              </Button>
+            </div>
           </div>
         )}
       </div>
