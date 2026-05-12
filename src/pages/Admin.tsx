@@ -117,6 +117,7 @@ const AdminOperators = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [delId, setDelId] = useState<string | null>(null);
+  const [inviteLink, setInviteLink] = useState<{ email: string; link: string } | null>(null);
   const [form, setForm] = useState({ email: "", full_name: "", role: "user" as "admin" | "user", agente_ativacao: "" });
 
   const load = async () => {
