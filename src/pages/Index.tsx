@@ -244,8 +244,8 @@ const Index = () => {
     return rows.filter((r) => (r.agente_ativacao?.trim().toLowerCase() ?? "") === me);
   }, [rows, isAdmin, isAtivador, myAgente]);
 
-  const atencaoData = useMemo(() => computeFiltered(filterByPeriod(rows, atencaoPeriod)), [rows, atencaoPeriod]);
-  const criticoData = useMemo(() => computeFiltered(filterByPeriod(rows, criticoPeriod)), [rows, criticoPeriod]);
+  const atencaoData = useMemo(() => computeFiltered(filterByPeriod(personalRows, atencaoPeriod)), [personalRows, atencaoPeriod]);
+  const criticoData = useMemo(() => computeFiltered(filterByPeriod(personalRows, criticoPeriod)), [personalRows, criticoPeriod]);
   const opData = useMemo(() => computeFiltered(filterByPeriod(rows, opPeriod)), [rows, opPeriod]);
   const kpiData = useMemo(
     () => computeSlaKpis(filterByPeriod(rows, kpiPeriod)),
@@ -724,8 +724,8 @@ const Index = () => {
         {data && opData.operadores.length > 0 && (
           <section className="mb-8">
             <Highlights
-              rows={rows}
-              operadores={opData.operadores}
+              rows={personalRows}
+              operadores={isAdmin ? opData.operadores : opData.operadores.filter((o) => o.nome.toLowerCase() === myAgente.toLowerCase())}
               hideOperatorIdentity={!isAdmin}
             />
           </section>
@@ -801,7 +801,7 @@ const Index = () => {
         {/* Tendência + Top risco */}
         <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <TrendChart />
-          <RiskRanking rows={rows} limit={10} />
+          <RiskRanking rows={personalRows} limit={10} />
         </section>
 
         {/* Heatmap de gargalos + SLA por perfil */}
