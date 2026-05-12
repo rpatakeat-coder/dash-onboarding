@@ -21,12 +21,6 @@ interface AdminUser {
   agente_ativacao?: string | null;
 }
 
-interface Vendedor {
-  id: string;
-  nome: string;
-  avatar_url: string | null;
-  created_at: string;
-}
 
 const Admin = () => {
   const { session, loading: authLoading } = useAuth();
