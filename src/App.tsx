@@ -17,6 +17,7 @@ import { NotificationsProvider } from "./contexts/NotificationsContext";
 import { CommandPalette } from "./components/CommandPalette";
 import { PreferencesDialog } from "./components/PreferencesDialog";
 import { PreferencesDialogContext } from "./contexts/PreferencesDialogContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -29,7 +30,7 @@ const Shell = () => {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/minha-carteira" element={<MinhaCarteira />} />
         <Route path="/tv" element={<Tv />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <CommandPalette onOpenPreferences={() => setPrefsOpen(true)} />
