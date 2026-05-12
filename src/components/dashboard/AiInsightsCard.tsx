@@ -156,6 +156,16 @@ export const AiInsightsCard = ({
             </span>
           )}
           <Button
+            size="icon"
+            variant="outline"
+            onClick={() => setSettingsOpen(true)}
+            className="h-8 w-8"
+            title="Configurar templates de prompt"
+            aria-label="Configurar templates de prompt"
+          >
+            <Settings2 className="h-3.5 w-3.5" />
+          </Button>
+          <Button
             size="sm"
             variant={data ? "outline" : "default"}
             onClick={() => onGenerate(Boolean(data))}
