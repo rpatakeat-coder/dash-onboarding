@@ -418,6 +418,8 @@ const Index = () => {
           </div>
         )}
 
+        <SlaLegend className="mb-6" />
+
         {/* SLA / Estoque */}
         <div className="mb-6 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3 pdf-hide">
