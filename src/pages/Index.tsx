@@ -435,6 +435,48 @@ const Index = () => {
           </div>
         )}
 
+        {data && (
+          <AiInsightsCard
+            periodo={`KPIs: ${periodLabel(kpiPeriod)} · janela ${deltaWindow}d vs ${deltaWindow}d`}
+            kpis={{
+              estoque_total: kpiData.total,
+              sla_p75_dias: Math.round(kpiData.slaP75),
+              sla_medio_dias: Math.round(kpiData.slaMedio),
+              pct_no_prazo: Number(kpiData.noPrazo.toFixed(1)),
+              pct_sla_estourado: Number(kpiData.estourado.toFixed(1)),
+              clientes_no_prazo: kpiData.noPrazoCount,
+              clientes_estourados: kpiData.estouradoCount,
+            }}
+            snapshotAnterior={
+              deltas
+                ? {
+                    estoque_total: deltas.total?.previousDays ?? 0,
+                    sla_medio_dias: deltas.slaMedio?.previousDays ?? 0,
+                    pct_no_prazo: deltas.noPrazo?.previousDays ?? 0,
+                    pct_sla_estourado: deltas.estourado?.previousDays ?? 0,
+                  }
+                : undefined
+            }
+            operadores={opData.operadores.slice(0, 20).map((o) => ({
+              nome: o.ativador,
+              ativos: o.ativos,
+              criticos: o.criticos,
+              slaMedio: Number((o.slaMedio ?? 0).toFixed(1)),
+              mrr: o.mrrAtivado,
+            }))}
+            scopeKey={JSON.stringify({
+              kpiPeriod,
+              deltaWindow,
+              ativador: [...ativadorSel].sort(),
+              etapa: [...etapaSel].sort(),
+              band: [...bandSel].sort(),
+              perfil: [...perfilSel].sort(),
+              onlyMine,
+              total: kpiData.total,
+            })}
+          />
+        )}
+
         <SlaLegend className="mb-6" />
 
         {/* SLA / Estoque */}
