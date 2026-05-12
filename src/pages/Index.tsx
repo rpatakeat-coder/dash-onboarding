@@ -503,13 +503,15 @@ const Index = () => {
               <UserCheck className="h-3 w-3" /> Só meus deals
             </button>
           )}
-          <MultiSelectFilter
-            label="Ativador"
-            options={ativadoresOpts}
-            counts={ativadoresCounts}
-            selected={ativadorSel}
-            onChange={setAtivadorSel}
-          />
+          {isAdmin && (
+            <MultiSelectFilter
+              label="Ativador"
+              options={ativadoresOpts}
+              counts={ativadoresCounts}
+              selected={ativadorSel}
+              onChange={setAtivadorSel}
+            />
+          )}
           <MultiSelectFilter
             label="Etapa"
             options={etapasOpts}
