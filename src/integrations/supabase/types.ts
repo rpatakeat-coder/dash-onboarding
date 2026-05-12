@@ -500,12 +500,30 @@ export type Database = {
     }
     Functions: {
       claim_first_admin: { Args: never; Returns: boolean }
+      distinct_agentes_ativacao: {
+        Args: never
+        Returns: {
+          agente: string
+        }[]
+      }
       has_operations_role: {
         Args: {
           _role: Database["public"]["Enums"]["operations_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      list_operators: {
+        Args: never
+        Returns: {
+          agente_ativacao: string
+          avatar_url: string
+          created_at: string
+          email: string
+          full_name: string
+          role: Database["public"]["Enums"]["operations_role"]
+          user_id: string
+        }[]
       }
       match_documents: {
         Args: { filter?: Json; match_count?: number; query_embedding: string }
