@@ -85,6 +85,12 @@ const Index = () => {
   const [estoqueOpen, setEstoqueOpen] = useState(false);
   const [operatorOpen, setOperatorOpen] = useState(false);
   const [selectedOperator, setSelectedOperator] = useState<OperatorStat | null>(null);
+  const [explainTarget, setExplainTarget] = useState<ExplainKpiTarget | null>(null);
+  const [explainOpen, setExplainOpen] = useState(false);
+  const openExplain = (t: ExplainKpiTarget) => {
+    setExplainTarget(t);
+    setExplainOpen(true);
+  };
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("tab") === "gestao" && isAdmin ? "gestao" : "exec";
   const setTab = (v: string) => {
