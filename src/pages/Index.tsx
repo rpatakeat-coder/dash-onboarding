@@ -23,6 +23,7 @@ import { RankingTable } from "@/components/dashboard/RankingTable";
 import { PerfilSlaPanel } from "@/components/dashboard/PerfilSlaPanel";
 import { RiskRanking } from "@/components/dashboard/RiskRanking";
 import { TrendChart } from "@/components/dashboard/TrendChart";
+import { SlaLegend } from "@/components/dashboard/SlaLegend";
 import { ExportCsvButton } from "@/components/dashboard/ExportCsvButton";
 import { ExportPdfButton } from "@/components/dashboard/ExportPdfButton";
 import { useUrlSets } from "@/hooks/useUrlSets";
