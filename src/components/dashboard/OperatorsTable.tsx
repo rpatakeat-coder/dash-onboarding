@@ -1,14 +1,20 @@
-import { Trophy } from "lucide-react";
+import { useState } from "react";
+import { Sparkles, Trophy } from "lucide-react";
 import { OperatorStat, fmtBRL } from "@/hooks/useDashOperacoes";
 import { SlaBandBar } from "./SlaBandBar";
 import { cn } from "@/lib/utils";
+import { OperatorInsightDialog } from "./OperatorInsightDialog";
 
 interface Props {
   operadores: OperatorStat[];
   onOperatorClick?: (op: OperatorStat) => void;
+  /** Aggregated KPIs sent as context to the AI per-operator analysis. */
+  contextoOperacao?: Record<string, string | number>;
+  scopeKey?: string;
 }
 
-export const OperatorsTable = ({ operadores, onOperatorClick }: Props) => {
+export const OperatorsTable = ({ operadores, onOperatorClick, contextoOperacao, scopeKey }: Props) => {
+  const [aiTarget, setAiTarget] = useState<OperatorStat | null>(null);
   return (
     <div className="rounded-2xl border border-border bg-card p-4 shadow-sm-soft sm:p-6">
       <div className="mb-5 flex items-center justify-between">
