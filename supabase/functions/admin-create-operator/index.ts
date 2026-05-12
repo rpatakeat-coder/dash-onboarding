@@ -54,16 +54,18 @@ Deno.serve(async (req) => {
 
     const newUserId = invited.user.id;
 
+    const agente = agente_ativacao ?? null;
+
     // Ensure profile exists
     await admin.from("profiles").upsert(
-      { id: newUserId, full_name: full_name ?? "", agente_ativacao },
+      { id: newUserId, full_name: full_name ?? "", agente_ativacao: agente },
       { onConflict: "id" },
     );
 
     const { error: roleInsertErr } = await admin
       .from("user_roles_operations")
       .upsert(
-        { user_id: newUserId, role, agente_ativacao },
+        { user_id: newUserId, role, agente_ativacao: agente },
         { onConflict: "user_id" },
       );
     if (roleInsertErr) return json({ error: roleInsertErr.message }, 500);
