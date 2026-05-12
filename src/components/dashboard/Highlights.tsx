@@ -5,6 +5,8 @@ import { InfoTooltip } from "./InfoTooltip";
 interface Props {
   rows: DashRow[];
   operadores: OperatorStat[];
+  /** When true, anonymize per-operator identity (used for non-admin "ativador" role). */
+  hideOperatorIdentity?: boolean;
 }
 
 const slaOf = (r: DashRow) => {
