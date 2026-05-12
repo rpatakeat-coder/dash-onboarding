@@ -820,16 +820,18 @@ const Index = () => {
           <StalledTable
             travados={travadosLista}
             onRowClick={(id) => {
-              const row = allRows.find((r) => r.id_deal === id);
+              const row = personalRows.find((r) => r.id_deal === id);
               if (row) openDeal(row);
             }}
           />
         </section>
           </TabsContent>
 
-          <TabsContent value="gestao" className="space-y-0">
-            <ManagerialView rows={rows} totalRows={allRows.length} />
-          </TabsContent>
+          {isAdmin && (
+            <TabsContent value="gestao" className="space-y-0">
+              <ManagerialView rows={rows} totalRows={allRows.length} />
+            </TabsContent>
+          )}
         </Tabs>
 
 
