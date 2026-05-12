@@ -229,6 +229,13 @@ const Index = () => {
     [allRows, ativadorSel, etapaSel, bandSelKeys, perfilSel, onlyMine, fullName],
   );
 
+  // Personal/deal-level scope: ativadores only see own deals in detail tables.
+  const personalRows = useMemo<DashRow[]>(() => {
+    if (isAdmin || !isAtivador) return rows;
+    const me = myAgente.toLowerCase();
+    return rows.filter((r) => (r.agente_ativacao?.trim().toLowerCase() ?? "") === me);
+  }, [rows, isAdmin, isAtivador, myAgente]);
+
   const atencaoData = useMemo(() => computeFiltered(filterByPeriod(rows, atencaoPeriod)), [rows, atencaoPeriod]);
   const criticoData = useMemo(() => computeFiltered(filterByPeriod(rows, criticoPeriod)), [rows, criticoPeriod]);
   const opData = useMemo(() => computeFiltered(filterByPeriod(rows, opPeriod)), [rows, opPeriod]);
