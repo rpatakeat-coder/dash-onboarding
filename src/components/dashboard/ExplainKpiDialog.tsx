@@ -103,14 +103,30 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
         )}
 
         {target && (
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!data?.content || isLoading}
+              onClick={handleCopy}
+            >
+              {copied ? (
+                <><Check className="mr-1.5 h-3.5 w-3.5" /> Copiado</>
+              ) : (
+                <><Copy className="mr-1.5 h-3.5 w-3.5" /> Copiar texto</>
+              )}
+            </Button>
             <Button
               size="sm"
               variant="outline"
               disabled={isLoading}
               onClick={() => generate(target, { force: true })}
             >
-              {isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Regenerar"}
+              {isLoading ? (
+                <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Regenerando…</>
+              ) : (
+                <><RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Regenerar análise</>
+              )}
             </Button>
           </div>
         )}
