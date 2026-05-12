@@ -467,6 +467,12 @@ const Index = () => {
             deltasLoading={deltasLoading}
             windowDays={deltaWindow}
             onChangeWindow={setDeltaWindow}
+            onExplain={openExplain}
+          />
+            deltas={deltas}
+            deltasLoading={deltasLoading}
+            windowDays={deltaWindow}
+            onChangeWindow={setDeltaWindow}
           />
           <PeriodCompare
             title="Comparar SLA entre períodos"
