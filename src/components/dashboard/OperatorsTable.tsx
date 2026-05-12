@@ -121,6 +121,13 @@ export const OperatorsTable = ({ operadores, onOperatorClick, contextoOperacao, 
           );
         })}
       </div>
+      <OperatorInsightDialog
+        open={!!aiTarget}
+        onOpenChange={(o) => !o && setAiTarget(null)}
+        operator={aiTarget}
+        contextoOperacao={contextoOperacao}
+        scopeKey={scopeKey}
+      />
     </div>
   );
 };
