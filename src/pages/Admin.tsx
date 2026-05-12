@@ -247,6 +247,50 @@ const AdminUsers = () => {
                       </div>
                     )}
                   </td>
+                  <td className="px-4 py-3">
+                    {editAgenteId === u.id ? (
+                      <div className="flex items-center gap-1.5">
+                        <Input
+                          value={editAgenteValue}
+                          onChange={(e) => setEditAgenteValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveAgente(u);
+                            if (e.key === "Escape") setEditAgenteId(null);
+                          }}
+                          placeholder="Ex.: João Silva"
+                          autoFocus
+                          className="h-8 max-w-[180px] text-xs"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => saveAgente(u)}
+                          disabled={savingAgente}
+                          className="h-8 px-2"
+                        >
+                          {savingAgente ? <Loader2 className="h-3 w-3 animate-spin" /> : "OK"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditAgenteId(null)}
+                          className="h-8 px-2"
+                        >
+                          ✕
+                        </Button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditAgenteId(u.id);
+                          setEditAgenteValue(u.agente_ativacao ?? "");
+                        }}
+                        className="rounded border border-dashed border-border px-2 py-1 text-xs text-muted-foreground hover:border-primary hover:text-primary"
+                      >
+                        {u.agente_ativacao || <span className="italic">não vinculado</span>}
+                      </button>
+                    )}
+                  </td>
                   <td className="px-4 py-3 font-numeric text-xs text-muted-foreground">
                     {new Date(u.created_at).toLocaleDateString("pt-BR")}
                   </td>
