@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Loader2, Sparkles, AlertCircle, Copy, Check, RefreshCw, History } from "lucide-react";
+import { Loader2, Sparkles, AlertCircle, Copy, Check, RefreshCw, History, GitCompare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useAiInsights } from "@/hooks/useAiInsights";
 import { toast } from "@/hooks/use-toast";
+import { AiExportMenu } from "./AiExportMenu";
+import { AiVersionsCompareDialog } from "./AiVersionsCompareDialog";
 
 export interface ExplainKpiTarget {
   kpiName: string;
