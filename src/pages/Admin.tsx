@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Shield, ShieldCheck, ShieldOff, UserCog, Users, Settings as SettingsIcon, Plus, Trash2, Loader2, History, RefreshCw, UserPlus, Mail } from "lucide-react";
+import { Shield, ShieldCheck, ShieldOff, Users, Settings as SettingsIcon, Trash2, Loader2, History, RefreshCw, UserPlus, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,12 +21,6 @@ interface AdminUser {
   agente_ativacao?: string | null;
 }
 
-interface Vendedor {
-  id: string;
-  nome: string;
-  avatar_url: string | null;
-  created_at: string;
-}
 
 const Admin = () => {
   const { session, loading: authLoading } = useAuth();
@@ -58,13 +52,11 @@ const Admin = () => {
           <TabsList>
             <TabsTrigger value="operators" className="gap-1.5"><UserPlus className="h-3.5 w-3.5" />Operadores</TabsTrigger>
             <TabsTrigger value="users" className="gap-1.5"><Users className="h-3.5 w-3.5" />Usuários</TabsTrigger>
-            <TabsTrigger value="vendedores" className="gap-1.5"><UserCog className="h-3.5 w-3.5" />Vendedores</TabsTrigger>
             <TabsTrigger value="config" className="gap-1.5"><SettingsIcon className="h-3.5 w-3.5" />Configurações</TabsTrigger>
             <TabsTrigger value="auditoria" className="gap-1.5"><History className="h-3.5 w-3.5" />Auditoria</TabsTrigger>
           </TabsList>
           <TabsContent value="operators" className="mt-4"><AdminOperators /></TabsContent>
           <TabsContent value="users" className="mt-4"><AdminUsers /></TabsContent>
-          <TabsContent value="vendedores" className="mt-4"><AdminOperadores /></TabsContent>
           <TabsContent value="config" className="mt-4"><AdminConfig /></TabsContent>
           <TabsContent value="auditoria" className="mt-4"><AdminAuditoria /></TabsContent>
         </Tabs>
@@ -332,6 +324,7 @@ const AdminUsers = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [delId, setDelId] = useState<string | null>(null);
   const [editAgenteId, setEditAgenteId] = useState<string | null>(null);
   const [editAgenteValue, setEditAgenteValue] = useState("");
   const [savingAgente, setSavingAgente] = useState(false);
@@ -416,6 +409,29 @@ const AdminUsers = () => {
       summary: isAdmin
         ? `Removeu admin de ${u.full_name || u.id}`
         : `Promoveu ${u.full_name || u.id} a admin`,
+      metadata: { target_user_id: u.id, target_name: u.full_name },
+    });
+    await load();
+  };
+
+  const removeUser = async (u: AdminUser) => {
+    if (u.id === user?.id) return toast.error("Você não pode excluir a si mesmo");
+    if (!confirm(`Apagar definitivamente ${u.full_name || u.id}? Essa ação remove o login, perfil e papel.`)) return;
+    setDelId(u.id);
+    const { data, error } = await supabase.functions.invoke("admin-delete-operator", {
+      body: { user_id: u.id },
+    });
+    setDelId(null);
+    if (error || (data as { error?: string })?.error) {
+      const msg = (data as { error?: string })?.error || error?.message;
+      return toast.error("Erro ao excluir", { description: typeof msg === "string" ? msg : "falha desconhecida" });
+    }
+    toast.success("Usuário excluído");
+    void logAudit({
+      action: "user.delete",
+      entity_type: "user_role",
+      entity_id: u.id,
+      summary: `Excluiu usuário ${u.full_name || u.id}`,
       metadata: { target_user_id: u.id, target_name: u.full_name },
     });
     await load();
@@ -520,17 +536,30 @@ const AdminUsers = () => {
                     {new Date(u.created_at).toLocaleDateString("pt-BR")}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Button
-                      size="sm"
-                      variant={isAdmin ? "outline" : "default"}
-                      disabled={busyId === u.id || isMe}
-                      onClick={() => toggleAdmin(u)}
-                      className="gap-1.5"
-                      title={isMe ? "Você não pode remover seu próprio admin" : undefined}
-                    >
-                      {busyId === u.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isAdmin ? <ShieldOff className="h-3.5 w-3.5" /> : <ShieldCheck className="h-3.5 w-3.5" />}
-                      {isAdmin ? "Remover admin" : "Promover a admin"}
-                    </Button>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Button
+                        size="sm"
+                        variant={isAdmin ? "outline" : "default"}
+                        disabled={busyId === u.id || isMe}
+                        onClick={() => toggleAdmin(u)}
+                        className="gap-1.5"
+                        title={isMe ? "Você não pode remover seu próprio admin" : undefined}
+                      >
+                        {busyId === u.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isAdmin ? <ShieldOff className="h-3.5 w-3.5" /> : <ShieldCheck className="h-3.5 w-3.5" />}
+                        {isAdmin ? "Remover admin" : "Promover a admin"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={delId === u.id || isMe}
+                        onClick={() => removeUser(u)}
+                        className="gap-1.5 text-destructive hover:text-destructive"
+                        title={isMe ? "Você não pode excluir a si mesmo" : "Apagar usuário (auth + perfil + papel)"}
+                      >
+                        {delId === u.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                        Excluir
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -540,195 +569,6 @@ const AdminUsers = () => {
             )}
           </tbody>
         </table>
-      </div>
-    </div>
-  );
-};
-
-// ============ OPERADORES ============
-const AdminOperadores = () => {
-  const [list, setList] = useState<Vendedor[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [novo, setNovo] = useState("");
-  const [adding, setAdding] = useState(false);
-  const [editId, setEditId] = useState<string | null>(null);
-  const [editNome, setEditNome] = useState("");
-
-  const load = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("vendedores")
-      .select("id, nome, avatar_url, created_at")
-      .order("nome", { ascending: true });
-    setLoading(false);
-    if (error) return toast.error("Erro ao carregar operadores", { description: error.message });
-    setList((data as Vendedor[]) ?? []);
-  };
-
-  useEffect(() => { load(); }, []);
-
-  const addVendedor = async () => {
-    const nome = novo.trim();
-    if (!nome) return;
-    setAdding(true);
-    const { data: inserted, error } = await supabase
-      .from("vendedores")
-      .insert({ nome })
-      .select("id")
-      .maybeSingle();
-    setAdding(false);
-    if (error) return toast.error("Erro ao adicionar", { description: error.message });
-    toast.success(`Operador "${nome}" adicionado`);
-    void logAudit({
-      action: "operador.create",
-      entity_type: "operador",
-      entity_id: inserted?.id,
-      summary: `Adicionou operador "${nome}"`,
-      metadata: { nome },
-    });
-    setNovo("");
-    await load();
-  };
-
-  const saveEdit = async (id: string) => {
-    const nome = editNome.trim();
-    if (!nome) return;
-    const before = list.find((v) => v.id === id);
-    const { error } = await supabase.from("vendedores").update({ nome }).eq("id", id);
-    if (error) return toast.error("Erro ao salvar", { description: error.message });
-    toast.success("Operador atualizado");
-    void logAudit({
-      action: "operador.rename",
-      entity_type: "operador",
-      entity_id: id,
-      summary: `Renomeou "${before?.nome ?? "?"}" → "${nome}"`,
-      metadata: { from: before?.nome, to: nome },
-    });
-    setEditId(null);
-    await load();
-  };
-
-  const uploadAvatar = async (id: string, file: File) => {
-    const ext = file.name.split(".").pop();
-    const path = `vendedores/${id}.${ext}`;
-    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-    if (upErr) return toast.error("Erro no upload", { description: upErr.message });
-    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-    const url = `${data.publicUrl}?v=${Date.now()}`;
-    const before = list.find((v) => v.id === id);
-    const { error } = await supabase.from("vendedores").update({ avatar_url: url }).eq("id", id);
-    if (error) return toast.error("Erro ao salvar avatar", { description: error.message });
-    toast.success("Avatar atualizado");
-    void logAudit({
-      action: "operador.avatar_update",
-      entity_type: "operador",
-      entity_id: id,
-      summary: `Atualizou avatar de "${before?.nome ?? id}"`,
-      metadata: { file_name: file.name, file_size: file.size },
-    });
-    await load();
-  };
-
-  if (loading) return <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
-
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-3">
-        <Input
-          placeholder="Nome do novo operador"
-          value={novo}
-          onChange={(e) => setNovo(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addVendedor()}
-          className="max-w-sm"
-        />
-        <Button onClick={addVendedor} disabled={adding || !novo.trim()} className="gap-1.5">
-          {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Adicionar
-        </Button>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-border bg-muted/40 text-left">
-              <tr>
-                <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Avatar</th>
-                <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Nome</th>
-                <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Criado em</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map((v) => (
-                <tr key={v.id} className="border-b border-border/50 last:border-0">
-                  <td className="px-4 py-3">
-                    <label className="inline-flex cursor-pointer items-center" title="Trocar avatar">
-                      {v.avatar_url ? (
-                        <img src={v.avatar_url} alt={v.nome} className="h-9 w-9 rounded-full object-cover ring-2 ring-transparent transition hover:ring-primary/40" />
-                      ) : (
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground ring-2 ring-transparent transition hover:ring-primary/40">
-                          {v.nome.slice(0, 1).toUpperCase()}
-                        </div>
-                      )}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const f = e.target.files?.[0];
-                          if (f) uploadAvatar(v.id, f);
-                          e.target.value = "";
-                        }}
-                      />
-                    </label>
-                  </td>
-                  <td className="px-4 py-3">
-                    {editId === v.id ? (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={editNome}
-                          onChange={(e) => setEditNome(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") saveEdit(v.id);
-                            if (e.key === "Escape") setEditId(null);
-                          }}
-                          className="max-w-xs"
-                          autoFocus
-                        />
-                        <Button size="sm" onClick={() => saveEdit(v.id)}>Salvar</Button>
-                        <Button size="sm" variant="ghost" onClick={() => setEditId(null)}>Cancelar</Button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => { setEditId(v.id); setEditNome(v.nome); }}
-                        className="text-left font-medium text-foreground hover:text-primary"
-                      >
-                        {v.nome}
-                      </button>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 font-numeric text-xs text-muted-foreground">
-                    {new Date(v.created_at).toLocaleDateString("pt-BR")}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled
-                      title="A exclusão de operadores está desabilitada para preservar histórico."
-                      className="gap-1.5 text-muted-foreground"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" /> Excluir
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-              {list.length === 0 && (
-                <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">Nenhum operador cadastrado.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
       </div>
     </div>
   );
