@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Loader2, Sparkles, AlertCircle } from "lucide-react";
+import { Loader2, Sparkles, AlertCircle, Copy, Check, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useAiInsights } from "@/hooks/useAiInsights";
+import { toast } from "@/hooks/use-toast";
 
 export interface ExplainKpiTarget {
   kpiName: string;
@@ -23,6 +24,7 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
     ? `kpi:${target.kpiName}:${target.valorAtual}:${target.valorAnterior ?? ""}`
     : "kpi:none";
   const { data, isLoading, error, generate } = useAiInsights<ExplainKpiTarget>("kpi", cacheKey);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (open && target && !data && !isLoading) {
@@ -30,6 +32,22 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, cacheKey]);
+
+  useEffect(() => {
+    if (!open) setCopied(false);
+  }, [open]);
+
+  const handleCopy = async () => {
+    if (!data?.content) return;
+    try {
+      await navigator.clipboard.writeText(data.content);
+      setCopied(true);
+      toast({ title: "Texto copiado", description: "Explicação copiada para a área de transferência." });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast({ title: "Erro ao copiar", description: "Não foi possível copiar o texto.", variant: "destructive" });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -85,14 +103,30 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
         )}
 
         {target && (
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!data?.content || isLoading}
+              onClick={handleCopy}
+            >
+              {copied ? (
+                <><Check className="mr-1.5 h-3.5 w-3.5" /> Copiado</>
+              ) : (
+                <><Copy className="mr-1.5 h-3.5 w-3.5" /> Copiar texto</>
+              )}
+            </Button>
             <Button
               size="sm"
               variant="outline"
               disabled={isLoading}
               onClick={() => generate(target, { force: true })}
             >
-              {isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Regenerar"}
+              {isLoading ? (
+                <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Regenerando…</>
+              ) : (
+                <><RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Regenerar análise</>
+              )}
             </Button>
           </div>
         )}
