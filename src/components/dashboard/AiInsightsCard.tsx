@@ -35,7 +35,7 @@ interface AiInsightsCardProps {
   scopeKey?: string;
 }
 
-type InsightType = "executive" | "risks" | "opportunities" | "operators" | "trends";
+
 
 const INSIGHT_TYPES: Array<{
   id: InsightType;
