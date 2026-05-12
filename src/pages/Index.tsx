@@ -244,8 +244,8 @@ const Index = () => {
     return rows.filter((r) => (r.agente_ativacao?.trim().toLowerCase() ?? "") === me);
   }, [rows, isAdmin, isAtivador, myAgente]);
 
-  const atencaoData = useMemo(() => computeFiltered(filterByPeriod(rows, atencaoPeriod)), [rows, atencaoPeriod]);
-  const criticoData = useMemo(() => computeFiltered(filterByPeriod(rows, criticoPeriod)), [rows, criticoPeriod]);
+  const atencaoData = useMemo(() => computeFiltered(filterByPeriod(personalRows, atencaoPeriod)), [personalRows, atencaoPeriod]);
+  const criticoData = useMemo(() => computeFiltered(filterByPeriod(personalRows, criticoPeriod)), [personalRows, criticoPeriod]);
   const opData = useMemo(() => computeFiltered(filterByPeriod(rows, opPeriod)), [rows, opPeriod]);
   const kpiData = useMemo(
     () => computeSlaKpis(filterByPeriod(rows, kpiPeriod)),
