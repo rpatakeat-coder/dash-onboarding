@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,18 @@ const AuthPage = () => {
   const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
   const nav = useNavigate();
+  const location = useLocation();
 
-  if (!loading && session) return <Navigate to="/" replace />;
+  const requested =
+    (location.state as { from?: string } | null)?.from ||
+    new URLSearchParams(location.search).get("redirect") ||
+    "/";
+  const safeRedirect =
+    requested.startsWith("/") && !requested.startsWith("//") && requested !== "/auth"
+      ? requested
+      : "/";
+
+  if (!loading && session) return <Navigate to={safeRedirect} replace />;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -31,7 +41,7 @@ const AuthPage = () => {
     if (mode === "signup") {
       toast.success("Conta criada — verifique seu e-mail se necessário.");
     }
-    nav("/");
+    nav(safeRedirect, { replace: true });
   };
 
   return (
