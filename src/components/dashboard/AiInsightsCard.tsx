@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { AiPromptSettingsDialog } from "./AiPromptSettingsDialog";
+import type { InsightType } from "@/lib/aiPromptTemplates";
 
 interface AiInsightsCardProps {
   periodo?: string;
