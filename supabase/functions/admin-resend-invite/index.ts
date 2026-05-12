@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
     // Webhook (whatsapp)
     if (channels.includes("whatsapp")) {
       try {
-        await fetch("https://webhook.takeat.cloud/webhook/430412b2-607c-424c-bc7b-d6e785bbd0c1", {
+        await fetch("https://webhook.takeat.cloud/webhook/dash-onboarding", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
