@@ -40,6 +40,7 @@ const Card = ({
   currentRange,
   previousRange,
   tooltip,
+  onExplain,
 }: {
   label: string;
   value: string;
@@ -57,6 +58,7 @@ const Card = ({
   currentRange?: DateRange;
   previousRange?: DateRange;
   tooltip?: string;
+  onExplain?: () => void;
 }) => {
   const ring = {
     default: "border-border",
@@ -83,11 +85,25 @@ const Card = ({
       role={interactive ? "button" : undefined}
       tabIndex={interactive ? 0 : undefined}
       className={cn(
-        "rounded-2xl border bg-card p-5 shadow-sm-soft transition",
+        "group relative rounded-2xl border bg-card p-5 shadow-sm-soft transition",
         ring[tone ?? "default"],
         interactive && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
       )}
     >
+      {onExplain && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onExplain();
+          }}
+          className="pdf-hide absolute right-2.5 top-2.5 z-10 inline-flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-muted-foreground opacity-0 transition hover:border-primary/30 hover:bg-primary/10 hover:text-primary group-hover:opacity-100 focus:opacity-100"
+          title="Explicar este KPI com IA"
+          aria-label="Explicar este KPI com IA"
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+        </button>
+      )}
       <div className="flex items-center gap-1.5">
         <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
           {label}
