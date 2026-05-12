@@ -458,11 +458,11 @@ const Index = () => {
                 : undefined
             }
             operadores={opData.operadores.slice(0, 20).map((o) => ({
-              nome: o.ativador,
+              nome: o.nome,
               ativos: o.ativos,
-              criticos: o.criticos,
-              slaMedio: Number((o.slaMedio ?? 0).toFixed(1)),
-              mrr: o.mrrAtivado,
+              criticos: o.bands?.critico ?? 0,
+              slaMedio: Number((o.tempoMedio ?? 0).toFixed(1)),
+              mrr: o.mrr,
             }))}
             scopeKey={JSON.stringify({
               kpiPeriod,
