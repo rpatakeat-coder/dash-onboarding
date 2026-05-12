@@ -94,7 +94,7 @@ export const AiInsightsCard = ({
     [insightType, templateHash, appliedFocus, scopeKey],
   );
 
-  const { data, isLoading, error, generate, lastGeneratedAt } = useAiInsights<{
+  const { data, isLoading, error, generate, lastGeneratedAt, versions } = useAiInsights<{
     periodo?: string;
     kpis: Record<string, string | number>;
     operadores: AiInsightsCardProps["operadores"];
