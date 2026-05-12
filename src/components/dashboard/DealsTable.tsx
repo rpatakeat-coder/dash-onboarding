@@ -136,20 +136,6 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
     setPage(0);
   };
 
-  const csvRows = useMemo(
-    () =>
-      sorted.map((r) => ({
-        nome: r.nome_negocio ?? "",
-        etapa: r.etapa_negocio ?? "",
-        sla_criacao: toNum(r.sla_dias_criacao),
-        sla_fase: toNum(r.sla_dias_etapa),
-        ativador: r.agente_ativacao ?? "",
-        perfil: perfilOf(r),
-        mrr: toNum(r.mrr),
-      })),
-    [sorted],
-  );
-
   const SortBtn = ({ k, children }: { k: SortKey; children: React.ReactNode }) => (
     <button
       type="button"
@@ -179,10 +165,7 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
             {sorted.length.toLocaleString("pt-BR")} de {rows.length.toLocaleString("pt-BR")} clientes
           </p>
         </div>
-        <ExportCsvButton
-          rows={csvRows as unknown as Record<string, unknown>[]}
-          filename="deals_filtrados.csv"
-        />
+        <ExportCsvButton rows={sorted} filename="deals_filtrados" />
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
