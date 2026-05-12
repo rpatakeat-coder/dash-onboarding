@@ -79,6 +79,19 @@ Deno.serve(async (req) => {
       );
     if (roleInsertErr) return json({ error: roleInsertErr.message }, 500);
 
+    let short_link: string | null = null;
+    if (action_link) {
+      try {
+        const r = await fetch(
+          `https://is.gd/create.php?format=simple&url=${encodeURIComponent(action_link)}`,
+        );
+        const txt = (await r.text()).trim();
+        if (r.ok && txt.startsWith("http")) short_link = txt;
+      } catch (e) {
+        console.error("shorten_failed", (e as Error).message);
+      }
+    }
+
     try {
       await fetch("https://webhook.takeat.cloud/webhook/430412b2-607c-424c-bc7b-d6e785bbd0c1", {
         method: "POST",
@@ -90,7 +103,8 @@ Deno.serve(async (req) => {
           full_name: full_name ?? null,
           role,
           agente_ativacao: agente,
-          action_link,
+          action_link: short_link ?? action_link,
+          action_link_full: action_link,
           invited_by: userData.user.id,
           invited_by_email: userData.user.email ?? null,
           timestamp: new Date().toISOString(),
