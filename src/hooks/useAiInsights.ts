@@ -2,78 +2,92 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const TTL_MS = 10 * 60 * 1000;
+const HISTORY_LIMIT = 5;
 
 export type AiInsightMode = "dashboard" | "kpi";
 
-interface AiInsightsResponse {
+export interface AiInsightsResponse {
   content: string;
   model: string;
   mode: AiInsightMode;
   usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number } | null;
 }
 
-interface CacheEntry {
+export interface AiInsightVersion {
   data: AiInsightsResponse;
   at: number;
 }
 
+interface CacheEntry {
+  // newest first
+  versions: AiInsightVersion[];
+}
+
+const storageKey = (key: string) => `ai-insights:${key}`;
+
 function readCache(key: string): CacheEntry | null {
   try {
-    const raw = sessionStorage.getItem(`ai-insights:${key}`);
+    const raw = sessionStorage.getItem(storageKey(key));
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as CacheEntry;
-    if (Date.now() - parsed.at > TTL_MS) return null;
-    return parsed;
+    const parsed = JSON.parse(raw) as CacheEntry | { data: AiInsightsResponse; at: number };
+    // Backward-compat: legacy single-entry shape
+    if ("data" in parsed && "at" in parsed) {
+      const legacy = parsed as { data: AiInsightsResponse; at: number };
+      if (Date.now() - legacy.at > TTL_MS) return null;
+      return { versions: [{ data: legacy.data, at: legacy.at }] };
+    }
+    const ce = parsed as CacheEntry;
+    const fresh = (ce.versions ?? []).filter((v) => Date.now() - v.at <= TTL_MS);
+    return fresh.length ? { versions: fresh } : null;
   } catch {
     return null;
   }
 }
 
-function writeCache(key: string, data: AiInsightsResponse, at: number = Date.now()) {
+function writeCache(key: string, entry: CacheEntry) {
   try {
-    sessionStorage.setItem(
-      `ai-insights:${key}`,
-      JSON.stringify({ data, at } satisfies CacheEntry),
-    );
+    sessionStorage.setItem(storageKey(key), JSON.stringify(entry));
   } catch {
     /* ignore */
   }
 }
 
 export function useAiInsights<TPayload>(mode: AiInsightMode, cacheKey: string) {
-  const [data, setData] = useState<AiInsightsResponse | null>(null);
+  const [versions, setVersions] = useState<AiInsightVersion[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastGeneratedAt, setLastGeneratedAt] = useState<number | null>(null);
 
   // hydrate from cache when key changes
   useEffect(() => {
     const cached = readCache(cacheKey);
     if (cached) {
-      setData(cached.data);
-      setLastGeneratedAt(cached.at);
+      setVersions(cached.versions);
+      setActiveIndex(0);
       setError(null);
     } else {
-      setData(null);
-      setLastGeneratedAt(null);
+      setVersions([]);
+      setActiveIndex(0);
     }
   }, [cacheKey]);
+
+  const active = versions[activeIndex] ?? null;
+  const data = active?.data ?? null;
+  const lastGeneratedAt = active?.at ?? null;
+
+  const selectVersion = useCallback((index: number) => {
+    setActiveIndex(index);
+  }, []);
 
   const generate = useCallback(
     async (payload: TPayload, opts?: { force?: boolean }) => {
       if (!opts?.force) {
         const cached = readCache(cacheKey);
-        if (cached) {
-          setData(cached.data);
-          setLastGeneratedAt(cached.at);
-          return cached.data;
+        if (cached && cached.versions.length) {
+          setVersions(cached.versions);
+          setActiveIndex(0);
+          return cached.versions[0].data;
         }
-      } else {
-        // force: clear current data so the UI shows the loading state and
-        // refreshes immediately when the new response arrives.
-        setData(null);
-        setLastGeneratedAt(null);
-        try { sessionStorage.removeItem(`ai-insights:${cacheKey}`); } catch { /* ignore */ }
       }
       setIsLoading(true);
       setError(null);
@@ -89,11 +103,14 @@ export function useAiInsights<TPayload>(mode: AiInsightMode, cacheKey: string) {
         }
         const ok = res as AiInsightsResponse;
         const now = Date.now();
-        // Persist BEFORE updating state so any concurrent reader (e.g. modal
-        // reopen) immediately sees the freshest version.
-        writeCache(cacheKey, ok, now);
-        setData(ok);
-        setLastGeneratedAt(now);
+        const newVersion: AiInsightVersion = { data: ok, at: now };
+        // Read current cache to merge with any other regenerations done in
+        // parallel from other components sharing the same key.
+        const current = readCache(cacheKey)?.versions ?? [];
+        const next = [newVersion, ...current].slice(0, HISTORY_LIMIT);
+        writeCache(cacheKey, { versions: next });
+        setVersions(next);
+        setActiveIndex(0);
         return ok;
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Erro desconhecido.";
@@ -106,5 +123,14 @@ export function useAiInsights<TPayload>(mode: AiInsightMode, cacheKey: string) {
     [mode, cacheKey],
   );
 
-  return { data, isLoading, error, generate, lastGeneratedAt };
+  return {
+    data,
+    isLoading,
+    error,
+    generate,
+    lastGeneratedAt,
+    versions,
+    activeIndex,
+    selectVersion,
+  };
 }
