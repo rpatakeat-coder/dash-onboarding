@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Shorten via is.gd — tenta usar alias customizado "acesso-dash-XXXXX"
+    // Shorten via is.gd — tenta usar alias customizado "invite-acesso-XXXXX"
     // (precisa ser único globalmente no is.gd; faz fallback para alias gerado).
     let short_link: string | null = null;
     const tryShorten = async (alias?: string) => {
@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
       // 5 tentativas com sufixo aleatório curto para evitar colisão
       for (let i = 0; i < 5 && !short_link; i++) {
         const suffix = Math.random().toString(36).slice(2, 7);
-        short_link = await tryShorten(`acesso-dash-${suffix}`);
+        short_link = await tryShorten(`invite-acesso-${suffix}`);
       }
       // Fallback: alias automático
       if (!short_link) short_link = await tryShorten();
