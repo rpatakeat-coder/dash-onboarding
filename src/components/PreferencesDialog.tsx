@@ -70,11 +70,11 @@ export const PreferencesDialog = ({ open, onOpenChange }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90vh] max-w-md flex-col gap-0 p-0 sm:max-h-[85vh]">
+        <DialogHeader className="border-b border-border px-6 py-4">
           <DialogTitle className="font-display">Preferências</DialogTitle>
         </DialogHeader>
-        <div className="space-y-6 py-2">
+        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
           <section>
             <h4 className="mb-2 font-subtitle text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Foto de perfil
