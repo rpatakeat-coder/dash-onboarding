@@ -11,6 +11,7 @@ import {
   LineChart,
   FileText,
   Settings2,
+  GitCompare,
 } from "lucide-react";
 import { useAiInsights } from "@/hooks/useAiInsights";
 import { useAiPromptTemplates } from "@/hooks/useAiPromptTemplates";
@@ -18,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { AiPromptSettingsDialog } from "./AiPromptSettingsDialog";
+import { AiVersionsCompareDialog } from "./AiVersionsCompareDialog";
+import { AiExportMenu } from "./AiExportMenu";
 import type { InsightType } from "@/lib/aiPromptTemplates";
 
 interface AiInsightsCardProps {
