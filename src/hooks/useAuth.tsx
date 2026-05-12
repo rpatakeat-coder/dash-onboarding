@@ -42,7 +42,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(data.session);
       setLoading(false);
     });
-    return () => sub.subscription.unsubscribe();
+
+    // Revalida a sessão quando a aba volta ao foco ou é restaurada do bfcache
+    // (evita que "Voltar" no histórico mostre rota protegida com sessão expirada)
+    const revalidate = () => {
+      supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    };
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) revalidate();
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") revalidate();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      sub.subscription.unsubscribe();
+      window.removeEventListener("pageshow", onPageShow);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
 
