@@ -479,6 +479,7 @@ export type Database = {
     }
     Functions: {
       claim_first_admin: { Args: never; Returns: boolean }
+      current_user_agente: { Args: never; Returns: string }
       distinct_agentes_ativacao: {
         Args: never
         Returns: {
