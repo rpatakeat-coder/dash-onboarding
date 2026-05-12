@@ -154,12 +154,22 @@ const AdminOperators = () => {
       const msg = (data as { error?: string })?.error || error?.message;
       return toast.error("Erro ao convidar", { description: typeof msg === "string" ? msg : "falha desconhecida" });
     }
-    toast.success(`Convite enviado para ${form.email}`);
+    const link = (data as { action_link?: string })?.action_link ?? null;
+    toast.success(`Convite gerado para ${form.email}`);
+    if (link) {
+      try {
+        await navigator.clipboard.writeText(link);
+        toast.success("Link copiado para a área de transferência");
+      } catch {
+        /* ignore clipboard errors */
+      }
+      setInviteLink({ email: form.email.trim(), link });
+    }
     void logAudit({
       action: "operator.invite",
       entity_type: "user_role",
       entity_id: form.email,
-      summary: `Convidou ${form.email} (${form.role}) — agente ${form.agente_ativacao}`,
+      summary: `Convidou ${form.email} (${form.role}) — agente ${form.agente_ativacao || "—"}`,
       metadata: { email: form.email, role: form.role, agente_ativacao: form.agente_ativacao },
     });
     setForm({ email: "", full_name: "", role: "user", agente_ativacao: "" });
