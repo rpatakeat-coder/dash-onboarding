@@ -108,6 +108,9 @@ interface OperatorRow {
   role: "admin" | "user";
   agente_ativacao: string | null;
   created_at: string;
+  last_sign_in_at: string | null;
+  email_confirmed_at: string | null;
+  invited_at: string | null;
 }
 
 const AdminOperators = () => {
