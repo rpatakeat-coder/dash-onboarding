@@ -29,11 +29,11 @@ function readCache(key: string): CacheEntry | null {
   }
 }
 
-function writeCache(key: string, data: AiInsightsResponse) {
+function writeCache(key: string, data: AiInsightsResponse, at: number = Date.now()) {
   try {
     sessionStorage.setItem(
       `ai-insights:${key}`,
-      JSON.stringify({ data, at: Date.now() } satisfies CacheEntry),
+      JSON.stringify({ data, at } satisfies CacheEntry),
     );
   } catch {
     /* ignore */
