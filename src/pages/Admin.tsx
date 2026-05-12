@@ -135,8 +135,9 @@ const AdminOperators = () => {
   useEffect(() => { load(); }, []);
 
   const invite = async () => {
-    if (!form.email.trim() || !form.agente_ativacao.trim()) {
-      return toast.error("Informe email e agente HubSpot");
+    if (!form.email.trim()) return toast.error("Informe o email");
+    if (form.role !== "admin" && !form.agente_ativacao.trim()) {
+      return toast.error("Informe o agente HubSpot");
     }
     setBusy(true);
     const { data, error } = await supabase.functions.invoke("admin-create-operator", {
@@ -144,7 +145,7 @@ const AdminOperators = () => {
         email: form.email.trim(),
         full_name: form.full_name.trim() || undefined,
         role: form.role,
-        agente_ativacao: form.agente_ativacao,
+        agente_ativacao: form.role === "admin" ? undefined : form.agente_ativacao,
       },
     });
     setBusy(false);
