@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, Upload, Trash2 } from "lucide-react";
+import { Loader2, Upload, Trash2, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { usePreferences, type ThemeMode, type Density, type HomeRoute } from "@/contexts/PreferencesContext";
 
 interface Props {
@@ -18,6 +20,7 @@ interface Props {
 export const PreferencesDialog = ({ open, onOpenChange }: Props) => {
   const p = usePreferences();
   const { user, fullName } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -199,6 +202,19 @@ export const PreferencesDialog = ({ open, onOpenChange }: Props) => {
               ))}
             </div>
           </section>
+          {isAdmin && (
+            <section>
+              <h4 className="mb-2 font-subtitle text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Administração
+              </h4>
+              <Button asChild variant="outline" className="w-full justify-start gap-2" onClick={() => onOpenChange(false)}>
+                <Link to="/admin">
+                  <Shield className="h-4 w-4" />
+                  Acessar painel de admin
+                </Link>
+              </Button>
+            </section>
+          )}
         </div>
       </DialogContent>
     </Dialog>
