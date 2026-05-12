@@ -35,8 +35,10 @@ export const DashboardHeader = () => {
 
   return (
     <header className="border-b border-border bg-card/60 backdrop-blur-sm">
-      <div className="mx-auto max-w-[1400px] px-4 py-3 sm:px-6 sm:py-4 md:px-10">
-        <div className="flex items-center justify-between gap-4">
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 md:px-10">
+        {/* Tier 1: Brand · Search · Actions + User */}
+        <div className="flex items-center justify-between gap-4 border-b border-border/60 py-3 sm:py-4">
+          {/* Brand */}
           <div className="flex items-center gap-3">
             <Sheet open={navOpen} onOpenChange={setNavOpen}>
               <SheetTrigger asChild>
@@ -70,45 +72,38 @@ export const DashboardHeader = () => {
             <img src={logo} alt="Takeat" className="h-9 w-auto" />
             <div className="hidden h-8 w-px bg-border md:block" />
             <div className="hidden md:block">
-              <p className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">
+              <p className="font-subtitle text-[10px] uppercase tracking-widest text-muted-foreground leading-tight">
                 Painel de Operações
               </p>
-              <h1 className="flex items-center gap-2 font-display text-lg font-semibold text-secondary">
+              <h1 className="flex items-center gap-2 font-display text-base font-semibold text-secondary leading-tight">
                 Onboarding
-                <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 font-subtitle text-[10px] font-medium uppercase tracking-wider text-muted-foreground" title="Versão do app">
+                <span className="rounded border border-border bg-muted px-1.5 py-0.5 font-subtitle text-[10px] font-medium uppercase tracking-wider text-muted-foreground" title="Versão do app">
                   v{APP_VERSION}
                 </span>
               </h1>
             </div>
-            <MainNav className="ml-2 hidden md:flex" />
           </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden text-right md:block">
-              <p className="font-small text-xs uppercase tracking-wider text-muted-foreground">
-                {today}
-              </p>
-              <p className="flex items-center justify-end gap-2 font-subtitle text-sm font-medium text-foreground">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-pulse-soft rounded-full bg-success opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
-                </span>
-                Atualizado em tempo real
-              </p>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={openPalette}
-                title="Buscar (Ctrl/Cmd + K)"
-                aria-label="Abrir busca global"
-                className="hidden items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5 font-subtitle text-xs text-muted-foreground transition hover:text-foreground md:inline-flex"
-              >
-                <Search className="h-3.5 w-3.5" />
-                <span>Buscar</span>
-                <kbd className="ml-2 rounded border border-border bg-muted px-1.5 py-0.5 font-numeric text-[10px] text-muted-foreground">
-                  {isMac ? "⌘" : "Ctrl"}K
-                </kbd>
-              </button>
+
+          {/* Central search */}
+          <div className="hidden flex-1 max-w-md md:block">
+            <button
+              type="button"
+              onClick={openPalette}
+              title="Buscar (Ctrl/Cmd + K)"
+              aria-label="Abrir busca global"
+              className="group flex w-full items-center gap-2 rounded-lg border border-border bg-background/60 px-3 py-2 text-left font-subtitle text-sm text-muted-foreground transition hover:border-primary/30 hover:text-foreground"
+            >
+              <Search className="h-4 w-4" />
+              <span className="flex-1">Buscar…</span>
+              <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-numeric text-[10px] text-muted-foreground">
+                {isMac ? "⌘" : "Ctrl"}K
+              </kbd>
+            </button>
+          </div>
+
+          {/* Actions cluster + user */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-0.5 rounded-lg border border-border bg-card/60 p-0.5">
               <NotificationsBell />
               <ThemeToggle />
               <button
@@ -116,20 +111,20 @@ export const DashboardHeader = () => {
                 onClick={prefsDialog.open}
                 title="Preferências (Ctrl/Cmd + ,)"
                 aria-label="Abrir preferências"
-                className="inline-flex items-center justify-center rounded-lg border border-border bg-card p-2 text-muted-foreground transition hover:text-foreground"
+                className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
               >
                 <Settings className="h-4 w-4" />
               </button>
             </div>
             {session ? (
-              <div className="flex items-center gap-2">
-                <span className="hidden items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 font-subtitle text-xs text-muted-foreground sm:inline-flex">
-                  <User className="h-3 w-3" />
-                  {fullName || session.user.email}
+              <div className="flex items-center gap-2 border-l border-border pl-2">
+                <span className="hidden items-center gap-1.5 font-subtitle text-xs font-medium text-foreground sm:inline-flex">
+                  <User className="h-3 w-3 text-muted-foreground" />
+                  <span className="max-w-[140px] truncate">{fullName || session.user.email}</span>
                 </span>
                 <button
                   onClick={handleSignOut}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-destructive"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs text-muted-foreground transition hover:border-destructive/40 hover:text-destructive"
                 >
                   <LogOut className="h-3 w-3" /> Sair
                 </button>
@@ -144,7 +139,23 @@ export const DashboardHeader = () => {
             )}
           </div>
         </div>
-        
+
+        {/* Tier 2: Navigation · Status */}
+        <div className="hidden items-center justify-between gap-4 py-2 md:flex">
+          <MainNav />
+          <div className="text-right">
+            <p className="font-small text-[10px] uppercase tracking-wider text-muted-foreground leading-tight">
+              {today}
+            </p>
+            <p className="flex items-center justify-end gap-2 font-subtitle text-xs font-medium text-foreground leading-tight">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-pulse-soft rounded-full bg-success opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+              </span>
+              Atualizado em tempo real
+            </p>
+          </div>
+        </div>
       </div>
     </header>
   );
