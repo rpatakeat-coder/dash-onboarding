@@ -68,6 +68,12 @@ export function useAiInsights<TPayload>(mode: AiInsightMode, cacheKey: string) {
           setLastGeneratedAt(cached.at);
           return cached.data;
         }
+      } else {
+        // force: clear current data so the UI shows the loading state and
+        // refreshes immediately when the new response arrives.
+        setData(null);
+        setLastGeneratedAt(null);
+        try { sessionStorage.removeItem(`ai-insights:${cacheKey}`); } catch { /* ignore */ }
       }
       setIsLoading(true);
       setError(null);
