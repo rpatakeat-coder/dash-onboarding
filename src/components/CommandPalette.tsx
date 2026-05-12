@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   CommandDialog,
   CommandEmpty,
@@ -7,24 +6,14 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command";
+import { User } from "lucide-react";
 import {
-  Briefcase,
-  LayoutDashboard,
-  Tv as TvIcon,
-  Building2,
-  User,
-} from "lucide-react";
-import {
-  slaBand,
   SLA_BAND_META,
   useDashOperacoes,
-  type DashRow,
   type OperatorStat,
   type SlaBand,
 } from "@/hooks/useDashOperacoes";
-import { useDealDrawer } from "@/contexts/DealDrawer";
 import { usePreferences } from "@/contexts/PreferencesContext";
 import { cn } from "@/lib/utils";
 
