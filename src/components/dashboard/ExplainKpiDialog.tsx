@@ -24,7 +24,8 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
   const cacheKey = target
     ? `kpi:${target.kpiName}:${target.valorAtual}:${target.valorAnterior ?? ""}`
     : "kpi:none";
-  const { data, isLoading, error, generate } = useAiInsights<ExplainKpiTarget>("kpi", cacheKey);
+  const { data, isLoading, error, generate, versions, activeIndex, selectVersion, lastGeneratedAt } =
+    useAiInsights<ExplainKpiTarget>("kpi", cacheKey);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
