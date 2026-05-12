@@ -23,16 +23,16 @@ const PESO_BAND: Record<string, number> = {
 };
 
 const MinhaCarteira = () => {
-  const { session, fullName, loading } = useAuth();
+  const { session, fullName, agenteAtivacao, loading } = useAuth();
   const { data } = useDashOperacoes();
   const allRows = data?.rows ?? [];
 
+  const myAgente = (agenteAtivacao ?? fullName ?? "").trim();
   const myRows = useMemo(() => {
-    if (!fullName) return [];
-    const norm = (s: string) => s.trim().toLowerCase();
-    const me = norm(fullName);
-    return allRows.filter((r) => norm(r.agente_ativacao ?? "") === me);
-  }, [allRows, fullName]);
+    if (!myAgente) return [];
+    const me = myAgente.toLowerCase();
+    return allRows.filter((r) => (r.agente_ativacao?.trim().toLowerCase() ?? "") === me);
+  }, [allRows, myAgente]);
 
   const kpis = useMemo(() => {
     const total = myRows.length;
@@ -112,15 +112,29 @@ const MinhaCarteira = () => {
           </h2>
         </div>
 
-        {fullName && myRows.length === 0 && (
+        {myAgente && myRows.length === 0 && (
           <div className="mb-6 flex items-start gap-2 rounded-xl border border-warning/40 bg-warning/[0.06] p-4 text-warning">
             <AlertTriangle className="h-4 w-4 mt-0.5" />
             <div>
               <p className="font-subtitle text-sm font-semibold">
-                Nenhum cliente vinculado a "{fullName}"
+                Nenhum cliente vinculado a "{myAgente}"
               </p>
               <p className="font-small text-xs opacity-80">
-                Confirme se o nome cadastrado é exatamente igual ao "agente_ativacao" usado no HubSpot.
+                Peça ao admin para configurar seu campo "agente_ativacao" no painel de usuários
+                (deve ser igual ao nome usado no HubSpot).
+              </p>
+            </div>
+          </div>
+        )}
+        {!myAgente && session && (
+          <div className="mb-6 flex items-start gap-2 rounded-xl border border-warning/40 bg-warning/[0.06] p-4 text-warning">
+            <AlertTriangle className="h-4 w-4 mt-0.5" />
+            <div>
+              <p className="font-subtitle text-sm font-semibold">
+                Seu usuário ainda não está vinculado a um ativador
+              </p>
+              <p className="font-small text-xs opacity-80">
+                Peça ao admin para definir seu "agente_ativacao" em Admin → Usuários.
               </p>
             </div>
           </div>

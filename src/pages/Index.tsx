@@ -28,6 +28,7 @@ import { ExportCsvButton } from "@/components/dashboard/ExportCsvButton";
 import { ExportPdfButton } from "@/components/dashboard/ExportPdfButton";
 import { useUrlSets } from "@/hooks/useUrlSets";
 import { useDealDrawer } from "@/contexts/DealDrawer";
+import { useAtivadorScope } from "@/hooks/useAtivadorScope";
 import { useSnapshotDeltas, type DeltaWindow } from "@/hooks/useSnapshotDeltas";
 import {
   computeFiltered,
@@ -78,14 +79,15 @@ const ScopeBadge = ({
 
 const Index = () => {
   const { data, error } = useDashOperacoes();
+  const { isAdmin, isAtivador, myAgente } = useAtivadorScope();
   const [estoqueOpen, setEstoqueOpen] = useState(false);
   const [operatorOpen, setOperatorOpen] = useState(false);
   const [selectedOperator, setSelectedOperator] = useState<OperatorStat | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = searchParams.get("tab") === "gestao" ? "gestao" : "exec";
+  const tab = searchParams.get("tab") === "gestao" && isAdmin ? "gestao" : "exec";
   const setTab = (v: string) => {
     const next = new URLSearchParams(searchParams);
-    if (v === "gestao") next.set("tab", "gestao");
+    if (v === "gestao" && isAdmin) next.set("tab", "gestao");
     else next.delete("tab");
     setSearchParams(next, { replace: true });
   };
@@ -227,6 +229,13 @@ const Index = () => {
     [allRows, ativadorSel, etapaSel, bandSelKeys, perfilSel, onlyMine, fullName],
   );
 
+  // Personal/deal-level scope: ativadores only see own deals in detail tables.
+  const personalRows = useMemo<DashRow[]>(() => {
+    if (isAdmin || !isAtivador) return rows;
+    const me = myAgente.toLowerCase();
+    return rows.filter((r) => (r.agente_ativacao?.trim().toLowerCase() ?? "") === me);
+  }, [rows, isAdmin, isAtivador, myAgente]);
+
   const atencaoData = useMemo(() => computeFiltered(filterByPeriod(rows, atencaoPeriod)), [rows, atencaoPeriod]);
   const criticoData = useMemo(() => computeFiltered(filterByPeriod(rows, criticoPeriod)), [rows, criticoPeriod]);
   const opData = useMemo(() => computeFiltered(filterByPeriod(rows, opPeriod)), [rows, opPeriod]);
@@ -276,7 +285,7 @@ const Index = () => {
 
   const travadosLista = useMemo(() => {
     const TRAVADO_DIAS = 7;
-    return rows
+    return personalRows
       .map((r) => ({
         id: r.id_deal,
         cliente: r.nome_negocio?.trim() || "—",
@@ -287,7 +296,7 @@ const Index = () => {
       .filter((r) => r.dias > TRAVADO_DIAS)
       .sort((a, b) => b.dias - a.dias)
       .slice(0, 10);
-  }, [rows]);
+  }, [personalRows]);
 
   const scopeCounts = useMemo(() => {
     const ETAPAS_ATENCAO = new Set(["Pré-Cancelamento", "Inativo", "Pendências", "Processo Pausado"]);
@@ -467,7 +476,7 @@ const Index = () => {
         <EstoqueModal
           open={estoqueOpen}
           onOpenChange={setEstoqueOpen}
-          rows={rows}
+          rows={personalRows}
         />
 
         <OperatorCarteiraModal
@@ -494,13 +503,15 @@ const Index = () => {
               <UserCheck className="h-3 w-3" /> Só meus deals
             </button>
           )}
-          <MultiSelectFilter
-            label="Ativador"
-            options={ativadoresOpts}
-            counts={ativadoresCounts}
-            selected={ativadorSel}
-            onChange={setAtivadorSel}
-          />
+          {isAdmin && (
+            <MultiSelectFilter
+              label="Ativador"
+              options={ativadoresOpts}
+              counts={ativadoresCounts}
+              selected={ativadorSel}
+              onChange={setAtivadorSel}
+            />
+          )}
           <MultiSelectFilter
             label="Etapa"
             options={etapasOpts}
@@ -640,20 +651,26 @@ const Index = () => {
 
         <div id="dashboard-tabs" className="scroll-mt-4" />
         <Tabs value={tab} onValueChange={setTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="exec" className="gap-2">
-              <LayoutDashboard className="h-4 w-4" /> Visão executiva
-            </TabsTrigger>
-            <TabsTrigger value="gestao" className="gap-2">
-              <Users2 className="h-4 w-4" /> Gestão
-            </TabsTrigger>
-          </TabsList>
+          {isAdmin ? (
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="exec" className="gap-2">
+                <LayoutDashboard className="h-4 w-4" /> Visão executiva
+              </TabsTrigger>
+              <TabsTrigger value="gestao" className="gap-2">
+                <Users2 className="h-4 w-4" /> Gestão
+              </TabsTrigger>
+            </TabsList>
+          ) : null}
 
           <TabsContent value="exec" className="space-y-0">
         {/* Destaques automáticos */}
         {data && opData.operadores.length > 0 && (
           <section className="mb-8">
-            <Highlights rows={rows} operadores={opData.operadores} />
+            <Highlights
+              rows={rows}
+              operadores={opData.operadores}
+              hideOperatorIdentity={!isAdmin}
+            />
           </section>
         )}
 
@@ -737,7 +754,7 @@ const Index = () => {
         </section>
 
         {/* Ranking de ativadores vs metas */}
-        {opData.operadores.length > 0 && (
+        {isAdmin && opData.operadores.length > 0 && (
           <section className="mb-8">
             <div className="mb-3 flex items-center gap-2">
               <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
@@ -761,29 +778,31 @@ const Index = () => {
         )}
 
         {/* Performance por ativador */}
-        <section className="mb-8">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                Performance por ativador
-              </h3>
-              <ScopeBadge
-                scope={scopeCounts.operadores.scope}
-                destaque={scopeCounts.operadores.destaque}
-                destaqueLabel="ativadores"
-                total={allRows.length}
-              />
+        {isAdmin && (
+          <section className="mb-8">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                  Performance por ativador
+                </h3>
+                <ScopeBadge
+                  scope={scopeCounts.operadores.scope}
+                  destaque={scopeCounts.operadores.destaque}
+                  destaqueLabel="ativadores"
+                  total={allRows.length}
+                />
+              </div>
+              <PeriodFilter value={opPeriod} onChange={setOpPeriod} counts={countsBy.operadores} />
             </div>
-            <PeriodFilter value={opPeriod} onChange={setOpPeriod} counts={countsBy.operadores} />
-          </div>
-          <OperatorsTable
-            operadores={opData.operadores}
-            onOperatorClick={(op) => {
-              setSelectedOperator(op);
-              setOperatorOpen(true);
-            }}
-          />
-        </section>
+            <OperatorsTable
+              operadores={opData.operadores}
+              onOperatorClick={(op) => {
+                setSelectedOperator(op);
+                setOperatorOpen(true);
+              }}
+            />
+          </section>
+        )}
 
         {/* Travados */}
         <section className="mb-8">
@@ -801,16 +820,18 @@ const Index = () => {
           <StalledTable
             travados={travadosLista}
             onRowClick={(id) => {
-              const row = allRows.find((r) => r.id_deal === id);
+              const row = personalRows.find((r) => r.id_deal === id);
               if (row) openDeal(row);
             }}
           />
         </section>
           </TabsContent>
 
-          <TabsContent value="gestao" className="space-y-0">
-            <ManagerialView rows={rows} totalRows={allRows.length} />
-          </TabsContent>
+          {isAdmin && (
+            <TabsContent value="gestao" className="space-y-0">
+              <ManagerialView rows={rows} totalRows={allRows.length} />
+            </TabsContent>
+          )}
         </Tabs>
 
 

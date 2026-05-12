@@ -5,6 +5,8 @@ import { InfoTooltip } from "./InfoTooltip";
 interface Props {
   rows: DashRow[];
   operadores: OperatorStat[];
+  /** When true, anonymize per-operator identity (used for non-admin "ativador" role). */
+  hideOperatorIdentity?: boolean;
 }
 
 const slaOf = (r: DashRow) => {
@@ -30,7 +32,7 @@ const TONE: Record<HighlightCard["tone"], string> = {
   neutral: "border-border bg-card text-foreground",
 };
 
-export const Highlights = ({ rows, operadores }: Props) => {
+export const Highlights = ({ rows, operadores, hideOperatorIdentity }: Props) => {
   if (!rows.length) return null;
 
   // Operador com mais críticos
@@ -64,7 +66,7 @@ export const Highlights = ({ rows, operadores }: Props) => {
   const totalAtivos = rows.length;
 
   const cards: HighlightCard[] = [];
-  if (topCritico && topCritico.bands.critico > 0) {
+  if (topCritico && topCritico.bands.critico > 0 && !hideOperatorIdentity) {
     cards.push({
       label: "Operador com mais críticos",
       value: topCritico.nome,

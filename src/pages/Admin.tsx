@@ -18,6 +18,7 @@ interface AdminUser {
   avatar_url: string | null;
   created_at: string;
   roles: string[];
+  agente_ativacao?: string | null;
 }
 
 interface Vendedor {
@@ -110,19 +111,53 @@ const AdminUsers = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [editAgenteId, setEditAgenteId] = useState<string | null>(null);
+  const [editAgenteValue, setEditAgenteValue] = useState("");
+  const [savingAgente, setSavingAgente] = useState(false);
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("list_admin_users");
+    const [{ data: usersData, error }, { data: profilesData }] = await Promise.all([
+      supabase.rpc("list_admin_users"),
+      supabase.from("profiles").select("id, agente_ativacao"),
+    ]);
     setLoading(false);
     if (error) {
       toast.error("Erro ao carregar usuários", { description: error.message });
       return;
     }
-    setUsers((data as AdminUser[]) ?? []);
+    const map = new Map<string, string | null>(
+      (profilesData ?? []).map((p) => [p.id, p.agente_ativacao]),
+    );
+    const merged = ((usersData as AdminUser[]) ?? []).map((u) => ({
+      ...u,
+      agente_ativacao: map.get(u.id) ?? null,
+    }));
+    setUsers(merged);
   };
 
   useEffect(() => { load(); }, []);
+
+  const saveAgente = async (u: AdminUser) => {
+    const value = editAgenteValue.trim() || null;
+    setSavingAgente(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ agente_ativacao: value })
+      .eq("id", u.id);
+    setSavingAgente(false);
+    if (error) return toast.error("Erro ao salvar", { description: error.message });
+    toast.success(value ? `Vinculado a "${value}"` : "Vínculo removido");
+    void logAudit({
+      action: "user.set_agente_ativacao",
+      entity_type: "outro",
+      entity_id: u.id,
+      summary: `Definiu agente_ativacao de ${u.full_name || u.id} para ${value ?? "(nenhum)"}`,
+      metadata: { target_user_id: u.id, value },
+    });
+    setEditAgenteId(null);
+    await load();
+  };
 
   const toggleAdmin = async (u: AdminUser) => {
     const isAdmin = u.roles.includes("admin");
@@ -171,6 +206,9 @@ const AdminUsers = () => {
             <tr>
               <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Nome</th>
               <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Papéis</th>
+              <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground" title="Nome usado no campo agente_ativacao do HubSpot">
+                Agente (HubSpot)
+              </th>
               <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Criado em</th>
               <th className="px-4 py-3"></th>
             </tr>
@@ -209,6 +247,50 @@ const AdminUsers = () => {
                       </div>
                     )}
                   </td>
+                  <td className="px-4 py-3">
+                    {editAgenteId === u.id ? (
+                      <div className="flex items-center gap-1.5">
+                        <Input
+                          value={editAgenteValue}
+                          onChange={(e) => setEditAgenteValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveAgente(u);
+                            if (e.key === "Escape") setEditAgenteId(null);
+                          }}
+                          placeholder="Ex.: João Silva"
+                          autoFocus
+                          className="h-8 max-w-[180px] text-xs"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => saveAgente(u)}
+                          disabled={savingAgente}
+                          className="h-8 px-2"
+                        >
+                          {savingAgente ? <Loader2 className="h-3 w-3 animate-spin" /> : "OK"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditAgenteId(null)}
+                          className="h-8 px-2"
+                        >
+                          ✕
+                        </Button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditAgenteId(u.id);
+                          setEditAgenteValue(u.agente_ativacao ?? "");
+                        }}
+                        className="rounded border border-dashed border-border px-2 py-1 text-xs text-muted-foreground hover:border-primary hover:text-primary"
+                      >
+                        {u.agente_ativacao || <span className="italic">não vinculado</span>}
+                      </button>
+                    )}
+                  </td>
                   <td className="px-4 py-3 font-numeric text-xs text-muted-foreground">
                     {new Date(u.created_at).toLocaleDateString("pt-BR")}
                   </td>
@@ -229,7 +311,7 @@ const AdminUsers = () => {
               );
             })}
             {users.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">Nenhum usuário encontrado.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Nenhum usuário encontrado.</td></tr>
             )}
           </tbody>
         </table>
