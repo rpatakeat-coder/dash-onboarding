@@ -95,6 +95,25 @@ Deno.serve(async (req) => {
 
     if (!action_link) return json({ error: "no_link_generated" }, 500);
 
+    // ─── Safety check: ensure the generated link will redirect to the
+    // operations dashboard, NOT to the commercial dashboard (Site URL fallback).
+    const validation = validateRedirect(action_link, APP_URL);
+    if (!validation.ok) {
+      console.error("invalid_redirect", validation);
+      return json(
+        {
+          error: "invalid_redirect_target",
+          message:
+            `O link gerado redirecionaria para "${validation.actual ?? "(vazio)"}" em vez de "${APP_URL}". ` +
+            `Adicione "${APP_URL.replace(/\/$/, "")}/**" em Authentication → URL Configuration → Redirect URLs no Supabase.`,
+          expected: APP_URL,
+          actual: validation.actual,
+          reason: validation.reason,
+        },
+        500,
+      );
+    }
+
     // Shorten via is.gd
     let short_link: string | null = null;
     try {
