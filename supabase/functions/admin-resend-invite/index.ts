@@ -55,8 +55,12 @@ Deno.serve(async (req) => {
       .eq("user_id", user_id)
       .maybeSingle();
 
-    const origin = req.headers.get("origin") ?? "";
-    const redirectTo = origin ? `${origin}/auth` : undefined;
+    // Always send users to the operations dashboard, regardless of where the
+    // admin clicked "Resend invite" (this Supabase project is shared with the
+    // commercial dashboard, so we cannot rely on the request origin).
+    const APP_URL =
+      Deno.env.get("OPERATIONS_APP_URL") ?? "https://dash-onboarding-three.vercel.app";
+    const redirectTo = `${APP_URL.replace(/\/$/, "")}/auth`;
 
     // Decide link type: invite if not yet confirmed, otherwise recovery (reset password)
     const linkType: "invite" | "recovery" = target.user.email_confirmed_at ? "recovery" : "invite";
