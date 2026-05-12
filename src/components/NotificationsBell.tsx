@@ -10,7 +10,7 @@ const KIND_LABEL: Record<string, string> = {
 };
 
 export const NotificationsBell = () => {
-  const { items, unreadCount, markRead, markAllRead, clear } = useNotifications();
+  const { items, unreadCount, isRead, markRead, markAllRead, clear } = useNotifications();
 
   return (
     <Popover>
@@ -60,38 +60,46 @@ export const NotificationsBell = () => {
             </p>
           ) : (
             <ul className="divide-y divide-border">
-              {items.slice(0, 50).map((n) => (
-                <li key={n.id}>
-                  <button
-                    onClick={() => markRead(n.id)}
-                    className={cn(
-                      "block w-full px-4 py-3 text-left transition hover:bg-muted/60",
-                    )}
-                  >
-                    <div className="flex items-start gap-2">
-                      <span
-                        className={cn(
-                          "mt-1 inline-block h-2 w-2 shrink-0 rounded-full",
-                          n.kind === "slaCritico"
-                            ? "bg-destructive"
-                            : n.kind === "parado"
-                              ? "bg-warning"
-                              : "bg-success",
-                        )}
-                      />
-                      <div className="flex-1">
-                        <p className="font-subtitle text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                          {KIND_LABEL[n.kind]}
-                        </p>
-                        <p className="font-subtitle text-sm font-medium text-foreground">
-                          {n.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{n.description}</p>
+              {items.slice(0, 50).map((n) => {
+                const read = isRead(n.id);
+                return (
+                  <li key={n.id}>
+                    <button
+                      onClick={() => markRead(n.id)}
+                      disabled={read}
+                      className={cn(
+                        "block w-full px-4 py-3 text-left transition hover:bg-muted/60",
+                        read && "opacity-60",
+                      )}
+                    >
+                      <div className="flex items-start gap-2">
+                        <span
+                          className={cn(
+                            "mt-1 inline-block h-2 w-2 shrink-0 rounded-full",
+                            read
+                              ? "bg-muted-foreground/40"
+                              : n.kind === "slaCritico"
+                                ? "bg-destructive"
+                                : n.kind === "parado"
+                                  ? "bg-warning"
+                                  : "bg-success",
+                          )}
+                        />
+                        <div className="flex-1">
+                          <p className="font-subtitle text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                            {KIND_LABEL[n.kind]}
+                            {read && <span className="ml-2 normal-case tracking-normal">· lida</span>}
+                          </p>
+                          <p className={cn("font-subtitle text-sm font-medium text-foreground", read && "font-normal")}>
+                            {n.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{n.description}</p>
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                </li>
-              ))}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
