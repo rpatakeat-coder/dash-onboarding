@@ -214,13 +214,16 @@ const AdminOperators = () => {
             />
           </div>
           <div>
-            <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">Agente HubSpot</label>
+            <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
+              Agente HubSpot{form.role === "admin" && <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">(não exigido)</span>}
+            </label>
             <select
               value={form.agente_ativacao}
               onChange={(e) => setForm((f) => ({ ...f, agente_ativacao: e.target.value }))}
-              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+              disabled={form.role === "admin"}
+              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm disabled:opacity-50"
             >
-              <option value="">Selecione…</option>
+              <option value="">{form.role === "admin" ? "—" : "Selecione…"}</option>
               {agentes.map((a) => <option key={a} value={a}>{a}</option>)}
             </select>
           </div>
