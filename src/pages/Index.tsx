@@ -651,14 +651,16 @@ const Index = () => {
 
         <div id="dashboard-tabs" className="scroll-mt-4" />
         <Tabs value={tab} onValueChange={setTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="exec" className="gap-2">
-              <LayoutDashboard className="h-4 w-4" /> Visão executiva
-            </TabsTrigger>
-            <TabsTrigger value="gestao" className="gap-2">
-              <Users2 className="h-4 w-4" /> Gestão
-            </TabsTrigger>
-          </TabsList>
+          {isAdmin ? (
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="exec" className="gap-2">
+                <LayoutDashboard className="h-4 w-4" /> Visão executiva
+              </TabsTrigger>
+              <TabsTrigger value="gestao" className="gap-2">
+                <Users2 className="h-4 w-4" /> Gestão
+              </TabsTrigger>
+            </TabsList>
+          ) : null}
 
           <TabsContent value="exec" className="space-y-0">
         {/* Destaques automáticos */}
