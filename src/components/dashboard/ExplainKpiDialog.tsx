@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Loader2, Sparkles, AlertCircle, Copy, Check, RefreshCw } from "lucide-react";
+import { Loader2, Sparkles, AlertCircle, Copy, Check, RefreshCw, History } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useAiInsights } from "@/hooks/useAiInsights";
@@ -23,7 +24,8 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
   const cacheKey = target
     ? `kpi:${target.kpiName}:${target.valorAtual}:${target.valorAnterior ?? ""}`
     : "kpi:none";
-  const { data, isLoading, error, generate } = useAiInsights<ExplainKpiTarget>("kpi", cacheKey);
+  const { data, isLoading, error, generate, versions, activeIndex, selectVersion, lastGeneratedAt } =
+    useAiInsights<ExplainKpiTarget>("kpi", cacheKey);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -80,6 +82,39 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
                 <p className="font-semibold text-foreground">{target.valorAnterior}</p>
               </div>
             )}
+          </div>
+        )}
+
+        {versions.length > 1 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <span className="inline-flex shrink-0 items-center gap-1 font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
+              <History className="h-3 w-3" /> Histórico
+            </span>
+            {versions.map((v, i) => {
+              const isActive = i === activeIndex;
+              const label =
+                i === 0 ? "Atual" : `v${versions.length - i}`;
+              const time = new Date(v.at).toLocaleTimeString("pt-BR", {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+              return (
+                <button
+                  key={v.at}
+                  type="button"
+                  onClick={() => selectVersion(i)}
+                  className={cn(
+                    "shrink-0 rounded-full border px-2.5 py-0.5 font-subtitle text-[11px] transition",
+                    isActive
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                  )}
+                  title={`Gerada às ${time}`}
+                >
+                  {label} · {time}
+                </button>
+              );
+            })}
           </div>
         )}
 
