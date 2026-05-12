@@ -61,9 +61,7 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
   const [period, setPeriod] = useState<Period>("tudo");
   const [stages, setStages] = useState<Set<string>>(new Set());
   const [bands, setBands] = useState<Set<SlaBand>>(new Set());
-  const navigate = useNavigate();
   const { data } = useDashOperacoes();
-  const { open: openDeal } = useDealDrawer();
   const { cycleTheme } = usePreferences();
 
   useEffect(() => {
