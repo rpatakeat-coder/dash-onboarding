@@ -1,8 +1,19 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Sparkles, RefreshCw, Loader2, AlertCircle } from "lucide-react";
+import {
+  Sparkles,
+  RefreshCw,
+  Loader2,
+  AlertCircle,
+  AlertTriangle,
+  TrendingUp,
+  Users,
+  LineChart,
+  FileText,
+} from "lucide-react";
 import { useAiInsights } from "@/hooks/useAiInsights";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 interface AiInsightsCardProps {
@@ -20,6 +31,21 @@ interface AiInsightsCardProps {
   scopeKey?: string;
 }
 
+type InsightType = "executive" | "risks" | "opportunities" | "operators" | "trends";
+
+const INSIGHT_TYPES: Array<{
+  id: InsightType;
+  label: string;
+  icon: typeof Sparkles;
+  description: string;
+}> = [
+  { id: "executive", label: "Executivo", icon: FileText, description: "Resumo + ações por operador" },
+  { id: "risks", label: "Riscos", icon: AlertTriangle, description: "Alertas e mitigações" },
+  { id: "opportunities", label: "Oportunidades", icon: TrendingUp, description: "Onde acelerar" },
+  { id: "operators", label: "Operadores", icon: Users, description: "Diagnóstico por pessoa" },
+  { id: "trends", label: "Tendências", icon: LineChart, description: "Comparação com snapshot anterior" },
+];
+
 function timeAgo(ts: number) {
   const diff = Math.max(0, Date.now() - ts);
   const m = Math.floor(diff / 60000);
@@ -36,19 +62,40 @@ export const AiInsightsCard = ({
   snapshotAnterior,
   scopeKey,
 }: AiInsightsCardProps) => {
+  const [insightType, setInsightType] = useState<InsightType>("executive");
+  const [focus, setFocus] = useState("");
+  const [appliedFocus, setAppliedFocus] = useState("");
+
   const cacheKey = useMemo(
-    () => `dashboard:${scopeKey ?? "default"}`,
-    [scopeKey],
+    () => `dashboard:${insightType}:${appliedFocus || "_"}:${scopeKey ?? "default"}`,
+    [insightType, appliedFocus, scopeKey],
   );
+
   const { data, isLoading, error, generate, lastGeneratedAt } = useAiInsights<{
     periodo?: string;
     kpis: Record<string, string | number>;
     operadores: AiInsightsCardProps["operadores"];
     snapshotAnterior?: Record<string, string | number>;
+    insightType: InsightType;
+    focus?: string;
   }>("dashboard", cacheKey);
 
-  const onGenerate = (force = false) =>
-    generate({ periodo, kpis, operadores, snapshotAnterior }, { force });
+  const onGenerate = (force = false) => {
+    setAppliedFocus(focus.trim());
+    return generate(
+      {
+        periodo,
+        kpis,
+        operadores,
+        snapshotAnterior,
+        insightType,
+        focus: focus.trim() || undefined,
+      },
+      { force },
+    );
+  };
+
+  const activeType = INSIGHT_TYPES.find((t) => t.id === insightType)!;
 
   return (
     <section
@@ -72,7 +119,7 @@ export const AiInsightsCard = ({
               </span>
             </div>
             <p className="font-small text-xs text-muted-foreground">
-              Análise automática dos KPIs atuais e ações sugeridas por operador.
+              {activeType.description}.
             </p>
           </div>
         </div>
@@ -102,6 +149,61 @@ export const AiInsightsCard = ({
         </div>
       </div>
 
+      {/* Type selector + focus */}
+      <div className="space-y-3 border-b border-border bg-muted/20 px-5 py-3">
+        <div className="flex flex-wrap gap-1.5">
+          {INSIGHT_TYPES.map((t) => {
+            const Icon = t.icon;
+            const isActive = insightType === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setInsightType(t.id)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-subtitle text-xs font-medium transition",
+                  isActive
+                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                    : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                )}
+                title={t.description}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Input
+            value={focus}
+            onChange={(e) => setFocus(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                onGenerate(true);
+              }
+            }}
+            placeholder="Foco opcional (ex.: priorizar SLA estourado, comparar agentes X e Y…)"
+            className="h-8 flex-1 min-w-[240px] text-xs"
+            maxLength={500}
+          />
+          {focus && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 text-xs"
+              onClick={() => {
+                setFocus("");
+                setAppliedFocus("");
+              }}
+            >
+              Limpar
+            </Button>
+          )}
+        </div>
+      </div>
+
       <div className="px-5 py-5">
         {error && (
           <div className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 font-small text-xs text-destructive">
@@ -112,9 +214,9 @@ export const AiInsightsCard = ({
 
         {!data && !isLoading && !error && (
           <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-8 text-center">
-            <Sparkles className="mx-auto mb-2 h-6 w-6 text-primary/60" />
+            <activeType.icon className="mx-auto mb-2 h-6 w-6 text-primary/60" />
             <p className="font-subtitle text-sm font-medium text-foreground">
-              Clique em "Gerar análise" para um resumo executivo da operação
+              Clique em "Gerar análise" para a visão "{activeType.label}"
             </p>
             <p className="mt-1 font-small text-xs text-muted-foreground">
               A IA usa apenas os KPIs e operadores filtrados na tela atual.
