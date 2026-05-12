@@ -473,27 +473,6 @@ export type Database = {
         }
         Relationships: []
       }
-      vendedores: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          id: string
-          nome: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          id?: string
-          nome: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          id?: string
-          nome?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never

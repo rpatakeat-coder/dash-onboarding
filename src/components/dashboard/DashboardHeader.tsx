@@ -1,13 +1,11 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LogIn, LogOut, Menu, Search, Settings, User } from "lucide-react";
+import { LogIn, LogOut, Search, Settings, User } from "lucide-react";
 import logo from "@/assets/logo-takeat.png";
 import { useAuth } from "@/hooks/useAuth";
 import { MainNav } from "@/components/MainNav";
+import { MobileMainNav } from "@/components/MobileMainNav";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
 import { APP_VERSION } from "@/lib/version";
 import { usePreferencesDialog } from "@/contexts/PreferencesDialogContext";
 
@@ -20,7 +18,6 @@ export const DashboardHeader = () => {
   });
   const { session, fullName, signOut } = useAuth();
   const navigate = useNavigate();
-  const [navOpen, setNavOpen] = useState(false);
   const prefsDialog = usePreferencesDialog();
   const handleSignOut = async () => {
     await signOut();
@@ -40,42 +37,13 @@ export const DashboardHeader = () => {
         <div className="flex items-center justify-between gap-4 border-b border-border/60 py-3 sm:py-4">
           {/* Brand */}
           <div className="flex items-center gap-3">
-            <Sheet open={navOpen} onOpenChange={setNavOpen}>
-              <SheetTrigger asChild>
-                <button
-                  type="button"
-                  aria-label={navOpen ? "Fechar menu de navegação" : "Abrir menu de navegação"}
-                  className="inline-flex items-center justify-center rounded-lg border border-border bg-card p-2 text-muted-foreground transition-all duration-200 hover:scale-105 hover:text-foreground active:scale-95 md:hidden"
-                >
-                  <Menu
-                    className={cn(
-                      "h-4 w-4 transition-transform duration-300 ease-out",
-                      navOpen ? "rotate-90 scale-110" : "rotate-0",
-                    )}
-                  />
-                </button>
-              </SheetTrigger>
-              <SheetContent
-                side="left"
-                className="w-72 p-0 duration-300 data-[state=closed]:duration-200 motion-safe:data-[state=open]:ease-[cubic-bezier(0.22,1,0.36,1)] motion-safe:data-[state=closed]:ease-[cubic-bezier(0.4,0,1,1)]"
-              >
-                <SheetHeader className="border-b border-border px-5 py-4 text-left">
-                  <SheetTitle className="font-display text-base font-semibold text-secondary">
-                    Navegação
-                  </SheetTitle>
-                </SheetHeader>
-                <div className="px-3 py-4">
-                  <MainNav orientation="vertical" onNavigate={() => setNavOpen(false)} />
-                </div>
-              </SheetContent>
-            </Sheet>
             <img src={logo} alt="Takeat" className="h-9 w-auto" />
-            <div className="hidden h-8 w-px bg-border md:block" />
-            <div className="hidden md:block">
+            <div className="h-8 w-px bg-border" />
+            <div>
               <p className="font-subtitle text-[10px] uppercase tracking-widest text-muted-foreground leading-tight">
                 Painel de Operações
               </p>
-              <h1 className="flex items-center gap-2 font-display text-base font-semibold text-secondary leading-tight">
+              <h1 className="flex items-center gap-2 font-display text-sm font-semibold text-secondary leading-tight sm:text-base">
                 Onboarding
                 <span className="rounded border border-border bg-muted px-1.5 py-0.5 font-subtitle text-[10px] font-medium uppercase tracking-wider text-muted-foreground" title="Versão do app">
                   v{APP_VERSION}
@@ -140,7 +108,10 @@ export const DashboardHeader = () => {
           </div>
         </div>
 
-        {/* Tier 2: Navigation · Status */}
+        {/* Tier 2: Navigation · Status (mobile = expandable nav, desktop = horizontal) */}
+        <div className="py-2 md:hidden">
+          <MobileMainNav />
+        </div>
         <div className="hidden items-center justify-between gap-4 py-2 md:flex">
           <MainNav />
           <div className="text-right">
