@@ -95,6 +95,25 @@ Deno.serve(async (req) => {
 
     if (!action_link) return json({ error: "no_link_generated" }, 500);
 
+    // ─── Safety check: ensure the generated link will redirect to the
+    // operations dashboard, NOT to the commercial dashboard (Site URL fallback).
+    const validation = validateRedirect(action_link, APP_URL);
+    if (!validation.ok) {
+      console.error("invalid_redirect", validation);
+      return json(
+        {
+          error: "invalid_redirect_target",
+          message:
+            `O link gerado redirecionaria para "${validation.actual ?? "(vazio)"}" em vez de "${APP_URL}". ` +
+            `Adicione "${APP_URL.replace(/\/$/, "")}/**" em Authentication → URL Configuration → Redirect URLs no Supabase.`,
+          expected: APP_URL,
+          actual: validation.actual,
+          reason: validation.reason,
+        },
+        500,
+      );
+    }
+
     // Shorten via is.gd
     let short_link: string | null = null;
     try {
@@ -152,4 +171,43 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+/**
+ * Parse Supabase's verify URL and confirm that:
+ * 1. There is a `redirect_to` query param (Supabase only includes it when our
+ *    requested redirectTo is in the allow-list — otherwise it silently falls
+ *    back to Site URL, which would land on the wrong dashboard).
+ * 2. That `redirect_to` host matches the expected operations APP_URL host.
+ */
+function validateRedirect(
+  actionLink: string,
+  appUrl: string,
+): { ok: true } | { ok: false; reason: string; actual: string | null } {
+  let url: URL;
+  let expected: URL;
+  try {
+    url = new URL(actionLink);
+    expected = new URL(appUrl);
+  } catch {
+    return { ok: false, reason: "unparsable_url", actual: actionLink };
+  }
+  const redirectTo = url.searchParams.get("redirect_to");
+  if (!redirectTo) {
+    return {
+      ok: false,
+      reason: "missing_redirect_to_param_supabase_fallback_to_site_url",
+      actual: null,
+    };
+  }
+  let target: URL;
+  try {
+    target = new URL(redirectTo);
+  } catch {
+    return { ok: false, reason: "redirect_to_invalid_url", actual: redirectTo };
+  }
+  if (target.host !== expected.host) {
+    return { ok: false, reason: "host_mismatch", actual: redirectTo };
+  }
+  return { ok: true };
 }
