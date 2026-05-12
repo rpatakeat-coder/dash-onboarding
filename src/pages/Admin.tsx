@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { AccessDenied } from "@/components/AccessDenied";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ const Admin = () => {
     );
   }
   if (!session) return <Navigate to="/auth" replace />;
-  if (!isAdmin) return <ClaimAdminScreen />;
+  if (!isAdmin) return <AccessDenied showClaimAdmin />;
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background">
