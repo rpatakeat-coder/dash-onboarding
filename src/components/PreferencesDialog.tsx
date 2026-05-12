@@ -18,7 +18,6 @@ interface Props {
 export const PreferencesDialog = ({ open, onOpenChange }: Props) => {
   const p = usePreferences();
   const { user, fullName } = useAuth();
-  const fileRef = useRef<HTMLInputElement>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
