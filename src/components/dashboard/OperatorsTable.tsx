@@ -1,14 +1,20 @@
-import { Trophy } from "lucide-react";
+import { useState } from "react";
+import { Sparkles, Trophy } from "lucide-react";
 import { OperatorStat, fmtBRL } from "@/hooks/useDashOperacoes";
 import { SlaBandBar } from "./SlaBandBar";
 import { cn } from "@/lib/utils";
+import { OperatorInsightDialog } from "./OperatorInsightDialog";
 
 interface Props {
   operadores: OperatorStat[];
   onOperatorClick?: (op: OperatorStat) => void;
+  /** Aggregated KPIs sent as context to the AI per-operator analysis. */
+  contextoOperacao?: Record<string, string | number>;
+  scopeKey?: string;
 }
 
-export const OperatorsTable = ({ operadores, onOperatorClick }: Props) => {
+export const OperatorsTable = ({ operadores, onOperatorClick, contextoOperacao, scopeKey }: Props) => {
+  const [aiTarget, setAiTarget] = useState<OperatorStat | null>(null);
   return (
     <div className="rounded-2xl border border-border bg-card p-4 shadow-sm-soft sm:p-6">
       <div className="mb-5 flex items-center justify-between">
@@ -42,12 +48,24 @@ export const OperatorsTable = ({ operadores, onOperatorClick }: Props) => {
                 }
               }}
               className={cn(
-                "space-y-2 rounded-xl border p-3 transition",
+                "group relative space-y-2 rounded-xl border p-3 transition",
                 hasCriticos ? "border-destructive/30" : "border-transparent",
                 interactive && "cursor-pointer hover:border-primary/40 hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
               )}
             >
-              <div className="flex items-center justify-between gap-3 text-sm">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setAiTarget(op);
+                }}
+                className="absolute right-2 top-2 z-10 inline-flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-muted-foreground opacity-0 transition hover:border-primary/30 hover:bg-primary/10 hover:text-primary group-hover:opacity-100 focus:opacity-100"
+                title="Analisar este operador com IA"
+                aria-label="Analisar este operador com IA"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+              </button>
+              <div className="flex items-center justify-between gap-3 pr-8 text-sm">
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="font-numeric text-xs font-bold text-muted-foreground w-5 shrink-0">
                     {String(i + 1).padStart(2, "0")}
@@ -103,6 +121,13 @@ export const OperatorsTable = ({ operadores, onOperatorClick }: Props) => {
           );
         })}
       </div>
+      <OperatorInsightDialog
+        open={!!aiTarget}
+        onOpenChange={(o) => !o && setAiTarget(null)}
+        operator={aiTarget}
+        contextoOperacao={contextoOperacao}
+        scopeKey={scopeKey}
+      />
     </div>
   );
 };
