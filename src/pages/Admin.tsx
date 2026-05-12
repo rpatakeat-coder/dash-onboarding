@@ -18,6 +18,7 @@ interface AdminUser {
   avatar_url: string | null;
   created_at: string;
   roles: string[];
+  agente_ativacao?: string | null;
 }
 
 interface Vendedor {
