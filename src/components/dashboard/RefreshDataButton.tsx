@@ -15,7 +15,6 @@ export const RefreshDataButton = () => {
     try {
       await fetch(WEBHOOK_URL, {
         method: "POST",
-        mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ event: "atualizar_dados" }),
       });
