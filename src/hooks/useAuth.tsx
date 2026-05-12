@@ -6,6 +6,7 @@ interface AuthCtx {
   session: Session | null;
   user: User | null;
   fullName: string | null;
+  agenteAtivacao: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
@@ -17,6 +18,7 @@ const Ctx = createContext<AuthCtx | null>(null);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [fullName, setFullName] = useState<string | null>(null);
+  const [agenteAtivacao, setAgenteAtivacao] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,13 +28,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setTimeout(() => {
           supabase
             .from("profiles")
-            .select("full_name")
+            .select("full_name, agente_ativacao")
             .eq("id", s.user.id)
             .maybeSingle()
-            .then(({ data }) => setFullName(data?.full_name ?? null));
+            .then(({ data }) => {
+              setFullName(data?.full_name ?? null);
+              setAgenteAtivacao(data?.agente_ativacao ?? null);
+            });
         }, 0);
       } else {
         setFullName(null);
+        setAgenteAtivacao(null);
       }
     });
     supabase.auth.getSession().then(({ data }) => {
@@ -41,6 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     return () => sub.subscription.unsubscribe();
   }, []);
+
 
   const value: AuthCtx = {
     session,
