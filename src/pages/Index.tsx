@@ -79,14 +79,15 @@ const ScopeBadge = ({
 
 const Index = () => {
   const { data, error } = useDashOperacoes();
+  const { isAdmin, isAtivador, myAgente } = useAtivadorScope();
   const [estoqueOpen, setEstoqueOpen] = useState(false);
   const [operatorOpen, setOperatorOpen] = useState(false);
   const [selectedOperator, setSelectedOperator] = useState<OperatorStat | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = searchParams.get("tab") === "gestao" ? "gestao" : "exec";
+  const tab = searchParams.get("tab") === "gestao" && isAdmin ? "gestao" : "exec";
   const setTab = (v: string) => {
     const next = new URLSearchParams(searchParams);
-    if (v === "gestao") next.set("tab", "gestao");
+    if (v === "gestao" && isAdmin) next.set("tab", "gestao");
     else next.delete("tab");
     setSearchParams(next, { replace: true });
   };
