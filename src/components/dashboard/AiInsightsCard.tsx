@@ -10,11 +10,15 @@ import {
   Users,
   LineChart,
   FileText,
+  Settings2,
 } from "lucide-react";
 import { useAiInsights } from "@/hooks/useAiInsights";
+import { useAiPromptTemplates } from "@/hooks/useAiPromptTemplates";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { AiPromptSettingsDialog } from "./AiPromptSettingsDialog";
+import type { InsightType } from "@/lib/aiPromptTemplates";
 
 interface AiInsightsCardProps {
   periodo?: string;
@@ -31,7 +35,7 @@ interface AiInsightsCardProps {
   scopeKey?: string;
 }
 
-type InsightType = "executive" | "risks" | "opportunities" | "operators" | "trends";
+
 
 const INSIGHT_TYPES: Array<{
   id: InsightType;
@@ -65,10 +69,25 @@ export const AiInsightsCard = ({
   const [insightType, setInsightType] = useState<InsightType>("executive");
   const [focus, setFocus] = useState("");
   const [appliedFocus, setAppliedFocus] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const { getTemplate, isCustom } = useAiPromptTemplates();
+  const effectiveTemplate = getTemplate(insightType);
+  const customized = isCustom(insightType);
+
+  // Hash template into cache key so editing the prompt invalidates the cache.
+  const templateHash = useMemo(() => {
+    let h = 0;
+    for (let i = 0; i < effectiveTemplate.length; i++) {
+      h = ((h << 5) - h + effectiveTemplate.charCodeAt(i)) | 0;
+    }
+    return Math.abs(h).toString(36);
+  }, [effectiveTemplate]);
 
   const cacheKey = useMemo(
-    () => `dashboard:${insightType}:${appliedFocus || "_"}:${scopeKey ?? "default"}`,
-    [insightType, appliedFocus, scopeKey],
+    () =>
+      `dashboard:${insightType}:${templateHash}:${appliedFocus || "_"}:${scopeKey ?? "default"}`,
+    [insightType, templateHash, appliedFocus, scopeKey],
   );
 
   const { data, isLoading, error, generate, lastGeneratedAt } = useAiInsights<{
@@ -78,6 +97,7 @@ export const AiInsightsCard = ({
     snapshotAnterior?: Record<string, string | number>;
     insightType: InsightType;
     focus?: string;
+    template?: string;
   }>("dashboard", cacheKey);
 
   const onGenerate = (force = false) => {
@@ -90,6 +110,7 @@ export const AiInsightsCard = ({
         snapshotAnterior,
         insightType,
         focus: focus.trim() || undefined,
+        template: customized ? effectiveTemplate : undefined,
       },
       { force },
     );
@@ -119,7 +140,12 @@ export const AiInsightsCard = ({
               </span>
             </div>
             <p className="font-small text-xs text-muted-foreground">
-              {activeType.description}.
+              {activeType.description}
+              {customized && (
+                <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                  Prompt personalizado
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -130,6 +156,16 @@ export const AiInsightsCard = ({
               {data?.model ? ` · ${data.model}` : ""}
             </span>
           )}
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => setSettingsOpen(true)}
+            className="h-8 w-8"
+            title="Configurar templates de prompt"
+            aria-label="Configurar templates de prompt"
+          >
+            <Settings2 className="h-3.5 w-3.5" />
+          </Button>
           <Button
             size="sm"
             variant={data ? "outline" : "default"}
@@ -239,6 +275,11 @@ export const AiInsightsCard = ({
           </div>
         )}
       </div>
+      <AiPromptSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        initialType={insightType}
+      />
     </section>
   );
 };

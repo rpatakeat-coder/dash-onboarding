@@ -52,6 +52,7 @@ const DashboardPayload = z.object({
     snapshotAnterior: z.record(z.union([z.string(), z.number()])).optional(),
     insightType: InsightType,
     focus: z.string().max(500).optional(),
+    template: z.string().max(4000).optional(),
   }),
 });
 
@@ -128,7 +129,7 @@ function buildDashboardPrompt(payload: DashboardPayloadT): string {
     "",
     "Gere a resposta em markdown com EXATAMENTE estas seções e nada mais:",
     "",
-    SECTIONS[type],
+    payload.template?.trim() ? payload.template.trim() : SECTIONS[type],
   ]
     .filter(Boolean)
     .join("\n");
