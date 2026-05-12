@@ -666,7 +666,11 @@ const Index = () => {
         {/* Destaques automáticos */}
         {data && opData.operadores.length > 0 && (
           <section className="mb-8">
-            <Highlights rows={rows} operadores={opData.operadores} />
+            <Highlights
+              rows={rows}
+              operadores={opData.operadores}
+              hideOperatorIdentity={!isAdmin}
+            />
           </section>
         )}
 
