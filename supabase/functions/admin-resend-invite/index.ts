@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
     // commercial dashboard, so we cannot rely on the request origin).
     const APP_URL =
       Deno.env.get("OPERATIONS_APP_URL") ?? "https://dash-onboarding-three.vercel.app";
-    const redirectTo = `${APP_URL.replace(/\/$/, "")}/auth`;
+    const redirectTo = `${APP_URL.replace(/\/$/, "")}/set-password`;
 
     // Decide link type: invite if not yet confirmed, otherwise recovery (reset password)
     const linkType: "invite" | "recovery" = target.user.email_confirmed_at ? "recovery" : "invite";
