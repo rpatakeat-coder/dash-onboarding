@@ -36,8 +36,10 @@ export const PreferencesDialog = ({ open, onOpenChange }: Props) => {
     const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
       upsert: true,
       cacheControl: "3600",
+      contentType: file.type || "image/png",
     });
     if (upErr) {
+      console.error("[avatar] upload error", upErr);
       setUploading(false);
       return toast.error("Erro ao enviar", { description: upErr.message });
     }
