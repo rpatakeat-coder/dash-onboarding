@@ -28,6 +28,10 @@ const KpiPayload = z.object({
   }),
 });
 
+const InsightType = z
+  .enum(["executive", "risks", "opportunities", "operators", "trends"])
+  .default("executive");
+
 const DashboardPayload = z.object({
   mode: z.literal("dashboard"),
   payload: z.object({
@@ -46,6 +50,8 @@ const DashboardPayload = z.object({
       .max(50)
       .default([]),
     snapshotAnterior: z.record(z.union([z.string(), z.number()])).optional(),
+    insightType: InsightType,
+    focus: z.string().max(500).optional(),
   }),
 });
 
