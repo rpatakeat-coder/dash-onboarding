@@ -26,12 +26,13 @@ const Shell = () => {
   return (
     <PreferencesDialogContext.Provider value={{ open: () => setPrefsOpen(true) }}>
       <Routes>
-        <Route path="/" element={<Index />} />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/minha-carteira" element={<MinhaCarteira />} />
-        <Route path="/tv" element={<Tv />} />
+        <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+        <Route path="/minha-carteira" element={<ProtectedRoute><MinhaCarteira /></ProtectedRoute>} />
+        <Route path="/tv" element={<ProtectedRoute><Tv /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
+      </Routes>
       </Routes>
       <CommandPalette onOpenPreferences={() => setPrefsOpen(true)} />
       <PreferencesDialog open={prefsOpen} onOpenChange={setPrefsOpen} />
