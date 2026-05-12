@@ -1,4 +1,4 @@
-import { LucideIcon, TrendingDown, TrendingUp } from "lucide-react";
+import { LucideIcon, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface KpiCardProps {
@@ -8,6 +8,7 @@ interface KpiCardProps {
   icon: LucideIcon;
   tone?: "primary" | "secondary" | "success" | "warning";
   hint?: string;
+  onExplain?: () => void;
 }
 
 
@@ -18,10 +19,21 @@ const toneMap = {
   warning: "text-warning bg-warning/10",
 } as const;
 
-export const KpiCard = ({ label, value, delta, icon: Icon, tone = "primary", hint }: KpiCardProps) => {
+export const KpiCard = ({ label, value, delta, icon: Icon, tone = "primary", hint, onExplain }: KpiCardProps) => {
   const isUp = (delta?.value ?? 0) >= 0;
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm-soft transition-all hover:shadow-md-soft hover:-translate-y-0.5">
+      {onExplain && (
+        <button
+          type="button"
+          onClick={onExplain}
+          className="pdf-hide absolute right-3 top-3 z-10 inline-flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-muted-foreground opacity-0 transition hover:border-primary/30 hover:bg-primary/10 hover:text-primary group-hover:opacity-100 focus:opacity-100"
+          title="Explicar este KPI com IA"
+          aria-label="Explicar este KPI com IA"
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+        </button>
+      )}
       <div className="flex items-start justify-between">
         <div>
           <p className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">
