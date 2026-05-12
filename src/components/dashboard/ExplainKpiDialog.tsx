@@ -118,6 +118,14 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
                 </button>
               );
             })}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ml-auto h-7 gap-1.5 px-2 text-xs"
+              onClick={() => setCompareOpen(true)}
+            >
+              <GitCompare className="h-3.5 w-3.5" /> Comparar
+            </Button>
           </div>
         )}
 
