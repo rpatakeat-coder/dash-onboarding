@@ -181,6 +181,12 @@ export const SlaKpiRow = ({
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
           previousRange={deltas?.previousRange}
+          onExplain={onExplain && (() => onExplain({
+            kpiName: "Estoque total",
+            valorAtual: total,
+            valorAnterior: deltas?.total?.previous,
+            contexto: ctx,
+          }))}
         />
         <Card
           label="P75 SLA"
@@ -189,6 +195,11 @@ export const SlaKpiRow = ({
           hint="desde a criação do deal"
           tone="warning"
           tooltip="Percentil 75 calculado sobre sla_dias_criacao (dias desde a criação do deal). 75% dos deals estão abaixo deste valor."
+          onExplain={onExplain && (() => onExplain({
+            kpiName: "P75 SLA (dias desde criação)",
+            valorAtual: `${Math.round(slaP75)} dias`,
+            contexto: ctx,
+          }))}
         />
         <Card
           label="SLA médio"
@@ -205,6 +216,12 @@ export const SlaKpiRow = ({
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
           previousRange={deltas?.previousRange}
+          onExplain={onExplain && (() => onExplain({
+            kpiName: "SLA médio (dias na etapa)",
+            valorAtual: `${Math.round(slaMedio)} dias`,
+            valorAnterior: deltas?.slaMedio?.previous != null ? `${deltas.slaMedio.previous} dias` : undefined,
+            contexto: ctx,
+          }))}
         />
         <Card
           label="% no prazo (≤30d)"
@@ -221,6 +238,12 @@ export const SlaKpiRow = ({
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
           previousRange={deltas?.previousRange}
+          onExplain={onExplain && (() => onExplain({
+            kpiName: "% no prazo (≤30 dias na etapa)",
+            valorAtual: fmtPct(noPrazo),
+            valorAnterior: deltas?.noPrazo?.previous != null ? fmtPct(deltas.noPrazo.previous) : undefined,
+            contexto: `${ctx} ${noPrazoCount} clientes no prazo.`,
+          }))}
         />
         <Card
           label="SLA estourado (>30d)"
@@ -237,6 +260,12 @@ export const SlaKpiRow = ({
           deltaLoading={deltasLoading}
           currentRange={deltas?.currentRange}
           previousRange={deltas?.previousRange}
+          onExplain={onExplain && (() => onExplain({
+            kpiName: "% SLA estourado (>30 dias)",
+            valorAtual: fmtPct(estourado),
+            valorAnterior: deltas?.estourado?.previous != null ? fmtPct(deltas.estourado.previous) : undefined,
+            contexto: `${ctx} ${estouradoCount} clientes estourados.`,
+          }))}
         />
       </div>
     </section>
