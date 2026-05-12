@@ -32,7 +32,7 @@ const TONE: Record<HighlightCard["tone"], string> = {
   neutral: "border-border bg-card text-foreground",
 };
 
-export const Highlights = ({ rows, operadores }: Props) => {
+export const Highlights = ({ rows, operadores, hideOperatorIdentity }: Props) => {
   if (!rows.length) return null;
 
   // Operador com mais críticos
