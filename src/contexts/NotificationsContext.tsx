@@ -18,6 +18,7 @@ export interface Notification {
 interface Ctx {
   items: Notification[];
   unreadCount: number;
+  isRead: (id: string) => boolean;
   markRead: (id: string) => void;
   markAllRead: () => void;
   clear: () => void;
