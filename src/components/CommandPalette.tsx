@@ -108,7 +108,6 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
   }, [data]);
 
   const showOperators = operators.length > 0;
-  const showDeals = deals.length > 0;
 
   const run = (fn: () => void) => {
     setOpen(false);
