@@ -24,6 +24,7 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
     ? `kpi:${target.kpiName}:${target.valorAtual}:${target.valorAnterior ?? ""}`
     : "kpi:none";
   const { data, isLoading, error, generate } = useAiInsights<ExplainKpiTarget>("kpi", cacheKey);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (open && target && !data && !isLoading) {
@@ -31,6 +32,22 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, cacheKey]);
+
+  useEffect(() => {
+    if (!open) setCopied(false);
+  }, [open]);
+
+  const handleCopy = async () => {
+    if (!data?.content) return;
+    try {
+      await navigator.clipboard.writeText(data.content);
+      setCopied(true);
+      toast({ title: "Texto copiado", description: "Explicação copiada para a área de transferência." });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast({ title: "Erro ao copiar", description: "Não foi possível copiar o texto.", variant: "destructive" });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
