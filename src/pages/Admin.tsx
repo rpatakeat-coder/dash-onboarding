@@ -108,6 +108,9 @@ interface OperatorRow {
   role: "admin" | "user";
   agente_ativacao: string | null;
   created_at: string;
+  last_sign_in_at: string | null;
+  email_confirmed_at: string | null;
+  invited_at: string | null;
 }
 
 const AdminOperators = () => {
@@ -296,13 +299,14 @@ const AdminOperators = () => {
                 <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Email</th>
                 <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Papel</th>
                 <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Agente HubSpot</th>
+                <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Status</th>
                 <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Criado em</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={6} className="px-4 py-10 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" /></td></tr>
+                <tr><td colSpan={7} className="px-4 py-10 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" /></td></tr>
               )}
               {!loading && list.map((op) => {
                 const isMe = op.user_id === user?.id;
@@ -332,6 +336,15 @@ const AdminOperators = () => {
                     <td className="px-4 py-3 text-foreground">
                       {op.agente_ativacao || <span className="italic text-muted-foreground">—</span>}
                     </td>
+                    <td className="px-4 py-3">
+                      {op.last_sign_in_at ? (
+                        <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-500">Ativo</span>
+                      ) : op.email_confirmed_at ? (
+                        <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-500">Confirmado</span>
+                      ) : (
+                        <span className="rounded-full border border-muted-foreground/30 bg-muted px-2 py-0.5 text-xs text-muted-foreground">Pendente</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 font-numeric text-xs text-muted-foreground">
                       {new Date(op.created_at).toLocaleDateString("pt-BR")}
                     </td>
@@ -352,7 +365,7 @@ const AdminOperators = () => {
                 );
               })}
               {!loading && list.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Nenhum operador cadastrado.</td></tr>
+                <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Nenhum operador cadastrado.</td></tr>
               )}
             </tbody>
           </table>

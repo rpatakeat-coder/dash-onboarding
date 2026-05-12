@@ -520,7 +520,10 @@ export type Database = {
           avatar_url: string
           created_at: string
           email: string
+          email_confirmed_at: string
           full_name: string
+          invited_at: string
+          last_sign_in_at: string
           role: Database["public"]["Enums"]["operations_role"]
           user_id: string
         }[]
