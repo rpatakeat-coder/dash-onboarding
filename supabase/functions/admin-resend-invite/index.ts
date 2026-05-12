@@ -114,14 +114,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Shorten via is.gd
+    // Shorten via is.gd — tenta usar alias customizado "acesso-dash-XXXXX"
+    // (precisa ser único globalmente no is.gd; faz fallback para alias gerado).
     let short_link: string | null = null;
-    try {
-      const r = await fetch(
-        `https://is.gd/create.php?format=simple&url=${encodeURIComponent(action_link)}`,
-      );
+    const tryShorten = async (alias?: string) => {
+      const params = new URLSearchParams({ format: "simple", url: action_link! });
+      if (alias) params.set("shorturl", alias);
+      const r = await fetch(`https://is.gd/create.php?${params.toString()}`);
       const txt = (await r.text()).trim();
-      if (r.ok && txt.startsWith("http")) short_link = txt;
+      return r.ok && txt.startsWith("http") ? txt : null;
+    };
+    try {
+      // 5 tentativas com sufixo aleatório curto para evitar colisão
+      for (let i = 0; i < 5 && !short_link; i++) {
+        const suffix = Math.random().toString(36).slice(2, 7);
+        short_link = await tryShorten(`acesso-dash-${suffix}`);
+      }
+      // Fallback: alias automático
+      if (!short_link) short_link = await tryShorten();
     } catch (e) {
       console.error("shorten_failed", (e as Error).message);
     }
