@@ -1,13 +1,11 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LogIn, LogOut, Menu, Search, Settings, User } from "lucide-react";
+import { LogIn, LogOut, Search, Settings, User } from "lucide-react";
 import logo from "@/assets/logo-takeat.png";
 import { useAuth } from "@/hooks/useAuth";
 import { MainNav } from "@/components/MainNav";
+import { MobileMainNav } from "@/components/MobileMainNav";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
 import { APP_VERSION } from "@/lib/version";
 import { usePreferencesDialog } from "@/contexts/PreferencesDialogContext";
 
