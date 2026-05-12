@@ -36,6 +36,10 @@ const Index = () => {
       <DashboardHeader />
 
       <main className="mx-auto max-w-[1400px] space-y-6 px-4 py-6 sm:px-6 md:px-10">
+        <div className="flex items-center justify-end">
+          <RefreshDataButton />
+        </div>
+
         {error && (
           <div className="rounded-2xl border border-destructive/30 bg-destructive/[0.06] p-4 font-subtitle text-sm text-destructive">
             Erro ao carregar dados: {(error as Error).message}
