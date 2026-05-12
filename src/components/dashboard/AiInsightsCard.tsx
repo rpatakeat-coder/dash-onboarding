@@ -73,6 +73,7 @@ export const AiInsightsCard = ({
   const [focus, setFocus] = useState("");
   const [appliedFocus, setAppliedFocus] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
 
   const { getTemplate, isCustom } = useAiPromptTemplates();
   const effectiveTemplate = getTemplate(insightType);
