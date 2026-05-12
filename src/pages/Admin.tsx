@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Shield, ShieldCheck, ShieldOff, UserCog, Users, Settings as SettingsIcon, Plus, Trash2, Loader2, History, RefreshCw } from "lucide-react";
+import { Shield, ShieldCheck, ShieldOff, UserCog, Users, Settings as SettingsIcon, Plus, Trash2, Loader2, History, RefreshCw, UserPlus, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,13 +56,15 @@ const Admin = () => {
 
         <Tabs defaultValue="users" className="w-full">
           <TabsList>
+            <TabsTrigger value="operators" className="gap-1.5"><UserPlus className="h-3.5 w-3.5" />Operadores</TabsTrigger>
             <TabsTrigger value="users" className="gap-1.5"><Users className="h-3.5 w-3.5" />Usuários</TabsTrigger>
-            <TabsTrigger value="operadores" className="gap-1.5"><UserCog className="h-3.5 w-3.5" />Operadores</TabsTrigger>
+            <TabsTrigger value="vendedores" className="gap-1.5"><UserCog className="h-3.5 w-3.5" />Vendedores</TabsTrigger>
             <TabsTrigger value="config" className="gap-1.5"><SettingsIcon className="h-3.5 w-3.5" />Configurações</TabsTrigger>
             <TabsTrigger value="auditoria" className="gap-1.5"><History className="h-3.5 w-3.5" />Auditoria</TabsTrigger>
           </TabsList>
+          <TabsContent value="operators" className="mt-4"><AdminOperators /></TabsContent>
           <TabsContent value="users" className="mt-4"><AdminUsers /></TabsContent>
-          <TabsContent value="operadores" className="mt-4"><AdminOperadores /></TabsContent>
+          <TabsContent value="vendedores" className="mt-4"><AdminOperadores /></TabsContent>
           <TabsContent value="config" className="mt-4"><AdminConfig /></TabsContent>
           <TabsContent value="auditoria" className="mt-4"><AdminAuditoria /></TabsContent>
         </Tabs>
