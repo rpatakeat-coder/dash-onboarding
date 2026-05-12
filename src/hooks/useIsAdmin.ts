@@ -16,7 +16,7 @@ export const useIsAdmin = () => {
     }
     setLoading(true);
     supabase
-      .from("user_roles")
+      .from("user_roles_operations")
       .select("role")
       .eq("user_id", user.id)
       .eq("role", "admin")
