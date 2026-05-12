@@ -85,6 +85,39 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
           </div>
         )}
 
+        {versions.length > 1 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <span className="inline-flex shrink-0 items-center gap-1 font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
+              <History className="h-3 w-3" /> Histórico
+            </span>
+            {versions.map((v, i) => {
+              const isActive = i === activeIndex;
+              const label =
+                i === 0 ? "Atual" : `v${versions.length - i}`;
+              const time = new Date(v.at).toLocaleTimeString("pt-BR", {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+              return (
+                <button
+                  key={v.at}
+                  type="button"
+                  onClick={() => selectVersion(i)}
+                  className={cn(
+                    "shrink-0 rounded-full border px-2.5 py-0.5 font-subtitle text-[11px] transition",
+                    isActive
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                  )}
+                  title={`Gerada às ${time}`}
+                >
+                  {label} · {time}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {error && (
           <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 font-small text-xs text-destructive">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
