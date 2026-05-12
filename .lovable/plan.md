@@ -1,101 +1,68 @@
+# Mais profundidade no Insights da IA
 
-# Painel "Insights da IA"
+Três recursos novos, todos no painel de Insights e no modal "Explicar KPI". Sem mudanças de schema — tudo aproveita a edge function `ai-insights` e o histórico de versões já existente em sessionStorage.
 
-Provedor: **OpenAI** (modelo padrão `gpt-4o-mini`, configurável). Sua API Key fica como secret no Supabase — nunca vai pro frontend. Disparo **manual** via botão "Gerar análise", com cache de 10 min por sessão.
+## 1. Comparar duas versões lado a lado
 
-## Entregas
+**O que muda na UI**
+- No `AiInsightsCard` e no `ExplainKpiDialog`, quando houver 2+ versões no histórico, surge o botão **"Comparar"** ao lado do seletor de versões.
+- Abre um diálogo amplo (`max-w-5xl`) com duas colunas:
+  - Esquerda: versão âncora (default = mais antiga visível).
+  - Direita: versão comparada (default = mais nova/atual).
+- Cada coluna mostra: timestamp, modelo, foco aplicado (se houver), conteúdo em Markdown.
+- Acima das colunas, dois `Select` permitem trocar quais versões comparar.
+- Toggle **"Realçar diferenças"** que aplica `diff` por linha (verde = adicionado, vermelho = removido) usando a lib `diff` (~10kb). Quando desligado, exibe markdown puro lado a lado.
+- Em telas estreitas (<768px), as colunas viram tabs.
 
-1. **Card "Insights da IA"** no topo do dashboard (`Index.tsx`) com:
-   - Botão **"Gerar análise"** + estado de loading.
-   - **Resumo executivo do dia** (3–5 bullets em markdown).
-   - **Sugestões de ação por operador** (top 5 com mais críticos), cada uma com nome do operador + ação recomendada.
-   - Timestamp da última geração + botão "Atualizar".
+**Onde toca**
+- Novo: `src/components/dashboard/AiVersionsCompareDialog.tsx`.
+- Editar: `AiInsightsCard.tsx` e `ExplainKpiDialog.tsx` (ler `versions` do hook, abrir o diálogo).
+- Dependência nova: `diff`.
 
-2. **Botão "Explicar este KPI"** em cada `KpiCard` → abre modal com explicação contextual (compara valor atual com snapshot anterior, contextualiza variação).
+## 2. Modal de análise focada por operador
 
-3. **Edge function `ai-insights`** (Supabase) que:
-   - Recebe `{ mode: "dashboard" | "kpi", payload }`.
-   - Monta prompt com os dados (KPIs, operadores, snapshot anterior).
-   - Chama OpenAI com sua chave (`OPENAI_API_KEY` secret).
-   - Devolve markdown estruturado.
-   - Trata erros 401/429/quota explicitamente.
+**O que muda na UI**
+- `OperatorsTable.tsx` ganha um botão Sparkles em cada linha (mesmo padrão do `KpiCard`), visível em hover, com `aria-label="Analisar operador com IA"`.
+- Clicar abre `OperatorInsightDialog` (novo), que reusa `useAiInsights` em modo `"dashboard"` com:
+  - `insightType` fixo em `"operators"`.
+  - `operadores` reduzido a apenas o operador clicado.
+  - `kpis` enviados são os do operador (ativos, críticos, sla médio, mrr) + um resumo agregado da operação para contexto.
+  - `cacheKey` próprio: `dashboard:operator:<nome>:<scopeKey>` — não polui o cache do painel principal.
+- Layout do modal: cabeçalho com nome do operador, badges (ativos / críticos / SLA), conteúdo gerado pela IA, mesmos botões de **Regenerar / Copiar / Exportar** (item 3) e o seletor de **Histórico** já existente.
 
-4. **Secrets**: `OPENAI_API_KEY` (sua chave) + opcional `OPENAI_MODEL` (default `gpt-4o-mini`).
+**Onde toca**
+- Novo: `src/components/dashboard/OperatorInsightDialog.tsx`.
+- Editar: `OperatorsTable.tsx` (botão + estado do dialog), `Index.tsx` se precisar passar contexto agregado.
+- Edge function `ai-insights`: já aceita `insightType: "operators"`, sem alteração de schema. Apenas garantir que o prompt funciona bem com 1 único operador no payload (ele já não inventa nomes).
 
-## Arquitetura
+## 3. Exportar insight em PDF e Markdown
 
-```text
-[KpiCard / Index.tsx] ──click──▶ [useAiInsights hook]
-                                        │
-                                        ▼
-                          supabase.functions.invoke('ai-insights')
-                                        │
-                                        ▼
-                    [Edge Function ai-insights/index.ts]
-                          │ valida JWT + monta prompt
-                          ▼
-                    api.openai.com/v1/chat/completions
-                          │
-                          ▼
-                    devolve { content, usage, model }
-```
+**O que muda na UI**
+- Novo componente utilitário `AiExportMenu` (DropdownMenu com 3 itens: "Copiar como Markdown", "Baixar .md", "Baixar PDF").
+- Aparece no rodapé/cabeçalho de:
+  - `AiInsightsCard` (substitui o botão "Atualizar" duplicado por um menu próprio).
+  - `ExplainKpiDialog`.
+  - `OperatorInsightDialog`.
+  - `AiVersionsCompareDialog` (exporta as 2 versões num único arquivo).
 
-## Detalhes técnicos
+**Como geramos**
+- **Markdown**: serializa cabeçalho (título, escopo, timestamp, modelo, foco) + conteúdo. Para comparação, dois blocos `## Versão A` / `## Versão B`.
+- **PDF**: usar `jspdf` + `html2canvas` (já presentes no projeto pelo `ExportPdfButton.tsx`). Renderizamos um nó oculto com o markdown convertido (via `react-markdown` + `renderToString`) e a marca Takeat do `pdfBranding.ts`. Mantemos uma página A4, header com logo + título "Insights da IA — {tipo}", footer com data/hora.
 
-**Edge function** (`supabase/functions/ai-insights/index.ts`):
-- Valida JWT do usuário autenticado.
-- Aceita 2 modos:
-  - `mode: "dashboard"` → recebe `{ kpis, operadores, snapshotAnterior, periodo }` e retorna resumo + sugestões.
-  - `mode: "kpi"` → recebe `{ kpiName, valorAtual, valorAnterior, contexto }` e retorna explicação curta (2–3 frases).
-- Sistema de prompt em PT-BR, tom executivo, sem inventar números.
-- `temperature: 0.2`, `max_tokens: 600` (dashboard) / `200` (kpi).
-- Trata 429 → "Limite atingido, tente em alguns minutos"; 402/insufficient_quota → "Créditos OpenAI esgotados".
-- CORS habilitado, `verify_jwt = true` (no `config.toml`).
+**Onde toca**
+- Novo: `src/components/dashboard/AiExportMenu.tsx`, `src/lib/aiInsightExport.ts` (helpers `toMarkdown`, `toPdf`).
+- Editar: os três componentes acima para incluir o menu.
+- Sem dependências novas (jspdf, html2canvas e react-markdown já existem).
 
-**Hook `useAiInsights`** (`src/hooks/useAiInsights.ts`):
-- Cache em `sessionStorage` por chave (`dashboard:<hashFiltros>` / `kpi:<nome>:<valor>`), TTL 10 min.
-- Retorna `{ data, isLoading, error, generate, lastGeneratedAt }`.
-- Não dispara automático — só quando o usuário clica.
+## Detalhes técnicos comuns
 
-**Componente `AiInsightsCard`** (`src/components/dashboard/AiInsightsCard.tsx`):
-- Header com ícone Sparkles, título "Insights da IA", badge "OpenAI".
-- Estado vazio: CTA "Gerar análise" com explicação curta.
-- Estado loading: skeleton + "Analisando dados…".
-- Estado pronto: 2 seções (Resumo / Ações por operador) renderizadas com `react-markdown` (instalar).
-- Footer: "Gerado há X min · Modelo: gpt-4o-mini" + botão refresh.
-- Erros mostrados em alerta inline com mensagem amigável.
+- Histórico já é mantido por `useAiInsights` (até 5 versões/`cacheKey`, TTL 10 min). Os recursos 1 e 3 só consomem; o recurso 2 cria suas próprias `cacheKey`s.
+- Auditoria: cada exportação registra entrada em `audit_logs` via `src/lib/audit.ts` (`action: "ai_insights_exported"`, metadata com `format` e `mode`). Sem nova RLS — política de insert existente cobre.
+- Rate limit da edge function permanece em 10 req/min/usuário; os novos modais reaproveitam cache antes de chamar a IA.
+- Acessibilidade: todos os botões com `aria-label`, modais com foco inicial no botão primário, navegação por teclado nas tabs do compare.
 
-**Modal `ExplainKpiDialog`** (`src/components/dashboard/ExplainKpiDialog.tsx`):
-- Trigger: ícone discreto (Sparkles) no canto do `KpiCard`.
-- Mostra: nome do KPI, valor atual, delta vs período anterior, explicação da IA.
+## Fora do escopo (para iteração futura)
 
-**Integrações**:
-- `KpiCard.tsx`: nova prop opcional `onExplain?: () => void` + botão sparkles no canto.
-- `Index.tsx`: renderizar `<AiInsightsCard />` logo após o header de filtros.
-- Estado do modal de explicação centralizado em `Index.tsx` (passa `onExplain` para cada KpiCard).
-
-**Dependência nova**: `react-markdown` (~30kb).
-
-## Segurança
-
-- `OPENAI_API_KEY` **só** no Supabase secrets, nunca no client.
-- Edge function valida JWT → só usuários logados podem gerar.
-- Rate limit simples in-memory: máx 10 req/min por user_id (proteção contra abuso).
-- Logs de uso na tabela `audit_logs` existente (`action: "ai_insights_generated"`, `metadata: { mode, model, tokens }`) — opcional mas recomendado.
-
-## Fluxo de implementação
-
-1. Pedir o secret `OPENAI_API_KEY` (e opcional `OPENAI_MODEL`).
-2. Criar edge function `ai-insights` com os 2 modos.
-3. Criar hook `useAiInsights` com cache.
-4. Criar `AiInsightsCard` e plugar no `Index.tsx`.
-5. Criar `ExplainKpiDialog` e adicionar trigger no `KpiCard`.
-6. Instalar `react-markdown`.
-7. Testar: gerar análise, explicar KPI, simular erro de quota.
-
-## O que NÃO está incluído (fica para depois)
-
-- Streaming de resposta (vai chegar de uma vez).
-- Histórico persistente das análises geradas (só cache de sessão).
-- Geração automática agendada.
-- Análise por operador individual em modal próprio (só lista no card).
+- Sincronizar histórico no Supabase (hoje fica em sessionStorage).
+- Diff semântico (comparação por trecho ao invés de por linha).
+- Exportar análise consolidada de vários operadores em um único PDF.
