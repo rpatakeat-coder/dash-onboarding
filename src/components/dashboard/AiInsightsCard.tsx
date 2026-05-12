@@ -11,6 +11,7 @@ import {
   LineChart,
   FileText,
   Settings2,
+  GitCompare,
 } from "lucide-react";
 import { useAiInsights } from "@/hooks/useAiInsights";
 import { useAiPromptTemplates } from "@/hooks/useAiPromptTemplates";
@@ -18,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { AiPromptSettingsDialog } from "./AiPromptSettingsDialog";
+import { AiVersionsCompareDialog } from "./AiVersionsCompareDialog";
+import { AiExportMenu } from "./AiExportMenu";
 import type { InsightType } from "@/lib/aiPromptTemplates";
 
 interface AiInsightsCardProps {
@@ -70,6 +73,7 @@ export const AiInsightsCard = ({
   const [focus, setFocus] = useState("");
   const [appliedFocus, setAppliedFocus] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
 
   const { getTemplate, isCustom } = useAiPromptTemplates();
   const effectiveTemplate = getTemplate(insightType);
@@ -90,7 +94,7 @@ export const AiInsightsCard = ({
     [insightType, templateHash, appliedFocus, scopeKey],
   );
 
-  const { data, isLoading, error, generate, lastGeneratedAt } = useAiInsights<{
+  const { data, isLoading, error, generate, lastGeneratedAt, versions } = useAiInsights<{
     periodo?: string;
     kpis: Record<string, string | number>;
     operadores: AiInsightsCardProps["operadores"];
@@ -149,12 +153,37 @@ export const AiInsightsCard = ({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {lastGeneratedAt && (
             <span className="font-small text-xs text-muted-foreground">
               Gerado {timeAgo(lastGeneratedAt)}
               {data?.model ? ` · ${data.model}` : ""}
             </span>
+          )}
+          {versions.length > 1 && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => setCompareOpen(true)}
+              title="Comparar versões geradas"
+            >
+              <GitCompare className="h-3.5 w-3.5" /> Comparar
+            </Button>
+          )}
+          {data && (
+            <AiExportMenu
+              content={data.content}
+              auditContext={`dashboard:${insightType}`}
+              meta={{
+                title: `Insights da IA — ${activeType.label}`,
+                subtitle: periodo,
+                typeLabel: activeType.label,
+                focus: appliedFocus || undefined,
+                model: data.model,
+                generatedAt: lastGeneratedAt ?? Date.now(),
+              }}
+            />
           )}
           <Button
             size="icon"
@@ -279,6 +308,14 @@ export const AiInsightsCard = ({
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
         initialType={insightType}
+      />
+      <AiVersionsCompareDialog
+        open={compareOpen}
+        onOpenChange={setCompareOpen}
+        versions={versions}
+        title={`Insights da IA · ${activeType.label}`}
+        subtitle={periodo}
+        typeLabel={activeType.label}
       />
     </section>
   );

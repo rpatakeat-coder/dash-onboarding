@@ -857,6 +857,21 @@ const Index = () => {
                 setSelectedOperator(op);
                 setOperatorOpen(true);
               }}
+              contextoOperacao={{
+                estoque_total: kpiData.total,
+                sla_p75_dias: Math.round(kpiData.slaP75),
+                sla_medio_dias: Math.round(kpiData.slaMedio),
+                pct_no_prazo: Number(kpiData.noPrazo.toFixed(1)),
+                pct_sla_estourado: Number(kpiData.estourado.toFixed(1)),
+              }}
+              scopeKey={JSON.stringify({
+                opPeriod,
+                ativador: [...ativadorSel].sort(),
+                etapa: [...etapaSel].sort(),
+                band: [...bandSel].sort(),
+                perfil: [...perfilSel].sort(),
+                onlyMine,
+              })}
             />
           </section>
         )}

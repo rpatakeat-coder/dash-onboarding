@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Loader2, Sparkles, AlertCircle, Copy, Check, RefreshCw, History } from "lucide-react";
+import { Loader2, Sparkles, AlertCircle, Copy, Check, RefreshCw, History, GitCompare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useAiInsights } from "@/hooks/useAiInsights";
 import { toast } from "@/hooks/use-toast";
+import { AiExportMenu } from "./AiExportMenu";
+import { AiVersionsCompareDialog } from "./AiVersionsCompareDialog";
 
 export interface ExplainKpiTarget {
   kpiName: string;
@@ -27,6 +29,7 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
   const { data, isLoading, error, generate, versions, activeIndex, selectVersion, lastGeneratedAt } =
     useAiInsights<ExplainKpiTarget>("kpi", cacheKey);
   const [copied, setCopied] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
 
   useEffect(() => {
     if (open && target && !data && !isLoading) {
@@ -115,6 +118,14 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
                 </button>
               );
             })}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ml-auto h-7 gap-1.5 px-2 text-xs"
+              onClick={() => setCompareOpen(true)}
+            >
+              <GitCompare className="h-3.5 w-3.5" /> Comparar
+            </Button>
           </div>
         )}
 
@@ -138,7 +149,7 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
         )}
 
         {target && (
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button
               size="sm"
               variant="outline"
@@ -151,6 +162,19 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
                 <><Copy className="mr-1.5 h-3.5 w-3.5" /> Copiar texto</>
               )}
             </Button>
+            {data && (
+              <AiExportMenu
+                content={data.content}
+                auditContext={`kpi:${target.kpiName}`}
+                meta={{
+                  title: "Insights da IA — KPI",
+                  subtitle: target.kpiName,
+                  typeLabel: "Explicar KPI",
+                  model: data.model,
+                  generatedAt: lastGeneratedAt ?? Date.now(),
+                }}
+              />
+            )}
             <Button
               size="sm"
               variant="outline"
@@ -166,6 +190,16 @@ export const ExplainKpiDialog = ({ open, onOpenChange, target }: ExplainKpiDialo
           </div>
         )}
       </DialogContent>
+      {target && (
+        <AiVersionsCompareDialog
+          open={compareOpen}
+          onOpenChange={setCompareOpen}
+          versions={versions}
+          title="Explicar KPI"
+          subtitle={target.kpiName}
+          typeLabel="KPI"
+        />
+      )}
     </Dialog>
   );
 };
