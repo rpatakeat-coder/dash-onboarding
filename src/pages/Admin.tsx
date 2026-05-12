@@ -256,6 +256,35 @@ const AdminOperators = () => {
             Enviar convite
           </Button>
         </div>
+        {inviteLink && (
+          <div className="mt-4 rounded-xl border border-primary/30 bg-primary/5 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-small text-xs text-muted-foreground">
+                Link de convite para <span className="font-medium text-foreground">{inviteLink.email}</span>
+              </p>
+              <div className="flex gap-1.5">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(inviteLink.link);
+                      toast.success("Link copiado");
+                    } catch {
+                      toast.error("Não foi possível copiar");
+                    }
+                  }}
+                >
+                  Copiar
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setInviteLink(null)}>Fechar</Button>
+              </div>
+            </div>
+            <code className="mt-2 block max-w-full overflow-x-auto whitespace-nowrap rounded bg-background px-2 py-1.5 text-[11px] text-foreground">
+              {inviteLink.link}
+            </code>
+          </div>
+        )}
       </div>
 
       <div className="rounded-2xl border border-border bg-card">
