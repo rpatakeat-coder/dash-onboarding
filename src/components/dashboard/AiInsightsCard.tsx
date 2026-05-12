@@ -153,12 +153,37 @@ export const AiInsightsCard = ({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {lastGeneratedAt && (
             <span className="font-small text-xs text-muted-foreground">
               Gerado {timeAgo(lastGeneratedAt)}
               {data?.model ? ` · ${data.model}` : ""}
             </span>
+          )}
+          {versions.length > 1 && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => setCompareOpen(true)}
+              title="Comparar versões geradas"
+            >
+              <GitCompare className="h-3.5 w-3.5" /> Comparar
+            </Button>
+          )}
+          {data && (
+            <AiExportMenu
+              content={data.content}
+              auditContext={`dashboard:${insightType}`}
+              meta={{
+                title: `Insights da IA — ${activeType.label}`,
+                subtitle: periodo,
+                typeLabel: activeType.label,
+                focus: appliedFocus || undefined,
+                model: data.model,
+                generatedAt: lastGeneratedAt ?? Date.now(),
+              }}
+            />
           )}
           <Button
             size="icon"
