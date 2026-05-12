@@ -117,6 +117,7 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
   const value: Ctx = {
     items,
     unreadCount: items.filter((n) => !readIds.has(n.id)).length,
+    isRead: (id) => readIds.has(id),
     markRead: (id) => {
       const next = new Set(readIds);
       next.add(id);
