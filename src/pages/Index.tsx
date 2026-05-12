@@ -26,6 +26,8 @@ import { TrendChart } from "@/components/dashboard/TrendChart";
 import { SlaLegend } from "@/components/dashboard/SlaLegend";
 import { ExportCsvButton } from "@/components/dashboard/ExportCsvButton";
 import { ExportPdfButton } from "@/components/dashboard/ExportPdfButton";
+import { AiInsightsCard } from "@/components/dashboard/AiInsightsCard";
+import { ExplainKpiDialog, type ExplainKpiTarget } from "@/components/dashboard/ExplainKpiDialog";
 import { useUrlSets } from "@/hooks/useUrlSets";
 import { useDealDrawer } from "@/contexts/DealDrawer";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
