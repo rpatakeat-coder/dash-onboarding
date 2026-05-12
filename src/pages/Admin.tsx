@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Shield, ShieldCheck, ShieldOff, Users, Settings as SettingsIcon, Trash2, Loader2, History, RefreshCw, UserPlus, Mail } from "lucide-react";
+import { Shield, ShieldCheck, ShieldOff, Users, Settings as SettingsIcon, Trash2, Loader2, History, RefreshCw, UserPlus, Mail, Send, Copy, MessageCircle, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +9,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { logAudit } from "@/lib/audit";
 import { z } from "zod";
 
@@ -120,6 +121,7 @@ const AdminOperators = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [delId, setDelId] = useState<string | null>(null);
+  const [resendId, setResendId] = useState<string | null>(null);
   const [inviteLink, setInviteLink] = useState<{ email: string; link: string } | null>(null);
   const [form, setForm] = useState({ email: "", full_name: "", role: "user" as "admin" | "user", agente_ativacao: "" });
 
@@ -200,6 +202,39 @@ const AdminOperators = () => {
       metadata: { email: op.email, role: op.role, agente_ativacao: op.agente_ativacao },
     });
     await load();
+  };
+
+  const resend = async (op: OperatorRow, channels: ("email" | "whatsapp" | "link_only")[]) => {
+    setResendId(op.user_id);
+    const { data, error } = await supabase.functions.invoke("admin-resend-invite", {
+      body: { user_id: op.user_id, channels },
+    });
+    setResendId(null);
+    if (error || (data as { error?: string })?.error) {
+      const msg = (data as { error?: string })?.error || error?.message;
+      return toast.error("Erro ao reenviar", { description: typeof msg === "string" ? msg : "falha desconhecida" });
+    }
+    const link =
+      (data as { short_link?: string })?.short_link ||
+      (data as { action_link?: string })?.action_link ||
+      null;
+    if (link) {
+      try { await navigator.clipboard.writeText(link); } catch { /* ignore */ }
+      setInviteLink({ email: op.email || op.user_id, link });
+    }
+    const labels: Record<string, string> = {
+      email: "Email enviado",
+      whatsapp: "WhatsApp acionado",
+      link_only: "Link copiado",
+    };
+    toast.success(channels.map((c) => labels[c]).join(" + "));
+    void logAudit({
+      action: "operator.invite_resend",
+      entity_type: "user_role",
+      entity_id: op.user_id,
+      summary: `Reenviou convite para ${op.email || op.user_id} via ${channels.join(", ")}`,
+      metadata: { email: op.email, channels },
+    });
   };
 
   return (
@@ -349,17 +384,49 @@ const AdminOperators = () => {
                       {new Date(op.created_at).toLocaleDateString("pt-BR")}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={delId === op.user_id || isMe}
-                        onClick={() => remove(op)}
-                        className="gap-1.5 text-destructive hover:text-destructive"
-                        title={isMe ? "Você não pode excluir a si mesmo" : undefined}
-                      >
-                        {delId === op.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                        Excluir
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={resendId === op.user_id}
+                              className="gap-1.5"
+                            >
+                              {resendId === op.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                              Reenviar
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-52">
+                            <DropdownMenuLabel className="text-xs">Reenviar convite via</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => resend(op, ["email"])}>
+                              <Mail className="mr-2 h-3.5 w-3.5" /> Email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => resend(op, ["whatsapp"])}>
+                              <MessageCircle className="mr-2 h-3.5 w-3.5" /> WhatsApp (webhook)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => resend(op, ["email", "whatsapp"])}>
+                              <Send className="mr-2 h-3.5 w-3.5" /> Email + WhatsApp
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => resend(op, ["link_only"])}>
+                              <Link2 className="mr-2 h-3.5 w-3.5" /> Apenas copiar link
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={delId === op.user_id || isMe}
+                          onClick={() => remove(op)}
+                          className="gap-1.5 text-destructive hover:text-destructive"
+                          title={isMe ? "Você não pode excluir a si mesmo" : undefined}
+                        >
+                          {delId === op.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                          Excluir
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 );
