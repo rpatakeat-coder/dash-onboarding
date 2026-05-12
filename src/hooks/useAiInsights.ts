@@ -40,10 +40,7 @@ function writeCache(key: string, data: AiInsightsResponse) {
   }
 }
 
-export function useAiInsights<TPayload extends Record<string, unknown>>(
-  mode: AiInsightMode,
-  cacheKey: string,
-) {
+export function useAiInsights<TPayload>(mode: AiInsightMode, cacheKey: string) {
   const [data, setData] = useState<AiInsightsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
