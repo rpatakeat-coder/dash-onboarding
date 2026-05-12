@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   CommandDialog,
   CommandEmpty,
@@ -7,24 +6,14 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command";
+import { User } from "lucide-react";
 import {
-  Briefcase,
-  LayoutDashboard,
-  Tv as TvIcon,
-  Building2,
-  User,
-} from "lucide-react";
-import {
-  slaBand,
   SLA_BAND_META,
   useDashOperacoes,
-  type DashRow,
   type OperatorStat,
   type SlaBand,
 } from "@/hooks/useDashOperacoes";
-import { useDealDrawer } from "@/contexts/DealDrawer";
 import { usePreferences } from "@/contexts/PreferencesContext";
 import { cn } from "@/lib/utils";
 
@@ -72,9 +61,7 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
   const [period, setPeriod] = useState<Period>("tudo");
   const [stages, setStages] = useState<Set<string>>(new Set());
   const [bands, setBands] = useState<Set<SlaBand>>(new Set());
-  const navigate = useNavigate();
   const { data } = useDashOperacoes();
-  const { open: openDeal } = useDealDrawer();
   const { cycleTheme } = usePreferences();
 
   useEffect(() => {
@@ -114,41 +101,13 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
       .slice(0, 30);
   }, [data, query]);
 
-  const slaOf = (r: DashRow) => {
-    const n = parseFloat(String(r.sla_dias_etapa ?? "").replace(",", "."));
-    return Number.isFinite(n) ? n : 0;
-  };
-
   const allStages = useMemo(() => {
     const set = new Set<string>();
     (data?.rows ?? []).forEach((r) => r.etapa_negocio && set.add(r.etapa_negocio));
     return [...set].sort();
   }, [data]);
 
-  const deals = useMemo(() => {
-    const cutoff =
-      period === "tudo"
-        ? 0
-        : Date.now() - (PERIODS.find((p) => p.id === period)?.days ?? 0) * 86400000;
-    const list = (data?.rows ?? [])
-      .filter((d) => {
-        if (cutoff && dateMs(d.data_entrada_fase) < cutoff) return false;
-        if (stages.size > 0 && !(d.etapa_negocio && stages.has(d.etapa_negocio))) return false;
-        if (bands.size > 0 && !bands.has(slaBand(slaOf(d)))) return false;
-        return true;
-      })
-      .map((d) => {
-        const text = `${d.nome_negocio ?? ""} ${d.etapa_negocio ?? ""} ${d.agente_ativacao ?? ""}`;
-        return { d, score: scoreMatch(text, query), recency: dateMs(d.data_entrada_fase) };
-      })
-      .filter((x) => x.score > 0);
-    return list
-      .sort((a, b) => (b.score === a.score ? b.recency - a.recency : b.score - a.score))
-      .slice(0, 80);
-  }, [data, query, period, stages, bands]);
-
   const showOperators = operators.length > 0;
-  const showDeals = deals.length > 0;
 
   const run = (fn: () => void) => {
     setOpen(false);
@@ -298,67 +257,23 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
       </div>
       <CommandList>
         <CommandEmpty>Nenhum resultado.</CommandEmpty>
-        <CommandGroup heading="Navegação">
-          {[
-            { to: "/", label: "Visão geral", Icon: LayoutDashboard },
-            { to: "/minha-carteira", label: "Minha carteira", Icon: Briefcase },
-            { to: "/tv", label: "Modo TV", Icon: TvIcon },
-          ]
-            .filter((p) => scoreMatch(p.label, query) > 0)
-            .map(({ to, label, Icon }) => (
+        {showOperators && (
+          <CommandGroup heading={`Operadores (${operators.length})`}>
+            {operators.map(({ op }: { op: OperatorStat }) => (
               <CommandItem
-                key={to}
-                value={`page ${label}`}
-                onSelect={() => run(() => navigate(to))}
+                key={op.nome}
+                value={`op ${op.nome}`}
+                onSelect={() =>
+                  run(() => window.dispatchEvent(new CustomEvent("open-operator", { detail: op })))
+                }
                 className={ITEM_CLS}
               >
-                <Icon className="mr-2 h-4 w-4" /> {label}
+                <User className="mr-2 h-4 w-4" />
+                <span className="flex-1">{op.nome}</span>
+                <span className="ml-2 text-xs text-muted-foreground">{op.ativos} ativos</span>
               </CommandItem>
             ))}
-        </CommandGroup>
-        {showOperators && (
-          <>
-            <CommandSeparator />
-            <CommandGroup heading={`Operadores (${operators.length})`}>
-              {operators.map(({ op }: { op: OperatorStat }) => (
-                <CommandItem
-                  key={op.nome}
-                  value={`op ${op.nome}`}
-                  onSelect={() =>
-                    run(() => window.dispatchEvent(new CustomEvent("open-operator", { detail: op })))
-                  }
-                  className={ITEM_CLS}
-                >
-                  <User className="mr-2 h-4 w-4" />
-                  <span className="flex-1">{op.nome}</span>
-                  <span className="ml-2 text-xs text-muted-foreground">{op.ativos} ativos</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </>
-        )}
-        {showDeals && (
-          <>
-            <CommandSeparator />
-            <CommandGroup heading={`Deals (${deals.length})`}>
-              {deals.map(({ d }: { d: DashRow }) => (
-                <CommandItem
-                  key={d.id_deal}
-                  value={`deal ${d.nome_negocio ?? d.id_deal}`}
-                  onSelect={() => run(() => openDeal(d))}
-                  className={ITEM_CLS}
-                >
-                  <Building2 className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="flex-1 truncate font-medium">
-                    {d.nome_negocio || `Deal ${d.id_deal}`}
-                  </span>
-                  <span className="ml-2 rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-subtitle text-[10px] text-muted-foreground">
-                    {d.etapa_negocio ?? "—"}
-                  </span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </>
+          </CommandGroup>
         )}
       </CommandList>
     </CommandDialog>
