@@ -725,7 +725,7 @@ const Index = () => {
           <section className="mb-8">
             <Highlights
               rows={personalRows}
-              operadores={opData.operadores}
+              operadores={isAdmin ? opData.operadores : opData.operadores.filter((o) => o.nome.toLowerCase() === myAgente.toLowerCase())}
               hideOperatorIdentity={!isAdmin}
             />
           </section>
