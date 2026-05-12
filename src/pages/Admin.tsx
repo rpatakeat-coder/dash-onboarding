@@ -299,6 +299,7 @@ const AdminOperators = () => {
                 <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Email</th>
                 <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Papel</th>
                 <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Agente HubSpot</th>
+                <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Status</th>
                 <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Criado em</th>
                 <th className="px-4 py-3"></th>
               </tr>
