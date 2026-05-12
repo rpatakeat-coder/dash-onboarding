@@ -26,9 +26,6 @@ export const PreferencesDialog = ({ open, onOpenChange }: Props) => {
     supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle()
       .then(({ data }) => setAvatarUrl(data?.avatar_url ?? null));
   }, [open, user]);
-
-  const onPickFile = () => fileRef.current?.click();
-
   const handleUpload = async (file: File) => {
     if (!user) return;
     if (!file.type.startsWith("image/")) return toast.error("Selecione uma imagem");
