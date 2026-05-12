@@ -54,7 +54,7 @@ const Admin = () => {
           </p>
         </header>
 
-        <Tabs defaultValue="users" className="w-full">
+        <Tabs defaultValue="operators" className="w-full">
           <TabsList>
             <TabsTrigger value="operators" className="gap-1.5"><UserPlus className="h-3.5 w-3.5" />Operadores</TabsTrigger>
             <TabsTrigger value="users" className="gap-1.5"><Users className="h-3.5 w-3.5" />Usuários</TabsTrigger>
@@ -103,6 +103,225 @@ const ClaimAdminScreen = () => {
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
         Reivindicar admin
       </Button>
+    </div>
+  );
+};
+
+// ============ OPERATORS (real users with auth) ============
+interface OperatorRow {
+  user_id: string;
+  email: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  role: "admin" | "user";
+  agente_ativacao: string | null;
+  created_at: string;
+}
+
+const AdminOperators = () => {
+  const { user } = useAuth();
+  const [list, setList] = useState<OperatorRow[]>([]);
+  const [agentes, setAgentes] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [delId, setDelId] = useState<string | null>(null);
+  const [form, setForm] = useState({ email: "", full_name: "", role: "user" as "admin" | "user", agente_ativacao: "" });
+
+  const load = async () => {
+    setLoading(true);
+    const [{ data: ops, error: oErr }, { data: ags, error: aErr }] = await Promise.all([
+      supabase.rpc("list_operators"),
+      supabase.rpc("distinct_agentes_ativacao"),
+    ]);
+    setLoading(false);
+    if (oErr) return toast.error("Erro ao carregar operadores", { description: oErr.message });
+    if (aErr) toast.error("Erro ao carregar agentes", { description: aErr.message });
+    setList((ops as OperatorRow[]) ?? []);
+    setAgentes(((ags as { agente: string }[]) ?? []).map((a) => a.agente));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const invite = async () => {
+    if (!form.email.trim() || !form.agente_ativacao.trim()) {
+      return toast.error("Informe email e agente HubSpot");
+    }
+    setBusy(true);
+    const { data, error } = await supabase.functions.invoke("admin-create-operator", {
+      body: {
+        email: form.email.trim(),
+        full_name: form.full_name.trim() || undefined,
+        role: form.role,
+        agente_ativacao: form.agente_ativacao,
+      },
+    });
+    setBusy(false);
+    if (error || (data as { error?: string })?.error) {
+      const msg = (data as { error?: string })?.error || error?.message;
+      return toast.error("Erro ao convidar", { description: typeof msg === "string" ? msg : "falha desconhecida" });
+    }
+    toast.success(`Convite enviado para ${form.email}`);
+    void logAudit({
+      action: "operator.invite",
+      entity_type: "user_role",
+      entity_id: form.email,
+      summary: `Convidou ${form.email} (${form.role}) — agente ${form.agente_ativacao}`,
+      metadata: { email: form.email, role: form.role, agente_ativacao: form.agente_ativacao },
+    });
+    setForm({ email: "", full_name: "", role: "user", agente_ativacao: "" });
+    await load();
+  };
+
+  const remove = async (op: OperatorRow) => {
+    if (op.user_id === user?.id) return toast.error("Você não pode excluir a si mesmo");
+    if (!confirm(`Apagar definitivamente ${op.email || op.full_name || op.user_id}? Essa ação remove o login, perfil e papel.`)) return;
+    setDelId(op.user_id);
+    const { data, error } = await supabase.functions.invoke("admin-delete-operator", {
+      body: { user_id: op.user_id },
+    });
+    setDelId(null);
+    if (error || (data as { error?: string })?.error) {
+      const msg = (data as { error?: string })?.error || error?.message;
+      return toast.error("Erro ao excluir", { description: typeof msg === "string" ? msg : "falha desconhecida" });
+    }
+    toast.success("Operador excluído");
+    void logAudit({
+      action: "operator.delete",
+      entity_type: "user_role",
+      entity_id: op.user_id,
+      summary: `Excluiu operador ${op.email || op.full_name || op.user_id}`,
+      metadata: { email: op.email, role: op.role, agente_ativacao: op.agente_ativacao },
+    });
+    await load();
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <h3 className="font-display text-base font-semibold text-secondary">Convidar novo operador</h3>
+        <p className="mt-1 font-small text-sm text-muted-foreground">
+          Envia um convite por email. O usuário define a senha ao acessar o link.
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="lg:col-span-2">
+            <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">Email</label>
+            <Input
+              type="email"
+              placeholder="email@empresa.com"
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">Nome (opcional)</label>
+            <Input
+              placeholder="Nome completo"
+              value={form.full_name}
+              onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">Agente HubSpot</label>
+            <select
+              value={form.agente_ativacao}
+              onChange={(e) => setForm((f) => ({ ...f, agente_ativacao: e.target.value }))}
+              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+            >
+              <option value="">Selecione…</option>
+              {agentes.map((a) => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">Papel</label>
+            <select
+              value={form.role}
+              onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as "admin" | "user" }))}
+              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+            >
+              <option value="user">Usuário</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
+        <div className="mt-3 flex justify-end">
+          <Button onClick={invite} disabled={busy} className="gap-1.5">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+            Enviar convite
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-border bg-muted/40 text-left">
+              <tr>
+                <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Operador</th>
+                <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Email</th>
+                <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Papel</th>
+                <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Agente HubSpot</th>
+                <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Criado em</th>
+                <th className="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr><td colSpan={6} className="px-4 py-10 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" /></td></tr>
+              )}
+              {!loading && list.map((op) => {
+                const isMe = op.user_id === user?.id;
+                return (
+                  <tr key={op.user_id} className="border-b border-border/50 last:border-0">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {op.avatar_url ? (
+                          <img src={op.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
+                        ) : (
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                            {(op.full_name || op.email || "?").slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                        <span className="font-medium text-foreground">
+                          {op.full_name || <span className="text-muted-foreground">Sem nome</span>}
+                          {isMe && <span className="ml-2 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary">você</span>}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{op.email ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      <span className={`rounded-full border px-2 py-0.5 text-xs ${op.role === "admin" ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-muted text-foreground"}`}>
+                        {op.role}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-foreground">
+                      {op.agente_ativacao || <span className="italic text-muted-foreground">—</span>}
+                    </td>
+                    <td className="px-4 py-3 font-numeric text-xs text-muted-foreground">
+                      {new Date(op.created_at).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={delId === op.user_id || isMe}
+                        onClick={() => remove(op)}
+                        className="gap-1.5 text-destructive hover:text-destructive"
+                        title={isMe ? "Você não pode excluir a si mesmo" : undefined}
+                      >
+                        {delId === op.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                        Excluir
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {!loading && list.length === 0 && (
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Nenhum operador cadastrado.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };
