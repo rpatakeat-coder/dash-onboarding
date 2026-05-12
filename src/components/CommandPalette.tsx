@@ -101,38 +101,11 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
       .slice(0, 30);
   }, [data, query]);
 
-  const slaOf = (r: DashRow) => {
-    const n = parseFloat(String(r.sla_dias_etapa ?? "").replace(",", "."));
-    return Number.isFinite(n) ? n : 0;
-  };
-
   const allStages = useMemo(() => {
     const set = new Set<string>();
     (data?.rows ?? []).forEach((r) => r.etapa_negocio && set.add(r.etapa_negocio));
     return [...set].sort();
   }, [data]);
-
-  const deals = useMemo(() => {
-    const cutoff =
-      period === "tudo"
-        ? 0
-        : Date.now() - (PERIODS.find((p) => p.id === period)?.days ?? 0) * 86400000;
-    const list = (data?.rows ?? [])
-      .filter((d) => {
-        if (cutoff && dateMs(d.data_entrada_fase) < cutoff) return false;
-        if (stages.size > 0 && !(d.etapa_negocio && stages.has(d.etapa_negocio))) return false;
-        if (bands.size > 0 && !bands.has(slaBand(slaOf(d)))) return false;
-        return true;
-      })
-      .map((d) => {
-        const text = `${d.nome_negocio ?? ""} ${d.etapa_negocio ?? ""} ${d.agente_ativacao ?? ""}`;
-        return { d, score: scoreMatch(text, query), recency: dateMs(d.data_entrada_fase) };
-      })
-      .filter((x) => x.score > 0);
-    return list
-      .sort((a, b) => (b.score === a.score ? b.recency - a.recency : b.score - a.score))
-      .slice(0, 80);
-  }, [data, query, period, stages, bands]);
 
   const showOperators = operators.length > 0;
   const showDeals = deals.length > 0;
