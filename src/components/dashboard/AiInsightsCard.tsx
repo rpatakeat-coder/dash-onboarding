@@ -10,11 +10,14 @@ import {
   Users,
   LineChart,
   FileText,
+  Settings2,
 } from "lucide-react";
 import { useAiInsights } from "@/hooks/useAiInsights";
+import { useAiPromptTemplates } from "@/hooks/useAiPromptTemplates";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { AiPromptSettingsDialog } from "./AiPromptSettingsDialog";
 
 interface AiInsightsCardProps {
   periodo?: string;
