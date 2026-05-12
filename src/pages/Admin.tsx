@@ -150,7 +150,7 @@ const AdminUsers = () => {
     toast.success(value ? `Vinculado a "${value}"` : "Vínculo removido");
     void logAudit({
       action: "user.set_agente_ativacao",
-      entity_type: "user",
+      entity_type: "outro",
       entity_id: u.id,
       summary: `Definiu agente_ativacao de ${u.full_name || u.id} para ${value ?? "(nenhum)"}`,
       metadata: { target_user_id: u.id, value },
