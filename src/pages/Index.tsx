@@ -476,7 +476,7 @@ const Index = () => {
         <EstoqueModal
           open={estoqueOpen}
           onOpenChange={setEstoqueOpen}
-          rows={rows}
+          rows={personalRows}
         />
 
         <OperatorCarteiraModal
