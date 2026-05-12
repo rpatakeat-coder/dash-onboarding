@@ -20,6 +20,7 @@ interface Props {
   deltasLoading?: boolean;
   windowDays?: DeltaWindow;
   onChangeWindow?: (w: DeltaWindow) => void;
+  onExplain?: (target: ExplainKpiTarget) => void;
 }
 
 const Card = ({
