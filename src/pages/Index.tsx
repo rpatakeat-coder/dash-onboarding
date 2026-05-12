@@ -4,6 +4,7 @@ import { MacroEstoque } from "@/components/dashboard/MacroEstoque";
 import { MacroMovimento } from "@/components/dashboard/MacroMovimento";
 import { CarteiraPorAtivador } from "@/components/dashboard/CarteiraPorAtivador";
 import { DealsTable } from "@/components/dashboard/DealsTable";
+import { RefreshDataButton } from "@/components/dashboard/RefreshDataButton";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
 import { useDashOperacoes } from "@/hooks/useDashOperacoes";
@@ -35,6 +36,10 @@ const Index = () => {
       <DashboardHeader />
 
       <main className="mx-auto max-w-[1400px] space-y-6 px-4 py-6 sm:px-6 md:px-10">
+        <div className="flex items-center justify-end">
+          <RefreshDataButton />
+        </div>
+
         {error && (
           <div className="rounded-2xl border border-destructive/30 bg-destructive/[0.06] p-4 font-subtitle text-sm text-destructive">
             Erro ao carregar dados: {(error as Error).message}
