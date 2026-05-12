@@ -4,6 +4,7 @@ import { MacroEstoque } from "@/components/dashboard/MacroEstoque";
 import { MacroMovimento } from "@/components/dashboard/MacroMovimento";
 import { CarteiraPorAtivador } from "@/components/dashboard/CarteiraPorAtivador";
 import { DealsTable } from "@/components/dashboard/DealsTable";
+import { RefreshDataButton } from "@/components/dashboard/RefreshDataButton";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
 import { useDashOperacoes } from "@/hooks/useDashOperacoes";
