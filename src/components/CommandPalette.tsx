@@ -13,13 +13,8 @@ import {
   Briefcase,
   LayoutDashboard,
   Tv as TvIcon,
-  Moon,
-  Sun,
-  Settings,
   Building2,
   User,
-  Globe,
-  Zap,
 } from "lucide-react";
 import {
   slaBand,
@@ -39,16 +34,7 @@ interface Props {
   onOpenPreferences: () => void;
 }
 
-type Scope = "all" | "pages" | "operators" | "deals" | "actions";
 type Period = "7d" | "30d" | "tudo";
-
-const SCOPES: { id: Scope; label: string; icon: typeof Globe }[] = [
-  { id: "all", label: "Tudo", icon: Globe },
-  { id: "pages", label: "Páginas", icon: LayoutDashboard },
-  { id: "operators", label: "Operadores", icon: User },
-  { id: "deals", label: "Deals", icon: Building2 },
-  { id: "actions", label: "Ações", icon: Zap },
-];
 
 const PERIODS: { id: Period; label: string; days?: number }[] = [
   { id: "7d", label: "7 dias", days: 7 },
@@ -71,7 +57,6 @@ const scoreMatch = (haystack: string, q: string): number => {
   const n = norm(q);
   const idx = h.indexOf(n);
   if (idx === -1) return 0;
-  // earlier match + shorter haystack = higher
   return 1000 - idx - h.length * 0.05;
 };
 
@@ -84,14 +69,13 @@ const dateMs = (d?: string | null) => {
 export const CommandPalette = ({ onOpenPreferences }: Props) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [scope, setScope] = useState<Scope>("all");
   const [period, setPeriod] = useState<Period>("tudo");
   const [stages, setStages] = useState<Set<string>>(new Set());
   const [bands, setBands] = useState<Set<SlaBand>>(new Set());
   const navigate = useNavigate();
   const { data } = useDashOperacoes();
   const { open: openDeal } = useDealDrawer();
-  const { cycleTheme, theme } = usePreferences();
+  const { cycleTheme } = usePreferences();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -112,7 +96,6 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
     return () => window.removeEventListener("keydown", onKey);
   }, [onOpenPreferences, cycleTheme]);
 
-  // Reset filters when reopening
   useEffect(() => {
     if (open) return;
     setQuery("");
@@ -164,253 +147,175 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
       .slice(0, 80);
   }, [data, query, period, stages, bands]);
 
-  const showPages = scope === "all" || scope === "pages";
-  const showActions = scope === "all" || scope === "actions";
-  const showOperators = (scope === "all" || scope === "operators") && operators.length > 0;
-  const showDeals = (scope === "all" || scope === "deals") && deals.length > 0;
-  const showPeriodChips = scope === "all" || scope === "deals";
+  const showOperators = operators.length > 0;
+  const showDeals = deals.length > 0;
 
   const run = (fn: () => void) => {
     setOpen(false);
     setTimeout(fn, 50);
   };
 
+  const hasFilters = period !== "tudo" || stages.size > 0 || bands.size > 0;
+
   return (
     <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
       <CommandInput
-        placeholder="Buscar páginas, operadores, deals ou ações..."
+        placeholder="Buscar páginas, operadores ou deals..."
         value={query}
         onValueChange={setQuery}
       />
       <div className="border-b border-border bg-muted/30 px-4 py-3">
-        {(() => {
-          const hasFilters =
-            scope !== "all" || period !== "tudo" || stages.size > 0 || bands.size > 0;
-          return (
-            <div className="mb-2 flex items-center justify-between">
-              <span className="font-subtitle text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                Filtros
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setScope("all");
-                  setPeriod("tudo");
-                  setStages(new Set());
-                  setBands(new Set());
-                }}
-                disabled={!hasFilters}
-                className={cn(
-                  "rounded-md border border-border bg-card px-2 py-0.5 font-subtitle text-[10px] uppercase tracking-wider transition",
-                  hasFilters
-                    ? "text-muted-foreground hover:border-destructive/40 hover:text-destructive"
-                    : "cursor-not-allowed text-muted-foreground/40",
-                )}
-              >
-                Limpar tudo
-              </button>
-            </div>
-          );
-        })()}
-        <div
-          className={cn(
-            "grid gap-x-5 gap-y-3",
-            showPeriodChips ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" : "grid-cols-1",
-          )}
-        >
-          {/* Escopo */}
+        <div className="mb-2 flex items-center justify-between">
+          <span className="font-subtitle text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            Filtros
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setPeriod("tudo");
+              setStages(new Set());
+              setBands(new Set());
+            }}
+            disabled={!hasFilters}
+            className={cn(
+              "rounded-md border border-border bg-card px-2 py-0.5 font-subtitle text-[10px] uppercase tracking-wider transition",
+              hasFilters
+                ? "text-muted-foreground hover:border-destructive/40 hover:text-destructive"
+                : "cursor-not-allowed text-muted-foreground/40",
+            )}
+          >
+            Limpar tudo
+          </button>
+        </div>
+        <div className="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Período */}
           <div className="space-y-1.5">
             <label className="block font-subtitle text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-              Escopo
+              Período
             </label>
             <div className="flex flex-wrap gap-1">
-              {SCOPES.map((s) => {
-                const Icon = s.icon;
-                const active = scope === s.id;
+              {PERIODS.map((p) => {
+                const active = period === p.id;
                 return (
                   <button
-                    key={s.id}
+                    key={p.id}
                     type="button"
-                    onClick={() => setScope(s.id)}
+                    onClick={() => setPeriod(p.id)}
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-subtitle text-[11px] font-medium transition",
+                      "rounded-full border px-2 py-0.5 font-numeric text-[11px] transition",
                       active
                         ? "border-primary/40 bg-primary/10 text-primary"
                         : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:text-foreground",
                     )}
                   >
-                    <Icon className="h-3 w-3" />
-                    {s.label}
+                    {p.label}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {showPeriodChips && (
-            <>
-              {/* Período */}
-              <div className="space-y-1.5">
-                <label className="block font-subtitle text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Período
-                </label>
-                <div className="flex flex-wrap gap-1">
-                  {PERIODS.map((p) => {
-                    const active = period === p.id;
-                    return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => setPeriod(p.id)}
-                        className={cn(
-                          "rounded-full border px-2 py-0.5 font-numeric text-[11px] transition",
-                          active
-                            ? "border-primary/40 bg-primary/10 text-primary"
-                            : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:text-foreground",
-                        )}
-                      >
-                        {p.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* SLA */}
-              <div className="space-y-1.5">
-                <label className="block font-subtitle text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  SLA
-                </label>
-                <div className="flex flex-wrap gap-1">
-                  {BANDS.map((b) => {
-                    const active = bands.has(b);
-                    return (
-                      <button
-                        key={b}
-                        type="button"
-                        onClick={() =>
-                          setBands((prev) => {
-                            const next = new Set(prev);
-                            next.has(b) ? next.delete(b) : next.add(b);
-                            return next;
-                          })
-                        }
-                        className={cn(
-                          "rounded-full border px-2 py-0.5 font-subtitle text-[11px] transition",
-                          active
-                            ? "border-primary/40 bg-primary/10 text-primary"
-                            : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:text-foreground",
-                        )}
-                      >
-                        {SLA_BAND_META[b].label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Etapa */}
-              {allStages.length > 0 && (
-                <div className="space-y-1.5 lg:col-span-1 sm:col-span-2">
-                  <div className="flex items-center justify-between">
-                    <label className="block font-subtitle text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Etapa
-                    </label>
-                    {(stages.size > 0 || bands.size > 0) && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setStages(new Set());
-                          setBands(new Set());
-                        }}
-                        className="font-subtitle text-[10px] text-muted-foreground hover:text-destructive"
-                      >
-                        Limpar
-                      </button>
+          {/* SLA */}
+          <div className="space-y-1.5">
+            <label className="block font-subtitle text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              SLA
+            </label>
+            <div className="flex flex-wrap gap-1">
+              {BANDS.map((b) => {
+                const active = bands.has(b);
+                return (
+                  <button
+                    key={b}
+                    type="button"
+                    onClick={() =>
+                      setBands((prev) => {
+                        const next = new Set(prev);
+                        next.has(b) ? next.delete(b) : next.add(b);
+                        return next;
+                      })
+                    }
+                    className={cn(
+                      "rounded-full border px-2 py-0.5 font-subtitle text-[11px] transition",
+                      active
+                        ? "border-primary/40 bg-primary/10 text-primary"
+                        : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:text-foreground",
                     )}
-                  </div>
-                  <div className="flex max-h-16 flex-wrap gap-1 overflow-y-auto pr-1">
-                    {allStages.map((s) => {
-                      const active = stages.has(s);
-                      return (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() =>
-                            setStages((prev) => {
-                              const next = new Set(prev);
-                              next.has(s) ? next.delete(s) : next.add(s);
-                              return next;
-                            })
-                          }
-                          className={cn(
-                            "max-w-[160px] truncate rounded-full border px-2 py-0.5 font-subtitle text-[11px] transition",
-                            active
-                              ? "border-primary/40 bg-primary/10 text-primary"
-                              : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:text-foreground",
-                          )}
-                          title={s}
-                        >
-                          {s}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </>
+                  >
+                    {SLA_BAND_META[b].label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Etapa */}
+          {allStages.length > 0 && (
+            <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
+              <div className="flex items-center justify-between">
+                <label className="block font-subtitle text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Etapa
+                </label>
+                {stages.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setStages(new Set())}
+                    className="font-subtitle text-[10px] text-muted-foreground hover:text-destructive"
+                  >
+                    Limpar
+                  </button>
+                )}
+              </div>
+              <div className="flex max-h-16 flex-wrap gap-1 overflow-y-auto pr-1">
+                {allStages.map((s) => {
+                  const active = stages.has(s);
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() =>
+                        setStages((prev) => {
+                          const next = new Set(prev);
+                          next.has(s) ? next.delete(s) : next.add(s);
+                          return next;
+                        })
+                      }
+                      className={cn(
+                        "max-w-[160px] truncate rounded-full border px-2 py-0.5 font-subtitle text-[11px] transition",
+                        active
+                          ? "border-primary/40 bg-primary/10 text-primary"
+                          : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:text-foreground",
+                      )}
+                      title={s}
+                    >
+                      {s}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
       </div>
       <CommandList>
         <CommandEmpty>Nenhum resultado.</CommandEmpty>
-        {showPages && (
-          <CommandGroup heading="Navegação">
-            {[
-              { to: "/", label: "Visão geral", Icon: LayoutDashboard },
-              { to: "/minha-carteira", label: "Minha carteira", Icon: Briefcase },
-              { to: "/tv", label: "Modo TV", Icon: TvIcon },
-            ]
-              .filter((p) => scoreMatch(p.label, query) > 0)
-              .map(({ to, label, Icon }) => (
-                <CommandItem
-                  key={to}
-                  value={`page ${label}`}
-                  onSelect={() => run(() => navigate(to))}
-                  className={ITEM_CLS}
-                >
-                  <Icon className="mr-2 h-4 w-4" /> {label}
-                </CommandItem>
-              ))}
-          </CommandGroup>
-        )}
-        {showActions && (
-          <>
-            {showPages && <CommandSeparator />}
-            <CommandGroup heading="Ações">
-              {[
-                {
-                  key: "theme",
-                  label: `Alternar tema (atual: ${theme})`,
-                  Icon: theme === "dark" ? Sun : Moon,
-                  fn: cycleTheme,
-                },
-                { key: "prefs", label: "Preferências", Icon: Settings, fn: onOpenPreferences },
-              ]
-                .filter((a) => scoreMatch(a.label, query) > 0)
-                .map(({ key, label, Icon, fn }) => (
-                  <CommandItem
-                    key={key}
-                    value={`action ${label}`}
-                    onSelect={() => run(fn)}
-                    className={ITEM_CLS}
-                  >
-                    <Icon className="mr-2 h-4 w-4" /> {label}
-                  </CommandItem>
-                ))}
-            </CommandGroup>
-          </>
-        )}
+        <CommandGroup heading="Navegação">
+          {[
+            { to: "/", label: "Visão geral", Icon: LayoutDashboard },
+            { to: "/minha-carteira", label: "Minha carteira", Icon: Briefcase },
+            { to: "/tv", label: "Modo TV", Icon: TvIcon },
+          ]
+            .filter((p) => scoreMatch(p.label, query) > 0)
+            .map(({ to, label, Icon }) => (
+              <CommandItem
+                key={to}
+                value={`page ${label}`}
+                onSelect={() => run(() => navigate(to))}
+                className={ITEM_CLS}
+              >
+                <Icon className="mr-2 h-4 w-4" /> {label}
+              </CommandItem>
+            ))}
+        </CommandGroup>
         {showOperators && (
           <>
             <CommandSeparator />
