@@ -309,6 +309,14 @@ export const AiInsightsCard = ({
         onOpenChange={setSettingsOpen}
         initialType={insightType}
       />
+      <AiVersionsCompareDialog
+        open={compareOpen}
+        onOpenChange={setCompareOpen}
+        versions={versions}
+        title={`Insights da IA · ${activeType.label}`}
+        subtitle={periodo}
+        typeLabel={activeType.label}
+      />
     </section>
   );
 };
