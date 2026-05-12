@@ -110,6 +110,45 @@ export type Database = {
         }
         Relationships: []
       }
+      dash_operacoes_backup: {
+        Row: {
+          agente_ativacao: string | null
+          data_criacao: string | null
+          data_entrada_fase: string | null
+          etapa_negocio: string | null
+          id_deal: number | null
+          mrr: string | null
+          nome_negocio: string | null
+          perfil_cliente: string | null
+          sla_dias_criacao: string | null
+          sla_dias_etapa: string | null
+        }
+        Insert: {
+          agente_ativacao?: string | null
+          data_criacao?: string | null
+          data_entrada_fase?: string | null
+          etapa_negocio?: string | null
+          id_deal?: number | null
+          mrr?: string | null
+          nome_negocio?: string | null
+          perfil_cliente?: string | null
+          sla_dias_criacao?: string | null
+          sla_dias_etapa?: string | null
+        }
+        Update: {
+          agente_ativacao?: string | null
+          data_criacao?: string | null
+          data_entrada_fase?: string | null
+          etapa_negocio?: string | null
+          id_deal?: number | null
+          mrr?: string | null
+          nome_negocio?: string | null
+          perfil_cliente?: string | null
+          sla_dias_criacao?: string | null
+          sla_dias_etapa?: string | null
+        }
+        Relationships: []
+      }
       dash_operacoes_snapshots: {
         Row: {
           band_alerta: number
