@@ -324,6 +324,7 @@ const AdminUsers = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [delId, setDelId] = useState<string | null>(null);
   const [editAgenteId, setEditAgenteId] = useState<string | null>(null);
   const [editAgenteValue, setEditAgenteValue] = useState("");
   const [savingAgente, setSavingAgente] = useState(false);
@@ -408,6 +409,29 @@ const AdminUsers = () => {
       summary: isAdmin
         ? `Removeu admin de ${u.full_name || u.id}`
         : `Promoveu ${u.full_name || u.id} a admin`,
+      metadata: { target_user_id: u.id, target_name: u.full_name },
+    });
+    await load();
+  };
+
+  const removeUser = async (u: AdminUser) => {
+    if (u.id === user?.id) return toast.error("Você não pode excluir a si mesmo");
+    if (!confirm(`Apagar definitivamente ${u.full_name || u.id}? Essa ação remove o login, perfil e papel.`)) return;
+    setDelId(u.id);
+    const { data, error } = await supabase.functions.invoke("admin-delete-operator", {
+      body: { user_id: u.id },
+    });
+    setDelId(null);
+    if (error || (data as { error?: string })?.error) {
+      const msg = (data as { error?: string })?.error || error?.message;
+      return toast.error("Erro ao excluir", { description: typeof msg === "string" ? msg : "falha desconhecida" });
+    }
+    toast.success("Usuário excluído");
+    void logAudit({
+      action: "user.delete",
+      entity_type: "user_role",
+      entity_id: u.id,
+      summary: `Excluiu usuário ${u.full_name || u.id}`,
       metadata: { target_user_id: u.id, target_name: u.full_name },
     });
     await load();
@@ -512,17 +536,30 @@ const AdminUsers = () => {
                     {new Date(u.created_at).toLocaleDateString("pt-BR")}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Button
-                      size="sm"
-                      variant={isAdmin ? "outline" : "default"}
-                      disabled={busyId === u.id || isMe}
-                      onClick={() => toggleAdmin(u)}
-                      className="gap-1.5"
-                      title={isMe ? "Você não pode remover seu próprio admin" : undefined}
-                    >
-                      {busyId === u.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isAdmin ? <ShieldOff className="h-3.5 w-3.5" /> : <ShieldCheck className="h-3.5 w-3.5" />}
-                      {isAdmin ? "Remover admin" : "Promover a admin"}
-                    </Button>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Button
+                        size="sm"
+                        variant={isAdmin ? "outline" : "default"}
+                        disabled={busyId === u.id || isMe}
+                        onClick={() => toggleAdmin(u)}
+                        className="gap-1.5"
+                        title={isMe ? "Você não pode remover seu próprio admin" : undefined}
+                      >
+                        {busyId === u.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isAdmin ? <ShieldOff className="h-3.5 w-3.5" /> : <ShieldCheck className="h-3.5 w-3.5" />}
+                        {isAdmin ? "Remover admin" : "Promover a admin"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={delId === u.id || isMe}
+                        onClick={() => removeUser(u)}
+                        className="gap-1.5 text-destructive hover:text-destructive"
+                        title={isMe ? "Você não pode excluir a si mesmo" : "Apagar usuário (auth + perfil + papel)"}
+                      >
+                        {delId === u.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                        Excluir
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               );
