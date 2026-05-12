@@ -129,7 +129,7 @@ function buildDashboardPrompt(payload: DashboardPayloadT): string {
     "",
     "Gere a resposta em markdown com EXATAMENTE estas seções e nada mais:",
     "",
-    SECTIONS[type],
+    payload.template?.trim() ? payload.template.trim() : SECTIONS[type],
   ]
     .filter(Boolean)
     .join("\n");
