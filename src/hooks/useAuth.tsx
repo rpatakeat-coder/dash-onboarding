@@ -25,16 +25,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
       if (s?.user) {
-        setTimeout(() => {
-          supabase
-            .from("profiles")
-            .select("full_name, agente_ativacao")
-            .eq("id", s.user.id)
-            .maybeSingle()
-            .then(({ data }) => {
-              setFullName(data?.full_name ?? null);
-              setAgenteAtivacao(data?.agente_ativacao ?? null);
-            });
+        setTimeout(async () => {
+          const [{ data: profile }, { data: ops }] = await Promise.all([
+            supabase.from("profiles").select("full_name").eq("id", s.user.id).maybeSingle(),
+            supabase.from("user_roles_operations").select("agente_ativacao").eq("user_id", s.user.id).maybeSingle(),
+          ]);
+          setFullName(profile?.full_name ?? null);
+          setAgenteAtivacao(ops?.agente_ativacao ?? null);
         }, 0);
       } else {
         setFullName(null);
