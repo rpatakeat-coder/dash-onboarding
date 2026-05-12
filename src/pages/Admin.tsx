@@ -384,17 +384,49 @@ const AdminOperators = () => {
                       {new Date(op.created_at).toLocaleDateString("pt-BR")}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={delId === op.user_id || isMe}
-                        onClick={() => remove(op)}
-                        className="gap-1.5 text-destructive hover:text-destructive"
-                        title={isMe ? "Você não pode excluir a si mesmo" : undefined}
-                      >
-                        {delId === op.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                        Excluir
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={resendId === op.user_id}
+                              className="gap-1.5"
+                            >
+                              {resendId === op.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                              Reenviar
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-52">
+                            <DropdownMenuLabel className="text-xs">Reenviar convite via</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => resend(op, ["email"])}>
+                              <Mail className="mr-2 h-3.5 w-3.5" /> Email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => resend(op, ["whatsapp"])}>
+                              <MessageCircle className="mr-2 h-3.5 w-3.5" /> WhatsApp (webhook)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => resend(op, ["email", "whatsapp"])}>
+                              <Send className="mr-2 h-3.5 w-3.5" /> Email + WhatsApp
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => resend(op, ["link_only"])}>
+                              <Link2 className="mr-2 h-3.5 w-3.5" /> Apenas copiar link
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={delId === op.user_id || isMe}
+                          onClick={() => remove(op)}
+                          className="gap-1.5 text-destructive hover:text-destructive"
+                          title={isMe ? "Você não pode excluir a si mesmo" : undefined}
+                        >
+                          {delId === op.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                          Excluir
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 );
