@@ -29,11 +29,11 @@ function readCache(key: string): CacheEntry | null {
   }
 }
 
-function writeCache(key: string, data: AiInsightsResponse) {
+function writeCache(key: string, data: AiInsightsResponse, at: number = Date.now()) {
   try {
     sessionStorage.setItem(
       `ai-insights:${key}`,
-      JSON.stringify({ data, at: Date.now() } satisfies CacheEntry),
+      JSON.stringify({ data, at } satisfies CacheEntry),
     );
   } catch {
     /* ignore */
@@ -88,10 +88,12 @@ export function useAiInsights<TPayload>(mode: AiInsightMode, cacheKey: string) {
           throw new Error(msg);
         }
         const ok = res as AiInsightsResponse;
-        setData(ok);
         const now = Date.now();
+        // Persist BEFORE updating state so any concurrent reader (e.g. modal
+        // reopen) immediately sees the freshest version.
+        writeCache(cacheKey, ok, now);
+        setData(ok);
         setLastGeneratedAt(now);
-        writeCache(cacheKey, ok);
         return ok;
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Erro desconhecido.";
