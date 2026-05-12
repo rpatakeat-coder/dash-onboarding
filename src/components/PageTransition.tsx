@@ -7,21 +7,22 @@ interface Props {
 }
 
 /**
- * Envolve cada rota com fade+slide curtos para evitar trocas bruscas.
- * Funciona tanto com children diretos quanto via <Outlet />.
+ * Transição de página com fade puro (sem deslocamento) e sem gap entre rotas.
+ * mode="popLayout" deixa a próxima rota aparecer imediatamente, evitando o "pulo".
  */
 export const PageTransition = ({ children }: Props) => {
   const location = useLocation();
   const outlet = useOutlet();
   const content = children ?? outlet;
   return (
-    <AnimatePresence mode="wait" initial={false}>
+    <AnimatePresence mode="popLayout" initial={false}>
       <motion.div
         key={location.pathname}
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -4 }}
-        transition={{ duration: 0.18, ease: "easeOut" }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.12, ease: "linear" }}
+        style={{ willChange: "opacity" }}
         className="contents"
       >
         {content}
