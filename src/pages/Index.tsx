@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Sparkles } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { MacroEstoque } from "@/components/dashboard/MacroEstoque";
 import { MacroMovimento } from "@/components/dashboard/MacroMovimento";
@@ -7,6 +8,7 @@ import { CarteiraPorAtivador } from "@/components/dashboard/CarteiraPorAtivador"
 import { DealsTable } from "@/components/dashboard/DealsTable";
 import { RefreshDataButton } from "@/components/dashboard/RefreshDataButton";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
+import { AiInsightsDialog } from "@/components/dashboard/AiInsightsDialog";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
 import { useDashOperacoes, type PerfilStat } from "@/hooks/useDashOperacoes";
 
@@ -14,6 +16,7 @@ const Index = () => {
   const { data, isLoading, error } = useDashOperacoes();
   const { isAdmin, isAtivador, myAgente } = useAtivadorScope();
   const [estoqueOpen, setEstoqueOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [filtroAtivadores, setFiltroAtivadores] = useState<Set<string>>(new Set());
   const [filtroEtapas, setFiltroEtapas] = useState<Set<string>>(new Set());
 
@@ -78,7 +81,17 @@ const Index = () => {
             onEtapasChange={setFiltroEtapas}
             hideAtivador={isAtivador && !isAdmin}
           />
-          <RefreshDataButton />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setAiOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 font-subtitle text-xs font-semibold text-primary transition hover:bg-primary/20"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Insights de IA
+            </button>
+            <RefreshDataButton />
+          </div>
         </div>
 
         {error && (
@@ -116,6 +129,14 @@ const Index = () => {
         open={estoqueOpen}
         onOpenChange={setEstoqueOpen}
         rows={macroRows}
+      />
+
+      <AiInsightsDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        rows={macroRows}
+        filtroAtivadores={filtroAtivadores}
+        filtroEtapas={filtroEtapas}
       />
     </div>
   );
