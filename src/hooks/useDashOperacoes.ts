@@ -172,8 +172,17 @@ function buildOperadores(rows: DashRow[]): OperatorStat[] {
 
 const parseDate = (s: string | null): Date | null => {
   if (!s) return null;
-  // formato "YYYY-MM-DD HH:MM"
-  const iso = s.includes("T") ? s : s.replace(" ", "T");
+  const str = s.trim();
+  if (!str) return null;
+  // Formato BR: "DD/MM/YYYY[ HH:MM[:SS]]"
+  const br = str.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+  if (br) {
+    const [, dd, mm, yyyy, hh = "0", mi = "0", ss = "0"] = br;
+    const d = new Date(+yyyy, +mm - 1, +dd, +hh, +mi, +ss);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  // Formato ISO "YYYY-MM-DD[ HH:MM]"
+  const iso = str.includes("T") ? str : str.replace(" ", "T");
   const d = new Date(iso);
   return isNaN(d.getTime()) ? null : d;
 };
