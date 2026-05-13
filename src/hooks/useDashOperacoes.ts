@@ -14,6 +14,7 @@ export interface DashRow {
   data_criacao: string | null;
   data_entrada_fase: string | null;
   etapa_negocio: string | null;
+  data_ativacao: string | null;
 }
 
 export type SlaBand = "critico" | "atencao" | "alerta" | "saudavel";
@@ -335,15 +336,22 @@ export function countNovosHoje(rows: DashRow[]): number {
   }).length;
 }
 
-/** Soma de MRR de deals em "Acompanhamento" criados no período + contagem. */
+/** Soma de MRR e contagem de clientes ativados no período (com data_ativacao no intervalo). */
 export function mrrAtivadoNoPeriodo(rows: DashRow[], start: Date, end: Date) {
   const filtered = rows.filter((r) => {
-    if (r.etapa_negocio?.trim() !== ETAPA_ATIVADO) return false;
-    const d = parseDate(r.data_criacao);
+    const d = parseDate(r.data_ativacao);
     return d && d >= start && d < end;
   });
   const mrr = filtered.reduce((s, r) => s + toNum(r.mrr), 0);
   return { count: filtered.length, mrr };
+}
+
+/** Conta clientes "entrados" (data_criacao no intervalo). */
+export function countEntradosNoPeriodo(rows: DashRow[], start: Date, end: Date) {
+  return rows.filter((r) => {
+    const d = parseDate(r.data_criacao);
+    return d && d >= start && d < end;
+  }).length;
 }
 
 export function getPeriodRanges() {
