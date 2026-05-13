@@ -74,7 +74,7 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
   const [sortKey, setSortKey] = useState<SortKey>("fase");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize, setPageSize] = useState(25);
 
   const etapaOpts = useMemo(
     () => [...new Set(rows.map((r) => r.etapa_negocio?.trim() || "Sem etapa"))],
