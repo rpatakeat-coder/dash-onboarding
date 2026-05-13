@@ -18,6 +18,14 @@ type Status =
  * Lê o hash que o Supabase devolve após validar o token e mostra mensagens
  * claras para cada situação: válido, expirado, já usado ou inválido.
  */
+const Card = ({ children }: { children: React.ReactNode }) => (
+  <div className="flex min-h-screen items-center justify-center bg-gradient-surface px-4">
+    <div className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-card p-8 shadow-xl">
+      {children}
+    </div>
+  </div>
+);
+
 const SetPasswordPage = () => {
   const nav = useNavigate();
   const [status, setStatus] = useState<Status>({ kind: "loading" });
@@ -96,13 +104,7 @@ const SetPasswordPage = () => {
     setTimeout(() => nav("/", { replace: true }), 1500);
   };
 
-  const Card = ({ children }: { children: React.ReactNode }) => (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-surface px-4">
-      <div className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-card p-8 shadow-xl">
-        {children}
-      </div>
-    </div>
-  );
+
 
   if (status.kind === "loading") {
     return (
