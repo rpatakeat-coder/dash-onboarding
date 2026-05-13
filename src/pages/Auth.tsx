@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { usePreferences } from "@/contexts/PreferencesContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -13,14 +14,16 @@ const AuthPage = () => {
   const nav = useNavigate();
   const location = useLocation();
 
+  const { homeRoute } = usePreferences();
+
   const requested =
     (location.state as { from?: string } | null)?.from ||
     new URLSearchParams(location.search).get("redirect") ||
-    "/";
+    "";
   const safeRedirect =
     requested.startsWith("/") && !requested.startsWith("//") && requested !== "/auth"
       ? requested
-      : "/";
+      : homeRoute || "/";
 
   if (!loading && session) return <Navigate to={safeRedirect} replace />;
 
