@@ -68,7 +68,7 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
       </div>
 
       {/* Linha B: SLA por criação */}
-      <div className="rounded-2xl border border-border bg-card p-5 shadow-sm-soft">
+      <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm-soft">
         <div className="mb-4 flex items-end justify-between gap-2">
           <div>
             <h2 className="font-display text-base font-semibold text-secondary">
