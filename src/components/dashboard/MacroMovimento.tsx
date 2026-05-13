@@ -1,6 +1,7 @@
 import { CalendarDays, Sparkles } from "lucide-react";
 import {
   countNovosHoje,
+  countEntradosNoPeriodo,
   fmtBRLk,
   getPeriodRanges,
   mrrAtivadoNoPeriodo,
@@ -14,37 +15,24 @@ interface Props {
 export const MacroMovimento = ({ rows }: Props) => {
   const novosHoje = countNovosHoje(rows);
   const r = getPeriodRanges();
-  const hoje = mrrAtivadoNoPeriodo(rows, r.todayStart, r.tomorrow);
-  const semana = mrrAtivadoNoPeriodo(rows, r.weekStart, r.nextWeek);
-  const mes = mrrAtivadoNoPeriodo(rows, r.monthStart, r.nextMonth);
-  const mesAnt = mrrAtivadoNoPeriodo(rows, r.lastMonthStart, r.monthStart);
 
-  const cards: { label: string; value: string; sub: string; accent?: string }[] = [
-    {
-      label: "Hoje",
-      value: fmtBRLk(hoje.mrr),
-      sub: `${hoje.count} clientes ativados`,
-      accent: "text-primary",
-    },
-    {
-      label: "Esta semana",
-      value: fmtBRLk(semana.mrr),
-      sub: `${semana.count} clientes ativados`,
-      accent: "text-foreground",
-    },
-    {
-      label: "Este mês",
-      value: fmtBRLk(mes.mrr),
-      sub: `${mes.count} clientes ativados`,
-      accent: "text-success",
-    },
-    {
-      label: "Mês anterior",
-      value: fmtBRLk(mesAnt.mrr),
-      sub: `${mesAnt.count} clientes ativados`,
-      accent: "text-muted-foreground",
-    },
-  ];
+  const periods = [
+    { key: "hoje", label: "Hoje", start: r.todayStart, end: r.tomorrow, accent: "text-primary" },
+    { key: "semana", label: "Esta semana", start: r.weekStart, end: r.nextWeek, accent: "text-foreground" },
+    { key: "mes", label: "Este mês", start: r.monthStart, end: r.nextMonth, accent: "text-success" },
+    { key: "mesAnt", label: "Mês anterior", start: r.lastMonthStart, end: r.monthStart, accent: "text-muted-foreground" },
+  ] as const;
+
+  const cards = periods.map((p) => {
+    const ativ = mrrAtivadoNoPeriodo(rows, p.start, p.end);
+    const entrados = countEntradosNoPeriodo(rows, p.start, p.end);
+    return {
+      label: p.label,
+      value: fmtBRLk(ativ.mrr),
+      sub: `${ativ.count} ativados · ${entrados} entrados`,
+      accent: p.accent,
+    };
+  });
 
   return (
     <section className="grid grid-cols-1 gap-4 lg:grid-cols-5">
@@ -72,7 +60,7 @@ export const MacroMovimento = ({ rows }: Props) => {
               MRR ativado por período
             </h2>
             <p className="font-small text-xs text-muted-foreground">
-              Soma de MRR dos clientes que chegaram em "Acompanhamento"
+              Clientes entrados (data de criação) e ativados (data de ativação) no período
             </p>
           </div>
           <CalendarDays className="h-5 w-5 text-primary/70" />
