@@ -34,10 +34,34 @@ const num = (v: unknown) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+// Aceita "DD/MM/YYYY[ HH:mm[:ss]]" (formato vindo do Supabase) e ISO como fallback.
+const parseBRDate = (s: string | null | undefined): Date | null => {
+  if (!s) return null;
+  const str = String(s).trim();
+  const m = str.match(
+    /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/,
+  );
+  if (m) {
+    const day = parseInt(m[1], 10);
+    const month = parseInt(m[2], 10);
+    let year = parseInt(m[3], 10);
+    if (year < 100) year += 2000;
+    const hh = m[4] ? parseInt(m[4], 10) : 0;
+    const mm = m[5] ? parseInt(m[5], 10) : 0;
+    const ss = m[6] ? parseInt(m[6], 10) : 0;
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+    const d = new Date(year, month - 1, day, hh, mm, ss);
+    if (d.getDate() !== day || d.getMonth() !== month - 1) return null;
+    return d;
+  }
+  const d = new Date(str);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
 const fmtDate = (s: string | null | undefined) => {
   if (!s) return "—";
-  const d = new Date(s);
-  if (Number.isNaN(d.getTime())) return s;
+  const d = parseBRDate(s);
+  if (!d) return s ?? "—";
   return d.toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "short",
@@ -47,9 +71,9 @@ const fmtDate = (s: string | null | undefined) => {
 
 const daysBetween = (a: string | null | undefined, b: string | null | undefined) => {
   if (!a || !b) return null;
-  const da = new Date(a).getTime();
-  const db = new Date(b).getTime();
-  if (!Number.isFinite(da) || !Number.isFinite(db)) return null;
+  const da = parseBRDate(a)?.getTime();
+  const db = parseBRDate(b)?.getTime();
+  if (!da || !db || !Number.isFinite(da) || !Number.isFinite(db)) return null;
   return Math.round((db - da) / 86_400_000);
 };
 
