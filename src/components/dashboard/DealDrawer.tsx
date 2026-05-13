@@ -165,12 +165,12 @@ export const DealDrawer = ({ deal, onClose }: Props) => {
 
   const lastCall = useMemo(() => {
     const d = ligacoes?.[0]?.data_realizada;
-    return d ? new Date(d) : null;
+    return parseBRDate(d);
   }, [ligacoes]);
   const lastMeeting = useMemo(() => {
     const r = reunioes?.find((x) => x.data_reuniao_realizada);
     const d = r?.data_reuniao_realizada ?? reunioes?.[0]?.data_reuniao ?? null;
-    return d ? new Date(d) : null;
+    return parseBRDate(d);
   }, [reunioes]);
 
   const sugestoes = deal ? suggestActions(deal, lastMeeting, lastCall) : [];
