@@ -23,12 +23,23 @@ interface Props {
 
 export const MultiSelectFilter = ({ label, options, selected, onChange, counts, className }: Props) => {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+
   const sorted = useMemo(() => {
     if (counts) {
       return [...options].sort((a, b) => (counts[b] ?? 0) - (counts[a] ?? 0) || a.localeCompare(b));
     }
     return [...options].sort((a, b) => a.localeCompare(b));
   }, [options, counts]);
+
+  const norm = (s: string) =>
+    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  const visible = useMemo(() => {
+    const q = norm(query.trim());
+    if (!q) return sorted;
+    return sorted.filter((o) => norm(o).includes(q));
+  }, [sorted, query]);
 
   const toggle = (v: string) => {
     const n = new Set(selected);
@@ -41,7 +52,7 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setQuery(""); }}>
       <PopoverTrigger asChild>
         <button
           className={cn(
@@ -74,36 +85,48 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-[260px] p-0" align="start">
-        <Command>
-          <CommandInput placeholder={`Buscar ${label.toLowerCase()}...`} />
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder={`Buscar ${label.toLowerCase()}...`}
+            value={query}
+            onValueChange={setQuery}
+          />
           <CommandList>
-            <CommandEmpty>Nada encontrado</CommandEmpty>
-            <CommandGroup>
-              {sorted.map((opt) => {
-                const active = selected.has(opt);
-                const c = counts?.[opt];
-                return (
-                  <CommandItem key={opt} value={opt} onSelect={() => toggle(opt)}>
-                    <div
-                      className={cn(
-                        "mr-2 flex h-4 w-4 items-center justify-center rounded border",
-                        active
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border",
-                      )}
+            {visible.length === 0 ? (
+              <CommandEmpty>Nada encontrado</CommandEmpty>
+            ) : (
+              <CommandGroup>
+                {visible.map((opt) => {
+                  const active = selected.has(opt);
+                  const c = counts?.[opt];
+                  return (
+                    <CommandItem
+                      key={opt}
+                      value={opt}
+                      onSelect={() => toggle(opt)}
+                      className="cursor-pointer"
                     >
-                      {active && <Check className="h-3 w-3" />}
-                    </div>
-                    <span className="flex-1 truncate">{opt}</span>
-                    {c !== undefined && (
-                      <span className="ml-2 rounded-full bg-muted px-1.5 py-0.5 font-numeric text-[10px] font-bold tabular-nums text-foreground/70">
-                        {c.toLocaleString("pt-BR")}
-                      </span>
-                    )}
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
+                      <div
+                        className={cn(
+                          "mr-2 flex h-4 w-4 items-center justify-center rounded border",
+                          active
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border",
+                        )}
+                      >
+                        {active && <Check className="h-3 w-3" />}
+                      </div>
+                      <span className="flex-1 truncate">{opt}</span>
+                      {c !== undefined && (
+                        <span className="ml-2 rounded-full bg-muted px-1.5 py-0.5 font-numeric text-[10px] font-bold tabular-nums text-foreground/70">
+                          {c.toLocaleString("pt-BR")}
+                        </span>
+                      )}
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>
