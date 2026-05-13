@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { usePreferences, type ThemeMode, type Density, type HomeRoute } from "@/contexts/PreferencesContext";
+import { usePreferences, type ThemeMode, type HomeRoute } from "@/contexts/PreferencesContext";
 
 interface Props {
   open: boolean;
@@ -132,27 +132,6 @@ export const PreferencesDialog = ({ open, onOpenChange }: Props) => {
                 >
                   <RadioGroupItem id={`theme-${t}`} value={t} className="sr-only" />
                   <span className="capitalize">{t === "system" ? "Auto" : t === "light" ? "Claro" : "Escuro"}</span>
-                </Label>
-              ))}
-            </RadioGroup>
-          </section>
-          <section>
-            <h4 className="mb-2 font-subtitle text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Densidade
-            </h4>
-            <RadioGroup
-              value={p.density}
-              onValueChange={(v) => p.setDensity(v as Density)}
-              className="grid grid-cols-2 gap-2"
-            >
-              {(["comfortable", "compact"] as Density[]).map((d) => (
-                <Label
-                  key={d}
-                  htmlFor={`d-${d}`}
-                  className="flex cursor-pointer items-center justify-center rounded-lg border border-border bg-card px-3 py-2 text-sm hover:bg-muted [&:has([data-state=checked])]:border-primary [&:has([data-state=checked])]:bg-primary/10"
-                >
-                  <RadioGroupItem id={`d-${d}`} value={d} className="sr-only" />
-                  {d === "comfortable" ? "Confortável" : "Compacta"}
                 </Label>
               ))}
             </RadioGroup>
