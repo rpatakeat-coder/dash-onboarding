@@ -175,7 +175,7 @@ export const DealDrawer = ({ deal, onClose }: Props) => {
                   </p>
                 </div>
                 <a
-                  href={`https://app.hubspot.com/contacts/_/deal/${deal.id_deal}`}
+                  href={hubspotDealUrl(deal.id_deal)}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1 font-subtitle text-xs text-primary hover:bg-primary/10"
