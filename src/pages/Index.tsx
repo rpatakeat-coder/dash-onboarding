@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Sparkles } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { MacroEstoque } from "@/components/dashboard/MacroEstoque";
 import { MacroMovimento } from "@/components/dashboard/MacroMovimento";
@@ -7,6 +8,7 @@ import { CarteiraPorAtivador } from "@/components/dashboard/CarteiraPorAtivador"
 import { DealsTable } from "@/components/dashboard/DealsTable";
 import { RefreshDataButton } from "@/components/dashboard/RefreshDataButton";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
+import { AiInsightsDialog } from "@/components/dashboard/AiInsightsDialog";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
 import { useDashOperacoes, type PerfilStat } from "@/hooks/useDashOperacoes";
 
