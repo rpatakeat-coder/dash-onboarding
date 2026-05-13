@@ -130,6 +130,14 @@ const Index = () => {
         onOpenChange={setEstoqueOpen}
         rows={macroRows}
       />
+
+      <AiInsightsDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        rows={macroRows}
+        filtroAtivadores={filtroAtivadores}
+        filtroEtapas={filtroEtapas}
+      />
     </div>
   );
 };
