@@ -84,10 +84,18 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
     () => [...new Set(rows.map((r) => r.agente_ativacao?.trim() || "Sem responsável"))],
     [rows],
   );
-  const perfilOpts = useMemo(
-    () => [...new Set(rows.map(perfilOf))].sort(),
-    [rows],
-  );
+  const perfilOpts = useMemo(() => {
+    const order = ["P", "M", "G", "GG"];
+    const uniq = [...new Set(rows.map(perfilOf))];
+    return uniq.sort((a, b) => {
+      const ia = order.indexOf(a);
+      const ib = order.indexOf(b);
+      if (ia === -1 && ib === -1) return a.localeCompare(b);
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
+  }, [rows]);
   const bandOpts = useMemo(() => BAND_ORDER.map(bandLabel), []);
 
   const bandKeys = useMemo(() => new Set([...bandSel].map(bandFromLabel)), [bandSel]);
