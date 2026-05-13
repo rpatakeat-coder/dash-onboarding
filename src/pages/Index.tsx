@@ -81,7 +81,17 @@ const Index = () => {
             onEtapasChange={setFiltroEtapas}
             hideAtivador={isAtivador && !isAdmin}
           />
-          <RefreshDataButton />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setAiOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 font-subtitle text-xs font-semibold text-primary transition hover:bg-primary/20"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Insights de IA
+            </button>
+            <RefreshDataButton />
+          </div>
         </div>
 
         {error && (
