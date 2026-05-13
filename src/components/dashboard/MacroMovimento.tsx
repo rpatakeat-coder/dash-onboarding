@@ -40,13 +40,13 @@ export const MacroMovimento = ({ rows }: Props) => {
         <div className="flex items-start justify-between">
           <div>
             <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
-              Novos hoje
+              Entradas hoje
             </p>
             <p className="mt-2 font-numeric text-4xl font-bold text-success">
               {novosHoje}
             </p>
             <p className="mt-1 font-small text-xs text-muted-foreground">
-              entradas no funil
+              {novosHoje === 1 ? "cliente entrou" : "clientes entraram"} no pipeline hoje
             </p>
           </div>
           <Sparkles className="h-6 w-6 text-success/70" />
