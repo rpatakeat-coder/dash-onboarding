@@ -127,9 +127,9 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
     return arr;
   }, [filtered, sortKey, sortDir]);
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const pageSafe = Math.min(page, totalPages - 1);
-  const pageRows = sorted.slice(pageSafe * PAGE_SIZE, (pageSafe + 1) * PAGE_SIZE);
+  const pageRows = sorted.slice(pageSafe * pageSize, (pageSafe + 1) * pageSize);
 
   const toggleSort = (k: SortKey) => {
     if (sortKey === k) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
