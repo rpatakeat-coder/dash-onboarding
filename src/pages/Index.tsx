@@ -3,6 +3,7 @@ import { Sparkles } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { MacroEstoque } from "@/components/dashboard/MacroEstoque";
 import { MacroMovimento } from "@/components/dashboard/MacroMovimento";
+import { MrrAtivadoKpis } from "@/components/dashboard/MrrAtivadoKpis";
 import { MacroFilters } from "@/components/dashboard/MacroFilters";
 import { CarteiraPorAtivador } from "@/components/dashboard/CarteiraPorAtivador";
 import { DealsTable } from "@/components/dashboard/DealsTable";
@@ -112,6 +113,8 @@ const Index = () => {
               perfis={perfisFiltrados}
               onTotalClick={() => setEstoqueOpen(true)}
             />
+
+            <MrrAtivadoKpis rows={macroRows} />
 
             <MacroMovimento rows={macroRows} />
 
