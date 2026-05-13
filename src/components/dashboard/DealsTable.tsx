@@ -292,7 +292,7 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
             </select>
           </label>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           <button
             onClick={() => setPage(0)}
             disabled={pageSafe === 0}
@@ -304,14 +304,17 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={pageSafe === 0}
-            className="rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 disabled:opacity-40"
+            className="rounded-lg border border-border px-2.5 py-1.5 hover:border-primary/40 disabled:opacity-40"
+            aria-label="Página anterior"
           >
-            Anterior
+            <span className="hidden sm:inline">Anterior</span>
+            <span className="sm:hidden">‹</span>
           </button>
           {(() => {
             const pages: number[] = [];
-            const start = Math.max(0, Math.min(pageSafe - 2, totalPages - 5));
-            const end = Math.min(totalPages, start + 5);
+            const visible = 3;
+            const start = Math.max(0, Math.min(pageSafe - Math.floor(visible / 2), totalPages - visible));
+            const end = Math.min(totalPages, start + visible);
             for (let i = start; i < end; i++) pages.push(i);
             return pages.map((i) => (
               <button
@@ -331,9 +334,11 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
           <button
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={pageSafe >= totalPages - 1}
-            className="rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 disabled:opacity-40"
+            className="rounded-lg border border-border px-2.5 py-1.5 hover:border-primary/40 disabled:opacity-40"
+            aria-label="Próxima página"
           >
-            Próxima
+            <span className="hidden sm:inline">Próxima</span>
+            <span className="sm:hidden">›</span>
           </button>
           <button
             onClick={() => setPage(totalPages - 1)}
