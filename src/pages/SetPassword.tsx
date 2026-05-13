@@ -96,13 +96,7 @@ const SetPasswordPage = () => {
     setTimeout(() => nav("/", { replace: true }), 1500);
   };
 
-  const Card = ({ children }: { children: React.ReactNode }) => (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-surface px-4">
-      <div className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-card p-8 shadow-xl">
-        {children}
-      </div>
-    </div>
-  );
+
 
   if (status.kind === "loading") {
     return (
