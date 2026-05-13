@@ -62,7 +62,7 @@ interface Props {
   hideAtivadorFilter?: boolean;
 }
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE_OPTS = [25, 50, 100, 200];
 
 export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
   const { open: openDeal } = useDealDrawer();
