@@ -14,6 +14,7 @@ import {
   type DashRow,
 } from "@/hooks/useDashOperacoes";
 import { computeRisk } from "@/lib/risk";
+import { hubspotDealUrl } from "@/lib/hubspot";
 import {
   ExternalLink,
   Phone,
