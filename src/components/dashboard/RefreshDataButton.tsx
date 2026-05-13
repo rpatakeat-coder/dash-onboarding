@@ -26,7 +26,7 @@ export const RefreshDataButton = () => {
       setTimeout(() => qc.invalidateQueries({ queryKey: ["dash_operacoes"] }), 1500);
     } catch (e) {
       toast({
-        title: "Falha ao acionar webhook",
+        title: "Falha ao atualizar",
         description: (e as Error).message,
         variant: "destructive",
       });
