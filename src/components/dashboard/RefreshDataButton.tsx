@@ -19,14 +19,14 @@ export const RefreshDataButton = () => {
         body: JSON.stringify({ event: "atualizar_dados" }),
       });
       toast({
-        title: "Atualização disparada",
-        description: "Webhook acionado. Os dados serão recarregados em instantes.",
+        title: "Atualizando dados",
+        description: "Buscando os dados mais recentes. Em instantes eles serão carregados.",
       });
       // Refaz as queries do dashboard para puxar o que vier novo
       setTimeout(() => qc.invalidateQueries({ queryKey: ["dash_operacoes"] }), 1500);
     } catch (e) {
       toast({
-        title: "Falha ao acionar webhook",
+        title: "Falha ao atualizar",
         description: (e as Error).message,
         variant: "destructive",
       });
