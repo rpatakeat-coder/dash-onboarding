@@ -271,29 +271,80 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
         </Table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between gap-2 font-subtitle text-xs text-muted-foreground">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 font-subtitle text-xs text-muted-foreground">
+        <div className="flex items-center gap-2">
           <span>
-            Página {pageSafe + 1} de {totalPages}
+            {sorted.length === 0
+              ? "0 resultados"
+              : `${pageSafe * pageSize + 1}–${Math.min(sorted.length, (pageSafe + 1) * pageSize)} de ${sorted.length.toLocaleString("pt-BR")}`}
           </span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={pageSafe === 0}
-              className="rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 disabled:opacity-40"
+          <span className="mx-1 text-border">·</span>
+          <label className="flex items-center gap-1.5">
+            Por página
+            <select
+              value={pageSize}
+              onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0); }}
+              className="rounded-md border border-border bg-background px-2 py-1 text-foreground"
             >
-              Anterior
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={pageSafe >= totalPages - 1}
-              className="rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 disabled:opacity-40"
-            >
-              Próxima
-            </button>
-          </div>
+              {PAGE_SIZE_OPTS.map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </label>
         </div>
-      )}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setPage(0)}
+            disabled={pageSafe === 0}
+            className="rounded-lg border border-border px-2.5 py-1.5 hover:border-primary/40 disabled:opacity-40"
+            aria-label="Primeira página"
+          >
+            «
+          </button>
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={pageSafe === 0}
+            className="rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 disabled:opacity-40"
+          >
+            Anterior
+          </button>
+          {(() => {
+            const pages: number[] = [];
+            const start = Math.max(0, Math.min(pageSafe - 2, totalPages - 5));
+            const end = Math.min(totalPages, start + 5);
+            for (let i = start; i < end; i++) pages.push(i);
+            return pages.map((i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i)}
+                className={cn(
+                  "min-w-[34px] rounded-lg border px-2.5 py-1.5 tabular-nums",
+                  i === pageSafe
+                    ? "border-primary/60 bg-primary/10 text-primary"
+                    : "border-border hover:border-primary/40",
+                )}
+              >
+                {i + 1}
+              </button>
+            ));
+          })()}
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            disabled={pageSafe >= totalPages - 1}
+            className="rounded-lg border border-border px-3 py-1.5 hover:border-primary/40 disabled:opacity-40"
+          >
+            Próxima
+          </button>
+          <button
+            onClick={() => setPage(totalPages - 1)}
+            disabled={pageSafe >= totalPages - 1}
+            className="rounded-lg border border-border px-2.5 py-1.5 hover:border-primary/40 disabled:opacity-40"
+            aria-label="Última página"
+          >
+            »
+          </button>
+        </div>
+      </div>
     </section>
   );
 };
