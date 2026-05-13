@@ -107,7 +107,19 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
       if (ativSel.size && !ativSel.has(r.agente_ativacao?.trim() || "Sem responsável")) return false;
       if (perfilSel.size && !perfilSel.has(perfilOf(r))) return false;
       if (bandKeys.size && !bandKeys.has(slaBand(toNum(r.sla_dias_etapa)))) return false;
-      if (q && !(r.nome_negocio?.toLowerCase().includes(q))) return false;
+      if (q) {
+        const haystack = [
+          r.nome_negocio,
+          r.agente_ativacao,
+          r.etapa_negocio,
+          r.perfil_cliente,
+          String(r.id_deal ?? ""),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
       return true;
     });
   }, [rows, etapaSel, ativSel, perfilSel, bandKeys, busca]);
@@ -183,7 +195,7 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
           <Input
             value={busca}
             onChange={(e) => { setBusca(e.target.value); setPage(0); }}
-            placeholder="Buscar negócio…"
+            placeholder="Buscar (negócio, ativador, etapa…)"
             className="h-10 w-[220px] pl-8"
           />
         </div>
