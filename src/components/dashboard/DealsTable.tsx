@@ -96,8 +96,6 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
       return ia - ib;
     });
   }, [rows]);
-    [rows],
-  );
   const bandOpts = useMemo(() => BAND_ORDER.map(bandLabel), []);
 
   const bandKeys = useMemo(() => new Set([...bandSel].map(bandFromLabel)), [bandSel]);
