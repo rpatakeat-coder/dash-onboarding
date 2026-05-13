@@ -53,7 +53,7 @@ export const MacroMovimento = ({ rows }: Props) => {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-5 shadow-sm-soft lg:col-span-4">
+      <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm-soft lg:col-span-4">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="font-display text-base font-semibold text-secondary">
