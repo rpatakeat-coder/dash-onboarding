@@ -68,10 +68,10 @@ const Index = () => {
   }, [macroRows]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen overflow-x-hidden bg-background">
       <DashboardHeader />
 
-      <main className="mx-auto max-w-[1400px] space-y-6 px-4 py-6 sm:px-6 md:px-10">
+      <main className="mx-auto max-w-[1400px] space-y-6 px-3 py-6 sm:px-6 md:px-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <MacroFilters
             rows={personalRows}
