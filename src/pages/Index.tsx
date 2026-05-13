@@ -16,6 +16,7 @@ const Index = () => {
   const { data, isLoading, error } = useDashOperacoes();
   const { isAdmin, isAtivador, myAgente } = useAtivadorScope();
   const [estoqueOpen, setEstoqueOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [filtroAtivadores, setFiltroAtivadores] = useState<Set<string>>(new Set());
   const [filtroEtapas, setFiltroEtapas] = useState<Set<string>>(new Set());
 
