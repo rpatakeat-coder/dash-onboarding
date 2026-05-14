@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X, Sparkles, Check } from "lucide-react";
 import { TUTORIAL_STEPS } from "./steps";
@@ -17,18 +17,16 @@ const PADDING = 8;
 export const TutorialOverlay = ({ stepIndex, onNext, onPrev, onClose }: Props) => {
   const step = TUTORIAL_STEPS[stepIndex];
   const [rect, setRect] = useState<Rect | null>(null);
-  const [tooltipHeight, setTooltipHeight] = useState(0);
-  const cardRef = useRef<HTMLDivElement | null>(null);
 
   const computeRect = (el: HTMLElement) => {
     const r = el.getBoundingClientRect();
     const vh = window.innerHeight;
     const vw = window.innerWidth;
-    const maxH = Math.max(120, vh - 280);
-    const maxW = Math.max(200, vw - 32);
+    const maxH = Math.max(72, vh - 160);
+    const maxW = Math.max(160, vw - 32);
     const height = Math.min(r.height, maxH);
     const width = Math.min(r.width, maxW);
-    const top = Math.max(72, Math.min(r.top, vh - height - 220));
+    const top = Math.max(16, Math.min(r.top, vh - height - 16));
     const left = Math.max(16, Math.min(r.left, vw - width - 16));
     return { top, left, width, height };
   };
@@ -50,7 +48,7 @@ export const TutorialOverlay = ({ stepIndex, onNext, onPrev, onClose }: Props) =
         if (attempts < 40) setTimeout(find, 150);
         return;
       }
-      el.scrollIntoView({ behavior: "smooth", block: "start", inline: "center" });
+      el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
       setTimeout(() => {
         if (cancelled) return;
         const fresh = document.querySelector(targetSel) as HTMLElement | null;
@@ -78,26 +76,6 @@ export const TutorialOverlay = ({ stepIndex, onNext, onPrev, onClose }: Props) =
     };
   }, [step]);
 
-  useLayoutEffect(() => {
-    if (!cardRef.current) return;
-
-    const measure = () => {
-      if (!cardRef.current) return;
-      setTooltipHeight(cardRef.current.getBoundingClientRect().height);
-    };
-
-    measure();
-
-    const observer = new ResizeObserver(measure);
-    observer.observe(cardRef.current);
-    window.addEventListener("resize", measure);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, [stepIndex, rect, step]);
-
   // Keyboard nav
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -115,22 +93,6 @@ export const TutorialOverlay = ({ stepIndex, onNext, onPrev, onClose }: Props) =
   const isLast = stepIndex === total - 1;
   const isFirst = stepIndex === 0;
   const isModalLike = step.kind === "welcome" || step.kind === "finish" || !rect;
-
-  // Tooltip position next to spotlight
-  let tipStyle: React.CSSProperties = {};
-  if (rect && step.kind === "spotlight") {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const tipW = Math.min(380, vw - 32);
-    const tipH = Math.max(180, tooltipHeight || 220);
-    const spaceBelow = vh - (rect.top + rect.height);
-    const placeBelow = spaceBelow > tipH + 24 || rect.top < tipH + 24;
-    let left = rect.left + rect.width / 2 - tipW / 2;
-    left = Math.max(16, Math.min(left, vw - tipW - 16));
-    const rawTop = placeBelow ? rect.top + rect.height + PADDING + 12 : rect.top - PADDING - tipH - 12;
-    const top = Math.max(16, Math.min(rawTop, vh - tipH - 16));
-    tipStyle = { top, left, width: tipW };
-  }
 
   return createPortal(
     <div className="fixed inset-0 z-[100]">
@@ -159,11 +121,10 @@ export const TutorialOverlay = ({ stepIndex, onNext, onPrev, onClose }: Props) =
         className={
           isModalLike
             ? "absolute left-1/2 top-1/2 w-[min(440px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 animate-fade-in"
-            : "absolute animate-fade-in"
+            : "pointer-events-none absolute inset-x-4 bottom-4 flex justify-center animate-fade-in"
         }
-        style={isModalLike ? undefined : tipStyle}
       >
-        <div ref={cardRef} className="max-h-[calc(100vh-32px)] overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-2xl">
+        <div className="pointer-events-auto w-[min(440px,calc(100vw-32px))] max-h-[calc(100vh-32px)] overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-2xl">
           <div className="mb-3 flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
