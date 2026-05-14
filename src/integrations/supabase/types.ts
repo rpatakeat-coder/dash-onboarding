@@ -71,6 +71,33 @@ export type Database = {
         }
         Relationships: []
       }
+      copilot_messages: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          parts: Json
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          parts?: Json
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          parts?: Json
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dash_operacoes: {
         Row: {
           agente_ativacao: string | null

@@ -9,6 +9,7 @@ import { NotificationsBell } from "@/components/NotificationsBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { APP_VERSION } from "@/lib/version";
 import { usePreferencesDialog } from "@/contexts/PreferencesDialogContext";
+import { CopilotButton } from "@/components/copilot/CopilotButton";
 
 export const DashboardHeader = () => {
   const today = new Date().toLocaleDateString("pt-BR", {
@@ -82,6 +83,7 @@ export const DashboardHeader = () => {
 
           {/* Actions cluster + user */}
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <CopilotButton />
             <div className="flex items-center gap-0.5 rounded-lg border border-border bg-card/60 p-0.5">
               <NotificationsBell />
               <ThemeToggle />
