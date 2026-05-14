@@ -1,119 +1,72 @@
-## Objetivo
+## Contexto
 
-Substituir o dashboard atual (`/`) por uma visão enxuta dividida em **dois blocos**:
+Hoje o projeto já tem `ai-insights` (edge function) com modos **kpi** e **dashboard**, gerando textos executivos, riscos, oportunidades, etc. Os próximos passos elevam isso de "explicador de KPI" para um **copiloto operacional**.
 
-1. **Macros** — quadros agregados (estoque, perfis, SLA, novos, ativações, carteira por ativador).
-2. **Lista linha-a-linha** — tabela filtrável (SLA, fase, ativador, perfil).
+## Recomendações (escolha 1 ou mais para começar)
 
-A página antiga (Highlights, Heatmap, RiskRanking, ManagerialView, Trend, Funnel etc.) será removida da rota `/`. Os componentes ficam no projeto para reuso futuro, mas saem do `Index.tsx`.
+### 1. Copiloto conversacional (chat com a operação)
+Um chat lateral onde você pergunta em linguagem natural:
+- *"Quais deals da Marina passaram de 30 dias?"*
+- *"Compare o MRR ativado de abril vs maio"*
+- *"Quem da equipe está com pior SLA esta semana?"*
 
----
+Usa AI SDK + tool calling com ferramentas que leem `dash_operacoes` e respondem com tabelas/links para os deals.
 
-## Bloco 1 — Quadros macro
+### 2. Previsão de risco por deal (score preditivo)
+Para cada deal no estoque, calcular um **score 0–100 de probabilidade de estourar SLA / virar crítico** com base em:
+- dias na etapa atual vs média histórica daquela etapa
+- perfil do cliente, MRR, ativador
+- comparação com deals que viraram críticos no passado
 
-### Linha A — Estoque
-- **Total em estoque** (count de `dash_operacoes`).
-- **Distribuição P / M / G / GG** — quantidade + % (já existe via `perfis`, manter).
+Mostrar como nova coluna em `DealsTable` + filtro "Em risco".
 
-### Linha B — SLA do estoque (criação)
-- **P75 (dias)** sobre `sla_dias_criacao`.
-- **Média (dias)** sobre `sla_dias_criacao`.
-- **% SLA > 30 dias** e **% SLA ≤ 30 dias** (sobre `sla_dias_criacao`, não mais sobre `sla_dias_etapa`).
-- ⚠️ Sem desconto de pausa nesta primeira entrega — ver seção "Pendência: desconto de pausados".
+### 3. Resumo diário automático (e-mail / TV)
+Um cron job (já existe `send-daily-alert`) gera todo dia 8h um briefing curto:
+- 3 destaques do dia (positivos)
+- 3 pontos de atenção
+- ação recomendada para cada ativador
+Enviado por e-mail ou exibido no `/tv`.
 
-### Linha C — Movimento
-- **Novos clientes hoje** (criados hoje).
-- **MRR ativado hoje** (R$ + nº de deals que estão em `Acompanhamento` criados hoje).
-- **MRR ativado semana** (R$ + nº).
-- **MRR ativado mês atual** (R$ + nº).
-- **MRR ativado mês anterior** (R$ + nº).
-- Conforme escolhido: **só valores absolutos**, sem percentual.
+### 4. Recomendações por ativador (coaching)
+Em `OperatorCarteiraModal`, adicionar bloco "Sugestões da IA":
+- *"3 deals podem virar críticos esta semana — priorize X, Y, Z"*
+- *"Seu SLA médio caiu 18% vs semana anterior — verifique etapa Onboarding Técnico"*
+- *"Carteira acima da média (24 vs 15) — considere redistribuir"*
 
-### Linha D — Carteira por ativador
-- Lista compacta: nome do ativador + nº de clientes em carteira.
-- Ordenada por carteira desc.
-- Para usuário ativador (não-admin): só aparece a própria linha (já garantido por RLS).
+### 5. Detecção de anomalias
+Comparar dia a dia e alertar quando algo foge do padrão:
+- pico de entradas em uma etapa
+- queda de ativações vs média móvel
+- ativador com salto de SLA
+Vira card no topo do dashboard + entrada no sino de notificações.
 
----
+### 6. Comparação narrativa de períodos
+Hoje há `PeriodCompare` numérico. Adicionar **narrativa gerada**: *"Maio teve 11 ativações vs 9 em abril (+22%). MRR ativado caiu 8% pois o ticket médio reduziu de R$ 580 para R$ 530, puxado por 3 deals do perfil Light."*
 
-## Bloco 2 — Lista linha-a-linha
+### 7. Busca semântica de deals
+Caixa de busca onde você descreve o que procura: *"restaurantes de SP que travaram no integração POS"* → retorna deals relevantes mesmo sem match exato no nome.
 
-Tabela única substituindo as listas espalhadas (Stalled, RiskRanking etc.).
+### 8. Auto-categorização de motivos de atraso
+Edge function que lê notas/tarefas do HubSpot por deal e classifica por que está parado (cliente sumiu, integração técnica, financeiro, etc.) — vira tag/coluna nova.
 
-**Colunas**:
-- Nome do negócio (`nome_negocio`) — clicável, abre o `DealDrawer` existente.
-- Etapa (`etapa_negocio`).
-- SLA criação (`sla_dias_criacao`) — com badge de cor por faixa.
-- SLA fase (`sla_dias_etapa`) — com badge de cor por faixa.
-- Ativador (`agente_ativacao`).
-- Perfil (`perfil_cliente`, normalizado P/M/G/GG).
-- MRR (mantém para contexto).
-
-**Filtros (multi-select, chips, igual ao padrão atual)**:
-- SLA: faixas Crítico / Atenção / Alerta / Saudável (aplicado ao `sla_dias_etapa`).
-- Fase: lista de `etapa_negocio` distintos.
-- Ativador: lista de `agente_ativacao` distintos (para ativador não-admin, pré-fixado nele mesmo).
-- Perfil: P / M / G / GG.
-
-**Extras**:
-- Busca por nome do negócio.
-- Ordenação por qualquer coluna.
-- Paginação client-side (50/página) ou scroll virtualizado se passar de ~500 linhas.
-- Botão "Exportar CSV" reaproveitando `ExportCsvButton`.
-
----
-
-## Estrutura técnica
-
-**Arquivos novos**
-- `src/components/dashboard/MacroEstoque.tsx` — Linhas A + B.
-- `src/components/dashboard/MacroMovimento.tsx` — Linha C (hoje/semana/mês/mês ant.).
-- `src/components/dashboard/CarteiraPorAtivador.tsx` — Linha D.
-- `src/components/dashboard/DealsTable.tsx` — Bloco 2 com filtros + tabela.
-
-**Arquivos editados**
-- `src/pages/Index.tsx` — reescrito: header + Bloco 1 + Bloco 2. Mantém `useDashOperacoes`, `useAtivadorScope`, `DealDrawer`, `EstoqueModal` (para drill do total).
-- `src/hooks/useDashOperacoes.ts` — adicionar:
-  - `slaP75Criacao`, `slaMedioCriacao` (sobre `sla_dias_criacao`).
-  - `pctAcima30Criacao`, `pctAbaixo30Criacao`.
-  - Manter os campos antigos para não quebrar referências em componentes não removidos.
-
-**Arquivos removidos do `Index.tsx` (componentes ficam em disco)**
-- `Highlights`, `BottleneckHeatmap`, `RankingTable`, `PerfilSlaPanel`, `RiskRanking`, `TrendChart`, `FunnelChart`, `AttentionPoints`, `SlaCritico`, `StalledTable`, `PeriodCompare`, `ManagerialView`, `AiInsightsCard`.
-- A aba "Gestão" (admin) também sai — se quiser preservar, me avise antes de implementar.
-
----
-
-## Pendência: desconto de pausados (P75 / média)
-
-Você pediu para o SLA de criação descontar o tempo em que o card morou em **Processo Pausado**. **Hoje isso não é possível** porque:
-
-- A tabela `dash_operacoes` guarda só o snapshot atual (`sla_dias_criacao`, `sla_dias_etapa`, `etapa_negocio`).
-- Não existe histórico de transições de etapa nem campo "dias acumulados em pausa".
-
-**Para implementar de verdade** seria necessário um destes caminhos (escolher depois):
-
-1. **Sincronizar do HubSpot** o histórico da propriedade `dealstage` (eventos de mudança de etapa) para uma nova tabela `dash_operacoes_historico (id_deal, etapa, entrou_em, saiu_em)`. Aí calculamos `dias_em_pausa` por deal e fazemos `sla_ajustado = sla_dias_criacao - dias_em_pausa`.
-2. **Adicionar uma coluna `dias_pausado`** na própria `dash_operacoes`, alimentada pelo n8n a partir do HubSpot (mais simples, sem nova tabela).
-
-Nesta entrega vou usar `sla_dias_criacao` cru e deixar uma nota visível no card de SLA ("não desconta tempo em pausa — pendente histórico"). Quando você decidir o caminho 1 ou 2, faço a segunda etapa.
-
----
-
-## Resumo do que muda visualmente
+## Sugestão de prioridade
 
 ```text
-ANTES (/)                          DEPOIS (/)
-─────────────────                  ─────────────────
-Header + filtros                   Header + filtros
-SlaKpiRow                          ── Bloco 1: Macros ──
-Highlights (4 cards)                 Estoque total + P/M/G/GG
-PeriodGrids                          P75 + Média + %>30 + %≤30
-Funnel + Operadores                  Novos hoje
-Heatmap + Ranking                    MRR ativado H/S/M/M-1
-PerfilSlaPanel                       Carteira por ativador
-RiskRanking + Trend                ── Bloco 2: Lista ──
-AttentionPoints + SlaCritico         Filtros (SLA/Fase/Ativador/Perfil)
-ManagerialView (aba admin)           Tabela linha-a-linha + export
-AiInsightsCard
+Quick wins (1–2 dias)
+  3. Resumo diário automático
+  6. Comparação narrativa de períodos
+
+Alto impacto (3–5 dias)
+  1. Copiloto conversacional
+  4. Recomendações por ativador
+  5. Detecção de anomalias
+
+Maior esforço (1+ semana)
+  2. Score preditivo de risco
+  7. Busca semântica
+  8. Auto-categorização via HubSpot
 ```
+
+## Próximo passo
+
+Me diga **quais dessas você quer** (pode escolher mais de uma) e eu volto com plano detalhado de implementação para cada uma.
