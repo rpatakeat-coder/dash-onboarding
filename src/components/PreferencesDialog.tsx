@@ -5,12 +5,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, Upload, Trash2, Shield } from "lucide-react";
+import { Loader2, Upload, Trash2, Shield, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { usePreferences, type ThemeMode, type HomeRoute } from "@/contexts/PreferencesContext";
+import { useTutorial } from "@/contexts/TutorialContext";
 
 interface Props {
   open: boolean;
@@ -21,6 +22,7 @@ export const PreferencesDialog = ({ open, onOpenChange }: Props) => {
   const p = usePreferences();
   const { user, fullName } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const tutorial = useTutorial();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -180,6 +182,22 @@ export const PreferencesDialog = ({ open, onOpenChange }: Props) => {
                 </div>
               ))}
             </div>
+          </section>
+          <section>
+            <h4 className="mb-2 font-subtitle text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Tutorial
+            </h4>
+            <Button
+              variant="outline"
+              className="w-full justify-start gap-2"
+              onClick={() => {
+                onOpenChange(false);
+                setTimeout(() => tutorial.start(), 200);
+              }}
+            >
+              <Sparkles className="h-4 w-4" />
+              Iniciar tour pelo sistema
+            </Button>
           </section>
           {isAdmin && (
             <section>
