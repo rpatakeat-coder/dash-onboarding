@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   Bar,
   CartesianGrid,
+  Cell,
   ComposedChart,
   Legend,
   Line,
@@ -196,9 +197,8 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
               fill="url(#mrrAtivBar)"
             >
               {data.map((entry) => (
-                <Bar
+                <Cell
                   key={entry.key}
-                  dataKey="mrr"
                   fill={entry.isCurrent ? "url(#mrrAtivBarCurrent)" : "url(#mrrAtivBar)"}
                 />
               ))}
