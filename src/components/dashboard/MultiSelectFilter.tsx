@@ -109,13 +109,14 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
             >
               Apenas selecionados ({selected.size})
             </button>
-            {selected.size > 0 && (
+            {(query || onlySelected || selected.size > 0) && (
               <button
                 type="button"
-                onClick={() => { onChange(new Set()); setOnlySelected(false); }}
-                className="text-muted-foreground hover:text-destructive"
+                onClick={() => { setQuery(""); setOnlySelected(false); onChange(new Set()); }}
+                className="rounded px-1.5 py-0.5 font-subtitle uppercase tracking-wider text-muted-foreground hover:text-destructive"
+                title="Limpa busca e seleção, restaurando a lista completa"
               >
-                Limpar
+                Limpar tudo
               </button>
             )}
           </div>
