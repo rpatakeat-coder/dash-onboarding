@@ -148,7 +148,7 @@ export const DashboardHeader = () => {
                 <span className="absolute inline-flex h-full w-full animate-pulse-soft rounded-full bg-success opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
               </span>
-              Atualizado em tempo real
+              {lastUpdated ? `Atualizado em ${lastUpdated}` : "Aguardando dados…"}
             </p>
           </div>
         </div>
