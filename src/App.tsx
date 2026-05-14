@@ -29,7 +29,6 @@ const Shell = () => {
   const [prefsOpen, setPrefsOpen] = useState(false);
   return (
     <PreferencesDialogContext.Provider value={{ open: () => setPrefsOpen(true) }}>
-      <TutorialProvider>
       <ScrollToTop />
       <PageTransition>
         <Routes>
@@ -44,7 +43,6 @@ const Shell = () => {
       </PageTransition>
       <CommandPalette onOpenPreferences={() => setPrefsOpen(true)} />
       <PreferencesDialog open={prefsOpen} onOpenChange={setPrefsOpen} />
-      </TutorialProvider>
     </PreferencesDialogContext.Provider>
   );
 };
@@ -59,7 +57,9 @@ const App = () => (
           <AuthProvider>
             <NotificationsProvider>
               <DealDrawerProvider>
-                <Shell />
+                <TutorialProvider>
+                  <Shell />
+                </TutorialProvider>
               </DealDrawerProvider>
             </NotificationsProvider>
           </AuthProvider>

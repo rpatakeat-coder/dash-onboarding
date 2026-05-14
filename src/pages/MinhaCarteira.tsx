@@ -103,7 +103,7 @@ const MinhaCarteira = () => {
     <div className="min-h-screen bg-gradient-surface">
       <DashboardHeader />
       <main data-tour="carteira" className="mx-auto max-w-[1200px] px-6 py-8 md:px-10 md:py-10">
-        <div className="mb-8">
+        <div data-tour="carteira-title" className="mb-8">
           <p className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">
             Olá, {fullName || "agente"}
           </p>
