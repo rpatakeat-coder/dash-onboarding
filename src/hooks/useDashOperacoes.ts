@@ -17,6 +17,7 @@ export interface DashRow {
   data_entrada_fase: string | null;
   etapa_negocio: string | null;
   data_ativacao: string | null;
+  pipeline_nome: string | null;
 }
 
 export type SlaBand = "critico" | "atencao" | "alerta" | "saudavel";

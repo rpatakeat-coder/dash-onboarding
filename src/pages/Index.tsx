@@ -49,15 +49,34 @@ const Index = () => {
     });
   }, [macroBase, filtroAtivadores, filtroEtapas]);
 
-  // Recalcula distribuição de perfis em cima das linhas filtradas
+  // Estoque atual: apenas deals do pipeline "Onboarding" criados no mês corrente.
+  const estoqueRows = useMemo(() => {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const parseBR = (s: string | null): Date | null => {
+      if (!s) return null;
+      const m = s.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      if (!m) return null;
+      const d = new Date(+m[3], +m[2] - 1, +m[1]);
+      return isNaN(d.getTime()) ? null : d;
+    };
+    return macroRows.filter((r) => {
+      if ((r.pipeline_nome?.trim().toLowerCase() ?? "") !== "onboarding") return false;
+      const d = parseBR(r.data_criacao);
+      return !!d && d >= monthStart && d < nextMonth;
+    });
+  }, [macroRows]);
+
+  // Recalcula distribuição de perfis em cima do estoque (Onboarding · mês atual)
   const perfisFiltrados: PerfilStat[] = useMemo(() => {
     const order = ["P", "M", "G", "GG"];
     const map = new Map<string, number>();
-    for (const r of macroRows) {
+    for (const r of estoqueRows) {
       const k = r.perfil_cliente?.trim().split(/\s+/)[0]?.toUpperCase() || "—";
       map.set(k, (map.get(k) ?? 0) + 1);
     }
-    const total = macroRows.length;
+    const total = estoqueRows.length;
     const out: PerfilStat[] = order
       .filter((k) => map.has(k))
       .map((k) => ({ perfil: k, count: map.get(k)!, pct: total ? (map.get(k)! / total) * 100 : 0 }));
@@ -67,7 +86,7 @@ const Index = () => {
       }
     }
     return out;
-  }, [macroRows]);
+  }, [estoqueRows]);
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background">
@@ -110,7 +129,7 @@ const Index = () => {
         {data && (
           <>
             <MacroEstoque
-              rows={macroRows}
+              rows={estoqueRows}
               perfis={perfisFiltrados}
               onTotalClick={() => setEstoqueOpen(true)}
             />
@@ -134,7 +153,7 @@ const Index = () => {
       <EstoqueModal
         open={estoqueOpen}
         onOpenChange={setEstoqueOpen}
-        rows={macroRows}
+        rows={estoqueRows}
       />
 
       <AiInsightsDialog

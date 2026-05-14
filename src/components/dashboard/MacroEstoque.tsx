@@ -30,7 +30,7 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
         <div className="relative">
           <div className="absolute right-2 top-2 z-10">
-            <InfoTooltip text="Estoque total = contagem de todos os deals ativos no pipe (filtros aplicados). Não considera SLA, apenas presença no funil." />
+            <InfoTooltip text="Estoque atual = deals do pipeline 'Onboarding' com data de criação dentro do mês corrente (filtros aplicados). Não considera SLA, apenas presença no funil de Onboarding no mês." />
           </div>
           <button
             type="button"
@@ -40,13 +40,13 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
             <div className="flex items-start justify-between">
               <div>
                 <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
-                  Estoque total
+                  Estoque atual
                 </p>
                 <p className="mt-2 font-numeric text-4xl font-bold text-primary">
                   {k.total.toLocaleString("pt-BR")}
                 </p>
                 <p className="mt-1 font-small text-xs text-muted-foreground">
-                  clientes no pipe
+                  Onboarding · mês atual
                 </p>
               </div>
               <Package className="h-6 w-6 text-primary/70" />
