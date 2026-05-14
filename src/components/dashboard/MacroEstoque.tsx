@@ -91,7 +91,7 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="relative rounded-xl border border-border bg-card/60 p-4">
-            <div className="absolute right-2 top-2"><InfoTooltip text="P75 SLA = percentil 75 de sla_dias_criacao do estoque filtrado. 75% dos deals possuem SLA menor ou igual a esse valor (em dias desde a criação)." /></div>
+            <div className="absolute right-2 top-2"><InfoTooltip text="P75 SLA = percentil 75 de sla_dias_real do estoque filtrado. 75% dos deals possuem SLA menor ou igual a esse valor (em dias desde a criação)." /></div>
             <p className="font-subtitle text-xs text-muted-foreground">P75 SLA</p>
             <p className="mt-2 font-numeric text-3xl font-bold text-foreground">
               {k.p75.toFixed(0)}<span className="ml-1 text-base font-medium text-muted-foreground">d</span>
@@ -102,7 +102,7 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
           </div>
 
           <div className="relative rounded-xl border border-border bg-card/60 p-4">
-            <div className="absolute right-2 top-2"><InfoTooltip text="SLA médio = média aritmética de sla_dias_criacao em todos os deals do estoque filtrado." /></div>
+            <div className="absolute right-2 top-2"><InfoTooltip text="SLA médio = média aritmética de sla_dias_real em todos os deals do estoque filtrado." /></div>
             <p className="font-subtitle text-xs text-muted-foreground">SLA médio</p>
             <p className="mt-2 font-numeric text-3xl font-bold text-foreground">
               {k.media.toFixed(1)}<span className="ml-1 text-base font-medium text-muted-foreground">d</span>
@@ -116,7 +116,7 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
             <div className="flex items-center justify-between">
               <p className="font-subtitle text-xs text-muted-foreground">% acima de 30d</p>
               <div className="flex items-center gap-1.5">
-                <InfoTooltip text="% acima de 30d = (deals com sla_dias_criacao > 30 / total filtrado) × 100. Indica volume estourado no funil." />
+                <InfoTooltip text="% acima de 30d = (deals com sla_dias_real > 30 / total filtrado) × 100. Indica volume estourado no funil." />
                 <AlertTriangle className="h-4 w-4 text-destructive/70" />
               </div>
             </div>
@@ -132,7 +132,7 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
             <div className="flex items-center justify-between">
               <p className="font-subtitle text-xs text-muted-foreground">% abaixo de 30d</p>
               <div className="flex items-center gap-1.5">
-                <InfoTooltip text="% abaixo de 30d = (deals com sla_dias_criacao ≤ 30 / total filtrado) × 100. Indica volume saudável no funil." />
+                <InfoTooltip text="% abaixo de 30d = (deals com sla_dias_real ≤ 30 / total filtrado) × 100. Indica volume saudável no funil." />
                 <ShieldCheck className="h-4 w-4 text-success/70" />
               </div>
             </div>
