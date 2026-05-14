@@ -28,31 +28,39 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
     <section className="space-y-4">
       {/* Linha A: Estoque + perfis */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-        <button
-          type="button"
-          onClick={onTotalClick}
-          className="rounded-2xl border border-primary/30 bg-primary/[0.04] p-5 text-left transition hover:-translate-y-0.5 hover:shadow-md-soft"
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
-                Estoque total
-              </p>
-              <p className="mt-2 font-numeric text-4xl font-bold text-primary">
-                {k.total.toLocaleString("pt-BR")}
-              </p>
-              <p className="mt-1 font-small text-xs text-muted-foreground">
-                clientes no pipe
-              </p>
-            </div>
-            <Package className="h-6 w-6 text-primary/70" />
+        <div className="relative">
+          <div className="absolute right-2 top-2 z-10">
+            <InfoTooltip text="Estoque total = contagem de todos os deals ativos no pipe (filtros aplicados). Não considera SLA, apenas presença no funil." />
           </div>
-        </button>
+          <button
+            type="button"
+            onClick={onTotalClick}
+            className="w-full rounded-2xl border border-primary/30 bg-primary/[0.04] p-5 text-left transition hover:-translate-y-0.5 hover:shadow-md-soft"
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+                  Estoque total
+                </p>
+                <p className="mt-2 font-numeric text-4xl font-bold text-primary">
+                  {k.total.toLocaleString("pt-BR")}
+                </p>
+                <p className="mt-1 font-small text-xs text-muted-foreground">
+                  clientes no pipe
+                </p>
+              </div>
+              <Package className="h-6 w-6 text-primary/70" />
+            </div>
+          </button>
+        </div>
 
         {(["P", "M", "G", "GG"] as const).map((p) => {
           const v = perfis.find((x) => x.perfil === p);
           return (
-            <div key={p} className="rounded-2xl border border-border bg-card p-5">
+            <div key={p} className="relative rounded-2xl border border-border bg-card p-5">
+              <div className="absolute right-2 top-2">
+                <InfoTooltip text={`Perfil ${p} = quantidade de deals cujo campo perfil_cliente começa com "${p}". O percentual é (count / estoque total filtrado) × 100.`} />
+              </div>
               <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
                 Perfil {p}
               </p>
