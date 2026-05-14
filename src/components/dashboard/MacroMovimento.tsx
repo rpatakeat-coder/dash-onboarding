@@ -7,6 +7,7 @@ import {
   mrrAtivadoNoPeriodo,
   type DashRow,
 } from "@/hooks/useDashOperacoes";
+import { InfoTooltip } from "./InfoTooltip";
 
 interface Props {
   rows: DashRow[];
