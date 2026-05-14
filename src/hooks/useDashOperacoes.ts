@@ -554,12 +554,24 @@ export function useDashOperacoes() {
   return useQuery({
     queryKey: ["dash_operacoes"],
     queryFn: async (): Promise<DashData> => {
-      const { data, error } = await supabase
-        .from("dash_operacoes")
-        .select("*")
-        .limit(2000);
-      if (error) throw error;
-      return aggregate((data ?? []) as unknown as DashRow[]);
+      // PostgREST limita a resposta a 1000 linhas por padrão.
+      // Paginamos com .range() até esgotar os registros.
+      const PAGE = 1000;
+      const all: DashRow[] = [];
+      let from = 0;
+      // Hard cap defensivo para evitar loop em caso de erro.
+      while (from < 100_000) {
+        const { data, error } = await supabase
+          .from("dash_operacoes")
+          .select("*")
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        const batch = (data ?? []) as unknown as DashRow[];
+        all.push(...batch);
+        if (batch.length < PAGE) break;
+        from += PAGE;
+      }
+      return aggregate(all);
     },
     refetchInterval: 60_000,
   });
