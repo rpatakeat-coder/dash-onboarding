@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { TutorialOverlay } from "@/components/tutorial/TutorialOverlay";
 import { TUTORIAL_STEPS } from "@/components/tutorial/steps";
 
@@ -24,9 +25,18 @@ export const TutorialProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const uid = user?.id ?? null;
+  const checkedRef = useRef<string | null>(null);
 
   const markDone = useCallback(() => {
     try { localStorage.setItem(storageKey(uid), "1"); } catch { /* noop */ }
+    if (uid) {
+      // Persist to user profile so it follows the user across devices/browsers
+      supabase
+        .from("profiles")
+        .update({ tutorial_done_at: new Date().toISOString() } as never)
+        .eq("id", uid)
+        .then(() => { /* noop */ });
+    }
   }, [uid]);
 
   const start = useCallback(() => {
@@ -55,20 +65,41 @@ export const TutorialProvider = ({ children }: { children: ReactNode }) => {
     setStepIndex((i) => Math.max(0, i - 1));
   }, []);
 
-  // Auto-start only on first access ever for this user
+  // Auto-start only on first access ever for this user (checked once per session per uid)
   useEffect(() => {
     if (loading || !session || !uid) return;
-    if (location.pathname === "/auth" || location.pathname === "/acesso-dash") return;
-    let done = false;
-    try {
-      done = !!localStorage.getItem(storageKey(uid))
-        // legacy key migration
-        || !!localStorage.getItem("tutorial:v1:done");
-    } catch { /* noop */ }
-    if (!done) {
-      const t = setTimeout(() => start(), 600);
-      return () => clearTimeout(t);
-    }
+    if (checkedRef.current === uid) return;
+    checkedRef.current = uid;
+
+    let cancelled = false;
+    (async () => {
+      // Local cache check
+      let done = false;
+      try {
+        done = !!localStorage.getItem(storageKey(uid))
+          || !!localStorage.getItem("tutorial:v1:done");
+      } catch { /* noop */ }
+
+      if (!done) {
+        // Server-side check (history per user)
+        const { data } = await supabase
+          .from("profiles")
+          .select("tutorial_done_at")
+          .eq("id", uid)
+          .maybeSingle();
+        const serverDone = !!(data as { tutorial_done_at?: string | null } | null)?.tutorial_done_at;
+        if (serverDone) {
+          try { localStorage.setItem(storageKey(uid), "1"); } catch { /* noop */ }
+          done = true;
+        }
+      }
+
+      if (cancelled || done) return;
+      if (location.pathname === "/auth" || location.pathname === "/acesso-dash") return;
+      setTimeout(() => { if (!cancelled) start(); }, 600);
+    })();
+
+    return () => { cancelled = true; };
   }, [loading, session, uid, location.pathname, start]);
 
   // Sync route with step
