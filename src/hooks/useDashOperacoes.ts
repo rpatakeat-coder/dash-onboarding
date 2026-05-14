@@ -571,20 +571,27 @@ export function useDashOperacoes() {
     queryKey: ["dash_operacoes"],
     queryFn: async (): Promise<DashData> => {
       // PostgREST limita a resposta a 1000 linhas por padrão.
-      // Paginamos com .range() até esgotar os registros.
+      // Fazemos a paginação com ordenação estável para não pular nem duplicar
+      // registros entre páginas no modo TV.
       const PAGE = 1000;
       const all: DashRow[] = [];
+      const { count, error: countError } = await supabase
+        .from("dash_operacoes")
+        .select("id_deal", { count: "exact", head: true });
+      if (countError) throw countError;
+      const totalRows = count ?? 0;
       let from = 0;
       // Hard cap defensivo para evitar loop em caso de erro.
-      while (from < 100_000) {
+      while (from < totalRows && from < 100_000) {
         const { data, error } = await supabase
           .from("dash_operacoes")
           .select("*")
+          .order("id_deal", { ascending: true })
           .range(from, from + PAGE - 1);
         if (error) throw error;
         const batch = (data ?? []) as unknown as DashRow[];
+        if (!batch.length) break;
         all.push(...batch);
-        if (batch.length < PAGE) break;
         from += PAGE;
       }
       return aggregate(all);
