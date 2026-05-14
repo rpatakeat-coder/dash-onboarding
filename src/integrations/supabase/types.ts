@@ -85,6 +85,7 @@ export type Database = {
           responsavel_ativacao: string | null
           sla_dias_criacao: string | null
           sla_dias_etapa: string | null
+          sla_dias_real: string | null
           tempo_pausado_dias: string | null
         }
         Insert: {
@@ -100,6 +101,7 @@ export type Database = {
           responsavel_ativacao?: string | null
           sla_dias_criacao?: string | null
           sla_dias_etapa?: string | null
+          sla_dias_real?: string | null
           tempo_pausado_dias?: string | null
         }
         Update: {
@@ -115,6 +117,7 @@ export type Database = {
           responsavel_ativacao?: string | null
           sla_dias_criacao?: string | null
           sla_dias_etapa?: string | null
+          sla_dias_real?: string | null
           tempo_pausado_dias?: string | null
         }
         Relationships: []
