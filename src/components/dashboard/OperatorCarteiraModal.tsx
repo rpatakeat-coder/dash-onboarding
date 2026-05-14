@@ -6,7 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ChevronDown, ChevronRight, Search, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, Sparkles, Loader2, X } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { SlaBandBar } from "./SlaBandBar";
@@ -17,6 +18,8 @@ import {
   type OperatorStat,
   type SlaBand,
 } from "@/hooks/useDashOperacoes";
+import { useOperatorRecommendations } from "@/hooks/useOperatorRecommendations";
+import { toast } from "sonner";
 
 interface Props {
   operador: OperatorStat | null;
