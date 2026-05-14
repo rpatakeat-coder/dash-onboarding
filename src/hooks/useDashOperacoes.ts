@@ -129,7 +129,7 @@ const toNum = (v: string | null | undefined) => {
 export const slaReal = (r: { sla_dias_real?: string | null; sla_dias_etapa?: string | null }) => {
   const raw = r.sla_dias_real;
   if (raw != null && String(raw).trim() !== "") return toNum(raw);
-  return slaReal(r);
+  return toNum(r.sla_dias_etapa);
 };
 
 const emptyBands = (): Record<SlaBand, number> => ({
