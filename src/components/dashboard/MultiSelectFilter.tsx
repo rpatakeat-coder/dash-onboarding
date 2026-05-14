@@ -110,21 +110,38 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
             value={query}
             onValueChange={setQuery}
           />
-          <div className="flex items-center justify-between border-b border-border px-2 py-1.5 text-[11px]">
-            <button
-              type="button"
-              onClick={() => setOnlySelected((v) => !v)}
-              disabled={selected.size === 0}
-              className={cn(
-                "rounded px-1.5 py-0.5 font-subtitle uppercase tracking-wider transition",
-                onlySelected
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:text-foreground",
-                selected.size === 0 && "opacity-40 cursor-not-allowed",
+          <div className="flex flex-wrap items-center justify-between gap-1 border-b border-border px-2 py-1.5 text-[11px]">
+            <div className="flex flex-wrap items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setOnlySelected((v) => !v)}
+                disabled={selected.size === 0}
+                className={cn(
+                  "rounded px-1.5 py-0.5 font-subtitle uppercase tracking-wider transition",
+                  onlySelected
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground hover:text-foreground",
+                  selected.size === 0 && "opacity-40 cursor-not-allowed",
+                )}
+              >
+                Apenas selecionados ({selected.size})
+              </button>
+              {query.trim() && selected.size > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const q = norm(query.trim());
+                    const next = new Set<string>();
+                    for (const v of selected) if (norm(v).includes(q)) next.add(v);
+                    onChange(next);
+                  }}
+                  className="rounded px-1.5 py-0.5 font-subtitle uppercase tracking-wider text-muted-foreground hover:text-primary"
+                  title="Mantém apenas os itens já selecionados que batem com o termo buscado"
+                >
+                  Aplicar busca à seleção
+                </button>
               )}
-            >
-              Apenas selecionados ({selected.size})
-            </button>
+            </div>
             {(query || onlySelected || selected.size > 0) && (
               <button
                 type="button"
