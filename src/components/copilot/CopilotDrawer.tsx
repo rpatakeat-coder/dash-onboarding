@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Send, Sparkles, Trash2, Loader2 } from "lucide-react";
 import {
   Sheet,
@@ -180,7 +181,7 @@ const Message = ({ role, content }: { role: "user" | "assistant"; content: strin
           <p className="whitespace-pre-wrap">{content}</p>
         ) : (
           <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0 prose-table:my-2 prose-headings:font-display prose-headings:mt-2 prose-headings:mb-1">
-            <ReactMarkdown>{content}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
           </div>
         )}
       </div>
