@@ -338,7 +338,7 @@ export interface SlaCriacaoKpis {
 
 export function computeSlaCriacaoKpis(rows: DashRow[]): SlaCriacaoKpis {
   const total = rows.length;
-  const dias = rows.map((r) => toNum(r.sla_dias_criacao));
+  const dias = rows.map((r) => slaReal(r));
   const media = dias.length ? dias.reduce((a, b) => a + b, 0) / dias.length : 0;
   const p75 = percentile(dias, 0.75);
   const countAcima30 = dias.filter((d) => d > 30).length;
