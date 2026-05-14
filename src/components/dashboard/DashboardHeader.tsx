@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { LogIn, LogOut, Search, Settings, User } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import logo from "@/assets/logo-takeat.png";
 import { useAuth } from "@/hooks/useAuth";
 import { MainNav } from "@/components/MainNav";
