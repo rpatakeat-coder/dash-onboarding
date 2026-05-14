@@ -1,5 +1,7 @@
-import { TrendingUp, TrendingDown, Calendar, CalendarDays, CalendarRange } from "lucide-react";
+import { useState } from "react";
+import { TrendingUp, TrendingDown, Calendar, CalendarDays, CalendarRange, DollarSign } from "lucide-react";
 import {
+  fmtBRL,
   fmtBRLk,
   fmtPct,
   getPeriodRanges,
@@ -8,6 +10,7 @@ import {
 } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
 import { InfoTooltip } from "./InfoTooltip";
+import { MrrAtivadoMesModal } from "./MrrAtivadoMesModal";
 
 interface Props {
   rows: DashRow[];
