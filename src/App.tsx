@@ -21,6 +21,7 @@ import { PreferencesDialogContext } from "./contexts/PreferencesDialogContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { PageTransition } from "./components/PageTransition";
+import { TutorialProvider } from "./contexts/TutorialContext";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const Shell = () => {
   const [prefsOpen, setPrefsOpen] = useState(false);
   return (
     <PreferencesDialogContext.Provider value={{ open: () => setPrefsOpen(true) }}>
+      <TutorialProvider>
       <ScrollToTop />
       <PageTransition>
         <Routes>
@@ -42,6 +44,7 @@ const Shell = () => {
       </PageTransition>
       <CommandPalette onOpenPreferences={() => setPrefsOpen(true)} />
       <PreferencesDialog open={prefsOpen} onOpenChange={setPrefsOpen} />
+      </TutorialProvider>
     </PreferencesDialogContext.Provider>
   );
 };
