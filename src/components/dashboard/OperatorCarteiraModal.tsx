@@ -38,6 +38,8 @@ export const OperatorCarteiraModal = ({ operador, open, onOpenChange }: Props) =
   });
   const [search, setSearch] = useState("");
   const [bandFilter, setBandFilter] = useState<Set<SlaBand>>(new Set());
+  const [recsContent, setRecsContent] = useState<string | null>(null);
+  const recsMutation = useOperatorRecommendations();
 
   const term = search.trim().toLowerCase();
 
