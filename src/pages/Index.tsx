@@ -82,17 +82,20 @@ const Index = () => {
 
       <main className="mx-auto max-w-[1400px] space-y-6 px-3 py-6 sm:px-6 md:px-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <MacroFilters
-            rows={personalRows}
-            ativadores={filtroAtivadores}
-            etapas={filtroEtapas}
-            onAtivadoresChange={setFiltroAtivadores}
-            onEtapasChange={setFiltroEtapas}
-            hideAtivador={isAtivador && !isAdmin}
-          />
+          <div data-tour="filters" className="flex-1 min-w-0">
+            <MacroFilters
+              rows={personalRows}
+              ativadores={filtroAtivadores}
+              etapas={filtroEtapas}
+              onAtivadoresChange={setFiltroAtivadores}
+              onEtapasChange={setFiltroEtapas}
+              hideAtivador={isAtivador && !isAdmin}
+            />
+          </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
+              data-tour="ai-insights"
               onClick={() => setAiOpen(true)}
               className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 font-subtitle text-xs font-semibold text-primary transition hover:bg-primary/20"
             >
@@ -122,7 +125,9 @@ const Index = () => {
               onTotalClick={() => setEstoqueOpen(true)}
             />
 
-            <MrrAtivadoKpis rows={macroRows} />
+            <div data-tour="kpis">
+              <MrrAtivadoKpis rows={macroRows} />
+            </div>
 
             <MrrAtivadoTrendChart rows={macroRows} />
 
@@ -130,10 +135,12 @@ const Index = () => {
 
             <CarteiraPorAtivador rows={estoqueRows} />
 
-            <DealsTable
-              rows={personalRows}
-              hideAtivadorFilter={isAtivador && !isAdmin}
-            />
+            <div data-tour="deals">
+              <DealsTable
+                rows={personalRows}
+                hideAtivadorFilter={isAtivador && !isAdmin}
+              />
+            </div>
           </>
         )}
       </main>
