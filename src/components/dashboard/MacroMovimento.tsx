@@ -7,6 +7,7 @@ import {
   mrrAtivadoNoPeriodo,
   type DashRow,
 } from "@/hooks/useDashOperacoes";
+import { InfoTooltip } from "./InfoTooltip";
 
 interface Props {
   rows: DashRow[];
@@ -31,12 +32,14 @@ export const MacroMovimento = ({ rows }: Props) => {
       value: fmtBRLk(ativ.mrr),
       sub: `${ativ.count} ativados · ${entrados} entrados`,
       accent: p.accent,
+      formula: `MRR ativado em ${p.label.toLowerCase()} = soma de mrr dos deals com data_ativacao dentro do período. "Entrados" = deals com data de criação no mesmo período.`,
     };
   });
 
   return (
     <section className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-      <div className="rounded-2xl border border-success/30 bg-success/[0.04] p-5 lg:col-span-1">
+      <div className="relative rounded-2xl border border-success/30 bg-success/[0.04] p-5 lg:col-span-1">
+        <div className="absolute right-2 top-2"><InfoTooltip text="Entradas hoje = contagem de deals cuja data de criação é hoje (00:00 → 23:59), sem aplicar filtros de etapa." /></div>
         <div className="flex items-start justify-between">
           <div>
             <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
@@ -67,7 +70,8 @@ export const MacroMovimento = ({ rows }: Props) => {
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {cards.map((c) => (
-            <div key={c.label} className="rounded-xl border border-border bg-card/60 p-4">
+            <div key={c.label} className="relative rounded-xl border border-border bg-card/60 p-4">
+              <div className="absolute right-2 top-2"><InfoTooltip text={c.formula} /></div>
               <p className="font-subtitle text-xs text-muted-foreground">{c.label}</p>
               <p className={`mt-2 font-numeric text-2xl font-bold ${c.accent ?? ""}`}>
                 {c.value}

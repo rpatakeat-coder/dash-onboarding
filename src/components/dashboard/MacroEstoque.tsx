@@ -28,31 +28,39 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
     <section className="space-y-4">
       {/* Linha A: Estoque + perfis */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-        <button
-          type="button"
-          onClick={onTotalClick}
-          className="rounded-2xl border border-primary/30 bg-primary/[0.04] p-5 text-left transition hover:-translate-y-0.5 hover:shadow-md-soft"
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
-                Estoque total
-              </p>
-              <p className="mt-2 font-numeric text-4xl font-bold text-primary">
-                {k.total.toLocaleString("pt-BR")}
-              </p>
-              <p className="mt-1 font-small text-xs text-muted-foreground">
-                clientes no pipe
-              </p>
-            </div>
-            <Package className="h-6 w-6 text-primary/70" />
+        <div className="relative">
+          <div className="absolute right-2 top-2 z-10">
+            <InfoTooltip text="Estoque total = contagem de todos os deals ativos no pipe (filtros aplicados). Não considera SLA, apenas presença no funil." />
           </div>
-        </button>
+          <button
+            type="button"
+            onClick={onTotalClick}
+            className="w-full rounded-2xl border border-primary/30 bg-primary/[0.04] p-5 text-left transition hover:-translate-y-0.5 hover:shadow-md-soft"
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+                  Estoque total
+                </p>
+                <p className="mt-2 font-numeric text-4xl font-bold text-primary">
+                  {k.total.toLocaleString("pt-BR")}
+                </p>
+                <p className="mt-1 font-small text-xs text-muted-foreground">
+                  clientes no pipe
+                </p>
+              </div>
+              <Package className="h-6 w-6 text-primary/70" />
+            </div>
+          </button>
+        </div>
 
         {(["P", "M", "G", "GG"] as const).map((p) => {
           const v = perfis.find((x) => x.perfil === p);
           return (
-            <div key={p} className="rounded-2xl border border-border bg-card p-5">
+            <div key={p} className="relative rounded-2xl border border-border bg-card p-5">
+              <div className="absolute right-2 top-2">
+                <InfoTooltip text={`Perfil ${p} = quantidade de deals cujo campo perfil_cliente começa com "${p}". O percentual é (count / estoque total filtrado) × 100.`} />
+              </div>
               <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
                 Perfil {p}
               </p>
@@ -82,7 +90,8 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="rounded-xl border border-border bg-card/60 p-4">
+          <div className="relative rounded-xl border border-border bg-card/60 p-4">
+            <div className="absolute right-2 top-2"><InfoTooltip text="P75 SLA = percentil 75 de sla_dias_criacao do estoque filtrado. 75% dos deals possuem SLA menor ou igual a esse valor (em dias desde a criação)." /></div>
             <p className="font-subtitle text-xs text-muted-foreground">P75 SLA</p>
             <p className="mt-2 font-numeric text-3xl font-bold text-foreground">
               {k.p75.toFixed(0)}<span className="ml-1 text-base font-medium text-muted-foreground">d</span>
@@ -92,7 +101,8 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
             </p>
           </div>
 
-          <div className="rounded-xl border border-border bg-card/60 p-4">
+          <div className="relative rounded-xl border border-border bg-card/60 p-4">
+            <div className="absolute right-2 top-2"><InfoTooltip text="SLA médio = média aritmética de sla_dias_criacao em todos os deals do estoque filtrado." /></div>
             <p className="font-subtitle text-xs text-muted-foreground">SLA médio</p>
             <p className="mt-2 font-numeric text-3xl font-bold text-foreground">
               {k.media.toFixed(1)}<span className="ml-1 text-base font-medium text-muted-foreground">d</span>
@@ -102,10 +112,13 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
             </p>
           </div>
 
-          <div className="rounded-xl border border-destructive/30 bg-destructive/[0.04] p-4">
+          <div className="relative rounded-xl border border-destructive/30 bg-destructive/[0.04] p-4">
             <div className="flex items-center justify-between">
               <p className="font-subtitle text-xs text-muted-foreground">% acima de 30d</p>
-              <AlertTriangle className="h-4 w-4 text-destructive/70" />
+              <div className="flex items-center gap-1.5">
+                <InfoTooltip text="% acima de 30d = (deals com sla_dias_criacao > 30 / total filtrado) × 100. Indica volume estourado no funil." />
+                <AlertTriangle className="h-4 w-4 text-destructive/70" />
+              </div>
             </div>
             <p className="mt-2 font-numeric text-3xl font-bold text-destructive">
               {fmtPct(k.pctAcima30, 1)}
@@ -115,10 +128,13 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
             </p>
           </div>
 
-          <div className="rounded-xl border border-success/30 bg-success/[0.04] p-4">
+          <div className="relative rounded-xl border border-success/30 bg-success/[0.04] p-4">
             <div className="flex items-center justify-between">
               <p className="font-subtitle text-xs text-muted-foreground">% abaixo de 30d</p>
-              <ShieldCheck className="h-4 w-4 text-success/70" />
+              <div className="flex items-center gap-1.5">
+                <InfoTooltip text="% abaixo de 30d = (deals com sla_dias_criacao ≤ 30 / total filtrado) × 100. Indica volume saudável no funil." />
+                <ShieldCheck className="h-4 w-4 text-success/70" />
+              </div>
             </div>
             <p className="mt-2 font-numeric text-3xl font-bold text-success">
               {fmtPct(k.pctAbaixo30, 1)}
