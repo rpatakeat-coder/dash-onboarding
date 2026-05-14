@@ -21,6 +21,7 @@ const Index = () => {
   const [aiOpen, setAiOpen] = useState(false);
   const [filtroAtivadores, setFiltroAtivadores] = useState<Set<string>>(new Set());
   const [filtroEtapas, setFiltroEtapas] = useState<Set<string>>(new Set());
+  const [filtroPipelines, setFiltroPipelines] = useState<Set<string>>(new Set());
 
   // Esconde linhas cuja etapa veio só como ID numérico (sync incompleto de outros pipelines)
   const isNumericEtapa = (e: string | null | undefined) =>
