@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TrendingUp, TrendingDown, Calendar, CalendarDays, CalendarRange, DollarSign } from "lucide-react";
+import { TrendingUp, TrendingDown, Calendar, CalendarDays, DollarSign } from "lucide-react";
 import {
   fmtBRL,
   fmtBRLk,
