@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { LogIn, LogOut, Search, Settings, User } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import logo from "@/assets/logo-takeat.png";
 import { useAuth } from "@/hooks/useAuth";
 import { MainNav } from "@/components/MainNav";
@@ -16,6 +17,16 @@ export const DashboardHeader = () => {
     month: "long",
     year: "numeric",
   });
+  const dashQuery = useQuery({ queryKey: ["dash_operacoes"], enabled: false });
+  const lastUpdated = dashQuery.dataUpdatedAt
+    ? new Date(dashQuery.dataUpdatedAt).toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
   const { session, fullName, signOut } = useAuth();
   const navigate = useNavigate();
   const prefsDialog = usePreferencesDialog();
@@ -137,7 +148,7 @@ export const DashboardHeader = () => {
                 <span className="absolute inline-flex h-full w-full animate-pulse-soft rounded-full bg-success opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
               </span>
-              Atualizado em tempo real
+              {lastUpdated ? `Atualizado em ${lastUpdated}` : "Aguardando dados…"}
             </p>
           </div>
         </div>
