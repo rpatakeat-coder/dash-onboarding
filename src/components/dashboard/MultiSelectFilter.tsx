@@ -24,6 +24,7 @@ interface Props {
 export const MultiSelectFilter = ({ label, options, selected, onChange, counts, className }: Props) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [onlySelected, setOnlySelected] = useState(false);
 
   const sorted = useMemo(() => {
     if (counts) {
@@ -37,9 +38,11 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
 
   const visible = useMemo(() => {
     const q = norm(query.trim());
-    if (!q) return sorted;
-    return sorted.filter((o) => norm(o).includes(q));
-  }, [sorted, query]);
+    let out = sorted;
+    if (onlySelected) out = out.filter((o) => selected.has(o));
+    if (q) out = out.filter((o) => norm(o).includes(q));
+    return out;
+  }, [sorted, query, onlySelected, selected]);
 
   const toggle = (v: string) => {
     const n = new Set(selected);
@@ -52,7 +55,7 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
   };
 
   return (
-    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setQuery(""); }}>
+    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setQuery(""); setOnlySelected(false); } }}>
       <PopoverTrigger asChild>
         <button
           className={cn(
@@ -91,6 +94,31 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
             value={query}
             onValueChange={setQuery}
           />
+          <div className="flex items-center justify-between border-b border-border px-2 py-1.5 text-[11px]">
+            <button
+              type="button"
+              onClick={() => setOnlySelected((v) => !v)}
+              disabled={selected.size === 0}
+              className={cn(
+                "rounded px-1.5 py-0.5 font-subtitle uppercase tracking-wider transition",
+                onlySelected
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+                selected.size === 0 && "opacity-40 cursor-not-allowed",
+              )}
+            >
+              Apenas selecionados ({selected.size})
+            </button>
+            {selected.size > 0 && (
+              <button
+                type="button"
+                onClick={() => { onChange(new Set()); setOnlySelected(false); }}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                Limpar
+              </button>
+            )}
+          </div>
           <CommandList>
             {visible.length === 0 ? (
               <CommandEmpty>Nada encontrado</CommandEmpty>
