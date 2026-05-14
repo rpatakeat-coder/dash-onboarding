@@ -8,6 +8,7 @@ export const CopilotButton = () => {
     <>
       <button
         type="button"
+        data-tour="copilot"
         onClick={() => setOpen(true)}
         title="Copiloto de Operações (IA)"
         aria-label="Abrir copiloto de IA"
