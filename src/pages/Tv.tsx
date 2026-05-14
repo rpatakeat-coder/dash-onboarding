@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Maximize, Pause, Play } from "lucide-react";
-import { useDashOperacoes } from "@/hooks/useDashOperacoes";
+import { useDashOperacoes, filterByPeriod, computeSlaKpis, computeFiltered } from "@/hooks/useDashOperacoes";
 import { SlaKpiRow } from "@/components/dashboard/SlaKpiRow";
 import { RiskRanking } from "@/components/dashboard/RiskRanking";
 import { BottleneckHeatmap } from "@/components/dashboard/BottleneckHeatmap";
@@ -16,35 +16,44 @@ const Tv = () => {
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
 
+  const mesLabel = useMemo(
+    () => new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" }),
+    [],
+  );
+
   const slides = useMemo(() => {
-    const rows = data?.rows ?? [];
+    const allRows = data?.rows ?? [];
+    // Modo TV sempre exibe o mês vigente
+    const rows = filterByPeriod(allRows, "mes");
+    const sla = computeSlaKpis(rows);
+    const { operadores } = computeFiltered(rows);
     return [
       {
-        title: "Visão geral",
+        title: `Visão geral · ${mesLabel}`,
         node: (
           <div className="flex h-full flex-col gap-6">
             <SlaKpiRow
-              total={data?.total ?? 0}
-              slaP75={data?.slaP75 ?? 0}
-              slaMedio={data?.slaMedio ?? 0}
-              noPrazo={data?.noPrazo ?? 0}
-              noPrazoCount={data?.noPrazoCount ?? 0}
-              estourado={data?.estourado ?? 0}
-              estouradoCount={data?.estouradoCount ?? 0}
+              total={sla.total}
+              slaP75={sla.slaP75}
+              slaMedio={sla.slaMedio}
+              noPrazo={sla.noPrazo}
+              noPrazoCount={sla.noPrazoCount}
+              estourado={sla.estourado}
+              estouradoCount={sla.estouradoCount}
               onEstoqueClick={() => {}}
             />
-            {data?.operadores && data.operadores.length > 0 && (
-              <Highlights rows={rows} operadores={data.operadores} />
+            {operadores.length > 0 && (
+              <Highlights rows={rows} operadores={operadores} />
             )}
           </div>
         ),
       },
       {
-        title: "Top risco de churn",
+        title: `Top risco de churn · ${mesLabel}`,
         node: <RiskRanking rows={rows} limit={12} />,
       },
       {
-        title: "Gargalos & tendência",
+        title: `Gargalos & tendência · ${mesLabel}`,
         node: (
           <div className="grid h-full grid-cols-1 gap-6 lg:grid-cols-2">
             <BottleneckHeatmap rows={rows} />
@@ -53,7 +62,7 @@ const Tv = () => {
         ),
       },
     ];
-  }, [data]);
+  }, [data, mesLabel]);
 
   useEffect(() => {
     if (paused || !slides.length) return;
