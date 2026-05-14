@@ -7,6 +7,7 @@ import { useDealDrawer } from "@/contexts/DealDrawer";
 interface Props {
   rows: DashRow[];
   limit?: number;
+  variant?: "table" | "vertical";
 }
 
 const slaOf = (r: DashRow) => {
