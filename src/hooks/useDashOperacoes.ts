@@ -121,6 +121,17 @@ const toNum = (v: string | null | undefined) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+/**
+ * SLA "real" do deal na etapa atual.
+ * Prefere `sla_dias_real` (já desconta tempo em Processo Pausado);
+ * se ausente/vazio, faz fallback para `sla_dias_etapa`.
+ */
+export const slaReal = (r: { sla_dias_real?: string | null; sla_dias_etapa?: string | null }) => {
+  const raw = r.sla_dias_real;
+  if (raw != null && String(raw).trim() !== "") return toNum(raw);
+  return toNum(r.sla_dias_etapa);
+};
+
 const emptyBands = (): Record<SlaBand, number> => ({
   critico: 0, atencao: 0, alerta: 0, saudavel: 0,
 });
