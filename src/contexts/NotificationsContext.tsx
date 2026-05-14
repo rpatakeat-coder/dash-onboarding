@@ -28,6 +28,7 @@ const NotificationsContext = createContext<Ctx | null>(null);
 
 const readKey = (uid: string) => `notif:read:${uid}`;
 const seenKey = (uid: string) => `notif:seen:${uid}`;
+const dismissedKey = (uid: string) => `notif:dismissed:${uid}`;
 
 export const NotificationsProvider = ({ children }: { children: ReactNode }) => {
   const { data } = useDashOperacoes();
@@ -35,12 +36,15 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
   const { notif } = usePreferences();
   const userId = session?.user.id ?? "anon";
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
   const seenRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     try {
       const r = JSON.parse(localStorage.getItem(readKey(userId)) || "[]");
       setReadIds(new Set(r));
+      const d = JSON.parse(localStorage.getItem(dismissedKey(userId)) || "[]");
+      setDismissedIds(new Set(d));
       const s = JSON.parse(localStorage.getItem(seenKey(userId)) || "[]");
       seenRef.current = new Set(s);
     } catch {
@@ -48,7 +52,7 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     }
   }, [userId]);
 
-  const items = useMemo<Notification[]>(() => {
+  const allItems = useMemo<Notification[]>(() => {
     if (!data) return [];
     const out: Notification[] = [];
     if (notif.slaCritico) {
