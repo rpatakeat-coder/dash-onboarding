@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Maximize, Pause, Play } from "lucide-react";
-import { useDashOperacoes } from "@/hooks/useDashOperacoes";
+import { useDashOperacoes, filterByPeriod, computeSlaKpis, computeFiltered } from "@/hooks/useDashOperacoes";
 import { SlaKpiRow } from "@/components/dashboard/SlaKpiRow";
 import { RiskRanking } from "@/components/dashboard/RiskRanking";
 import { BottleneckHeatmap } from "@/components/dashboard/BottleneckHeatmap";
