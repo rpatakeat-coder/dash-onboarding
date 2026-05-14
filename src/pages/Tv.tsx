@@ -22,11 +22,12 @@ const Tv = () => {
   );
 
   const slides = useMemo(() => {
-    const allRows = data?.rows ?? [];
-    // Modo TV sempre exibe o mês vigente
-    const rows = filterByPeriod(allRows, "mes");
-    const sla = computeSlaKpis(rows);
-    const { operadores } = computeFiltered(rows);
+    const rows = data?.rows ?? [];
+    // KPIs do mês vigente são calculados a partir dos deals criados no mês,
+    // mas o restante das visões usa todos os deals em curso.
+    const rowsMes = filterByPeriod(rows, "mes");
+    const sla = computeSlaKpis(rowsMes);
+    const { operadores } = computeFiltered(rowsMes);
     return [
       {
         title: `Visão geral · ${mesLabel}`,
@@ -43,17 +44,17 @@ const Tv = () => {
               onEstoqueClick={() => {}}
             />
             {operadores.length > 0 && (
-              <Highlights rows={rows} operadores={operadores} />
+              <Highlights rows={rowsMes} operadores={operadores} />
             )}
           </div>
         ),
       },
       {
-        title: `Top risco de churn · ${mesLabel}`,
+        title: "Top risco de churn",
         node: <RiskRanking rows={rows} limit={12} variant="vertical" />,
       },
       {
-        title: `Gargalos & tendência · ${mesLabel}`,
+        title: "Gargalos & tendência",
         node: (
           <div className="grid h-full grid-cols-1 gap-6 lg:grid-cols-2">
             <BottleneckHeatmap rows={rows} />
