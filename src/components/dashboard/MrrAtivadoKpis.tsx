@@ -96,12 +96,15 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
         {cards.map((c) => {
           const Icon = c.icon;
           return (
-            <div key={c.key} className={cn("rounded-xl border p-4", c.border, c.bg)}>
+            <div key={c.key} className={cn("relative rounded-xl border p-4", c.border, c.bg)}>
               <div className="flex items-start justify-between">
                 <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
                   {c.label}
                 </p>
-                <Icon className={cn("h-4 w-4 opacity-70", c.accent)} />
+                <div className="flex items-center gap-1.5">
+                  <InfoTooltip text={c.formula} />
+                  <Icon className={cn("h-4 w-4 opacity-70", c.accent)} />
+                </div>
               </div>
               <p className={cn("mt-2 font-numeric text-3xl font-bold", c.accent)}>
                 {fmtPct(c.pct, 1)}
@@ -112,16 +115,19 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
         })}
 
         {/* Mês atual vs anterior */}
-        <div className="rounded-xl border border-secondary/30 bg-secondary/[0.04] p-4">
+        <div className="relative rounded-xl border border-secondary/30 bg-secondary/[0.04] p-4">
           <div className="flex items-start justify-between">
             <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
               Mês atual vs. anterior
             </p>
-            {deltaMrr >= 0 ? (
-              <TrendingUp className="h-4 w-4 text-success/80" />
-            ) : (
-              <TrendingDown className="h-4 w-4 text-destructive/80" />
-            )}
+            <div className="flex items-center gap-1.5">
+              <InfoTooltip text="Variação % do MRR ativado: ((MRR ativado mês atual − MRR ativado mês anterior) ÷ MRR mês anterior) × 100. O p.p. ao lado é a diferença em pontos percentuais do % MRR Ativado entre os dois meses." />
+              {deltaMrr >= 0 ? (
+                <TrendingUp className="h-4 w-4 text-success/80" />
+              ) : (
+                <TrendingDown className="h-4 w-4 text-destructive/80" />
+              )}
+            </div>
           </div>
           <p
             className={cn(
