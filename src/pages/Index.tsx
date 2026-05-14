@@ -49,9 +49,13 @@ const Index = () => {
         const e = r.etapa_negocio?.trim() || "Sem etapa";
         if (!filtroEtapas.has(e)) return false;
       }
+      if (filtroPipelines.size > 0) {
+        const p = r.pipeline_nome?.trim() || "Sem pipeline";
+        if (!filtroPipelines.has(p)) return false;
+      }
       return true;
     });
-  }, [macroBase, filtroAtivadores, filtroEtapas]);
+  }, [macroBase, filtroAtivadores, filtroEtapas, filtroPipelines]);
 
   // Estoque atual: todos os deals atualmente no pipeline "Onboarding".
   const estoqueRows = useMemo(() => {
