@@ -17,6 +17,16 @@ export const DashboardHeader = () => {
     month: "long",
     year: "numeric",
   });
+  const dashQuery = useQuery({ queryKey: ["dash_operacoes"], enabled: false });
+  const lastUpdated = dashQuery.dataUpdatedAt
+    ? new Date(dashQuery.dataUpdatedAt).toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
   const { session, fullName, signOut } = useAuth();
   const navigate = useNavigate();
   const prefsDialog = usePreferencesDialog();
