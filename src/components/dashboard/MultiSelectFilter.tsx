@@ -33,6 +33,22 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
     return [...options].sort((a, b) => a.localeCompare(b));
   }, [options, counts]);
 
+  // Sincroniza a seleção com as opções disponíveis: remove itens
+  // selecionados que não estão mais presentes na lista de opções
+  // (por exemplo, quando outro filtro reduziu o conjunto de dados).
+  useEffect(() => {
+    if (selected.size === 0) return;
+    const opts = new Set(options);
+    let changed = false;
+    const next = new Set<string>();
+    for (const v of selected) {
+      if (opts.has(v)) next.add(v);
+      else changed = true;
+    }
+    if (changed) onChange(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [options]);
+
   const norm = (s: string) =>
     s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
