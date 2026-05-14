@@ -129,7 +129,7 @@ const Index = () => {
         {data && (
           <>
             <MacroEstoque
-              rows={macroRows}
+              rows={estoqueRows}
               perfis={perfisFiltrados}
               onTotalClick={() => setEstoqueOpen(true)}
             />
@@ -153,7 +153,7 @@ const Index = () => {
       <EstoqueModal
         open={estoqueOpen}
         onOpenChange={setEstoqueOpen}
-        rows={macroRows}
+        rows={estoqueRows}
       />
 
       <AiInsightsDialog
