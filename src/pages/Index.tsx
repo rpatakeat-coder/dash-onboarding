@@ -49,23 +49,11 @@ const Index = () => {
     });
   }, [macroBase, filtroAtivadores, filtroEtapas]);
 
-  // Estoque atual: apenas deals do pipeline "Onboarding" criados no mês corrente.
+  // Estoque atual: todos os deals atualmente no pipeline "Onboarding".
   const estoqueRows = useMemo(() => {
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const parseBR = (s: string | null): Date | null => {
-      if (!s) return null;
-      const m = s.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-      if (!m) return null;
-      const d = new Date(+m[3], +m[2] - 1, +m[1]);
-      return isNaN(d.getTime()) ? null : d;
-    };
-    return macroRows.filter((r) => {
-      if ((r.pipeline_nome?.trim().toLowerCase() ?? "") !== "onboarding") return false;
-      const d = parseBR(r.data_criacao);
-      return !!d && d >= monthStart && d < nextMonth;
-    });
+    return macroRows.filter(
+      (r) => (r.pipeline_nome?.trim().toLowerCase() ?? "") === "onboarding",
+    );
   }, [macroRows]);
 
   // Recalcula distribuição de perfis em cima do estoque (Onboarding · mês atual)
