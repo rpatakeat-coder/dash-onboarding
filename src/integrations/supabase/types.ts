@@ -82,8 +82,10 @@ export type Database = {
           mrr: string | null
           nome_negocio: string | null
           perfil_cliente: string | null
+          responsavel_ativacao: string | null
           sla_dias_criacao: string | null
           sla_dias_etapa: string | null
+          tempo_pausado_dias: string | null
         }
         Insert: {
           agente_ativacao?: string | null
@@ -95,8 +97,10 @@ export type Database = {
           mrr?: string | null
           nome_negocio?: string | null
           perfil_cliente?: string | null
+          responsavel_ativacao?: string | null
           sla_dias_criacao?: string | null
           sla_dias_etapa?: string | null
+          tempo_pausado_dias?: string | null
         }
         Update: {
           agente_ativacao?: string | null
@@ -108,8 +112,10 @@ export type Database = {
           mrr?: string | null
           nome_negocio?: string | null
           perfil_cliente?: string | null
+          responsavel_ativacao?: string | null
           sla_dias_criacao?: string | null
           sla_dias_etapa?: string | null
+          tempo_pausado_dias?: string | null
         }
         Relationships: []
       }
