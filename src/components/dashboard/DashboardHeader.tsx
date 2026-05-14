@@ -9,6 +9,7 @@ import { NotificationsBell } from "@/components/NotificationsBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { APP_VERSION } from "@/lib/version";
 import { usePreferencesDialog } from "@/contexts/PreferencesDialogContext";
+import { CopilotButton } from "@/components/copilot/CopilotButton";
 
 export const DashboardHeader = () => {
   const today = new Date().toLocaleDateString("pt-BR", {
