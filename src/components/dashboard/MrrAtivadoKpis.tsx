@@ -23,6 +23,7 @@ const num = (v: unknown) => {
 
 export const MrrAtivadoKpis = ({ rows }: Props) => {
   const r = getPeriodRanges();
+  const [mesModalOpen, setMesModalOpen] = useState(false);
   const mrrTotalEstoque = rows.reduce((s, x) => s + num(x.mrr), 0);
 
   const hoje = mrrAtivadoNoPeriodo(rows, r.todayStart, r.tomorrow);
@@ -39,6 +40,9 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
 
   const deltaMrr = mesAnt.mrr > 0 ? ((mes.mrr - mesAnt.mrr) / mesAnt.mrr) * 100 : mes.mrr > 0 ? 100 : 0;
   const deltaPp = pctMes - pctMesAnt;
+
+  const mesLabelRaw = r.monthStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  const mesLabel = mesLabelRaw.charAt(0).toUpperCase() + mesLabelRaw.slice(1).replace(" de ", "/");
 
   const cards = [
     {
@@ -66,19 +70,6 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
       bg: "bg-card",
       sub: `${fmtBRLk(semana.mrr)} · ${semana.count} ativ.`,
       formula: "Soma do MRR dos deals ativados nesta semana (segunda → domingo) ÷ MRR total do estoque filtrado × 100.",
-    },
-    {
-      key: "mes",
-      label: "% MRR Ativado · Mês atual",
-      icon: CalendarRange,
-      pct: pctMes,
-      mrr: mes.mrr,
-      count: mes.count,
-      accent: "text-success",
-      border: "border-success/30",
-      bg: "bg-success/[0.04]",
-      sub: `${fmtBRLk(mes.mrr)} · ${mes.count} ativ.`,
-      formula: "Soma do MRR dos deals ativados no mês atual ÷ MRR total do estoque filtrado × 100.",
     },
   ] as const;
 
@@ -117,6 +108,34 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
           );
         })}
 
+        {/* MRR Ativado · mês vigente (clicável → drill-down) */}
+        <button
+          type="button"
+          onClick={() => setMesModalOpen(true)}
+          className="group relative rounded-xl border border-success/30 bg-success/[0.04] p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md-soft"
+        >
+          <div className="flex items-start justify-between">
+            <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+              MRR Ativado
+            </p>
+            <div className="flex items-center gap-1.5">
+              <InfoTooltip text="Soma do MRR de todos os deals com data_ativacao no mês vigente (equivalente a mes_ano_ativacao = mês atual). Clique para ver o detalhamento por agente, perfil e a lista de deals." />
+              <DollarSign className="h-4 w-4 text-success/70" />
+            </div>
+          </div>
+          <p className="mt-2 font-numeric text-3xl font-bold text-success">
+            {fmtBRL(mes.mrr)}
+          </p>
+          <p className="mt-1 font-small text-xs text-muted-foreground">
+            {mes.count > 0
+              ? `${mesLabel} · ${mes.count} ativ${mes.count === 1 ? "ação" : "ações"}`
+              : `${mesLabel} · Nenhuma ativação este mês`}
+          </p>
+          <span className="pdf-hide mt-1 inline-block font-small text-[10px] text-primary/0 transition group-hover:text-primary">
+            Clique para detalhar →
+          </span>
+        </button>
+
         {/* Mês atual vs anterior */}
         <div className="relative rounded-xl border border-secondary/30 bg-secondary/[0.04] p-4">
           <div className="flex items-start justify-between">
@@ -149,6 +168,13 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
           </p>
         </div>
       </div>
+
+      <MrrAtivadoMesModal
+        open={mesModalOpen}
+        onOpenChange={setMesModalOpen}
+        rows={rows}
+        mesLabel={mesLabel}
+      />
     </section>
   );
 };
