@@ -7,6 +7,7 @@ import {
   type DashRow,
 } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
+import { InfoTooltip } from "./InfoTooltip";
 
 interface Props {
   rows: DashRow[];
