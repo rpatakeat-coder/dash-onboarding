@@ -35,12 +35,19 @@ export const TutorialOverlay = ({ stepIndex, onNext, onPrev, onClose }: Props) =
         if (attempts < 30) setTimeout(find, 120);
         return;
       }
-      el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
-      // wait for scroll
+      el.scrollIntoView({ behavior: "smooth", block: "start", inline: "center" });
       setTimeout(() => {
         if (cancelled) return;
         const r = el.getBoundingClientRect();
-        setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+        const vh = window.innerHeight;
+        const vw = window.innerWidth;
+        const maxH = Math.max(120, vh - 280);
+        const maxW = Math.max(200, vw - 32);
+        const height = Math.min(r.height, maxH);
+        const width = Math.min(r.width, maxW);
+        const top = Math.max(72, Math.min(r.top, vh - height - 220));
+        const left = Math.max(16, Math.min(r.left, vw - width - 16));
+        setRect({ top, left, width, height });
       }, 350);
     };
     find();
