@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X, Sparkles, Check } from "lucide-react";
 import { TUTORIAL_STEPS } from "./steps";
@@ -17,6 +17,8 @@ const PADDING = 8;
 export const TutorialOverlay = ({ stepIndex, onNext, onPrev, onClose }: Props) => {
   const step = TUTORIAL_STEPS[stepIndex];
   const [rect, setRect] = useState<Rect | null>(null);
+  const [tooltipHeight, setTooltipHeight] = useState(0);
+  const cardRef = useRef<HTMLDivElement | null>(null);
 
   const computeRect = (el: HTMLElement) => {
     const r = el.getBoundingClientRect();
@@ -68,9 +70,33 @@ export const TutorialOverlay = ({ stepIndex, onNext, onPrev, onClose }: Props) =
       const el = document.querySelector(targetSel) as HTMLElement | null;
       if (el) setRect(computeRect(el));
     };
+    window.addEventListener("scroll", handler, { passive: true });
     window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
+    return () => {
+      window.removeEventListener("scroll", handler);
+      window.removeEventListener("resize", handler);
+    };
   }, [step]);
+
+  useLayoutEffect(() => {
+    if (!cardRef.current) return;
+
+    const measure = () => {
+      if (!cardRef.current) return;
+      setTooltipHeight(cardRef.current.getBoundingClientRect().height);
+    };
+
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(cardRef.current);
+    window.addEventListener("resize", measure);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [stepIndex, rect, step]);
 
   // Keyboard nav
   useEffect(() => {
@@ -96,13 +122,14 @@ export const TutorialOverlay = ({ stepIndex, onNext, onPrev, onClose }: Props) =
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const tipW = Math.min(380, vw - 32);
-    const tipH = 200;
+    const tipH = Math.max(180, tooltipHeight || 220);
     const spaceBelow = vh - (rect.top + rect.height);
     const placeBelow = spaceBelow > tipH + 24 || rect.top < tipH + 24;
     let left = rect.left + rect.width / 2 - tipW / 2;
     left = Math.max(16, Math.min(left, vw - tipW - 16));
-    const top = placeBelow ? rect.top + rect.height + PADDING + 12 : rect.top - PADDING - tipH - 12;
-    tipStyle = { top: Math.max(16, top), left, width: tipW };
+    const rawTop = placeBelow ? rect.top + rect.height + PADDING + 12 : rect.top - PADDING - tipH - 12;
+    const top = Math.max(16, Math.min(rawTop, vh - tipH - 16));
+    tipStyle = { top, left, width: tipW };
   }
 
   return createPortal(
@@ -136,7 +163,7 @@ export const TutorialOverlay = ({ stepIndex, onNext, onPrev, onClose }: Props) =
         }
         style={isModalLike ? undefined : tipStyle}
       >
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-2xl">
+        <div ref={cardRef} className="max-h-[calc(100vh-32px)] overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-2xl">
           <div className="mb-3 flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
