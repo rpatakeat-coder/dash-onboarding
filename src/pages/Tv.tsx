@@ -79,7 +79,7 @@ const Tv = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-surface text-foreground">
+    <div data-tour="tv" className="flex min-h-screen flex-col bg-gradient-surface text-foreground">
       <header className="flex items-center justify-between border-b border-border bg-card/60 px-8 py-4 backdrop-blur-sm">
         <div className="flex items-center gap-4">
           <img src={logo} alt="Takeat" className="h-8 w-auto" />
