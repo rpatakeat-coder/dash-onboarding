@@ -24,6 +24,7 @@ interface Props {
 export const MultiSelectFilter = ({ label, options, selected, onChange, counts, className }: Props) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [onlySelected, setOnlySelected] = useState(false);
 
   const sorted = useMemo(() => {
     if (counts) {
@@ -37,9 +38,11 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
 
   const visible = useMemo(() => {
     const q = norm(query.trim());
-    if (!q) return sorted;
-    return sorted.filter((o) => norm(o).includes(q));
-  }, [sorted, query]);
+    let out = sorted;
+    if (onlySelected) out = out.filter((o) => selected.has(o));
+    if (q) out = out.filter((o) => norm(o).includes(q));
+    return out;
+  }, [sorted, query, onlySelected, selected]);
 
   const toggle = (v: string) => {
     const n = new Set(selected);
