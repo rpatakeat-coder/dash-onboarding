@@ -22,10 +22,7 @@ const Index = () => {
   const [filtroAtivadores, setFiltroAtivadores] = useState<Set<string>>(new Set());
   const [filtroEtapas, setFiltroEtapas] = useState<Set<string>>(new Set());
 
-  // Esconde linhas cuja etapa veio só como ID numérico (sync incompleto de outros pipelines)
-  const isNumericEtapa = (e: string | null | undefined) =>
-    !!e && /^\d+$/.test(e.trim());
-  const allRows = (data?.rows ?? []).filter((r) => !isNumericEtapa(r.etapa_negocio));
+  const allRows = data?.rows ?? [];
 
   const personalRows = (() => {
     if (isAdmin || !isAtivador) return allRows;
