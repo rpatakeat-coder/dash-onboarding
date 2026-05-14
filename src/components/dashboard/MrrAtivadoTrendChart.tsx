@@ -12,7 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { BarChart3 } from "lucide-react";
-import { fmtBRL, fmtBRLk, type DashRow } from "@/hooks/useDashOperacoes";
+import { fmtBRL, fmtBRLk, parseActivationDate, type DashRow } from "@/hooks/useDashOperacoes";
 import { InfoTooltip } from "./InfoTooltip";
 import { cn } from "@/lib/utils";
 
@@ -23,15 +23,6 @@ interface Props {
 const toNum = (v: unknown) => {
   const n = parseFloat(String(v ?? "").replace(",", "."));
   return Number.isFinite(n) ? n : 0;
-};
-
-const parseDateBR = (s: string | null): Date | null => {
-  if (!s) return null;
-  const m = s.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-  if (!m) return null;
-  const [, dd, mm, yyyy] = m;
-  const d = new Date(+yyyy, +mm - 1, +dd);
-  return isNaN(d.getTime()) ? null : d;
 };
 
 type RangeKey = 6 | 12;
@@ -58,8 +49,8 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
       });
     }
     const idx = new Map(buckets.map((b, i) => [b.key, i]));
-    for (const row of rows) {
-      const d = parseDateBR(row.data_ativacao);
+      for (const row of rows) {
+        const d = parseActivationDate(row.data_ativacao);
       if (!d) continue;
       const k = `${d.getFullYear()}-${d.getMonth()}`;
       const i = idx.get(k);

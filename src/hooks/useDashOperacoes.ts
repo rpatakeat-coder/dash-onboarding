@@ -133,6 +133,22 @@ export const slaReal = (r: { sla_dias_real?: string | null; sla_dias_etapa?: str
   return toNum(r.sla_dias_etapa);
 };
 
+/**
+ * `data_ativacao` chega persistida em UTC (21:00), mas o dashboard precisa
+ * agrupar pelo dia/mês local do HubSpot (UTC-3 → meia-noite do dia seguinte).
+ */
+export const parseActivationDate = (s: string | null): Date | null => {
+  const d = parseDate(s);
+  if (!d) return null;
+  return new Date(d.getTime() + 3 * 60 * 60 * 1000);
+};
+
+export const formatActivationDate = (s: string | null): string => {
+  const d = parseActivationDate(s);
+  if (!d) return s?.trim() || "";
+  return d.toLocaleDateString("pt-BR");
+};
+
 const emptyBands = (): Record<SlaBand, number> => ({
   critico: 0, atencao: 0, alerta: 0, saudavel: 0,
 });
@@ -362,7 +378,7 @@ export function countNovosHoje(rows: DashRow[]): number {
 /** Soma de MRR e contagem de clientes ativados no período (com data_ativacao no intervalo). */
 export function mrrAtivadoNoPeriodo(rows: DashRow[], start: Date, end: Date) {
   const filtered = rows.filter((r) => {
-    const d = parseDate(r.data_ativacao);
+    const d = parseActivationDate(r.data_ativacao);
     return d && d >= start && d < end;
   });
   const mrr = filtered.reduce((s, r) => s + toNum(r.mrr), 0);

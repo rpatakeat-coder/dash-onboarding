@@ -18,8 +18,10 @@ import { Input } from "@/components/ui/input";
 import { Search, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
+  formatActivationDate,
   fmtBRL,
   getPeriodRanges,
+  parseActivationDate,
   type DashRow,
 } from "@/hooks/useDashOperacoes";
 import { hubspotDealUrl } from "@/lib/hubspot";
@@ -37,15 +39,6 @@ const toNum = (v: string | null | undefined) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const parseDateBR = (s: string | null): Date | null => {
-  if (!s) return null;
-  const m = s.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})(?:[ T](\d{2}):(\d{2}))?/);
-  if (!m) return null;
-  const [, dd, mm, yyyy, hh = "0", mi = "0"] = m;
-  const d = new Date(+yyyy, +mm - 1, +dd, +hh, +mi);
-  return isNaN(d.getTime()) ? null : d;
-};
-
 const PERFIS_ORDER = ["P", "M", "G", "GG", "Isento"];
 
 type SortKey = "cliente" | "agente" | "perfil" | "mrr" | "data" | "sla";
@@ -58,7 +51,7 @@ export const MrrAtivadoMesModal = ({ open, onOpenChange, rows, mesLabel }: Props
   const ativados = useMemo(() => {
     return rows
       .map((row) => {
-        const d = parseDateBR(row.data_ativacao);
+        const d = parseActivationDate(row.data_ativacao);
         if (!d || d < r.monthStart || d >= r.nextMonth) return null;
         const perfilRaw = row.perfil_cliente?.trim() || "";
         const perfilKey = perfilRaw.split(/\s+/)[0]?.toUpperCase() || "—";
@@ -68,7 +61,7 @@ export const MrrAtivadoMesModal = ({ open, onOpenChange, rows, mesLabel }: Props
           agente: row.agente_ativacao?.trim() || "Sem responsável",
           perfil: perfilKey === "ISENTO" ? "Isento" : perfilKey,
           mrr: toNum(row.mrr),
-          dataStr: row.data_ativacao ?? "",
+          dataStr: formatActivationDate(row.data_ativacao),
           dataObj: d,
           sla: toNum(row.sla_dias_real) || toNum(row.sla_dias_etapa),
         };

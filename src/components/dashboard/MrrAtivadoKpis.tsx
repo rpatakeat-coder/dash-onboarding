@@ -119,7 +119,7 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
               MRR Ativado
             </p>
             <div className="flex items-center gap-1.5">
-              <InfoTooltip text="Soma do MRR de todos os deals com data_ativacao no mês vigente (equivalente a mes_ano_ativacao = mês atual). Clique para ver o detalhamento por agente, perfil e a lista de deals." />
+              <InfoTooltip text="Soma do MRR de todos os deals cuja data de ativação cai no mês vigente considerando o horário local do dashboard. Clique para ver o detalhamento por agente, perfil e a lista de deals." />
               <DollarSign className="h-4 w-4 text-success/70" />
             </div>
           </div>
