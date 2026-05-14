@@ -23,7 +23,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     kind: "spotlight",
     route: "/",
-    target: '[data-tour="filters"]',
+    target: '[data-tour="filters"] [role="combobox"], [data-tour="filters"] button',
     title: "Filtros do período",
     body: "Refine o que aparece nos KPIs e gráficos por ativador e etapa do funil. Os filtros aplicam para todo o dashboard.",
   },
@@ -44,7 +44,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     kind: "spotlight",
     route: "/",
-    target: '[data-tour="kpis"]',
+    target: '[data-tour="kpis"] section',
     title: "KPIs de MRR ativado",
     body: "Acompanhe o MRR ativado do período, ticket médio e a evolução comparada ao mês anterior.",
   },
@@ -58,14 +58,14 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     kind: "spotlight",
     route: "/minha-carteira",
-    target: '[data-tour="carteira"]',
+    target: '[data-tour="carteira-title"]',
     title: "Minha carteira",
     body: "Visão pessoal: só os deals sob sua responsabilidade, com KPIs próprios e ranking de prioridade.",
   },
   {
     kind: "spotlight",
     route: "/tv",
-    target: '[data-tour="tv"]',
+    target: '[data-tour="tv-header"]',
     title: "Modo TV",
     body: "Tela cheia com slides rotativos para acompanhar a operação ao vivo. Ideal para a TV do time.",
   },
