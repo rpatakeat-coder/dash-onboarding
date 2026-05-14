@@ -17,9 +17,21 @@ const PADDING = 8;
 export const TutorialOverlay = ({ stepIndex, onNext, onPrev, onClose }: Props) => {
   const step = TUTORIAL_STEPS[stepIndex];
   const [rect, setRect] = useState<Rect | null>(null);
-  const [tick, setTick] = useState(0);
 
-  // Find target element with retry (in case route just changed)
+  const computeRect = (el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    const vh = window.innerHeight;
+    const vw = window.innerWidth;
+    const maxH = Math.max(120, vh - 280);
+    const maxW = Math.max(200, vw - 32);
+    const height = Math.min(r.height, maxH);
+    const width = Math.min(r.width, maxW);
+    const top = Math.max(72, Math.min(r.top, vh - height - 220));
+    const left = Math.max(16, Math.min(r.left, vw - width - 16));
+    return { top, left, width, height };
+  };
+
+  // Find target on step change (with retry while route mounts)
   useLayoutEffect(() => {
     if (!step || step.kind !== "spotlight" || !step.target) {
       setRect(null);
@@ -27,36 +39,37 @@ export const TutorialOverlay = ({ stepIndex, onNext, onPrev, onClose }: Props) =
     }
     let cancelled = false;
     let attempts = 0;
+    const targetSel = step.target;
     const find = () => {
       if (cancelled) return;
-      const el = document.querySelector(step.target!) as HTMLElement | null;
+      const el = document.querySelector(targetSel) as HTMLElement | null;
       if (!el) {
         attempts++;
-        if (attempts < 30) setTimeout(find, 120);
+        if (attempts < 40) setTimeout(find, 150);
         return;
       }
-      el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
-      // wait for scroll
+      el.scrollIntoView({ behavior: "smooth", block: "start", inline: "center" });
       setTimeout(() => {
         if (cancelled) return;
-        const r = el.getBoundingClientRect();
-        setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-      }, 350);
+        const fresh = document.querySelector(targetSel) as HTMLElement | null;
+        if (fresh) setRect(computeRect(fresh));
+      }, 400);
     };
     find();
     return () => { cancelled = true; };
-  }, [step, tick]);
+  }, [step]);
 
-  // Reposition on resize/scroll
+  // Recompute (without re-scrolling) on resize only — scroll listener
+  // would loop because scrollIntoView itself triggers scroll events.
   useEffect(() => {
-    if (!step || step.kind !== "spotlight") return;
-    const handler = () => setTick((t) => t + 1);
-    window.addEventListener("resize", handler);
-    window.addEventListener("scroll", handler, true);
-    return () => {
-      window.removeEventListener("resize", handler);
-      window.removeEventListener("scroll", handler, true);
+    if (!step || step.kind !== "spotlight" || !step.target) return;
+    const targetSel = step.target;
+    const handler = () => {
+      const el = document.querySelector(targetSel) as HTMLElement | null;
+      if (el) setRect(computeRect(el));
     };
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
   }, [step]);
 
   // Keyboard nav
