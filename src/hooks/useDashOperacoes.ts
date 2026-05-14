@@ -570,10 +570,11 @@ export function useDashOperacoes() {
   return useQuery({
     queryKey: ["dash_operacoes"],
     queryFn: async (): Promise<DashData> => {
-      // PostgREST limita a resposta a 1000 linhas por padrão.
-      // Fazemos a paginação com ordenação estável para não pular nem duplicar
-      // registros entre páginas no modo TV.
+      // PostgREST normalmente entrega até 1000 por requisição, mas algumas
+      // configurações limitam a 100. Pedimos páginas grandes mas paginamos
+      // pelo tamanho REAL do lote recebido — assim funciona em ambos os casos.
       const PAGE = 1000;
+      const HARD_CAP = 100_000;
       const all: DashRow[] = [];
       const { count, error: countError } = await supabase
         .from("dash_operacoes")
@@ -581,8 +582,7 @@ export function useDashOperacoes() {
       if (countError) throw countError;
       const totalRows = count ?? 0;
       let from = 0;
-      // Hard cap defensivo para evitar loop em caso de erro.
-      while (from < totalRows && from < 100_000) {
+      while (from < HARD_CAP) {
         const { data, error } = await supabase
           .from("dash_operacoes")
           .select("*")
@@ -592,7 +592,11 @@ export function useDashOperacoes() {
         const batch = (data ?? []) as unknown as DashRow[];
         if (!batch.length) break;
         all.push(...batch);
-        from += PAGE;
+        // Avança pelo tamanho real do lote (cobre o caso da API capar em 100).
+        from += batch.length;
+        // Critérios de parada: lote menor que o pedido OU já cobrimos o total conhecido.
+        if (batch.length < PAGE) break;
+        if (totalRows && all.length >= totalRows) break;
       }
       return aggregate(all);
     },
