@@ -55,7 +55,7 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
   };
 
   return (
-    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setQuery(""); }}>
+    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setQuery(""); setOnlySelected(false); } }}>
       <PopoverTrigger asChild>
         <button
           className={cn(
