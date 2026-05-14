@@ -11,6 +11,8 @@ export interface DashRow {
   sla_dias_etapa: string | null;
   /** SLA (dias) desde a criação do deal — vem de `sla_dias_criacao` na tabela. */
   sla_dias_criacao: string | null;
+  /** SLA (dias) real — descontado o tempo em "Processo Pausado". Vem de `sla_dias_real`. */
+  sla_dias_real: string | null;
   data_criacao: string | null;
   data_entrada_fase: string | null;
   etapa_negocio: string | null;
