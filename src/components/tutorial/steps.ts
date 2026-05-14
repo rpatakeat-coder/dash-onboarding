@@ -51,7 +51,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     kind: "spotlight",
     route: "/",
-    target: '[data-tour="deals"]',
+    target: '[data-tour="deals-header"]',
     title: "Tabela de deals",
     body: "Lista completa dos deals com SLA, etapa e responsável. Clique em qualquer linha para abrir o detalhe.",
   },

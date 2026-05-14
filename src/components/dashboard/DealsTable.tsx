@@ -177,7 +177,7 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
 
   return (
     <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm-soft">
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+      <div data-tour="deals-header" className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="font-display text-base font-semibold text-secondary">
             Lista de deals
