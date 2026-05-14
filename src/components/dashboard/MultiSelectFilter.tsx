@@ -94,6 +94,31 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
             value={query}
             onValueChange={setQuery}
           />
+          <div className="flex items-center justify-between border-b border-border px-2 py-1.5 text-[11px]">
+            <button
+              type="button"
+              onClick={() => setOnlySelected((v) => !v)}
+              disabled={selected.size === 0}
+              className={cn(
+                "rounded px-1.5 py-0.5 font-subtitle uppercase tracking-wider transition",
+                onlySelected
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+                selected.size === 0 && "opacity-40 cursor-not-allowed",
+              )}
+            >
+              Apenas selecionados ({selected.size})
+            </button>
+            {selected.size > 0 && (
+              <button
+                type="button"
+                onClick={() => { onChange(new Set()); setOnlySelected(false); }}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                Limpar
+              </button>
+            )}
+          </div>
           <CommandList>
             {visible.length === 0 ? (
               <CommandEmpty>Nada encontrado</CommandEmpty>
