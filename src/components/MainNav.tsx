@@ -34,6 +34,7 @@ export const MainNav = ({ className, orientation = "horizontal", onNavigate }: P
   return (
     <nav
       aria-label="Navegação principal"
+      data-tour="nav"
       className={cn(
         "pdf-hide",
         vertical
