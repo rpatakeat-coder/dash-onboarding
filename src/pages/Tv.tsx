@@ -50,7 +50,7 @@ const Tv = () => {
       },
       {
         title: `Top risco de churn · ${mesLabel}`,
-        node: <RiskRanking rows={rows} limit={12} />,
+        node: <RiskRanking rows={rows} limit={12} variant="vertical" />,
       },
       {
         title: `Gargalos & tendência · ${mesLabel}`,
