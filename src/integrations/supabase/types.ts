@@ -82,7 +82,6 @@ export type Database = {
           mrr: string | null
           nome_negocio: string | null
           perfil_cliente: string | null
-          responsavel_ativacao: string | null
           sla_dias_criacao: string | null
           sla_dias_etapa: string | null
           sla_dias_real: string | null
@@ -98,7 +97,6 @@ export type Database = {
           mrr?: string | null
           nome_negocio?: string | null
           perfil_cliente?: string | null
-          responsavel_ativacao?: string | null
           sla_dias_criacao?: string | null
           sla_dias_etapa?: string | null
           sla_dias_real?: string | null
@@ -114,7 +112,6 @@ export type Database = {
           mrr?: string | null
           nome_negocio?: string | null
           perfil_cliente?: string | null
-          responsavel_ativacao?: string | null
           sla_dias_criacao?: string | null
           sla_dias_etapa?: string | null
           sla_dias_real?: string | null
