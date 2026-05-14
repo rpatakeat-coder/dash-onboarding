@@ -22,7 +22,7 @@ interface Props {
 const SUGGESTIONS = [
   "Quais deals estão críticos esta semana?",
   "Compare ativações de abril vs maio de 2026",
-  "Stats da Marina",
+  "Stats do Nuno Bisi",
   "Resumo dos KPIs do mês atual",
 ];
 
