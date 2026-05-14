@@ -97,6 +97,51 @@ export const OperatorCarteiraModal = ({ operador, open, onOpenChange }: Props) =
 
         <SlaBandBar bands={operador.bands} height="lg" showLabels />
 
+        {/* Sugestões da IA */}
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <Sparkles className="h-3.5 w-3.5" />
+              </span>
+              <div>
+                <p className="font-subtitle text-xs font-semibold text-foreground">Sugestões da IA</p>
+                <p className="font-small text-[11px] text-muted-foreground">
+                  Ações priorizadas com base na carteira deste ativador.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const content = await recsMutation.mutateAsync({ operador });
+                  setRecsContent(content);
+                } catch (e) {
+                  toast.error("Falha ao gerar sugestões", { description: (e as Error).message });
+                }
+              }}
+              disabled={recsMutation.isPending}
+              className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-card px-2.5 py-1 font-subtitle text-xs font-medium text-primary transition hover:bg-primary/10 disabled:opacity-60"
+            >
+              {recsMutation.isPending ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" /> Gerando…
+                </>
+              ) : recsContent ? (
+                "Regenerar"
+              ) : (
+                "Gerar sugestões"
+              )}
+            </button>
+          </div>
+          {recsContent && (
+            <div className="prose prose-sm mt-3 max-w-none dark:prose-invert prose-p:my-1 prose-ol:my-1 prose-li:my-0.5">
+              <ReactMarkdown>{recsContent}</ReactMarkdown>
+            </div>
+          )}
+        </div>
+
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <div className="relative min-w-[220px] flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
