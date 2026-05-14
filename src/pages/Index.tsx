@@ -21,7 +21,6 @@ const Index = () => {
   const [aiOpen, setAiOpen] = useState(false);
   const [filtroAtivadores, setFiltroAtivadores] = useState<Set<string>>(new Set());
   const [filtroEtapas, setFiltroEtapas] = useState<Set<string>>(new Set());
-  const [filtroPipelines, setFiltroPipelines] = useState<Set<string>>(new Set());
 
   // Esconde linhas cuja etapa veio só como ID numérico (sync incompleto de outros pipelines)
   const isNumericEtapa = (e: string | null | undefined) =>
@@ -49,13 +48,9 @@ const Index = () => {
         const e = r.etapa_negocio?.trim() || "Sem etapa";
         if (!filtroEtapas.has(e)) return false;
       }
-      if (filtroPipelines.size > 0) {
-        const p = r.pipeline_nome?.trim() || "Sem pipeline";
-        if (!filtroPipelines.has(p)) return false;
-      }
       return true;
     });
-  }, [macroBase, filtroAtivadores, filtroEtapas, filtroPipelines]);
+  }, [macroBase, filtroAtivadores, filtroEtapas]);
 
   // Estoque atual: todos os deals atualmente no pipeline "Onboarding".
   const estoqueRows = useMemo(() => {
@@ -94,10 +89,8 @@ const Index = () => {
             rows={personalRows}
             ativadores={filtroAtivadores}
             etapas={filtroEtapas}
-            pipelines={filtroPipelines}
             onAtivadoresChange={setFiltroAtivadores}
             onEtapasChange={setFiltroEtapas}
-            onPipelinesChange={setFiltroPipelines}
             hideAtivador={isAtivador && !isAdmin}
           />
           <div className="flex items-center gap-2">
