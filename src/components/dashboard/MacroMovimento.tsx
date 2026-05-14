@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { CalendarDays, Sparkles } from "lucide-react";
 import {
   countNovosHoje,
@@ -8,14 +9,18 @@ import {
   type DashRow,
 } from "@/hooks/useDashOperacoes";
 import { InfoTooltip } from "./InfoTooltip";
+import { cn } from "@/lib/utils";
 
 interface Props {
   rows: DashRow[];
 }
 
+type PeriodKey = "todos" | "hoje" | "semana" | "mes" | "mesAnt";
+
 export const MacroMovimento = ({ rows }: Props) => {
   const novosHoje = countNovosHoje(rows);
   const r = getPeriodRanges();
+  const [filter, setFilter] = useState<PeriodKey>("todos");
 
   const periods = [
     { key: "hoje", label: "Hoje", start: r.todayStart, end: r.tomorrow, accent: "text-primary" },
@@ -24,7 +29,17 @@ export const MacroMovimento = ({ rows }: Props) => {
     { key: "mesAnt", label: "Mês anterior", start: r.lastMonthStart, end: r.monthStart, accent: "text-muted-foreground" },
   ] as const;
 
-  const cards = periods.map((p) => {
+  const filterOpts: { key: PeriodKey; label: string }[] = [
+    { key: "todos", label: "Todos" },
+    { key: "hoje", label: "Hoje" },
+    { key: "semana", label: "Semana" },
+    { key: "mes", label: "Mês" },
+    { key: "mesAnt", label: "Mês anterior" },
+  ];
+
+  const visiblePeriods = filter === "todos" ? periods : periods.filter((p) => p.key === filter);
+
+  const cards = visiblePeriods.map((p) => {
     const ativ = mrrAtivadoNoPeriodo(rows, p.start, p.end);
     const entrados = countEntradosNoPeriodo(rows, p.start, p.end);
     return {
@@ -57,7 +72,7 @@ export const MacroMovimento = ({ rows }: Props) => {
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm-soft lg:col-span-4">
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-display text-base font-semibold text-secondary">
               MRR ativado por período
@@ -66,9 +81,31 @@ export const MacroMovimento = ({ rows }: Props) => {
               Clientes entrados (data de criação) e ativados (data de ativação) no período
             </p>
           </div>
-          <CalendarDays className="h-5 w-5 text-primary/70" />
+          <div className="flex items-center gap-2">
+            <div className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-border bg-card p-1">
+              {filterOpts.map((o) => {
+                const active = filter === o.key;
+                return (
+                  <button
+                    key={o.key}
+                    type="button"
+                    onClick={() => setFilter(o.key)}
+                    className={cn(
+                      "rounded-lg px-2.5 py-1 font-subtitle text-xs font-semibold transition",
+                      active
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
+                  >
+                    {o.label}
+                  </button>
+                );
+              })}
+            </div>
+            <CalendarDays className="h-5 w-5 text-primary/70" />
+          </div>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className={cn("grid gap-3", cards.length === 1 ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-4")}>
           {cards.map((c) => (
             <div key={c.label} className="relative rounded-xl border border-border bg-card/60 p-4">
               <div className="absolute right-2 top-2"><InfoTooltip text={c.formula} /></div>
