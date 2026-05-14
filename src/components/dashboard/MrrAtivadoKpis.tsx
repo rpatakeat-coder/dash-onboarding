@@ -49,6 +49,7 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
       border: "border-primary/30",
       bg: "bg-primary/[0.04]",
       sub: `${fmtBRLk(hoje.mrr)} · ${hoje.count} ativ.`,
+      formula: "Soma do MRR dos deals ativados hoje (data_ativacao = hoje) ÷ MRR total do estoque filtrado × 100.",
     },
     {
       key: "semana",
@@ -61,6 +62,7 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
       border: "border-border",
       bg: "bg-card",
       sub: `${fmtBRLk(semana.mrr)} · ${semana.count} ativ.`,
+      formula: "Soma do MRR dos deals ativados nesta semana (segunda → domingo) ÷ MRR total do estoque filtrado × 100.",
     },
     {
       key: "mes",
@@ -73,6 +75,7 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
       border: "border-success/30",
       bg: "bg-success/[0.04]",
       sub: `${fmtBRLk(mes.mrr)} · ${mes.count} ativ.`,
+      formula: "Soma do MRR dos deals ativados no mês atual ÷ MRR total do estoque filtrado × 100.",
     },
   ] as const;
 
