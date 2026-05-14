@@ -95,6 +95,12 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     return out.filter((n) => (seen.has(n.id) ? false : (seen.add(n.id), true)));
   }, [data, notif]);
 
+  // hide dismissed items from the visible list
+  const items = useMemo(
+    () => allItems.filter((n) => !dismissedIds.has(n.id)),
+    [allItems, dismissedIds],
+  );
+
   // toast on truly new alerts (this session)
   useEffect(() => {
     if (!items.length) return;
@@ -118,6 +124,11 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     localStorage.setItem(readKey(userId), JSON.stringify([...next]));
   };
 
+  const persistDismissed = (next: Set<string>) => {
+    setDismissedIds(new Set(next));
+    localStorage.setItem(dismissedKey(userId), JSON.stringify([...next]));
+  };
+
   const value: Ctx = {
     items,
     unreadCount: items.filter((n) => !readIds.has(n.id)).length,
@@ -127,8 +138,15 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
       next.add(id);
       persistRead(next);
     },
-    markAllRead: () => persistRead(new Set(items.map((n) => n.id))),
-    clear: () => persistRead(new Set(items.map((n) => n.id))),
+    markAllRead: () => {
+      // marca todas como lidas e remove da lista visível
+      persistRead(new Set(allItems.map((n) => n.id)));
+      persistDismissed(new Set([...dismissedIds, ...items.map((n) => n.id)]));
+    },
+    clear: () => {
+      persistRead(new Set(allItems.map((n) => n.id)));
+      persistDismissed(new Set([...dismissedIds, ...items.map((n) => n.id)]));
+    },
   };
 
   return <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>;
