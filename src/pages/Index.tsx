@@ -94,8 +94,10 @@ const Index = () => {
             rows={personalRows}
             ativadores={filtroAtivadores}
             etapas={filtroEtapas}
+            pipelines={filtroPipelines}
             onAtivadoresChange={setFiltroAtivadores}
             onEtapasChange={setFiltroEtapas}
+            onPipelinesChange={setFiltroPipelines}
             hideAtivador={isAtivador && !isAdmin}
           />
           <div className="flex items-center gap-2">
