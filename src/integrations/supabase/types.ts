@@ -79,9 +79,11 @@ export type Database = {
           data_entrada_fase: string | null
           etapa_negocio: string | null
           id_deal: number
+          mes_ano_ativacao: string | null
           mrr: string | null
           nome_negocio: string | null
           perfil_cliente: string | null
+          pipeline_nome: string | null
           sla_dias_criacao: string | null
           sla_dias_etapa: string | null
           sla_dias_real: string | null
@@ -94,9 +96,11 @@ export type Database = {
           data_entrada_fase?: string | null
           etapa_negocio?: string | null
           id_deal: number
+          mes_ano_ativacao?: string | null
           mrr?: string | null
           nome_negocio?: string | null
           perfil_cliente?: string | null
+          pipeline_nome?: string | null
           sla_dias_criacao?: string | null
           sla_dias_etapa?: string | null
           sla_dias_real?: string | null
@@ -109,9 +113,11 @@ export type Database = {
           data_entrada_fase?: string | null
           etapa_negocio?: string | null
           id_deal?: number
+          mes_ano_ativacao?: string | null
           mrr?: string | null
           nome_negocio?: string | null
           perfil_cliente?: string | null
+          pipeline_nome?: string | null
           sla_dias_criacao?: string | null
           sla_dias_etapa?: string | null
           sla_dias_real?: string | null
