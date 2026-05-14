@@ -128,7 +128,7 @@ const Index = () => {
 
             <MacroMovimento rows={macroRows} />
 
-            <CarteiraPorAtivador rows={macroRows} />
+            <CarteiraPorAtivador rows={estoqueRows} />
 
             <DealsTable
               rows={personalRows}
