@@ -996,7 +996,7 @@ const CopilotPromptEditor = () => {
   const save = async () => {
     if (tooShort) return toast.error("O prompt está muito curto. Capriche nas instruções.");
     setSaving(true);
-    const { error } = await supabase.from("config").upsert(
+    const { error } = await supabase.from("app_settings").upsert(
       {
         key: COPILOT_PROMPT_SETTINGS_KEY,
         value: { prompt: value.trim() } as never,
