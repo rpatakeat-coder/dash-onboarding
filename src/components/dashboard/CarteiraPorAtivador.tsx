@@ -108,11 +108,8 @@ export const CarteiraPorAtivador = ({ rows }: Props) => {
               margin={{ top: 4, right: 36, left: 8, bottom: 4 }}
               barCategoryGap={6}
             >
-              <XAxis
-                type="number"
-                hide
-                domain={[0, (max: number) => Math.ceil(max * 1.08)]}
-              />
+              <XAxis type="number" hide />
+
               <YAxis
                 type="category"
                 dataKey="nome"
