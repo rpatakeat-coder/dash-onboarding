@@ -118,9 +118,25 @@ const Tv = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="font-numeric text-xs text-muted-foreground">
+          <button
+            onClick={goPrev}
+            title="Slide anterior (←)"
+            aria-label="Slide anterior"
+            className="inline-flex items-center justify-center rounded-lg border border-border bg-card p-1.5 text-muted-foreground hover:text-foreground"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </button>
+          <span className="font-numeric text-xs text-muted-foreground tabular-nums">
             {idx + 1} / {slides.length}
           </span>
+          <button
+            onClick={goNext}
+            title="Próximo slide (→)"
+            aria-label="Próximo slide"
+            className="inline-flex items-center justify-center rounded-lg border border-border bg-card p-1.5 text-muted-foreground hover:text-foreground"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
           <button
             onClick={() => setPaused((p) => !p)}
             className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-foreground"
