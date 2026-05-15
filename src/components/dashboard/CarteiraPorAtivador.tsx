@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import type { DashRow } from "@/hooks/useDashOperacoes";
 import { MultiSelectFilter } from "./MultiSelectFilter";
-import { cn } from "@/lib/utils";
+
 
 interface Props {
   rows: DashRow[];
