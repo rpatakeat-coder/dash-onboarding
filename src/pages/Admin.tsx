@@ -957,6 +957,150 @@ const MetaField = ({
   </label>
 );
 
+// ============ COPILOT PROMPT ============
+const CopilotPromptEditor = () => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [existed, setExisted] = useState(false);
+  const [original, setOriginal] = useState<string>(DEFAULT_COPILOT_SYSTEM_PROMPT);
+  const [value, setValue] = useState<string>(DEFAULT_COPILOT_SYSTEM_PROMPT);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", COPILOT_PROMPT_SETTINGS_KEY)
+      .maybeSingle();
+    setLoading(false);
+    if (error) return toast.error("Erro ao carregar prompt", { description: error.message });
+    const stored = (data?.value as { prompt?: string } | null)?.prompt?.trim();
+    if (stored) {
+      setOriginal(stored);
+      setValue(stored);
+      setExisted(true);
+    } else {
+      setExisted(false);
+      setOriginal(DEFAULT_COPILOT_SYSTEM_PROMPT);
+      setValue(DEFAULT_COPILOT_SYSTEM_PROMPT);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const dirty = value.trim() !== original.trim();
+  const tooShort = value.trim().length < 40;
+
+  const save = async () => {
+    if (tooShort) return toast.error("O prompt está muito curto. Capriche nas instruções.");
+    setSaving(true);
+    const { error } = await supabase.from("app_settings").upsert(
+      {
+        key: COPILOT_PROMPT_SETTINGS_KEY,
+        value: { prompt: value.trim() } as never,
+        updated_by: user?.id ?? null,
+      },
+      { onConflict: "key" },
+    );
+    setSaving(false);
+    if (error) return toast.error("Erro ao salvar prompt", { description: error.message });
+    void logAudit({
+      action: existed ? "copilot_prompt.update" : "copilot_prompt.create",
+      entity_type: "app_settings",
+      entity_id: COPILOT_PROMPT_SETTINGS_KEY,
+      summary: existed ? "Atualizou o prompt do Copiloto" : "Definiu prompt customizado do Copiloto",
+      metadata: { length: value.trim().length },
+    });
+    toast.success("Prompt do Copiloto salvo");
+    setOriginal(value.trim());
+    setExisted(true);
+  };
+
+  const restoreDefault = async () => {
+    if (!existed) {
+      setValue(DEFAULT_COPILOT_SYSTEM_PROMPT);
+      return;
+    }
+    if (!confirm("Restaurar o prompt padrão do Copiloto? O texto customizado será removido.")) return;
+    setRemoving(true);
+    const { error } = await supabase
+      .from("app_settings")
+      .delete()
+      .eq("key", COPILOT_PROMPT_SETTINGS_KEY);
+    setRemoving(false);
+    if (error) return toast.error("Erro ao restaurar prompt", { description: error.message });
+    void logAudit({
+      action: "copilot_prompt.delete",
+      entity_type: "app_settings",
+      entity_id: COPILOT_PROMPT_SETTINGS_KEY,
+      summary: "Restaurou o prompt padrão do Copiloto",
+      metadata: {},
+    });
+    toast.success("Prompt padrão restaurado");
+    setExisted(false);
+    setOriginal(DEFAULT_COPILOT_SYSTEM_PROMPT);
+    setValue(DEFAULT_COPILOT_SYSTEM_PROMPT);
+  };
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          <div>
+            <h3 className="font-display text-base font-semibold text-secondary">Prompt do Copiloto</h3>
+            <p className="mt-1 font-small text-sm text-muted-foreground">
+              Define o comportamento, tom e formato de resposta do Copiloto de Operações. As alterações afetam todos os usuários.
+            </p>
+          </div>
+        </div>
+        <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs ${existed ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-muted text-muted-foreground"}`}>
+          {existed ? "Customizado" : "Padrão"}
+        </span>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+      ) : (
+        <>
+          <textarea
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            spellCheck={false}
+            rows={18}
+            className="mt-4 w-full resize-y rounded-lg border border-border bg-background p-3 font-mono text-xs leading-relaxed text-foreground outline-none focus:border-primary/40"
+            placeholder="Instruções do sistema para o Copiloto…"
+          />
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+            <span>{value.length.toLocaleString("pt-BR")} caracteres</span>
+            <span>Use markdown nas instruções (ex.: **negrito**, listas com "- ", tabelas com `|`).</span>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+            <Button
+              variant="ghost"
+              onClick={restoreDefault}
+              disabled={removing || saving || (!existed && !dirty)}
+              className="gap-1.5 text-destructive hover:text-destructive"
+            >
+              {removing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Restaurar padrão
+            </Button>
+            <Button onClick={save} disabled={!dirty || saving || tooShort} className="gap-1.5">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {existed ? "Salvar alterações" : "Salvar prompt customizado"}
+            </Button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 // ============ AUDITORIA ============
 interface AuditRow {
   id: string;
