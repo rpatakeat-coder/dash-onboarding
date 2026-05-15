@@ -72,6 +72,21 @@ const Tv = () => {
     return () => clearInterval(t);
   }, [paused, slides.length]);
 
+  const goPrev = () => setIdx((i) => (i - 1 + slides.length) % slides.length);
+  const goNext = () => setIdx((i) => (i + 1) % slides.length);
+
+  // Navegação por setas do teclado
+  useEffect(() => {
+    if (!slides.length) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") { e.preventDefault(); goPrev(); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); goNext(); }
+      else if (e.key === " ") { e.preventDefault(); setPaused((p) => !p); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [slides.length]);
+
   // Auto-refresh dos dados a cada 60s já é coberto pelo react-query stale time;
   // adicionamos refetch explícito a cada minuto via interval window-level.
   useEffect(() => {
