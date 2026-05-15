@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { Shield, ShieldCheck, ShieldOff, Users, Settings as SettingsIcon, Trash2, Loader2, History, RefreshCw, UserPlus, Mail, Send, Copy, MessageCircle, Link2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database, Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { AccessDenied } from "@/components/AccessDenied";
@@ -725,6 +726,10 @@ const metasSchema = z.object({
 
 type MetasValues = z.infer<typeof metasSchema>;
 type MetasErrors = Partial<Record<keyof MetasValues, string>>;
+type AppSettingsRow = Database["public"]["Tables"]["app_settings"]["Row"];
+type AppSettingsInsert = Database["public"]["Tables"]["app_settings"]["Insert"];
+
+const APP_SETTINGS_TABLE = "app_settings" as const;
 
 const DEFAULT_METAS: MetasValues = { slaNoPrazo: 80, maxCritico: 10, tempoMedioMax: 18 };
 
@@ -752,14 +757,15 @@ const AdminConfig = () => {
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("app_settings")
+      .from(APP_SETTINGS_TABLE)
       .select("value")
       .eq("key", "metas")
       .maybeSingle();
     setLoading(false);
     if (error) return toast.error("Erro ao carregar metas", { description: error.message });
-    if (data) {
-      const v = { ...DEFAULT_METAS, ...(data.value as Partial<MetasValues>) };
+    const settings = data as Pick<AppSettingsRow, "value"> | null;
+    if (settings) {
+      const v = { ...DEFAULT_METAS, ...(settings.value as Partial<MetasValues>) };
       setOriginal(v);
       setForm(v);
       setExisted(true);
@@ -795,8 +801,13 @@ const AdminConfig = () => {
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("app_settings").upsert(
-      { key: "metas", value: form as never, updated_by: user?.id ?? null },
+    const payload: AppSettingsInsert = {
+      key: "metas",
+      value: form as unknown as Json,
+      updated_by: user?.id ?? null,
+    };
+    const { error } = await supabase.from(APP_SETTINGS_TABLE).upsert(
+      payload,
       { onConflict: "key" },
     );
     setSaving(false);
@@ -825,7 +836,7 @@ const AdminConfig = () => {
     if (!existed) return;
     if (!confirm("Remover as metas configuradas? Os valores padrão voltam a vigorar.")) return;
     setRemoving(true);
-    const { error } = await supabase.from("app_settings").delete().eq("key", "metas");
+    const { error } = await supabase.from(APP_SETTINGS_TABLE).delete().eq("key", "metas");
     setRemoving(false);
     if (error) return toast.error("Erro ao remover metas", { description: error.message });
     void logAudit({
@@ -970,13 +981,14 @@ const CopilotPromptEditor = () => {
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("app_settings")
+      .from(APP_SETTINGS_TABLE)
       .select("value")
       .eq("key", COPILOT_PROMPT_SETTINGS_KEY)
       .maybeSingle();
     setLoading(false);
     if (error) return toast.error("Erro ao carregar prompt", { description: error.message });
-    const stored = (data?.value as { prompt?: string } | null)?.prompt?.trim();
+    const settings = data as Pick<AppSettingsRow, "value"> | null;
+    const stored = (settings?.value as { prompt?: string } | null)?.prompt?.trim();
     if (stored) {
       setOriginal(stored);
       setValue(stored);
@@ -996,12 +1008,13 @@ const CopilotPromptEditor = () => {
   const save = async () => {
     if (tooShort) return toast.error("O prompt está muito curto. Capriche nas instruções.");
     setSaving(true);
-    const { error } = await supabase.from("app_settings").upsert(
-      {
-        key: COPILOT_PROMPT_SETTINGS_KEY,
-        value: { prompt: value.trim() } as never,
-        updated_by: user?.id ?? null,
-      },
+    const payload: AppSettingsInsert = {
+      key: COPILOT_PROMPT_SETTINGS_KEY,
+      value: { prompt: value.trim() } as Json,
+      updated_by: user?.id ?? null,
+    };
+    const { error } = await supabase.from(APP_SETTINGS_TABLE).upsert(
+      payload,
       { onConflict: "key" },
     );
     setSaving(false);
@@ -1026,7 +1039,7 @@ const CopilotPromptEditor = () => {
     if (!confirm("Restaurar o prompt padrão do Copiloto? O texto customizado será removido.")) return;
     setRemoving(true);
     const { error } = await supabase
-      .from("app_settings")
+      .from(APP_SETTINGS_TABLE)
       .delete()
       .eq("key", COPILOT_PROMPT_SETTINGS_KEY);
     setRemoving(false);
