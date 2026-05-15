@@ -905,6 +905,8 @@ const AdminConfig = () => {
         </div>
       </div>
 
+      <CopilotPromptEditor />
+
       <div className="rounded-2xl border border-border bg-card p-5">
         <h3 className="font-display text-base font-semibold text-secondary">Limites de SLA</h3>
         <p className="mt-1 font-small text-sm text-muted-foreground">
