@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { logAudit } from "@/lib/audit";
 import { z } from "zod";
+import { DEFAULT_COPILOT_SYSTEM_PROMPT, COPILOT_PROMPT_SETTINGS_KEY } from "@/lib/copilotPrompt";
 
 interface AdminUser {
   id: string;
