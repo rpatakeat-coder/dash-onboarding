@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Maximize, Pause, Play } from "lucide-react";
-import { useDashOperacoes, filterByPeriod, computeSlaKpis, computeFiltered } from "@/hooks/useDashOperacoes";
+import { useDashOperacoes, computeSlaKpis, computeFiltered } from "@/hooks/useDashOperacoes";
 import { SlaKpiRow } from "@/components/dashboard/SlaKpiRow";
 import { RiskRanking } from "@/components/dashboard/RiskRanking";
 import { BottleneckHeatmap } from "@/components/dashboard/BottleneckHeatmap";
@@ -22,12 +22,13 @@ const Tv = () => {
   );
 
   const slides = useMemo(() => {
-    const rows = data?.rows ?? [];
-    // KPIs do mês vigente são calculados a partir dos deals criados no mês,
-    // mas o restante das visões usa todos os deals em curso.
-    const rowsMes = filterByPeriod(rows, "mes");
-    const sla = computeSlaKpis(rowsMes);
-    const { operadores } = computeFiltered(rowsMes);
+    const allRows = data?.rows ?? [];
+    // Alinhado com a página principal: estoque = deals atualmente no pipeline "Onboarding".
+    const rows = allRows.filter(
+      (r) => (r.pipeline_nome?.trim().toLowerCase() ?? "") === "onboarding",
+    );
+    const sla = computeSlaKpis(rows);
+    const { operadores } = computeFiltered(rows);
     return [
       {
         title: `Visão geral · ${mesLabel}`,
@@ -44,7 +45,7 @@ const Tv = () => {
               onEstoqueClick={() => {}}
             />
             {operadores.length > 0 && (
-              <Highlights rows={rowsMes} operadores={operadores} />
+              <Highlights rows={rows} operadores={operadores} />
             )}
           </div>
         ),
@@ -115,7 +116,7 @@ const Tv = () => {
                 <> / {data.totalDb.toLocaleString("pt-BR")}</>
               )}
             </span>
-            deals · {mesLabel}
+            deals carregados · onboarding agora
           </span>
           <span className="font-numeric text-xs text-muted-foreground">
             {idx + 1} / {slides.length}
