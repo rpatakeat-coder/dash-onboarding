@@ -117,8 +117,6 @@ const Tv = () => {
             </span>
             deals · {mesLabel}
           </span>
-            deals · {mesLabel}
-          </span>
           <span className="font-numeric text-xs text-muted-foreground">
             {idx + 1} / {slides.length}
           </span>
