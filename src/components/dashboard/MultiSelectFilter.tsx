@@ -154,6 +154,33 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
             )}
           </div>
           <CommandList>
+            {visible.length > 0 && (() => {
+              const allVisibleSelected = visible.every((o) => selected.has(o));
+              return (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = new Set(selected);
+                    if (allVisibleSelected) {
+                      visible.forEach((o) => next.delete(o));
+                    } else {
+                      visible.forEach((o) => next.add(o));
+                    }
+                    onChange(next);
+                  }}
+                  className="flex w-full items-center justify-between border-b border-border px-3 py-2 font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground transition hover:bg-muted/50 hover:text-foreground"
+                >
+                  <span>
+                    {allVisibleSelected ? "Limpar" : "Selecionar"}{" "}
+                    {query.trim() || onlySelected ? "visíveis" : "todos"}
+                  </span>
+                  <span className="font-numeric text-[10px] text-muted-foreground">
+                    {visible.length}
+                  </span>
+                </button>
+              );
+            })()}
+
             {visible.length === 0 ? (
               <CommandEmpty>Nada encontrado</CommandEmpty>
             ) : (
