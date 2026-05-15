@@ -180,8 +180,33 @@ const Message = ({ role, content }: { role: "user" | "assistant"; content: strin
         {isUser ? (
           <p className="whitespace-pre-wrap">{content}</p>
         ) : (
-          <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ul:pl-4 prose-ol:my-2 prose-ol:pl-4 prose-li:my-1 prose-li:marker:text-muted-foreground prose-strong:text-foreground prose-strong:font-semibold prose-table:my-3 prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-headings:font-display prose-headings:mt-3 prose-headings:mb-1.5">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+          <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ul:pl-4 prose-ol:my-2 prose-ol:pl-4 prose-li:my-1 prose-li:marker:text-muted-foreground prose-strong:text-foreground prose-strong:font-semibold prose-headings:font-display prose-headings:mt-3 prose-headings:mb-1.5 prose-code:rounded prose-code:bg-background/60 prose-code:px-1 prose-code:py-0.5 prose-code:text-[12px] prose-code:before:content-none prose-code:after:content-none">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                table: ({ node, ...props }) => (
+                  <div className="my-3 overflow-x-auto rounded-lg border border-border">
+                    <table className="w-full border-collapse text-xs" {...props} />
+                  </div>
+                ),
+                thead: (props) => <thead className="bg-background/60" {...props} />,
+                th: (props) => (
+                  <th
+                    className="border-b border-border px-2.5 py-1.5 text-left font-semibold text-foreground"
+                    {...props}
+                  />
+                ),
+                td: (props) => (
+                  <td
+                    className="border-b border-border/60 px-2.5 py-1.5 align-top text-foreground/90 last:border-b-0"
+                    {...props}
+                  />
+                ),
+                tr: (props) => <tr className="even:bg-background/30" {...props} />,
+              }}
+            >
+              {content}
+            </ReactMarkdown>
           </div>
         )}
       </div>
