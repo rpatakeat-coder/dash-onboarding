@@ -116,7 +116,7 @@ const Tv = () => {
                 <> / {data.totalDb.toLocaleString("pt-BR")}</>
               )}
             </span>
-            deals · {mesLabel}
+            deals carregados · onboarding agora
           </span>
           <span className="font-numeric text-xs text-muted-foreground">
             {idx + 1} / {slides.length}
