@@ -366,6 +366,7 @@ Deno.serve(async (req) => {
     // Carrega rows uma vez por requisição (RLS aplicada)
     const rows = await fetchAllRows(userClient);
 
+    const SYSTEM = await loadSystemPrompt(userClient);
     const messages: Array<Record<string, unknown>> = [
       { role: "system", content: SYSTEM },
       ...parsed.data.history.map((m) => ({ role: m.role, content: m.content })),
