@@ -104,12 +104,19 @@ const Tv = () => {
         <div className="flex items-center gap-2">
           <span
             data-tour="tv-loaded-count"
-            title="Total de deals carregados da base · período usado nas visões"
+            title="Deals carregados vs total existente na base · período usado nas visões"
             className="hidden md:inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-numeric text-xs text-muted-foreground"
           >
-            <span className="font-semibold text-foreground">
+            <span className={`font-semibold ${
+              data?.totalDb && data.rows.length < data.totalDb ? "text-warning" : "text-foreground"
+            }`}>
               {(data?.rows.length ?? 0).toLocaleString("pt-BR")}
+              {typeof data?.totalDb === "number" && (
+                <> / {data.totalDb.toLocaleString("pt-BR")}</>
+              )}
             </span>
+            deals · {mesLabel}
+          </span>
             deals · {mesLabel}
           </span>
           <span className="font-numeric text-xs text-muted-foreground">
