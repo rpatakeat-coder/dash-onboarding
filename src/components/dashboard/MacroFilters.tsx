@@ -26,7 +26,10 @@ export const MacroFilters = ({
       const ka = r.agente_ativacao?.trim() || "Sem responsável";
       const ke = r.etapa_negocio?.trim() || "Sem etapa";
       a.set(ka, (a.get(ka) ?? 0) + 1);
-      e.set(ke, (e.get(ke) ?? 0) + 1);
+      // Oculta nas opções de filtro etapas que vieram apenas como ID numérico
+      if (!/^\d+$/.test(ke)) {
+        e.set(ke, (e.get(ke) ?? 0) + 1);
+      }
     }
     return {
       ativadorOpts: [...a.keys()],
