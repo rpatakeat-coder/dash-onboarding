@@ -1008,7 +1008,7 @@ const CopilotPromptEditor = () => {
     if (error) return toast.error("Erro ao salvar prompt", { description: error.message });
     void logAudit({
       action: existed ? "copilot_prompt.update" : "copilot_prompt.create",
-      entity_type: "app_settings",
+      entity_type: "config",
       entity_id: COPILOT_PROMPT_SETTINGS_KEY,
       summary: existed ? "Atualizou o prompt do Copiloto" : "Definiu prompt customizado do Copiloto",
       metadata: { length: value.trim().length },
@@ -1033,7 +1033,7 @@ const CopilotPromptEditor = () => {
     if (error) return toast.error("Erro ao restaurar prompt", { description: error.message });
     void logAudit({
       action: "copilot_prompt.delete",
-      entity_type: "app_settings",
+      entity_type: "config",
       entity_id: COPILOT_PROMPT_SETTINGS_KEY,
       summary: "Restaurou o prompt padrão do Copiloto",
       metadata: {},
