@@ -85,6 +85,7 @@ export interface PerfilStat {
 export interface DashData {
   rows: DashRow[];
   total: number;
+  totalDb?: number;
   mrrTotal: number;
   tempoMedioFase: number;
   travados: number;
