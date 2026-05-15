@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Maximize, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize, Pause, Play } from "lucide-react";
 import { useDashOperacoes, computeSlaKpis, computeFiltered } from "@/hooks/useDashOperacoes";
 import { SlaKpiRow } from "@/components/dashboard/SlaKpiRow";
 import { RiskRanking } from "@/components/dashboard/RiskRanking";
@@ -72,6 +72,21 @@ const Tv = () => {
     return () => clearInterval(t);
   }, [paused, slides.length]);
 
+  const goPrev = () => setIdx((i) => (i - 1 + slides.length) % slides.length);
+  const goNext = () => setIdx((i) => (i + 1) % slides.length);
+
+  // Navegação por setas do teclado
+  useEffect(() => {
+    if (!slides.length) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") { e.preventDefault(); goPrev(); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); goNext(); }
+      else if (e.key === " ") { e.preventDefault(); setPaused((p) => !p); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [slides.length]);
+
   // Auto-refresh dos dados a cada 60s já é coberto pelo react-query stale time;
   // adicionamos refetch explícito a cada minuto via interval window-level.
   useEffect(() => {
@@ -103,24 +118,25 @@ const Tv = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span
-            data-tour="tv-loaded-count"
-            title="Deals carregados vs total existente na base · período usado nas visões"
-            className="hidden md:inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-numeric text-xs text-muted-foreground"
+          <button
+            onClick={goPrev}
+            title="Slide anterior (←)"
+            aria-label="Slide anterior"
+            className="inline-flex items-center justify-center rounded-lg border border-border bg-card p-1.5 text-muted-foreground hover:text-foreground"
           >
-            <span className={`font-semibold ${
-              data?.totalDb && data.rows.length < data.totalDb ? "text-warning" : "text-foreground"
-            }`}>
-              {(data?.rows.length ?? 0).toLocaleString("pt-BR")}
-              {typeof data?.totalDb === "number" && (
-                <> / {data.totalDb.toLocaleString("pt-BR")}</>
-              )}
-            </span>
-            deals carregados · onboarding agora
-          </span>
-          <span className="font-numeric text-xs text-muted-foreground">
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </button>
+          <span className="font-numeric text-xs text-muted-foreground tabular-nums">
             {idx + 1} / {slides.length}
           </span>
+          <button
+            onClick={goNext}
+            title="Próximo slide (→)"
+            aria-label="Próximo slide"
+            className="inline-flex items-center justify-center rounded-lg border border-border bg-card p-1.5 text-muted-foreground hover:text-foreground"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
           <button
             onClick={() => setPaused((p) => !p)}
             className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-subtitle text-xs text-muted-foreground hover:text-foreground"
