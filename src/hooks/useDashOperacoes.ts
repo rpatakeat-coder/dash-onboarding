@@ -599,7 +599,12 @@ export function useDashOperacoes() {
         if (batch.length < PAGE) break;
         if (totalRows && all.length >= totalRows) break;
       }
-      const agg = aggregate(all);
+      // Oculta etapas que vieram apenas como ID numérico (sem nome resolvido)
+      const filtered = all.filter((r) => {
+        const e = r.etapa_negocio?.trim() ?? "";
+        return !/^\d+$/.test(e);
+      });
+      const agg = aggregate(filtered);
       return { ...agg, totalDb: totalRows };
     },
     refetchInterval: 60_000,
