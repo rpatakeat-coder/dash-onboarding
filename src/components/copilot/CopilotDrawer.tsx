@@ -58,15 +58,15 @@ export const CopilotDrawer = ({ open, onOpenChange }: Props) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex w-full max-w-[520px] flex-col gap-0 p-0 sm:max-w-[520px]">
-        <SheetHeader className="border-b border-border px-5 py-4">
+        <SheetHeader className="border-b border-border px-5 py-4 pr-14">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Sparkles className="h-4 w-4" />
               </span>
-              <div>
-                <SheetTitle className="font-display text-base">Copiloto de Operações</SheetTitle>
-                <SheetDescription className="text-xs">
+              <div className="min-w-0">
+                <SheetTitle className="truncate font-display text-base">Copiloto de Operações</SheetTitle>
+                <SheetDescription className="truncate text-xs">
                   Pergunte sobre deals, KPIs, ativadores e períodos.
                 </SheetDescription>
               </div>
@@ -78,7 +78,7 @@ export const CopilotDrawer = ({ open, onOpenChange }: Props) => {
                   if (confirm("Limpar todo o histórico desta conversa?")) clear();
                 }}
                 title="Limpar conversa"
-                className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground transition hover:bg-muted hover:text-destructive"
+                className="mr-2 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -180,8 +180,33 @@ const Message = ({ role, content }: { role: "user" | "assistant"; content: strin
         {isUser ? (
           <p className="whitespace-pre-wrap">{content}</p>
         ) : (
-          <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ul:pl-4 prose-ol:my-2 prose-ol:pl-4 prose-li:my-1 prose-li:marker:text-muted-foreground prose-strong:text-foreground prose-strong:font-semibold prose-table:my-3 prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-headings:font-display prose-headings:mt-3 prose-headings:mb-1.5">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+          <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ul:pl-4 prose-ol:my-2 prose-ol:pl-4 prose-li:my-1 prose-li:marker:text-muted-foreground prose-strong:text-foreground prose-strong:font-semibold prose-headings:font-display prose-headings:mt-3 prose-headings:mb-1.5 prose-code:rounded prose-code:bg-background/60 prose-code:px-1 prose-code:py-0.5 prose-code:text-[12px] prose-code:before:content-none prose-code:after:content-none">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                table: ({ node, ...props }) => (
+                  <div className="my-3 overflow-x-auto rounded-lg border border-border">
+                    <table className="w-full border-collapse text-xs" {...props} />
+                  </div>
+                ),
+                thead: (props) => <thead className="bg-background/60" {...props} />,
+                th: (props) => (
+                  <th
+                    className="border-b border-border px-2.5 py-1.5 text-left font-semibold text-foreground"
+                    {...props}
+                  />
+                ),
+                td: (props) => (
+                  <td
+                    className="border-b border-border/60 px-2.5 py-1.5 align-top text-foreground/90 last:border-b-0"
+                    {...props}
+                  />
+                ),
+                tr: (props) => <tr className="even:bg-background/30" {...props} />,
+              }}
+            >
+              {content}
+            </ReactMarkdown>
           </div>
         )}
       </div>

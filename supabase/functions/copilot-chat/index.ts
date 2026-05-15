@@ -289,7 +289,7 @@ function execCompararPeriodos(rows: Row[], args: Record<string, unknown>) {
   };
 }
 
-const SYSTEM = `Você é o Copiloto de Operações da Takeat — analista sênior de Onboarding.
+const DEFAULT_SYSTEM = `Você é o Copiloto de Operações da Takeat — analista sênior de Onboarding.
 Responda SEMPRE em pt-BR, com tom executivo e analítico.
 
 USE EXATAMENTE ESTA ESTRUTURA EM MARKDOWN (cada seção em sua própria linha, com quebras duplas entre blocos):
@@ -304,6 +304,7 @@ Uma frase com a conclusão principal. Use **negrito** nos números-chave.
 
 **Detalhe** (opcional — só se ajudar a decisão ou se o usuário pediu lista)
 Tabela markdown compacta, máx 8 linhas. Se houver mais, escreva "mostrando 8 de N" abaixo.
+Sempre use a sintaxe completa de tabela markdown com pipes \`|\` e linha separadora \`|---|---|\`.
 
 **Próximo passo**
 Uma pergunta ou ação concreta. Ex.: "Quer que eu filtre por ativador?"
@@ -319,6 +320,21 @@ REGRAS DURAS:
 - Se a ferramenta retornar 0/erro, explique e proponha alternativa.
 
 Pense como analista ajudando um head de operações a decidir.`;
+
+async function loadSystemPrompt(client: ReturnType<typeof createClient>): Promise<string> {
+  try {
+    const { data } = await client
+      .from("app_settings")
+      .select("value")
+      .eq("key", "copilot.system_prompt")
+      .maybeSingle();
+    const v = data?.value as { prompt?: string } | null;
+    const custom = v?.prompt?.trim();
+    return custom && custom.length > 0 ? custom : DEFAULT_SYSTEM;
+  } catch {
+    return DEFAULT_SYSTEM;
+  }
+}
 
 
 Deno.serve(async (req) => {
@@ -350,6 +366,7 @@ Deno.serve(async (req) => {
     // Carrega rows uma vez por requisição (RLS aplicada)
     const rows = await fetchAllRows(userClient);
 
+    const SYSTEM = await loadSystemPrompt(userClient);
     const messages: Array<Record<string, unknown>> = [
       { role: "system", content: SYSTEM },
       ...parsed.data.history.map((m) => ({ role: m.role, content: m.content })),
