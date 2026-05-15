@@ -58,15 +58,15 @@ export const CopilotDrawer = ({ open, onOpenChange }: Props) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex w-full max-w-[520px] flex-col gap-0 p-0 sm:max-w-[520px]">
-        <SheetHeader className="border-b border-border px-5 py-4">
+        <SheetHeader className="border-b border-border px-5 py-4 pr-14">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Sparkles className="h-4 w-4" />
               </span>
-              <div>
-                <SheetTitle className="font-display text-base">Copiloto de Operações</SheetTitle>
-                <SheetDescription className="text-xs">
+              <div className="min-w-0">
+                <SheetTitle className="truncate font-display text-base">Copiloto de Operações</SheetTitle>
+                <SheetDescription className="truncate text-xs">
                   Pergunte sobre deals, KPIs, ativadores e períodos.
                 </SheetDescription>
               </div>
@@ -78,7 +78,7 @@ export const CopilotDrawer = ({ open, onOpenChange }: Props) => {
                   if (confirm("Limpar todo o histórico desta conversa?")) clear();
                 }}
                 title="Limpar conversa"
-                className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground transition hover:bg-muted hover:text-destructive"
+                className="mr-2 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
