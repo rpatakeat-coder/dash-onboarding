@@ -599,7 +599,8 @@ export function useDashOperacoes() {
         if (batch.length < PAGE) break;
         if (totalRows && all.length >= totalRows) break;
       }
-      return aggregate(all);
+      const agg = aggregate(all);
+      return { ...agg, totalDb: totalRows };
     },
     refetchInterval: 60_000,
   });
