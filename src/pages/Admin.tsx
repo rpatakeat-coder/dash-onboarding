@@ -752,7 +752,7 @@ const AdminConfig = () => {
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("app_settings")
+      .from("config")
       .select("value")
       .eq("key", "metas")
       .maybeSingle();
@@ -795,7 +795,7 @@ const AdminConfig = () => {
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("app_settings").upsert(
+    const { error } = await supabase.from("config").upsert(
       { key: "metas", value: form as never, updated_by: user?.id ?? null },
       { onConflict: "key" },
     );
@@ -825,7 +825,7 @@ const AdminConfig = () => {
     if (!existed) return;
     if (!confirm("Remover as metas configuradas? Os valores padrão voltam a vigorar.")) return;
     setRemoving(true);
-    const { error } = await supabase.from("app_settings").delete().eq("key", "metas");
+    const { error } = await supabase.from("config").delete().eq("key", "metas");
     setRemoving(false);
     if (error) return toast.error("Erro ao remover metas", { description: error.message });
     void logAudit({
@@ -970,7 +970,7 @@ const CopilotPromptEditor = () => {
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("app_settings")
+      .from("config")
       .select("value")
       .eq("key", COPILOT_PROMPT_SETTINGS_KEY)
       .maybeSingle();
@@ -996,7 +996,7 @@ const CopilotPromptEditor = () => {
   const save = async () => {
     if (tooShort) return toast.error("O prompt está muito curto. Capriche nas instruções.");
     setSaving(true);
-    const { error } = await supabase.from("app_settings").upsert(
+    const { error } = await supabase.from("config").upsert(
       {
         key: COPILOT_PROMPT_SETTINGS_KEY,
         value: { prompt: value.trim() } as never,
@@ -1026,7 +1026,7 @@ const CopilotPromptEditor = () => {
     if (!confirm("Restaurar o prompt padrão do Copiloto? O texto customizado será removido.")) return;
     setRemoving(true);
     const { error } = await supabase
-      .from("app_settings")
+      .from("config")
       .delete()
       .eq("key", COPILOT_PROMPT_SETTINGS_KEY);
     setRemoving(false);
