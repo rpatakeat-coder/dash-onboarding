@@ -104,7 +104,32 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-[260px] p-0" align="start">
-        <Command shouldFilter={false}>
+        <Command
+          shouldFilter={false}
+          onKeyDown={(e) => {
+            // Ctrl/Cmd+A: alterna seleção dos itens visíveis
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a") {
+              e.preventDefault();
+              if (visible.length === 0) return;
+              const allVisibleSelected = visible.every((o) => selected.has(o));
+              const next = new Set(selected);
+              if (allVisibleSelected) visible.forEach((o) => next.delete(o));
+              else visible.forEach((o) => next.add(o));
+              onChange(next);
+              return;
+            }
+            // Esc: limpa busca/seleção antes de fechar o popover
+            if (e.key === "Escape") {
+              if (query || onlySelected || selected.size > 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                setQuery("");
+                setOnlySelected(false);
+                onChange(new Set());
+              }
+            }
+          }}
+        >
           <CommandInput
             placeholder={`Buscar ${label.toLowerCase()}...`}
             value={query}
@@ -217,6 +242,18 @@ export const MultiSelectFilter = ({ label, options, selected, onChange, counts, 
               </CommandGroup>
             )}
           </CommandList>
+          <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-1.5 font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
+            <span>
+              <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-numeric text-[9px] normal-case">Ctrl</kbd>
+              {" + "}
+              <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-numeric text-[9px] normal-case">A</kbd>
+              {" selecionar"}
+            </span>
+            <span>
+              <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-numeric text-[9px] normal-case">Esc</kbd>
+              {" limpar"}
+            </span>
+          </div>
         </Command>
       </PopoverContent>
     </Popover>
