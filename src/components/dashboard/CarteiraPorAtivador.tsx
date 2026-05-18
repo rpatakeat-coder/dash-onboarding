@@ -160,6 +160,7 @@ export const CarteiraPorAtivador = ({ rows }: Props) => {
                 formatter={(value: number, name) => [`${value} clientes`, `Perfil ${name}`]}
                 labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
               />
+              <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
               {perfis.map((p, i) => {
                 const isLast = i === perfis.length - 1;
                 return (
