@@ -11,6 +11,7 @@ const Body = z
   .object({
     email: z.string().email(),
     agente_ativacao: z.string().min(1).max(120).optional(),
+    // super_admin nunca pode ser criado via UI
     role: z.enum(["admin", "user"]).default("user"),
     full_name: z.string().max(120).optional(),
   })
