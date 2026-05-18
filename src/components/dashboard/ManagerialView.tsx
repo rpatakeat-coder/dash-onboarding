@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { PeriodFilter } from "./PeriodFilter";
 import { SlaBandBar } from "./SlaBandBar";
 import { DealLink } from "./DealLink";
+import { OperatorCompareSheet } from "./OperatorCompareSheet";
+import { ExportRankingCsvButton } from "./ExportRankingCsvButton";
 import {
   SLA_BAND_META,
   computeFiltered,
