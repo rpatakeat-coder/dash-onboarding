@@ -143,7 +143,7 @@ const Index = () => {
           return (
             <>
               <GestaoAlerts rows={gestaoMacro} onSelectOperator={focusOperator} />
-              <ChurnKpis rows={gestaoPersonal} />
+              <ChurnKpis rows={personalRows} />
               <TrendByOperator rows={gestaoMacro} onSelectOperator={focusOperator} />
               <ManagerialView
                 rows={gestaoMacro}
