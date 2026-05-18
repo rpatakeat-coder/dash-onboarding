@@ -133,7 +133,11 @@ const Index = () => {
 
             <MacroMovimento rows={macroRows} />
 
-            <CarteiraPorAtivador rows={estoqueRows} />
+            <CarteiraPorAtivador
+              rows={estoqueRows}
+              etapasExcluidas={filtroEtapas}
+              onEtapasExcluidasChange={setFiltroEtapas}
+            />
 
             <div data-tour="deals">
               <DealsTable
