@@ -137,6 +137,7 @@ const Index = () => {
         {data && isGestao && (
           <>
             <GestaoAlerts rows={macroRows} onSelectOperator={focusOperator} />
+            <ChurnKpis rows={personalRows} />
             <TrendByOperator rows={macroRows} onSelectOperator={focusOperator} />
             <ManagerialView
               rows={macroRows}
