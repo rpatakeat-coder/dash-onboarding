@@ -43,7 +43,7 @@ const Index = () => {
       }
       if (filtroEtapas.size > 0) {
         const e = r.etapa_negocio?.trim() || "Sem etapa";
-        if (!filtroEtapas.has(e)) return false;
+        if (filtroEtapas.has(e)) return false;
       }
       return true;
     });
