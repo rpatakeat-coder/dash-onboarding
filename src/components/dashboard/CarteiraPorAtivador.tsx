@@ -109,7 +109,7 @@ export const CarteiraPorAtivador = ({ rows, etapasExcluidas, onEtapasExcluidasCh
             label="Ocultar fase"
             options={etapaOpts}
             selected={etapasExcluidas}
-            onChange={setEtapasExcluidas}
+            onChange={onEtapasExcluidasChange}
             counts={etapaCounts}
           />
           <Users className="h-5 w-5 shrink-0 text-primary/70" />
