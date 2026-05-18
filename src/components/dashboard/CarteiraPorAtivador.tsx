@@ -3,7 +3,7 @@ import { AlertTriangle, Users } from "lucide-react";
 import {
   Bar,
   BarChart,
-  Cell,
+  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
