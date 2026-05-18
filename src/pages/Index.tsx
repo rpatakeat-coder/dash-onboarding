@@ -15,6 +15,7 @@ import { AiInsightsDialog } from "@/components/dashboard/AiInsightsDialog";
 import { ManagerialView } from "@/components/dashboard/ManagerialView";
 import { GestaoAlerts } from "@/components/dashboard/GestaoAlerts";
 import { TrendByOperator } from "@/components/dashboard/TrendByOperator";
+import { ChurnKpis } from "@/components/dashboard/ChurnKpis";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
 import { useDashOperacoes, type PerfilStat } from "@/hooks/useDashOperacoes";
