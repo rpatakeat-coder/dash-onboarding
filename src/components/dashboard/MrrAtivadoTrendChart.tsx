@@ -12,7 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { BarChart3 } from "lucide-react";
-import { fmtBRL, fmtBRLk, parseActivationDate, type DashRow } from "@/hooks/useDashOperacoes";
+import { fmtBRL, fmtBRLk, parseActivationDate, parseDate, type DashRow } from "@/hooks/useDashOperacoes";
 import { InfoTooltip } from "./InfoTooltip";
 import { cn } from "@/lib/utils";
 
