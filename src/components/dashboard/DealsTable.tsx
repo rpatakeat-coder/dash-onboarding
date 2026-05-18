@@ -212,7 +212,7 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
           onChange={(s) => { setBandSel(s); setPage(0); }}
         />
         <MultiSelectFilter
-          label="Fase"
+          label="Ocultar fase"
           options={etapaOpts}
           selected={etapaSel}
           onChange={(s) => { setEtapaSel(s); setPage(0); }}
