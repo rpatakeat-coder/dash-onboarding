@@ -15,6 +15,7 @@ import { AiInsightsDialog } from "@/components/dashboard/AiInsightsDialog";
 import { ManagerialView } from "@/components/dashboard/ManagerialView";
 import { GestaoAlerts } from "@/components/dashboard/GestaoAlerts";
 import { TrendByOperator } from "@/components/dashboard/TrendByOperator";
+import { ChurnKpis } from "@/components/dashboard/ChurnKpis";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
 import { useDashOperacoes, type PerfilStat } from "@/hooks/useDashOperacoes";
@@ -136,6 +137,7 @@ const Index = () => {
         {data && isGestao && (
           <>
             <GestaoAlerts rows={macroRows} onSelectOperator={focusOperator} />
+            <ChurnKpis rows={personalRows} />
             <TrendByOperator rows={macroRows} onSelectOperator={focusOperator} />
             <ManagerialView
               rows={macroRows}
@@ -157,6 +159,8 @@ const Index = () => {
             <div data-tour="kpis">
               <MrrAtivadoKpis rows={macroRows} />
             </div>
+
+            <ChurnKpis rows={personalRows} />
 
             <MrrAtivadoTrendChart rows={macroRows} />
 
