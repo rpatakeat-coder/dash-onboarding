@@ -439,10 +439,10 @@ const AdminOperators = () => {
                         <Button
                           size="sm"
                           variant="ghost"
-                          disabled={delId === op.user_id || isMe}
+                          disabled={delId === op.user_id || isMe || !canModify}
                           onClick={() => remove(op)}
                           className="gap-1.5 text-destructive hover:text-destructive"
-                          title={isMe ? "Você não pode excluir a si mesmo" : undefined}
+                          title={isMe ? "Você não pode excluir a si mesmo" : lockReason}
                         >
                           {delId === op.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                           Excluir
