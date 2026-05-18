@@ -65,7 +65,12 @@ interface Props {
 
 const PAGE_SIZE_OPTS = [25, 50, 100, 200];
 
-export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
+export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
+  // Lista de deals oculta a pipeline "Sucesso" (mas KPIs de MRR Ativado seguem considerando).
+  const rows = useMemo(
+    () => rowsRaw.filter((r) => (r.pipeline_nome?.trim().toLowerCase() ?? "") !== "sucesso"),
+    [rowsRaw],
+  );
   const { open: openDeal } = useDealDrawer();
   const [bandSel, setBandSel] = usePersistedSet("dealsTable:band");
   const [etapaSel, setEtapaSel] = usePersistedSet("dealsTable:etapa");
