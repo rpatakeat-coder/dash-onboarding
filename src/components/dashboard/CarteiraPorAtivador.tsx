@@ -19,6 +19,20 @@ interface Props {
 
 const SEM_RESP = "Sem responsável";
 
+const PERFIL_COLORS: Record<string, string> = {
+  P: "hsl(var(--success))",
+  M: "hsl(var(--primary))",
+  G: "hsl(var(--secondary))",
+  GG: "hsl(var(--warning))",
+  "—": "hsl(var(--muted-foreground))",
+};
+const PERFIL_FALLBACKS = [
+  "hsl(var(--primary))",
+  "hsl(var(--success))",
+  "hsl(var(--secondary))",
+  "hsl(var(--warning))",
+];
+
 export const CarteiraPorAtivador = ({ rows }: Props) => {
   const [etapasExcluidas, setEtapasExcluidas] = useState<Set<string>>(new Set());
 
