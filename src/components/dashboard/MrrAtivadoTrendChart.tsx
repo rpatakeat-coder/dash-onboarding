@@ -69,7 +69,7 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
       }
     }
     for (const b of buckets) {
-      b.pct = b.mrr > 0 ? (b.criados / b.mrr) * 100 : 0;
+      b.pct = b.criados > 0 ? (b.qtd / b.criados) * 100 : 0;
     }
     return buckets;
   }, [rows, range]);
