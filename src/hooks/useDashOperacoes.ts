@@ -24,7 +24,7 @@ export interface DashRow {
 
 /** IDs/nomes de etapa considerados churn. */
 export const CHURN_STAGE_IDS = new Set(["162579097", "1122729590"]); // Pré-Churn, Churn (pipeline Sucesso)
-export const CHURN_STAGE_NAMES = new Set(["Cancelamento"]); // Pipeline Onboarding
+export const CHURN_CANCELAMENTO_PIPELINE = "Onboarding"; // etapa_de_cancelamento = Onboarding
 
 export interface ChurnKpis {
   /** 9% do MRR dos deals criados no mês vigente (referência de meta). */
