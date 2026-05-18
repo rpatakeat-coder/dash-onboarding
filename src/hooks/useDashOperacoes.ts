@@ -201,7 +201,7 @@ function buildOperadores(rows: DashRow[]): OperatorStat[] {
     .sort((a, b) => b.bands.critico - a.bands.critico || b.ativos - a.ativos);
 }
 
-const parseDate = (s: string | null): Date | null => {
+export const parseDate = (s: string | null): Date | null => {
   if (!s) return null;
   const str = s.trim();
   if (!str) return null;
