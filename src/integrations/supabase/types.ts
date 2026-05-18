@@ -547,6 +547,7 @@ export type Database = {
           email: string
           email_confirmed_at: string
           full_name: string
+          has_password: boolean
           invited_at: string
           last_sign_in_at: string
           role: Database["public"]["Enums"]["operations_role"]

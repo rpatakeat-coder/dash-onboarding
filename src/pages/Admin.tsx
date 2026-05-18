@@ -114,6 +114,7 @@ interface OperatorRow {
   created_at: string;
   last_sign_in_at: string | null;
   email_confirmed_at: string | null;
+  has_password?: boolean | null;
   invited_at: string | null;
 }
 
