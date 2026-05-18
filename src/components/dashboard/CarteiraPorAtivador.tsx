@@ -3,6 +3,7 @@ import { AlertTriangle, Users } from "lucide-react";
 import {
   Bar,
   BarChart,
+  LabelList,
   Legend,
   ResponsiveContainer,
   Tooltip,
