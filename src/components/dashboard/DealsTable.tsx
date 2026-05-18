@@ -13,6 +13,7 @@ import { MultiSelectFilter } from "./MultiSelectFilter";
 import { ExportCsvButton } from "./ExportCsvButton";
 import { useDealDrawer } from "@/contexts/DealDrawer";
 import { cn } from "@/lib/utils";
+import { usePersistedSet } from "@/hooks/usePersistedSet";
 import {
   SLA_BAND_META,
   slaBand,
@@ -66,10 +67,10 @@ const PAGE_SIZE_OPTS = [25, 50, 100, 200];
 
 export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
   const { open: openDeal } = useDealDrawer();
-  const [bandSel, setBandSel] = useState<Set<string>>(new Set());
-  const [etapaSel, setEtapaSel] = useState<Set<string>>(new Set());
-  const [ativSel, setAtivSel] = useState<Set<string>>(new Set());
-  const [perfilSel, setPerfilSel] = useState<Set<string>>(new Set());
+  const [bandSel, setBandSel] = usePersistedSet("dealsTable:band");
+  const [etapaSel, setEtapaSel] = usePersistedSet("dealsTable:etapa");
+  const [ativSel, setAtivSel] = usePersistedSet("dealsTable:ativ");
+  const [perfilSel, setPerfilSel] = usePersistedSet("dealsTable:perfil");
   const [busca, setBusca] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("fase");
   const [sortDir, setSortDir] = useState<SortDir>("desc");

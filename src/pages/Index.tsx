@@ -14,6 +14,7 @@ import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
 import { AiInsightsDialog } from "@/components/dashboard/AiInsightsDialog";
 import { ManagerialView } from "@/components/dashboard/ManagerialView";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
+import { usePersistedSet } from "@/hooks/usePersistedSet";
 import { useDashOperacoes, type PerfilStat } from "@/hooks/useDashOperacoes";
 
 const Index = () => {
@@ -24,8 +25,8 @@ const Index = () => {
   const isGestao = tab === "gestao";
   const [estoqueOpen, setEstoqueOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
-  const [filtroAtivadores, setFiltroAtivadores] = useState<Set<string>>(new Set());
-  const [filtroEtapas, setFiltroEtapas] = useState<Set<string>>(new Set());
+  const [filtroAtivadores, setFiltroAtivadores] = usePersistedSet("index:ativadores");
+  const [filtroEtapas, setFiltroEtapas] = usePersistedSet("index:etapas");
 
   const allRows = data?.rows ?? [];
 
