@@ -246,7 +246,6 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
               activeDot={{ r: 5 }}
             />
           </ComposedChart>
-          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </section>
