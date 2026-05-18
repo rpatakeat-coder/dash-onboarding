@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { CalendarDays, Sparkles } from "lucide-react";
+import { CalendarDays, Sparkles, CalendarIcon, X } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import type { DateRange } from "react-day-picker";
 import {
   countNovosHoje,
   countEntradosNoPeriodo,
@@ -10,17 +13,22 @@ import {
 } from "@/hooks/useDashOperacoes";
 import { InfoTooltip } from "./InfoTooltip";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   rows: DashRow[];
 }
 
-type PeriodKey = "todos" | "hoje" | "semana" | "mes" | "mesAnt";
+type PeriodKey = "todos" | "hoje" | "semana" | "mes" | "mesAnt" | "custom";
 
 export const MacroMovimento = ({ rows }: Props) => {
   const novosHoje = countNovosHoje(rows);
   const r = getPeriodRanges();
   const [filter, setFilter] = useState<PeriodKey>("todos");
+  const [customRange, setCustomRange] = useState<DateRange | undefined>();
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const periods = [
     { key: "hoje", label: "Hoje", start: r.todayStart, end: r.tomorrow, accent: "text-primary" },
@@ -37,22 +45,61 @@ export const MacroMovimento = ({ rows }: Props) => {
     { key: "mesAnt", label: "Mês anterior" },
   ];
 
-  const visiblePeriods = filter === "todos" ? periods : periods.filter((p) => p.key === filter);
+  // Build the cards list according to the active filter.
+  let cards: {
+    label: string;
+    value: string;
+    sub: string;
+    pctAtiv: number;
+    pctLabel: string;
+    accent?: string;
+    formula: string;
+  }[] = [];
 
-  const cards = visiblePeriods.map((p) => {
-    const ativ = mrrAtivadoNoPeriodo(rows, p.start, p.end);
-    const entrados = countEntradosNoPeriodo(rows, p.start, p.end);
+  if (filter === "custom" && customRange?.from) {
+    const start = customRange.from;
+    // end is exclusive — add 1 day to include "to"
+    const toBase = customRange.to ?? customRange.from;
+    const end = new Date(toBase.getFullYear(), toBase.getMonth(), toBase.getDate() + 1);
+    const ativ = mrrAtivadoNoPeriodo(rows, start, end);
+    const entrados = countEntradosNoPeriodo(rows, start, end);
     const pctAtiv = entrados > 0 ? (ativ.count / entrados) * 100 : 0;
-    return {
-      label: p.label,
-      value: fmtBRLk(ativ.mrr),
-      sub: `${ativ.count} ativados · ${entrados} entrados`,
-      pctAtiv,
-      pctLabel: entrados > 0 ? `${pctAtiv.toFixed(1).replace(".", ",")}% ativados` : "— sem entradas",
-      accent: p.accent,
-      formula: `MRR ativado em ${p.label.toLowerCase()} = soma de mrr dos deals com data_ativacao dentro do período. "Entrados" = deals com data de criação no mesmo período. % Ativados = ativados ÷ entrados × 100.`,
-    };
-  });
+    const label = `${format(start, "dd/MM/yyyy", { locale: ptBR })} → ${format(toBase, "dd/MM/yyyy", { locale: ptBR })}`;
+    cards = [
+      {
+        label,
+        value: fmtBRLk(ativ.mrr),
+        sub: `${ativ.count} ativados · ${entrados} entrados`,
+        pctAtiv,
+        pctLabel: entrados > 0 ? `${pctAtiv.toFixed(1).replace(".", ",")}% ativados` : "— sem entradas",
+        accent: "text-primary",
+        formula: `MRR ativado no intervalo personalizado = soma de mrr dos deals com data_ativacao dentro de ${label}. "Entrados" = deals com data de criação no mesmo intervalo. % Ativados = ativados ÷ entrados × 100.`,
+      },
+    ];
+  } else {
+    const visiblePeriods = filter === "todos" ? periods : periods.filter((p) => p.key === filter);
+    cards = visiblePeriods.map((p) => {
+      const ativ = mrrAtivadoNoPeriodo(rows, p.start, p.end);
+      const entrados = countEntradosNoPeriodo(rows, p.start, p.end);
+      const pctAtiv = entrados > 0 ? (ativ.count / entrados) * 100 : 0;
+      return {
+        label: p.label,
+        value: fmtBRLk(ativ.mrr),
+        sub: `${ativ.count} ativados · ${entrados} entrados`,
+        pctAtiv,
+        pctLabel: entrados > 0 ? `${pctAtiv.toFixed(1).replace(".", ",")}% ativados` : "— sem entradas",
+        accent: p.accent,
+        formula: `MRR ativado em ${p.label.toLowerCase()} = soma de mrr dos deals com data_ativacao dentro do período. "Entrados" = deals com data de criação no mesmo período. % Ativados = ativados ÷ entrados × 100.`,
+      };
+    });
+  }
+
+  const customActive = filter === "custom" && !!customRange?.from;
+  const customLabel = customActive
+    ? customRange?.to
+      ? `${format(customRange.from!, "dd/MM", { locale: ptBR })} → ${format(customRange.to, "dd/MM", { locale: ptBR })}`
+      : format(customRange!.from!, "dd/MM/yyyy", { locale: ptBR })
+    : "Personalizado";
 
   return (
     <section className="grid grid-cols-1 gap-4 lg:grid-cols-5">
@@ -105,6 +152,59 @@ export const MacroMovimento = ({ rows }: Props) => {
                 );
               })}
             </div>
+
+            <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "h-8 gap-1.5 rounded-lg font-subtitle text-xs font-semibold",
+                    customActive
+                      ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  <CalendarIcon className="h-3.5 w-3.5" />
+                  {customLabel}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="range"
+                  numberOfMonths={2}
+                  selected={customRange}
+                  onSelect={(range) => {
+                    setCustomRange(range);
+                    if (range?.from) setFilter("custom");
+                    if (range?.from && range?.to) setPickerOpen(false);
+                  }}
+                  locale={ptBR}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+                {customActive && (
+                  <div className="flex items-center justify-end gap-2 border-t border-border p-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 text-xs"
+                      onClick={() => {
+                        setCustomRange(undefined);
+                        setFilter("todos");
+                        setPickerOpen(false);
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                      Limpar
+                    </Button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
+
             <CalendarDays className="h-5 w-5 text-primary/70" />
           </div>
         </div>
