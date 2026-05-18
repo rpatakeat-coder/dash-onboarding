@@ -56,6 +56,10 @@ const Tv = () => {
         node: <RiskRanking rows={rows} limit={12} variant="vertical" />,
       },
       {
+        title: "Churn do mês",
+        node: <ChurnKpis rows={allRows} />,
+      },
+      {
         title: "Gargalos & tendência",
         node: (
           <div className="grid h-full grid-cols-1 gap-6 lg:grid-cols-2">
