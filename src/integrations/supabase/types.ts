@@ -104,6 +104,7 @@ export type Database = {
           data_ativacao: string | null
           data_criacao: string | null
           data_entrada_fase: string | null
+          data_fechamento: string | null
           etapa_negocio: string | null
           id_deal: number
           mes_ano_ativacao: string | null
@@ -121,6 +122,7 @@ export type Database = {
           data_ativacao?: string | null
           data_criacao?: string | null
           data_entrada_fase?: string | null
+          data_fechamento?: string | null
           etapa_negocio?: string | null
           id_deal: number
           mes_ano_ativacao?: string | null
@@ -138,6 +140,7 @@ export type Database = {
           data_ativacao?: string | null
           data_criacao?: string | null
           data_entrada_fase?: string | null
+          data_fechamento?: string | null
           etapa_negocio?: string | null
           id_deal?: number
           mes_ano_ativacao?: string | null
