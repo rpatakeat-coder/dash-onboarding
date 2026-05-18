@@ -3,6 +3,7 @@ import { AlertTriangle, Users } from "lucide-react";
 import {
   Bar,
   BarChart,
+  LabelList,
   Legend,
   ResponsiveContainer,
   Tooltip,
@@ -171,19 +172,15 @@ export const CarteiraPorAtivador = ({ rows }: Props) => {
                     stackId="carteira"
                     fill={PERFIL_COLORS[p] ?? PERFIL_FALLBACKS[i % PERFIL_FALLBACKS.length]}
                     radius={isLast ? [0, 4, 4, 0] : [0, 0, 0, 0]}
-                    label={
-                      isLast
-                        ? {
-                            position: "right",
-                            fill: "hsl(var(--foreground))",
-                            fontSize: 12,
-                            fontWeight: 700,
-                            formatter: (_: number, __: unknown, payload: any) =>
-                              payload?.payload?.count ?? "",
-                          }
-                        : undefined
-                    }
-                  />
+                  >
+                    {isLast && (
+                      <LabelList
+                        dataKey="count"
+                        position="right"
+                        style={{ fill: "hsl(var(--foreground))", fontSize: 12, fontWeight: 700 }}
+                      />
+                    )}
+                  </Bar>
                 );
               })}
             </BarChart>
