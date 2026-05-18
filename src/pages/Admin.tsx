@@ -410,8 +410,9 @@ const AdminOperators = () => {
                             <Button
                               size="sm"
                               variant="ghost"
-                              disabled={resendId === op.user_id}
+                              disabled={resendId === op.user_id || !canModify}
                               className="gap-1.5"
+                              title={lockReason}
                             >
                               {resendId === op.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
                               Reenviar
