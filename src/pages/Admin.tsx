@@ -356,6 +356,9 @@ const AdminOperators = () => {
               )}
               {!loading && list.map((op) => {
                 const isMe = op.user_id === user?.id;
+                const targetIsPrivileged = op.role === "admin" || op.role === "super_admin";
+                const canModify = !targetIsPrivileged || isSuperAdmin;
+                const lockReason = !canModify ? "Apenas super-admin pode alterar admins" : undefined;
                 return (
                   <tr key={op.user_id} className="border-b border-border/50 last:border-0">
                     <td className="px-4 py-3">
@@ -375,8 +378,14 @@ const AdminOperators = () => {
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{op.email ?? "—"}</td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-full border px-2 py-0.5 text-xs ${op.role === "admin" ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-muted text-foreground"}`}>
-                        {op.role}
+                      <span className={`rounded-full border px-2 py-0.5 text-xs ${
+                        op.role === "super_admin"
+                          ? "border-amber-500/40 bg-amber-500/10 text-amber-500"
+                          : op.role === "admin"
+                          ? "border-primary/30 bg-primary/10 text-primary"
+                          : "border-border bg-muted text-foreground"
+                      }`}>
+                        {op.role === "super_admin" ? "super-admin" : op.role}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-foreground">
