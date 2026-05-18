@@ -37,7 +37,7 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
 
   const data = useMemo(() => {
     const now = new Date();
-    const buckets: { key: string; label: string; mrr: number; qtd: number; isCurrent: boolean }[] = [];
+    const buckets: { key: string; label: string; mrr: number; qtd: number; criados: number; pct: number; isCurrent: boolean }[] = [];
     for (let i = range - 1; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       buckets.push({
@@ -45,18 +45,31 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
         label: `${MONTH_LABELS[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`,
         mrr: 0,
         qtd: 0,
+        criados: 0,
+        pct: 0,
         isCurrent: i === 0,
       });
     }
     const idx = new Map(buckets.map((b, i) => [b.key, i]));
       for (const row of rows) {
         const d = parseActivationDate(row.data_ativacao);
-      if (!d) continue;
-      const k = `${d.getFullYear()}-${d.getMonth()}`;
-      const i = idx.get(k);
-      if (i === undefined) continue;
-      buckets[i].mrr += toNum(row.mrr);
-      buckets[i].qtd += 1;
+      if (d) {
+        const k = `${d.getFullYear()}-${d.getMonth()}`;
+        const i = idx.get(k);
+        if (i !== undefined) {
+          buckets[i].mrr += toNum(row.mrr);
+          buckets[i].qtd += 1;
+        }
+      }
+      const dc = parseDate(row.data_criacao);
+      if (dc) {
+        const k = `${dc.getFullYear()}-${dc.getMonth()}`;
+        const i = idx.get(k);
+        if (i !== undefined) buckets[i].criados += 1;
+      }
+    }
+    for (const b of buckets) {
+      b.pct = b.mrr > 0 ? (b.criados / b.mrr) * 100 : 0;
     }
     return buckets;
   }, [rows, range]);
