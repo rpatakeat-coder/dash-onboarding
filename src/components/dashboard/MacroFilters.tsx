@@ -56,7 +56,7 @@ export const MacroFilters = ({
         />
       )}
       <MultiSelectFilter
-        label="Etapa"
+        label="Ocultar fase"
         options={etapaOpts}
         selected={etapas}
         onChange={onEtapasChange}

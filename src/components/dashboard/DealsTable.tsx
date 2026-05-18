@@ -77,7 +77,13 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
   const [pageSize, setPageSize] = useState(25);
 
   const etapaOpts = useMemo(
-    () => [...new Set(rows.map((r) => r.etapa_negocio?.trim() || "Sem etapa"))],
+    () => [
+      ...new Set(
+        rows
+          .map((r) => r.etapa_negocio?.trim() || "Sem etapa")
+          .filter((e) => !/^\d+$/.test(e)),
+      ),
+    ],
     [rows],
   );
   const ativOpts = useMemo(
@@ -103,7 +109,7 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
   const filtered = useMemo(() => {
     const q = busca.trim().toLowerCase();
     return rows.filter((r) => {
-      if (etapaSel.size && !etapaSel.has(r.etapa_negocio?.trim() || "Sem etapa")) return false;
+      if (etapaSel.size && etapaSel.has(r.etapa_negocio?.trim() || "Sem etapa")) return false;
       if (ativSel.size && !ativSel.has(r.agente_ativacao?.trim() || "Sem responsável")) return false;
       if (perfilSel.size && !perfilSel.has(perfilOf(r))) return false;
       if (bandKeys.size && !bandKeys.has(slaBand(toNum(r.sla_dias_etapa)))) return false;
@@ -206,7 +212,7 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
           onChange={(s) => { setBandSel(s); setPage(0); }}
         />
         <MultiSelectFilter
-          label="Fase"
+          label="Ocultar fase"
           options={etapaOpts}
           selected={etapaSel}
           onChange={(s) => { setEtapaSel(s); setPage(0); }}
