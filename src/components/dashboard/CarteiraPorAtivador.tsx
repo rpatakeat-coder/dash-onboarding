@@ -21,17 +21,17 @@ interface Props {
 const SEM_RESP = "Sem responsável";
 
 const PERFIL_COLORS: Record<string, string> = {
-  P: "hsl(var(--success))",
-  M: "hsl(var(--primary))",
-  G: "hsl(var(--secondary))",
-  GG: "hsl(var(--warning))",
-  "—": "hsl(var(--muted-foreground))",
+  P: "hsl(160 40% 65%)",   // verde suave
+  M: "hsl(15 65% 72%)",    // coral suave
+  G: "hsl(220 25% 75%)",   // azul-acinzentado suave
+  GG: "hsl(38 70% 70%)",   // âmbar suave
+  "—": "hsl(var(--muted-foreground) / 0.5)",
 };
 const PERFIL_FALLBACKS = [
-  "hsl(var(--primary))",
-  "hsl(var(--success))",
-  "hsl(var(--secondary))",
-  "hsl(var(--warning))",
+  "hsl(260 30% 75%)",
+  "hsl(190 35% 70%)",
+  "hsl(340 40% 78%)",
+  "hsl(90 30% 70%)",
 ];
 
 export const CarteiraPorAtivador = ({ rows }: Props) => {
