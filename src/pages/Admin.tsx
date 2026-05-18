@@ -109,7 +109,7 @@ interface OperatorRow {
   email: string | null;
   full_name: string | null;
   avatar_url: string | null;
-  role: "admin" | "user";
+  role: "admin" | "user" | "super_admin";
   agente_ativacao: string | null;
   created_at: string;
   last_sign_in_at: string | null;
