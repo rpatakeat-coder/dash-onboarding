@@ -143,30 +143,34 @@ export const CarteiraPorAtivador = ({ rows }: Props) => {
                   borderRadius: 8,
                   fontSize: 12,
                 }}
-                formatter={(value: number) => [`${value} clientes`, "Carteira"]}
+                formatter={(value: number, name) => [`${value} clientes`, `Perfil ${name}`]}
                 labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
               />
-              <Bar
-                dataKey="count"
-                radius={[4, 4, 4, 4]}
-                label={{
-                  position: "right",
-                  fill: "hsl(var(--foreground))",
-                  fontSize: 12,
-                  fontWeight: 700,
-                }}
-              >
-                {lista.map((entry) => (
-                  <Cell
-                    key={entry.nome}
-                    fill={
-                      entry.nome === SEM_RESP
-                        ? "hsl(var(--warning))"
-                        : "hsl(var(--primary))"
+              {perfis.map((p, i) => {
+                const isLast = i === perfis.length - 1;
+                return (
+                  <Bar
+                    key={p}
+                    dataKey={p}
+                    name={p}
+                    stackId="carteira"
+                    fill={PERFIL_COLORS[p] ?? PERFIL_FALLBACKS[i % PERFIL_FALLBACKS.length]}
+                    radius={isLast ? [0, 4, 4, 0] : [0, 0, 0, 0]}
+                    label={
+                      isLast
+                        ? {
+                            position: "right",
+                            fill: "hsl(var(--foreground))",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            formatter: (_: number, __: unknown, payload: any) =>
+                              payload?.payload?.count ?? "",
+                          }
+                        : undefined
                     }
                   />
-                ))}
-              </Bar>
+                );
+              })}
             </BarChart>
           </ResponsiveContainer>
         </div>
