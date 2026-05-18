@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { LogIn, LogOut, Search, Settings, User } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import logo from "@/assets/logo-takeat.png";
 import { useAuth } from "@/hooks/useAuth";
 import { MainNav } from "@/components/MainNav";
@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { APP_VERSION } from "@/lib/version";
 import { usePreferencesDialog } from "@/contexts/PreferencesDialogContext";
 import { CopilotButton } from "@/components/copilot/CopilotButton";
+import { getEffectiveLastUpdated, LAST_UPDATED_EVENT } from "@/lib/lastUpdated";
 
 export const DashboardHeader = () => {
   const today = new Date().toLocaleDateString("pt-BR", {
@@ -18,16 +19,26 @@ export const DashboardHeader = () => {
     month: "long",
     year: "numeric",
   });
-  const dashQuery = useQuery({ queryKey: ["dash_operacoes"], enabled: false });
-  const lastUpdated = dashQuery.dataUpdatedAt
-    ? new Date(dashQuery.dataUpdatedAt).toLocaleString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : null;
+  const [lastUpdatedTs, setLastUpdatedTs] = useState<number>(() => getEffectiveLastUpdated());
+  useEffect(() => {
+    const sync = () => setLastUpdatedTs(getEffectiveLastUpdated());
+    window.addEventListener(LAST_UPDATED_EVENT, sync);
+    window.addEventListener("storage", sync);
+    // Reavalia periodicamente para capturar a virada das 06:00
+    const interval = window.setInterval(sync, 60_000);
+    return () => {
+      window.removeEventListener(LAST_UPDATED_EVENT, sync);
+      window.removeEventListener("storage", sync);
+      window.clearInterval(interval);
+    };
+  }, []);
+  const lastUpdated = new Date(lastUpdatedTs).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   const { session, fullName, signOut } = useAuth();
   const navigate = useNavigate();
   const prefsDialog = usePreferencesDialog();
