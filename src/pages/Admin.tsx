@@ -142,6 +142,9 @@ const AdminOperators = () => {
     setAgentes(((ags as { agente: string }[]) ?? []).map((a) => a.agente));
   };
 
+  const myRole = list.find((o) => o.user_id === user?.id)?.role ?? null;
+  const isSuperAdmin = myRole === "super_admin";
+
   useEffect(() => { load(); }, []);
 
   const invite = async () => {
