@@ -194,7 +194,7 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
               }}
               formatter={(value: number, name) => {
                 if (name === "MRR Ativado") return [fmtBRL(value), name];
-                if (name === "% Criação / MRR")
+                if (name === "% Ativação")
                   return [`${value.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`, name];
                 return [value.toLocaleString("pt-BR"), name];
               }}
@@ -228,7 +228,7 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
               yAxisId="pct"
               type="monotone"
               dataKey="pct"
-              name="% Criação / MRR"
+              name="% Ativação"
               stroke="hsl(var(--warning))"
               strokeWidth={2}
               strokeDasharray="4 4"
