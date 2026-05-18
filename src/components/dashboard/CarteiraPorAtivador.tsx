@@ -3,7 +3,7 @@ import { AlertTriangle, Users } from "lucide-react";
 import {
   Bar,
   BarChart,
-  Cell,
+  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -18,6 +18,20 @@ interface Props {
 }
 
 const SEM_RESP = "Sem responsável";
+
+const PERFIL_COLORS: Record<string, string> = {
+  P: "hsl(var(--success))",
+  M: "hsl(var(--primary))",
+  G: "hsl(var(--secondary))",
+  GG: "hsl(var(--warning))",
+  "—": "hsl(var(--muted-foreground))",
+};
+const PERFIL_FALLBACKS = [
+  "hsl(var(--primary))",
+  "hsl(var(--success))",
+  "hsl(var(--secondary))",
+  "hsl(var(--warning))",
+];
 
 export const CarteiraPorAtivador = ({ rows }: Props) => {
   const [etapasExcluidas, setEtapasExcluidas] = useState<Set<string>>(new Set());
@@ -43,15 +57,28 @@ export const CarteiraPorAtivador = ({ rows }: Props) => {
     });
   }, [rows, etapasExcluidas]);
 
-  const lista = useMemo(() => {
-    const map = new Map<string, number>();
+  const { lista, perfis } = useMemo(() => {
+    const map = new Map<string, Record<string, number> & { count: number }>();
+    const perfisSet = new Set<string>();
     for (const r of filteredRows) {
       const k = r.agente_ativacao?.trim() || SEM_RESP;
-      map.set(k, (map.get(k) ?? 0) + 1);
+      const p = (r.perfil_cliente?.trim().split(/\s+/)[0] || "—").toUpperCase();
+      perfisSet.add(p);
+      const cur = map.get(k) ?? ({ count: 0 } as Record<string, number> & { count: number });
+      cur.count += 1;
+      cur[p] = (cur[p] ?? 0) + 1;
+      map.set(k, cur);
     }
-    return [...map.entries()]
-      .map(([nome, count]) => ({ nome, count }))
+    const ORDER = ["P", "M", "G", "GG", "—"];
+    const perfis = [...perfisSet].sort((a, b) => {
+      const ia = ORDER.indexOf(a);
+      const ib = ORDER.indexOf(b);
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    });
+    const lista = [...map.entries()]
+      .map(([nome, v]) => ({ nome, ...v }))
       .sort((a, b) => b.count - a.count);
+    return { lista, perfis };
   }, [filteredRows]);
 
   const total = filteredRows.length;
@@ -130,30 +157,35 @@ export const CarteiraPorAtivador = ({ rows }: Props) => {
                   borderRadius: 8,
                   fontSize: 12,
                 }}
-                formatter={(value: number) => [`${value} clientes`, "Carteira"]}
+                formatter={(value: number, name) => [`${value} clientes`, `Perfil ${name}`]}
                 labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
               />
-              <Bar
-                dataKey="count"
-                radius={[4, 4, 4, 4]}
-                label={{
-                  position: "right",
-                  fill: "hsl(var(--foreground))",
-                  fontSize: 12,
-                  fontWeight: 700,
-                }}
-              >
-                {lista.map((entry) => (
-                  <Cell
-                    key={entry.nome}
-                    fill={
-                      entry.nome === SEM_RESP
-                        ? "hsl(var(--warning))"
-                        : "hsl(var(--primary))"
+              <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
+              {perfis.map((p, i) => {
+                const isLast = i === perfis.length - 1;
+                return (
+                  <Bar
+                    key={p}
+                    dataKey={p}
+                    name={p}
+                    stackId="carteira"
+                    fill={PERFIL_COLORS[p] ?? PERFIL_FALLBACKS[i % PERFIL_FALLBACKS.length]}
+                    radius={isLast ? [0, 4, 4, 0] : [0, 0, 0, 0]}
+                    label={
+                      isLast
+                        ? {
+                            position: "right",
+                            fill: "hsl(var(--foreground))",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            formatter: (_: number, __: unknown, payload: any) =>
+                              payload?.payload?.count ?? "",
+                          }
+                        : undefined
                     }
                   />
-                ))}
-              </Bar>
+                );
+              })}
             </BarChart>
           </ResponsiveContainer>
         </div>
