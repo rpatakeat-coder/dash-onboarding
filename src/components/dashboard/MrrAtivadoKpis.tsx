@@ -21,15 +21,26 @@ const num = (v: unknown) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+type BigPeriod = "hoje" | "semana" | "mes" | "tudo";
+
 export const MrrAtivadoKpis = ({ rows }: Props) => {
   const r = getPeriodRanges();
   const [mesModalOpen, setMesModalOpen] = useState(false);
+  const [bigPeriod, setBigPeriod] = useState<BigPeriod>("mes");
   const mrrTotalEstoque = rows.reduce((s, x) => s + num(x.mrr), 0);
 
   const hoje = mrrAtivadoNoPeriodo(rows, r.todayStart, r.tomorrow);
   const semana = mrrAtivadoNoPeriodo(rows, r.weekStart, r.nextWeek);
   const mes = mrrAtivadoNoPeriodo(rows, r.monthStart, r.nextMonth);
   const mesAnt = mrrAtivadoNoPeriodo(rows, r.lastMonthStart, r.monthStart);
+  const tudo = mrrAtivadoNoPeriodo(rows, new Date(0), new Date(8640000000000000));
+
+  const bigMap: Record<BigPeriod, { data: { mrr: number; count: number }; label: string; sub: string }> = {
+    hoje: { data: hoje, label: "Hoje", sub: "ativações de hoje" },
+    semana: { data: semana, label: "Esta semana", sub: "seg → dom" },
+    mes: { data: mes, label: "", sub: "" },
+    tudo: { data: tudo, label: "Tudo", sub: "histórico completo" },
+  };
 
   const pct = (v: number) => (mrrTotalEstoque > 0 ? (v / mrrTotalEstoque) * 100 : 0);
 
@@ -108,33 +119,74 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
           );
         })}
 
-        {/* MRR Ativado · mês vigente (clicável → drill-down) */}
-        <button
-          type="button"
-          onClick={() => setMesModalOpen(true)}
-          className="group relative rounded-xl border border-success/30 bg-success/[0.04] p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md-soft"
-        >
-          <div className="flex items-start justify-between">
-            <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
-              MRR Ativado
-            </p>
-            <div className="flex items-center gap-1.5">
-              <InfoTooltip text="Soma do MRR de todos os deals cuja data de ativação cai no mês vigente considerando o horário local do dashboard. Clique para ver o detalhamento por agente, perfil e a lista de deals." />
-              <DollarSign className="h-4 w-4 text-success/70" />
+        {/* MRR Ativado · período selecionável (mês → clicável p/ drill-down) */}
+        {(() => {
+          const cur = bigMap[bigPeriod].data;
+          const isMes = bigPeriod === "mes";
+          const headerLabel = isMes ? mesLabel : bigMap[bigPeriod].label;
+          const subText =
+            cur.count > 0
+              ? `${headerLabel} · ${cur.count} ativ${cur.count === 1 ? "ação" : "ações"}`
+              : `${headerLabel} · Nenhuma ativação`;
+          const PERIODS: { key: BigPeriod; label: string }[] = [
+            { key: "hoje", label: "Hoje" },
+            { key: "semana", label: "Semana" },
+            { key: "mes", label: "Mês" },
+            { key: "tudo", label: "Tudo" },
+          ];
+          return (
+            <div className="group relative rounded-xl border border-success/30 bg-success/[0.04] p-4">
+              <div className="flex items-start justify-between">
+                <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+                  MRR Ativado
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <InfoTooltip text="Soma do MRR dos deals cuja data de ativação cai no período selecionado. No modo 'Mês', clique no valor para ver o detalhamento por agente, perfil e lista de deals." />
+                  <DollarSign className="h-4 w-4 text-success/70" />
+                </div>
+              </div>
+              <div className="pdf-hide mt-2 inline-flex items-center gap-0.5 rounded-md border border-border bg-card p-0.5">
+                {PERIODS.map((p) => (
+                  <button
+                    key={p.key}
+                    type="button"
+                    onClick={() => setBigPeriod(p.key)}
+                    className={cn(
+                      "rounded px-1.5 py-0.5 font-subtitle text-[10px] font-semibold transition",
+                      bigPeriod === p.key
+                        ? "bg-success text-success-foreground"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              {isMes ? (
+                <button
+                  type="button"
+                  onClick={() => setMesModalOpen(true)}
+                  className="mt-1 block w-full text-left transition hover:opacity-80"
+                >
+                  <p className="font-numeric text-3xl font-bold text-success">
+                    {fmtBRL(cur.mrr)}
+                  </p>
+                  <p className="mt-1 font-small text-xs text-muted-foreground">{subText}</p>
+                  <span className="pdf-hide mt-1 inline-block font-small text-[10px] text-primary/0 transition group-hover:text-primary">
+                    Clique para detalhar →
+                  </span>
+                </button>
+              ) : (
+                <>
+                  <p className="mt-2 font-numeric text-3xl font-bold text-success">
+                    {fmtBRL(cur.mrr)}
+                  </p>
+                  <p className="mt-1 font-small text-xs text-muted-foreground">{subText}</p>
+                </>
+              )}
             </div>
-          </div>
-          <p className="mt-2 font-numeric text-3xl font-bold text-success">
-            {fmtBRL(mes.mrr)}
-          </p>
-          <p className="mt-1 font-small text-xs text-muted-foreground">
-            {mes.count > 0
-              ? `${mesLabel} · ${mes.count} ativ${mes.count === 1 ? "ação" : "ações"}`
-              : `${mesLabel} · Nenhuma ativação este mês`}
-          </p>
-          <span className="pdf-hide mt-1 inline-block font-small text-[10px] text-primary/0 transition group-hover:text-primary">
-            Clique para detalhar →
-          </span>
-        </button>
+          );
+        })()}
 
         {/* Mês atual vs anterior */}
         <div className="relative rounded-xl border border-secondary/30 bg-secondary/[0.04] p-4">
