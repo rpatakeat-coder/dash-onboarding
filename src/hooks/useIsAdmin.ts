@@ -19,7 +19,7 @@ export const useIsAdmin = () => {
       .from("user_roles_operations")
       .select("role")
       .eq("user_id", user.id)
-      .eq("role", "admin")
+      .in("role", ["admin", "super_admin"])
       .maybeSingle()
       .then(({ data }) => {
         if (!cancelled) {
