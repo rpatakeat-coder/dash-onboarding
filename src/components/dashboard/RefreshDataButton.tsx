@@ -3,6 +3,7 @@ import { RefreshCw } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { markUserRefresh } from "@/lib/lastUpdated";
 
 const WEBHOOK_URL = "https://webhook.takeat.cloud/webhook/dash-onboarding";
 
@@ -18,6 +19,7 @@ export const RefreshDataButton = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ event: "atualizar_dados" }),
       });
+      markUserRefresh();
       toast({
         title: "Atualizando dados",
         description: "Buscando os dados mais recentes. Em instantes eles serão carregados.",
