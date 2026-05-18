@@ -29,6 +29,14 @@ const Index = () => {
   const [aiOpen, setAiOpen] = useState(false);
   const [filtroAtivadores, setFiltroAtivadores] = usePersistedSet("index:ativadores");
   const [filtroEtapas, setFiltroEtapas] = usePersistedSet("index:etapas");
+  const [gestaoOp, setGestaoOp] = useState<string | null>(null);
+
+  const focusOperator = (name: string) => {
+    setGestaoOp(name);
+    setTimeout(() => {
+      document.getElementById("gestao-managerial")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  };
 
   const allRows = data?.rows ?? [];
 
