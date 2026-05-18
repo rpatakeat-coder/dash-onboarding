@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { MacroEstoque } from "@/components/dashboard/MacroEstoque";
@@ -11,12 +12,16 @@ import { DealsTable } from "@/components/dashboard/DealsTable";
 import { RefreshDataButton } from "@/components/dashboard/RefreshDataButton";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
 import { AiInsightsDialog } from "@/components/dashboard/AiInsightsDialog";
+import { ManagerialView } from "@/components/dashboard/ManagerialView";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
 import { useDashOperacoes, type PerfilStat } from "@/hooks/useDashOperacoes";
 
 const Index = () => {
   const { data, isLoading, error } = useDashOperacoes();
   const { isAdmin, isAtivador, myAgente } = useAtivadorScope();
+  const [searchParams] = useSearchParams();
+  const tab = searchParams.get("tab");
+  const isGestao = tab === "gestao";
   const [estoqueOpen, setEstoqueOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [filtroAtivadores, setFiltroAtivadores] = useState<Set<string>>(new Set());
@@ -117,7 +122,11 @@ const Index = () => {
           </div>
         )}
 
-        {data && (
+        {data && isGestao && (
+          <ManagerialView rows={macroRows} totalRows={personalRows.length} />
+        )}
+
+        {data && !isGestao && (
           <>
             <MacroEstoque
               rows={estoqueRows}
