@@ -13,6 +13,8 @@ import { RefreshDataButton } from "@/components/dashboard/RefreshDataButton";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
 import { AiInsightsDialog } from "@/components/dashboard/AiInsightsDialog";
 import { ManagerialView } from "@/components/dashboard/ManagerialView";
+import { GestaoAlerts } from "@/components/dashboard/GestaoAlerts";
+import { TrendByOperator } from "@/components/dashboard/TrendByOperator";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
 import { useDashOperacoes, type PerfilStat } from "@/hooks/useDashOperacoes";
@@ -27,6 +29,14 @@ const Index = () => {
   const [aiOpen, setAiOpen] = useState(false);
   const [filtroAtivadores, setFiltroAtivadores] = usePersistedSet("index:ativadores");
   const [filtroEtapas, setFiltroEtapas] = usePersistedSet("index:etapas");
+  const [gestaoOp, setGestaoOp] = useState<string | null>(null);
+
+  const focusOperator = (name: string) => {
+    setGestaoOp(name);
+    setTimeout(() => {
+      document.getElementById("gestao-managerial")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  };
 
   const allRows = data?.rows ?? [];
 
@@ -124,7 +134,16 @@ const Index = () => {
         )}
 
         {data && isGestao && (
-          <ManagerialView rows={macroRows} totalRows={personalRows.length} />
+          <>
+            <GestaoAlerts rows={macroRows} onSelectOperator={focusOperator} />
+            <TrendByOperator rows={macroRows} onSelectOperator={focusOperator} />
+            <ManagerialView
+              rows={macroRows}
+              totalRows={personalRows.length}
+              selectedOperator={gestaoOp}
+              onSelectOperator={setGestaoOp}
+            />
+          </>
         )}
 
         {data && !isGestao && (
