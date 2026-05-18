@@ -114,6 +114,7 @@ interface OperatorRow {
   created_at: string;
   last_sign_in_at: string | null;
   email_confirmed_at: string | null;
+  has_password?: boolean | null;
   invited_at: string | null;
 }
 
@@ -379,10 +380,10 @@ const AdminOperators = () => {
                       {op.agente_ativacao || <span className="italic text-muted-foreground">—</span>}
                     </td>
                     <td className="px-4 py-3">
-                      {op.last_sign_in_at ? (
+                      {op.has_password ? (
                         <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-500">Ativo</span>
-                      ) : op.email_confirmed_at ? (
-                        <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-500">Confirmado</span>
+                      ) : op.last_sign_in_at || op.email_confirmed_at ? (
+                        <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-500" title="Abriu o link, mas ainda não definiu senha">Convite aberto</span>
                       ) : (
                         <span className="rounded-full border border-muted-foreground/30 bg-muted px-2 py-0.5 text-xs text-muted-foreground">Pendente</span>
                       )}
