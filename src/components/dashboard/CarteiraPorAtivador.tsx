@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { AlertTriangle, Users } from "lucide-react";
 import {
   Bar,
@@ -16,8 +16,6 @@ import { MultiSelectFilter } from "./MultiSelectFilter";
 
 interface Props {
   rows: DashRow[];
-  etapasExcluidas: Set<string>;
-  onEtapasExcluidasChange: (next: Set<string>) => void;
 }
 
 const SEM_RESP = "Sem responsável";
@@ -36,7 +34,8 @@ const PERFIL_FALLBACKS = [
   "hsl(90 30% 70%)",
 ];
 
-export const CarteiraPorAtivador = ({ rows, etapasExcluidas, onEtapasExcluidasChange }: Props) => {
+export const CarteiraPorAtivador = ({ rows }: Props) => {
+  const [etapasExcluidas, setEtapasExcluidas] = useState<Set<string>>(new Set());
 
   const { etapaOpts, etapaCounts } = useMemo(() => {
     const c = new Map<string, number>();
@@ -109,7 +108,7 @@ export const CarteiraPorAtivador = ({ rows, etapasExcluidas, onEtapasExcluidasCh
             label="Ocultar fase"
             options={etapaOpts}
             selected={etapasExcluidas}
-            onChange={onEtapasExcluidasChange}
+            onChange={setEtapasExcluidas}
             counts={etapaCounts}
           />
           <Users className="h-5 w-5 shrink-0 text-primary/70" />
