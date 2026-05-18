@@ -17,7 +17,58 @@ export interface DashRow {
   data_entrada_fase: string | null;
   etapa_negocio: string | null;
   data_ativacao: string | null;
+  data_fechamento: string | null;
   pipeline_nome: string | null;
+}
+
+/** IDs/nomes de etapa considerados churn. */
+export const CHURN_STAGE_IDS = new Set(["162579097", "1122729590"]); // Pré-Churn, Churn (pipeline Sucesso)
+export const CHURN_STAGE_NAMES = new Set(["Cancelamento"]); // Pipeline Onboarding
+
+export interface ChurnKpis {
+  /** 9% do MRR dos deals criados no mês vigente (referência de meta). */
+  churnMaximo: number;
+  /** MRR dos deals em Pré-Churn/Churn/Cancelamento com data_fechamento no mês vigente. */
+  churnReal: number;
+  /** Quantidade de deals em Churn Real. */
+  churnRealCount: number;
+  /** Soma de MRR dos deals criados no mês (base do Churn Máximo). */
+  mrrCriadoMes: number;
+  /** % do churn real sobre o churn máximo. */
+  pctDoMaximo: number;
+}
+
+export function computeChurnKpis(rows: DashRow[]): ChurnKpis {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  const inMonth = (raw: string | null) => {
+    const d = parseDate(raw);
+    return d ? d >= monthStart && d < nextMonth : false;
+  };
+
+  const mrrCriadoMes = rows
+    .filter((r) => inMonth(r.data_criacao))
+    .reduce((s, r) => s + toNum(r.mrr), 0);
+  const churnMaximo = mrrCriadoMes * 0.09;
+
+  const churnRows = rows.filter((r) => {
+    const etapa = (r.etapa_negocio ?? "").trim();
+    const isChurn =
+      CHURN_STAGE_IDS.has(etapa) || CHURN_STAGE_NAMES.has(etapa);
+    return isChurn && inMonth(r.data_fechamento);
+  });
+  const churnReal = churnRows.reduce((s, r) => s + toNum(r.mrr), 0);
+  const pctDoMaximo = churnMaximo > 0 ? (churnReal / churnMaximo) * 100 : 0;
+
+  return {
+    churnMaximo,
+    churnReal,
+    churnRealCount: churnRows.length,
+    mrrCriadoMes,
+    pctDoMaximo,
+  };
 }
 
 export type SlaBand = "critico" | "atencao" | "alerta" | "saudavel";
