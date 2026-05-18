@@ -179,6 +179,11 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
               axisLine={false}
               allowDecimals={false}
             />
+            <YAxis
+              yAxisId="pct"
+              orientation="right"
+              hide
+            />
             <Tooltip
               cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
               contentStyle={{
@@ -189,6 +194,8 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
               }}
               formatter={(value: number, name) => {
                 if (name === "MRR Ativado") return [fmtBRL(value), name];
+                if (name === "% Criação / MRR")
+                  return [`${value.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`, name];
                 return [value.toLocaleString("pt-BR"), name];
               }}
             />
@@ -217,6 +224,28 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
               dot={{ r: 3, fill: "hsl(var(--secondary))" }}
               activeDot={{ r: 5 }}
             />
+            <Line
+              yAxisId="pct"
+              type="monotone"
+              dataKey="pct"
+              name="% Criação / MRR"
+              stroke="hsl(var(--warning))"
+              strokeWidth={2}
+              strokeDasharray="4 4"
+              dot={{ r: 3, fill: "hsl(var(--warning))" }}
+              activeDot={{ r: 5 }}
+            />
+            <Line
+              yAxisId="right"
+              type="monotone"
+              dataKey="criados"
+              name="Deals criados"
+              stroke="hsl(var(--primary-glow))"
+              strokeWidth={2}
+              dot={{ r: 3, fill: "hsl(var(--primary-glow))" }}
+              activeDot={{ r: 5 }}
+            />
+          </ComposedChart>
           </ComposedChart>
         </ResponsiveContainer>
       </div>
