@@ -34,6 +34,13 @@ const MONTH_LABELS = [
 
 export const MrrAtivadoTrendChart = ({ rows }: Props) => {
   const [range, setRange] = useState<RangeKey>(6);
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const toggle = (key: string) =>
+    setHidden((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
 
   const data = useMemo(() => {
     const now = new Date();
