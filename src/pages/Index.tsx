@@ -134,7 +134,16 @@ const Index = () => {
         )}
 
         {data && isGestao && (
-          <ManagerialView rows={macroRows} totalRows={personalRows.length} />
+          <>
+            <GestaoAlerts rows={macroRows} onSelectOperator={focusOperator} />
+            <TrendByOperator rows={macroRows} onSelectOperator={focusOperator} />
+            <ManagerialView
+              rows={macroRows}
+              totalRows={personalRows.length}
+              selectedOperator={gestaoOp}
+              onSelectOperator={setGestaoOp}
+            />
+          </>
         )}
 
         {data && !isGestao && (
