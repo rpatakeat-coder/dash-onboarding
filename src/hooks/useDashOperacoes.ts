@@ -18,6 +18,7 @@ export interface DashRow {
   etapa_negocio: string | null;
   data_ativacao: string | null;
   data_fechamento: string | null;
+  etapa_de_cancelamento: string | null;
   pipeline_nome: string | null;
 }
 
