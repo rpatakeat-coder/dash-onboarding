@@ -77,7 +77,13 @@ export const DealsTable = ({ rows, hideAtivadorFilter }: Props) => {
   const [pageSize, setPageSize] = useState(25);
 
   const etapaOpts = useMemo(
-    () => [...new Set(rows.map((r) => r.etapa_negocio?.trim() || "Sem etapa"))],
+    () => [
+      ...new Set(
+        rows
+          .map((r) => r.etapa_negocio?.trim() || "Sem etapa")
+          .filter((e) => !/^\d+$/.test(e)),
+      ),
+    ],
     [rows],
   );
   const ativOpts = useMemo(
