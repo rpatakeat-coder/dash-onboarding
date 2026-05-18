@@ -195,7 +195,7 @@ export const ManagerialView = ({ rows, totalRows, selectedOperator, onSelectOper
   const hasLocalFilters = period !== "tudo" || !!mrrMin || !!mrrMax || p75Filter !== "all";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" id="gestao-managerial">
       {/* Cabeçalho + filtros locais */}
       <div className="space-y-3 rounded-xl border border-border bg-card/50 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -208,7 +208,11 @@ export const ManagerialView = ({ rows, totalRows, selectedOperator, onSelectOper
               {totals.operadoresN === 1 ? "" : "es"} · {fmtBRLk(totals.mrr)} sob gestão
             </p>
           </div>
-          <PeriodFilter value={period} onChange={setPeriod} counts={periodCounts} />
+          <div className="flex flex-wrap items-center gap-2">
+            <OperatorCompareSheet rows={filteredRows} operadores={sortedOperadores} />
+            <ExportRankingCsvButton operadores={sortedOperadores} period={period} />
+            <PeriodFilter value={period} onChange={setPeriod} counts={periodCounts} />
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
