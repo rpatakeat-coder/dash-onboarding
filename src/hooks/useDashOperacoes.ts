@@ -39,18 +39,21 @@ export interface ChurnKpis {
   pctDoMaximo: number;
 }
 
-export function computeChurnKpis(rows: DashRow[]): ChurnKpis {
+export function computeChurnKpis(
+  rows: DashRow[],
+  range?: { start: Date; end: Date },
+): ChurnKpis {
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const start = range?.start ?? new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = range?.end ?? new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
-  const inMonth = (raw: string | null) => {
+  const inRange = (raw: string | null) => {
     const d = parseDate(raw);
-    return d ? d >= monthStart && d < nextMonth : false;
+    return d ? d >= start && d < end : false;
   };
 
   const mrrCriadoMes = rows
-    .filter((r) => inMonth(r.data_criacao))
+    .filter((r) => inRange(r.data_criacao))
     .reduce((s, r) => s + toNum(r.mrr), 0);
   const churnMaximo = mrrCriadoMes * 0.09;
 
@@ -60,7 +63,7 @@ export function computeChurnKpis(rows: DashRow[]): ChurnKpis {
     const isChurn =
       CHURN_STAGE_IDS.has(etapa) ||
       cancel === CHURN_CANCELAMENTO_PIPELINE.toLowerCase();
-    return isChurn && inMonth(r.data_fechamento);
+    return isChurn && inRange(r.data_fechamento);
   });
   const churnReal = churnRows.reduce((s, r) => s + toNum(r.mrr), 0);
   const pctDoMaximo = churnMaximo > 0 ? (churnReal / churnMaximo) * 100 : 0;
