@@ -43,15 +43,28 @@ export const CarteiraPorAtivador = ({ rows }: Props) => {
     });
   }, [rows, etapasExcluidas]);
 
-  const lista = useMemo(() => {
-    const map = new Map<string, number>();
+  const { lista, perfis } = useMemo(() => {
+    const map = new Map<string, Record<string, number> & { count: number }>();
+    const perfisSet = new Set<string>();
     for (const r of filteredRows) {
       const k = r.agente_ativacao?.trim() || SEM_RESP;
-      map.set(k, (map.get(k) ?? 0) + 1);
+      const p = (r.perfil_cliente?.trim().split(/\s+/)[0] || "—").toUpperCase();
+      perfisSet.add(p);
+      const cur = map.get(k) ?? ({ count: 0 } as Record<string, number> & { count: number });
+      cur.count += 1;
+      cur[p] = (cur[p] ?? 0) + 1;
+      map.set(k, cur);
     }
-    return [...map.entries()]
-      .map(([nome, count]) => ({ nome, count }))
+    const ORDER = ["P", "M", "G", "GG", "—"];
+    const perfis = [...perfisSet].sort((a, b) => {
+      const ia = ORDER.indexOf(a);
+      const ib = ORDER.indexOf(b);
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    });
+    const lista = [...map.entries()]
+      .map(([nome, v]) => ({ nome, ...v }))
       .sort((a, b) => b.count - a.count);
+    return { lista, perfis };
   }, [filteredRows]);
 
   const total = filteredRows.length;
