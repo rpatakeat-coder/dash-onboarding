@@ -21,15 +21,26 @@ const num = (v: unknown) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+type BigPeriod = "hoje" | "semana" | "mes" | "tudo";
+
 export const MrrAtivadoKpis = ({ rows }: Props) => {
   const r = getPeriodRanges();
   const [mesModalOpen, setMesModalOpen] = useState(false);
+  const [bigPeriod, setBigPeriod] = useState<BigPeriod>("mes");
   const mrrTotalEstoque = rows.reduce((s, x) => s + num(x.mrr), 0);
 
   const hoje = mrrAtivadoNoPeriodo(rows, r.todayStart, r.tomorrow);
   const semana = mrrAtivadoNoPeriodo(rows, r.weekStart, r.nextWeek);
   const mes = mrrAtivadoNoPeriodo(rows, r.monthStart, r.nextMonth);
   const mesAnt = mrrAtivadoNoPeriodo(rows, r.lastMonthStart, r.monthStart);
+  const tudo = mrrAtivadoNoPeriodo(rows, new Date(0), new Date(8640000000000000));
+
+  const bigMap: Record<BigPeriod, { data: { mrr: number; count: number }; label: string; sub: string }> = {
+    hoje: { data: hoje, label: "Hoje", sub: "ativações de hoje" },
+    semana: { data: semana, label: "Esta semana", sub: "seg → dom" },
+    mes: { data: mes, label: "", sub: "" },
+    tudo: { data: tudo, label: "Tudo", sub: "histórico completo" },
+  };
 
   const pct = (v: number) => (mrrTotalEstoque > 0 ? (v / mrrTotalEstoque) * 100 : 0);
 
