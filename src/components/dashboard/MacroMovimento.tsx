@@ -42,12 +42,15 @@ export const MacroMovimento = ({ rows }: Props) => {
   const cards = visiblePeriods.map((p) => {
     const ativ = mrrAtivadoNoPeriodo(rows, p.start, p.end);
     const entrados = countEntradosNoPeriodo(rows, p.start, p.end);
+    const pctAtiv = entrados > 0 ? (ativ.count / entrados) * 100 : 0;
     return {
       label: p.label,
       value: fmtBRLk(ativ.mrr),
       sub: `${ativ.count} ativados · ${entrados} entrados`,
+      pctAtiv,
+      pctLabel: entrados > 0 ? `${pctAtiv.toFixed(1).replace(".", ",")}% ativados` : "— sem entradas",
       accent: p.accent,
-      formula: `MRR ativado em ${p.label.toLowerCase()} = soma de mrr dos deals com data_ativacao dentro do período. "Entrados" = deals com data de criação no mesmo período.`,
+      formula: `MRR ativado em ${p.label.toLowerCase()} = soma de mrr dos deals com data_ativacao dentro do período. "Entrados" = deals com data de criação no mesmo período. % Ativados = ativados ÷ entrados × 100.`,
     };
   });
 
@@ -114,6 +117,14 @@ export const MacroMovimento = ({ rows }: Props) => {
                 {c.value}
               </p>
               <p className="mt-1 font-small text-xs text-muted-foreground">{c.sub}</p>
+              <p
+                className={cn(
+                  "mt-1 font-numeric text-xs font-semibold",
+                  c.pctAtiv >= 50 ? "text-success" : c.pctAtiv > 0 ? "text-primary" : "text-muted-foreground",
+                )}
+              >
+                {c.pctLabel}
+              </p>
             </div>
           ))}
         </div>
