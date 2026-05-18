@@ -33,16 +33,24 @@ const toNum = (v: string) => {
 interface Props {
   rows: DashRow[];
   totalRows: number;
+  selectedOperator?: string | null;
+  onSelectOperator?: (name: string | null) => void;
 }
 
 type P75Filter = "all" | "acima" | "abaixo";
 
-export const ManagerialView = ({ rows, totalRows }: Props) => {
+export const ManagerialView = ({ rows, totalRows, selectedOperator, onSelectOperator }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("tudo");
   const [mrrMin, setMrrMin] = useState("");
   const [mrrMax, setMrrMax] = useState("");
   const [sortBy, setSortBy] = useState<SortKey>("critico");
-  const [selectedNome, setSelectedNome] = useState<string | null>(null);
+  const [selectedNomeInternal, setSelectedNomeInternal] = useState<string | null>(null);
+  const isControlled = selectedOperator !== undefined;
+  const selectedNome = isControlled ? selectedOperator : selectedNomeInternal;
+  const setSelectedNome = (n: string | null) => {
+    if (!isControlled) setSelectedNomeInternal(n);
+    onSelectOperator?.(n);
+  };
   const [search, setSearch] = useState("");
   const [bandFilter, setBandFilter] = useState<Set<SlaBand>>(new Set());
   const [searchParams, setSearchParams] = useSearchParams();
