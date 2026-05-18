@@ -160,6 +160,8 @@ const Index = () => {
               <MrrAtivadoKpis rows={macroRows} />
             </div>
 
+            <ChurnKpis rows={personalRows} />
+
             <MrrAtivadoTrendChart rows={macroRows} />
 
             <MacroMovimento rows={macroRows} />
