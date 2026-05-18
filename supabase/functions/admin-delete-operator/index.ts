@@ -39,6 +39,21 @@ Deno.serve(async (req) => {
       return json({ error: "cannot_delete_self" }, 400);
     }
 
+    // Hierarquia: admin comum não pode apagar admin/super_admin.
+    const { data: target } = await admin
+      .from("user_roles_operations")
+      .select("role")
+      .eq("user_id", user_id)
+      .maybeSingle();
+    const targetRole = (target as { role?: string } | null)?.role ?? "user";
+    if (targetRole === "admin" || targetRole === "super_admin") {
+      const { data: isSuper } = await admin.rpc("has_operations_role", {
+        _user_id: userData.user.id,
+        _role: "super_admin",
+      });
+      if (!isSuper) return json({ error: "only_super_admin_can_modify_admin" }, 403);
+    }
+
     await admin.from("user_roles_operations").delete().eq("user_id", user_id);
     await admin.from("profiles").delete().eq("id", user_id);
     const { error: delErr } = await admin.auth.admin.deleteUser(user_id);

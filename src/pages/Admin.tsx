@@ -109,7 +109,7 @@ interface OperatorRow {
   email: string | null;
   full_name: string | null;
   avatar_url: string | null;
-  role: "admin" | "user";
+  role: "admin" | "user" | "super_admin";
   agente_ativacao: string | null;
   created_at: string;
   last_sign_in_at: string | null;
@@ -141,6 +141,9 @@ const AdminOperators = () => {
     setList((ops as OperatorRow[]) ?? []);
     setAgentes(((ags as { agente: string }[]) ?? []).map((a) => a.agente));
   };
+
+  const myRole = list.find((o) => o.user_id === user?.id)?.role ?? null;
+  const isSuperAdmin = myRole === "super_admin";
 
   useEffect(() => { load(); }, []);
 
@@ -288,7 +291,7 @@ const AdminOperators = () => {
               className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
             >
               <option value="user">Usuário</option>
-              <option value="admin">Admin</option>
+              {isSuperAdmin && <option value="admin">Admin</option>}
             </select>
           </div>
         </div>
@@ -353,6 +356,9 @@ const AdminOperators = () => {
               )}
               {!loading && list.map((op) => {
                 const isMe = op.user_id === user?.id;
+                const targetIsPrivileged = op.role === "admin" || op.role === "super_admin";
+                const canModify = !targetIsPrivileged || isSuperAdmin;
+                const lockReason = !canModify ? "Apenas super-admin pode alterar admins" : undefined;
                 return (
                   <tr key={op.user_id} className="border-b border-border/50 last:border-0">
                     <td className="px-4 py-3">
@@ -372,8 +378,14 @@ const AdminOperators = () => {
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{op.email ?? "—"}</td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-full border px-2 py-0.5 text-xs ${op.role === "admin" ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-muted text-foreground"}`}>
-                        {op.role}
+                      <span className={`rounded-full border px-2 py-0.5 text-xs ${
+                        op.role === "super_admin"
+                          ? "border-amber-500/40 bg-amber-500/10 text-amber-500"
+                          : op.role === "admin"
+                          ? "border-primary/30 bg-primary/10 text-primary"
+                          : "border-border bg-muted text-foreground"
+                      }`}>
+                        {op.role === "super_admin" ? "super-admin" : op.role}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-foreground">
@@ -398,8 +410,9 @@ const AdminOperators = () => {
                             <Button
                               size="sm"
                               variant="ghost"
-                              disabled={resendId === op.user_id}
+                              disabled={resendId === op.user_id || !canModify}
                               className="gap-1.5"
+                              title={lockReason}
                             >
                               {resendId === op.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
                               Reenviar
@@ -426,10 +439,10 @@ const AdminOperators = () => {
                         <Button
                           size="sm"
                           variant="ghost"
-                          disabled={delId === op.user_id || isMe}
+                          disabled={delId === op.user_id || isMe || !canModify}
                           onClick={() => remove(op)}
                           className="gap-1.5 text-destructive hover:text-destructive"
-                          title={isMe ? "Você não pode excluir a si mesmo" : undefined}
+                          title={isMe ? "Você não pode excluir a si mesmo" : lockReason}
                         >
                           {delId === op.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                           Excluir

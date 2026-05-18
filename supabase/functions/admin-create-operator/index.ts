@@ -11,6 +11,7 @@ const Body = z
   .object({
     email: z.string().email(),
     agente_ativacao: z.string().min(1).max(120).optional(),
+    // super_admin nunca pode ser criado via UI
     role: z.enum(["admin", "user"]).default("user"),
     full_name: z.string().max(120).optional(),
   })
@@ -46,6 +47,15 @@ Deno.serve(async (req) => {
     const parsed = Body.safeParse(await req.json());
     if (!parsed.success) return json({ error: parsed.error.flatten() }, 400);
     const { email, agente_ativacao, role, full_name } = parsed.data;
+
+    // Hierarquia: somente super-admin pode criar outros admins.
+    if (role === "admin") {
+      const { data: isSuper } = await admin.rpc("has_operations_role", {
+        _user_id: userData.user.id,
+        _role: "super_admin",
+      });
+      if (!isSuper) return json({ error: "only_super_admin_can_create_admin" }, 403);
+    }
 
     // Build redirect URL from request origin
     const origin = req.headers.get("origin") ?? "";

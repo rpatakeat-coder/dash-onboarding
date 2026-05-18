@@ -55,6 +55,16 @@ Deno.serve(async (req) => {
       .eq("user_id", user_id)
       .maybeSingle();
 
+    // Hierarquia: admin comum não pode reenviar/resetar senha de admin/super_admin.
+    const targetRole = (opRow as { role?: string } | null)?.role ?? "user";
+    if (targetRole === "admin" || targetRole === "super_admin") {
+      const { data: isSuper } = await admin.rpc("has_operations_role", {
+        _user_id: userData.user.id,
+        _role: "super_admin",
+      });
+      if (!isSuper) return json({ error: "only_super_admin_can_modify_admin" }, 403);
+    }
+
     // Always send users to the operations dashboard, regardless of where the
     // admin clicked "Resend invite" (this Supabase project is shared with the
     // commercial dashboard, so we cannot rely on the request origin).
