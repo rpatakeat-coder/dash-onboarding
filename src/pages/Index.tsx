@@ -22,7 +22,7 @@ const Index = () => {
   const { isAdmin, isAtivador, myAgente } = useAtivadorScope();
   const [searchParams] = useSearchParams();
   const tab = searchParams.get("tab");
-  const isGestao = tab === "gestao";
+  const isGestao = tab === "gestao" && isAdmin;
   const [estoqueOpen, setEstoqueOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [filtroAtivadores, setFiltroAtivadores] = usePersistedSet("index:ativadores");
