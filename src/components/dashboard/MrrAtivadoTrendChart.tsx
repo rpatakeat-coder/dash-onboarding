@@ -206,13 +206,27 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
                 return [value.toLocaleString("pt-BR"), name];
               }}
             />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
+            <Legend
+              wrapperStyle={{ fontSize: 11, cursor: "pointer" }}
+              onClick={(o: any) => toggle(String(o.dataKey))}
+              formatter={(value, entry: any) => (
+                <span
+                  style={{
+                    opacity: hidden.has(String(entry?.dataKey)) ? 0.4 : 1,
+                    textDecoration: hidden.has(String(entry?.dataKey)) ? "line-through" : "none",
+                  }}
+                >
+                  {value}
+                </span>
+              )}
+            />
             <Bar
               yAxisId="left"
               dataKey="mrr"
               name="MRR Ativado"
               radius={[8, 8, 0, 0]}
               fill="url(#mrrAtivBar)"
+              hide={hidden.has("mrr")}
             >
               {data.map((entry) => (
                 <Cell
@@ -230,6 +244,7 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
               strokeWidth={2.5}
               dot={{ r: 3, fill: "hsl(var(--secondary))" }}
               activeDot={{ r: 5 }}
+              hide={hidden.has("qtd")}
             />
             <Line
               yAxisId="pct"
@@ -241,6 +256,7 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
               strokeDasharray="4 4"
               dot={{ r: 3, fill: "hsl(var(--warning))" }}
               activeDot={{ r: 5 }}
+              hide={hidden.has("pct")}
             />
             <Line
               yAxisId="right"
@@ -251,6 +267,7 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
               strokeWidth={2}
               dot={{ r: 3, fill: "hsl(var(--primary-glow))" }}
               activeDot={{ r: 5 }}
+              hide={hidden.has("criados")}
             />
           </ComposedChart>
         </ResponsiveContainer>
