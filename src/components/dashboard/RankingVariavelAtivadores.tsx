@@ -126,7 +126,7 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
       c.churnMax = c.mrrCriado * 0.09;
       c.pctChurn = c.churnMax > 0 ? ((c.churnMax - c.churnReal) / c.churnMax) * 100 : 0;
       // Score ponderado: MRR 60 + Clientes 30 + Churn 10 (média ponderada / 100)
-      c.scoreFinal = (c.pctMrr * 60 + c.pctClientes * 30 + c.pctChurn * 10) / 100;
+      c.scoreFinal = Math.max(0, (c.pctMrr * 60 + c.pctClientes * 30 + c.pctChurn * 10) / 100);
       c.pctFixo = pctFixoFromScore(c.scoreFinal);
       result.push(c);
     });
