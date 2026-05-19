@@ -529,10 +529,12 @@ const AdminUsers = () => {
   const saveAgente = async (u: AdminUser) => {
     const value = editAgenteValue.trim() || null;
     setSavingAgente(true);
+    // Preserva o papel atual (inclusive super_admin); default 'user' quando ainda não existe linha.
+    const keepRole = u.rawRole ?? "user";
     const { error } = await supabase
       .from("user_roles_operations")
       .upsert(
-        { user_id: u.id, agente_ativacao: value, role: u.roles.includes("admin") ? "admin" : "user" },
+        { user_id: u.id, agente_ativacao: value, role: keepRole },
         { onConflict: "user_id" },
       );
     setSavingAgente(false);
@@ -549,10 +551,36 @@ const AdminUsers = () => {
     await load();
   };
 
+  const saveProfile = async (u: AdminUser) => {
+    setSavingProfile(true);
+    const name = editProfileName.trim() || null;
+    const avatar = editProfileAvatar.trim() || null;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ full_name: name, avatar_url: avatar })
+      .eq("id", u.id);
+    setSavingProfile(false);
+    if (error) return toast.error("Erro ao salvar perfil", { description: error.message });
+    toast.success("Perfil atualizado");
+    void logAudit({
+      action: "user.update_profile",
+      entity_type: "outro",
+      entity_id: u.id,
+      summary: `Atualizou perfil de ${u.full_name || u.id}`,
+      metadata: { target_user_id: u.id, full_name: name, avatar_url: avatar },
+    });
+    setEditProfileId(null);
+    await load();
+  };
+
   const toggleAdmin = async (u: AdminUser) => {
-    const isAdmin = u.roles.includes("admin");
+    // Super-admins não podem ser rebaixados por este botão (proteção de segurança).
+    if (u.rawRole === "super_admin") {
+      return toast.error("Super-admins não podem ser alterados por aqui");
+    }
+    const isAdmin = u.rawRole === "admin";
     setBusyId(u.id);
-    const newRole = isAdmin ? "user" : "admin";
+    const newRole: "admin" | "user" = isAdmin ? "user" : "admin";
     const { error } = await supabase
       .from("user_roles_operations")
       .upsert(
