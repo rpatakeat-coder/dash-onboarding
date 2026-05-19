@@ -88,8 +88,27 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
     setQuery("");
   }, [open]);
 
+  const onboardingRows = useMemo(
+    () =>
+      (data?.rows ?? []).filter(
+        (r) => (r.pipeline_nome?.trim().toLowerCase() ?? "") === "onboarding",
+      ),
+    [data],
+  );
+
+  const onboardingOperators = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of onboardingRows) {
+      const k = r.agente_ativacao?.trim() || "Sem responsável";
+      counts.set(k, (counts.get(k) ?? 0) + 1);
+    }
+    return (data?.operadores ?? [])
+      .filter((op) => counts.has(op.nome))
+      .map((op) => ({ ...op, ativos: counts.get(op.nome) ?? op.ativos }));
+  }, [data, onboardingRows]);
+
   const operators = useMemo(() => {
-    const list = (data?.operadores ?? []).map((op) => ({
+    const list = onboardingOperators.map((op) => ({
       op,
       score: scoreMatch(op.nome, query),
     }));
@@ -99,13 +118,16 @@ export const CommandPalette = ({ onOpenPreferences }: Props) => {
         b.score === a.score ? b.op.ativos - a.op.ativos : b.score - a.score,
       )
       .slice(0, 30);
-  }, [data, query]);
+  }, [onboardingOperators, query]);
 
   const allStages = useMemo(() => {
     const set = new Set<string>();
-    (data?.rows ?? []).forEach((r) => r.etapa_negocio && set.add(r.etapa_negocio));
+    onboardingRows.forEach((r) => {
+      const e = r.etapa_negocio?.trim();
+      if (e && !/^\d+$/.test(e)) set.add(e);
+    });
     return [...set].sort();
-  }, [data]);
+  }, [onboardingRows]);
 
   const showOperators = operators.length > 0;
 
