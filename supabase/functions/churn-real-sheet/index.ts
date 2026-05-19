@@ -49,7 +49,13 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ mrrBase, raw, range: RANGE, fetchedAt: new Date().toISOString() }),
+      JSON.stringify({
+        mrrBase,
+        raw,
+        pct: mrrBase,
+        range: RANGE,
+        fetchedAt: new Date().toISOString(),
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (e) {
