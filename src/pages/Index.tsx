@@ -41,6 +41,9 @@ const Index = () => {
 
   const allRows = data?.rows ?? [];
 
+  const isSucessoPipeline = (r: { pipeline_nome: string | null }) =>
+    (r.pipeline_nome?.trim().toLowerCase() ?? "") === "sucesso";
+
   const personalRows = (() => {
     if (isAdmin || !isAtivador) return allRows;
     const me = myAgente.toLowerCase();
@@ -48,6 +51,10 @@ const Index = () => {
       (r) => (r.agente_ativacao?.trim().toLowerCase() ?? "") === me,
     );
   })();
+
+  // Em Gestão, o dropdown "Filtrar KPIs" não deve listar nem contar deals do pipeline Sucesso.
+  // Apenas o MRR Ativado (na Visão Geral) considera esses deals.
+  const filtersBase = isGestao ? personalRows.filter((r) => !isSucessoPipeline(r)) : personalRows;
 
   // Macros respeitam o escopo do usuário (RLS já garante, mas reforçamos)
   // e os filtros locais de ativador/etapa.
@@ -101,7 +108,7 @@ const Index = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div data-tour="filters" className="flex-1 min-w-0">
             <MacroFilters
-              rows={personalRows}
+              rows={filtersBase}
               ativadores={filtroAtivadores}
               etapas={filtroEtapas}
               onAtivadoresChange={setFiltroAtivadores}
@@ -136,10 +143,8 @@ const Index = () => {
 
         {data && isGestao && (() => {
           // Gestão oculta clientes do pipeline "Sucesso" (a regra de MRR Ativado não é afetada — ela vive na Visão Geral).
-          const isSucesso = (r: typeof macroRows[number]) =>
-            (r.pipeline_nome?.trim().toLowerCase() ?? "") === "sucesso";
-          const gestaoMacro = macroRows.filter((r) => !isSucesso(r));
-          const gestaoPersonal = personalRows.filter((r) => !isSucesso(r));
+          const gestaoMacro = macroRows.filter((r) => !isSucessoPipeline(r));
+          const gestaoPersonal = personalRows.filter((r) => !isSucessoPipeline(r));
           return (
             <>
               <GestaoAlerts rows={gestaoMacro} onSelectOperator={focusOperator} />
