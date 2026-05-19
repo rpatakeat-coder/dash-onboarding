@@ -29,8 +29,8 @@ export const ChurnKpis = ({ rows, className }: Props) => {
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  // % de Churn Real vinda da planilha (Google Sheets · Mensal 2026!B2)
-  const [sheetPct, setSheetPct] = useState<number | null>(null);
+  // MRR início do mês vindo da planilha (Google Sheets · Mensal 2026!B2)
+  const [mrrBase, setMrrBase] = useState<number | null>(null);
   const [sheetLoading, setSheetLoading] = useState(false);
   const [sheetError, setSheetError] = useState<string | null>(null);
   const [sheetFetchedAt, setSheetFetchedAt] = useState<string | null>(null);
@@ -42,7 +42,7 @@ export const ChurnKpis = ({ rows, className }: Props) => {
       const { data, error } = await supabase.functions.invoke("churn-real-sheet");
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setSheetPct(typeof data?.pct === "number" ? data.pct : null);
+      setMrrBase(typeof data?.mrrBase === "number" ? data.mrrBase : null);
       setSheetFetchedAt(data?.fetchedAt ?? null);
     } catch (e) {
       setSheetError((e as Error).message);
