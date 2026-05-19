@@ -149,7 +149,7 @@ const AdminOperators = () => {
 
   useEffect(() => { load(); }, []);
 
-  const invite = async () => {
+  const invite = async (channels: ("email" | "whatsapp" | "link_only")[]) => {
     if (!form.email.trim()) return toast.error("Informe o email");
     if (form.role !== "admin" && !form.agente_ativacao.trim()) {
       return toast.error("Informe o agente HubSpot");
@@ -161,6 +161,7 @@ const AdminOperators = () => {
         full_name: form.full_name.trim() || undefined,
         role: form.role,
         agente_ativacao: form.role === "admin" ? undefined : form.agente_ativacao,
+        channels,
       },
     });
     setBusy(false);
@@ -172,11 +173,15 @@ const AdminOperators = () => {
       (data as { short_link?: string })?.short_link ||
       (data as { action_link?: string })?.action_link ||
       null;
-    toast.success(`Convite gerado para ${form.email}`);
+    const labels: Record<string, string> = {
+      email: "Email enviado",
+      whatsapp: "WhatsApp acionado",
+      link_only: "Link copiado",
+    };
+    toast.success(`Convite criado para ${form.email} — ${channels.map((c) => labels[c]).join(" + ")}`);
     if (link) {
       try {
         await navigator.clipboard.writeText(link);
-        toast.success("Link copiado para a área de transferência");
       } catch {
         /* ignore clipboard errors */
       }
@@ -186,8 +191,8 @@ const AdminOperators = () => {
       action: "operator.invite",
       entity_type: "user_role",
       entity_id: form.email,
-      summary: `Convidou ${form.email} (${form.role}) — agente ${form.agente_ativacao || "—"}`,
-      metadata: { email: form.email, role: form.role, agente_ativacao: form.agente_ativacao },
+      summary: `Convidou ${form.email} (${form.role}) via ${channels.join(", ")} — agente ${form.agente_ativacao || "—"}`,
+      metadata: { email: form.email, role: form.role, agente_ativacao: form.agente_ativacao, channels },
     });
     setForm({ email: "", full_name: "", role: "user", agente_ativacao: "" });
     await load();
@@ -301,10 +306,31 @@ const AdminOperators = () => {
           </div>
         </div>
         <div className="mt-3 flex justify-end">
-          <Button onClick={invite} disabled={busy} className="gap-1.5">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-            Enviar convite
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button disabled={busy} className="gap-1.5">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                Enviar convite
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuLabel className="text-xs">Enviar convite via</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => invite(["email"])}>
+                <Mail className="mr-2 h-3.5 w-3.5" /> Email
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => invite(["whatsapp"])}>
+                <MessageCircle className="mr-2 h-3.5 w-3.5" /> WhatsApp (webhook)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => invite(["email", "whatsapp"])}>
+                <Send className="mr-2 h-3.5 w-3.5" /> Email + WhatsApp
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => invite(["link_only"])}>
+                <Link2 className="mr-2 h-3.5 w-3.5" /> Apenas copiar link
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         {inviteLink && (
           <div className="mt-4 rounded-xl border border-primary/30 bg-primary/5 p-3">
