@@ -123,7 +123,8 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
     map.forEach((c) => {
       c.pctMrr = c.mrrCriadoAnterior > 0 ? (c.mrrAtivado / c.mrrCriadoAnterior) * 100 : 0;
       c.pctClientes = c.clientesCriadosAnterior > 0 ? (c.clientesAtivados / c.clientesCriadosAnterior) * 100 : 0;
-      c.churnMax = c.mrrCriado * 0.09;
+      // Churn máx = 9% do MRR criado pelo ativador no mês anterior (mesma base usada no % MRR)
+      c.churnMax = c.mrrCriadoAnterior * 0.09;
       const pctChurnRaw = c.churnMax > 0 ? ((c.churnMax - c.churnReal) / c.churnMax) * 100 : 100;
       // Churn não pode puxar o score para negativo: clamp em [0, 100]
       c.pctChurn = Math.max(0, Math.min(100, pctChurnRaw));
