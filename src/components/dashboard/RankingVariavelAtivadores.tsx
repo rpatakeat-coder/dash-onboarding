@@ -43,10 +43,12 @@ const pctFixoFromScore = (score: number): number => {
 
 interface Row {
   ativador: string;
-  mrrCriado: number;
+  mrrCriado: number;            // mês vigente (base do churn máx)
+  mrrCriadoAnterior: number;    // mês anterior (denominador do % MRR)
   mrrAtivado: number;
   pctMrr: number;
-  clientesCriados: number;
+  clientesCriados: number;            // mês vigente
+  clientesCriadosAnterior: number;    // mês anterior (denominador do % Clientes)
   clientesAtivados: number;
   pctClientes: number;
   churnMax: number;
