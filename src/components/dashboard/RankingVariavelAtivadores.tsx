@@ -186,6 +186,7 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
                   <InfoTooltip text="Score = (% MRR × 60 + % Clientes × 30 + % Churn × 10) / 100. Mínimo 0 (clamp): mesmo com % Churn negativo, o score nunca fica abaixo de zero. Arredondamento ≥ .5 sobe para o próximo inteiro antes de cruzar a tabela de % do fixo." />
                 </span>
               </th>
+              <th className="px-3 py-2 text-right">% do fixo</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
