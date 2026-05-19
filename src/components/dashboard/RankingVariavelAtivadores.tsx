@@ -124,7 +124,9 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
       c.pctMrr = c.mrrCriadoAnterior > 0 ? (c.mrrAtivado / c.mrrCriadoAnterior) * 100 : 0;
       c.pctClientes = c.clientesCriadosAnterior > 0 ? (c.clientesAtivados / c.clientesCriadosAnterior) * 100 : 0;
       c.churnMax = c.mrrCriado * 0.09;
-      c.pctChurn = c.churnMax > 0 ? ((c.churnMax - c.churnReal) / c.churnMax) * 100 : 0;
+      const pctChurnRaw = c.churnMax > 0 ? ((c.churnMax - c.churnReal) / c.churnMax) * 100 : 100;
+      // Churn não pode puxar o score para negativo: clamp em [0, 100]
+      c.pctChurn = Math.max(0, Math.min(100, pctChurnRaw));
       // Score ponderado: MRR 60 + Clientes 30 + Churn 10 (média ponderada / 100)
       c.scoreFinal = Math.max(0, (c.pctMrr * 60 + c.pctClientes * 30 + c.pctChurn * 10) / 100);
       c.pctFixo = pctFixoFromScore(c.scoreFinal);
