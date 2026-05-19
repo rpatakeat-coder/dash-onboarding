@@ -35,6 +35,9 @@ const userSuggestions = (nome: string) => [
 ];
 
 export const CopilotDrawer = ({ open, onOpenChange }: Props) => {
+  const { isAdmin, myAgente } = useAtivadorScope();
+  const firstName = (myAgente || "").trim().split(/\s+/)[0] ?? "";
+  const suggestions = isAdmin ? ADMIN_SUGGESTIONS : userSuggestions(firstName);
   const { messages, isSending, pending, send, clear } = useCopilot();
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
