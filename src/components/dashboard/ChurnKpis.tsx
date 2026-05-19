@@ -227,20 +227,32 @@ export const ChurnKpis = ({ rows, className }: Props) => {
               <RefreshCw className={cn("h-3 w-3", sheetLoading && "animate-spin")} />
             </button>
           </div>
-          <p className="mt-1 font-display text-2xl font-bold text-foreground tabular-nums">
-            {sheetLoading && sheetPct === null
-              ? "…"
-              : sheetPct !== null
-              ? `${sheetPct.toFixed(2).replace(".", ",")}%`
-              : "—"}
-          </p>
-          <p className="font-small text-xs text-muted-foreground">
-            {sheetError
-              ? `Erro: ${sheetError}`
-              : sheetFetchedAt
-              ? `Planilha · ${new Date(sheetFetchedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}`
-              : "Lendo direto do Google Sheets (Mensal 2026 · B2)"}
-          </p>
+          {(() => {
+            const pct = mrrBase && mrrBase > 0 ? (k.churnReal / mrrBase) * 100 : null;
+            return (
+              <>
+                <p className="mt-1 font-display text-2xl font-bold text-foreground tabular-nums">
+                  {sheetLoading && pct === null
+                    ? "…"
+                    : pct !== null
+                    ? `${pct.toFixed(2).replace(".", ",")}%`
+                    : "—"}
+                </p>
+                <p className="font-small text-xs text-muted-foreground">
+                  {sheetError
+                    ? `Erro: ${sheetError}`
+                    : mrrBase !== null
+                    ? `${fmtBRL(k.churnReal)} ÷ ${fmtBRL(mrrBase)} (MRR início do mês)`
+                    : "Lendo MRR início do mês (Mensal 2026 · B2)…"}
+                </p>
+                {sheetFetchedAt && (
+                  <p className="font-small text-[10px] text-muted-foreground/70">
+                    Planilha · {new Date(sheetFetchedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+                  </p>
+                )}
+              </>
+            );
+          })()}
         </div>
 
 
