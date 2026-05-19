@@ -106,7 +106,7 @@ export const CopilotDrawer = ({ open, onOpenChange }: Props) => {
                 Comece com uma pergunta:
               </p>
               <div className="grid gap-2">
-                {SUGGESTIONS.map((s) => (
+                {suggestions.map((s) => (
                   <button
                     key={s}
                     type="button"
