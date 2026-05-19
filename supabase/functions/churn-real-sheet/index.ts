@@ -33,18 +33,23 @@ Deno.serve(async (req) => {
     }
 
     const raw = data?.values?.[0]?.[0];
-    // Aceita número (0.05) ou string ("5%", "5,0%")
-    let pct: number | null = null;
+    // B2 = MRR início do mês (número ou string com R$ / pontos / vírgula)
+    let mrrBase: number | null = null;
     if (typeof raw === 'number') {
-      pct = raw <= 1 ? raw * 100 : raw;
+      mrrBase = raw;
     } else if (typeof raw === 'string') {
-      const cleaned = raw.replace('%', '').replace(',', '.').trim();
+      const cleaned = raw
+        .replace(/r\$/i, '')
+        .replace(/\s/g, '')
+        .replace(/\./g, '')
+        .replace(',', '.')
+        .trim();
       const n = Number(cleaned);
-      if (!Number.isNaN(n)) pct = n;
+      if (!Number.isNaN(n)) mrrBase = n;
     }
 
     return new Response(
-      JSON.stringify({ pct, raw, range: RANGE, fetchedAt: new Date().toISOString() }),
+      JSON.stringify({ mrrBase, raw, range: RANGE, fetchedAt: new Date().toISOString() }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (e) {
