@@ -153,12 +153,12 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
           <ComposedChart data={data} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
             <defs>
               <linearGradient id="mrrAtivBar" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.95} />
-                <stop offset="100%" stopColor="hsl(var(--primary-glow))" stopOpacity={0.7} />
+                <stop offset="0%" stopColor="hsl(38 60% 78%)" stopOpacity={0.95} />
+                <stop offset="100%" stopColor="hsl(38 55% 70%)" stopOpacity={0.7} />
               </linearGradient>
               <linearGradient id="mrrAtivBarCurrent" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.95} />
-                <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0.6} />
+                <stop offset="0%" stopColor="hsl(142 65% 70%)" stopOpacity={0.95} />
+                <stop offset="100%" stopColor="hsl(142 60% 62%)" stopOpacity={0.7} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
