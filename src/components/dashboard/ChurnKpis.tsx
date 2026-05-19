@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
-import { TrendingDown, ShieldAlert, CalendarIcon, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { TrendingDown, ShieldAlert, CalendarIcon, X, RefreshCw } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
