@@ -320,7 +320,7 @@ const AdminOperators = () => {
                 <Mail className="mr-2 h-3.5 w-3.5" /> Email
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => invite(["whatsapp"])}>
-                <MessageCircle className="mr-2 h-3.5 w-3.5" /> WhatsApp (webhook)
+                <MessageCircle className="mr-2 h-3.5 w-3.5" /> WhatsApp
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => invite(["email", "whatsapp"])}>
                 <Send className="mr-2 h-3.5 w-3.5" /> Email + WhatsApp
@@ -456,7 +456,7 @@ const AdminOperators = () => {
                               <Mail className="mr-2 h-3.5 w-3.5" /> Email
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => resend(op, ["whatsapp"])}>
-                              <MessageCircle className="mr-2 h-3.5 w-3.5" /> WhatsApp (webhook)
+                              <MessageCircle className="mr-2 h-3.5 w-3.5" /> WhatsApp
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => resend(op, ["email", "whatsapp"])}>
                               <Send className="mr-2 h-3.5 w-3.5" /> Email + WhatsApp
