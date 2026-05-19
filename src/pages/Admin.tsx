@@ -168,7 +168,10 @@ const AdminOperators = () => {
       const msg = (data as { error?: string })?.error || error?.message;
       return toast.error("Erro ao convidar", { description: typeof msg === "string" ? msg : "falha desconhecida" });
     }
-    const link = (data as { action_link?: string })?.action_link ?? null;
+    const link =
+      (data as { short_link?: string })?.short_link ||
+      (data as { action_link?: string })?.action_link ||
+      null;
     toast.success(`Convite gerado para ${form.email}`);
     if (link) {
       try {
