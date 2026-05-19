@@ -176,6 +176,19 @@ export const CopilotDrawer = ({ open, onOpenChange }: Props) => {
   );
 };
 
+const normalizeAssistant = (raw: string) => {
+  let s = raw.replace(/\r\n/g, "\n");
+  // Converte "**Título**" em linha própria para "### Título"
+  s = s.replace(/^[ \t]*\*\*([^*\n]{2,40})\*\*[ \t]*$/gm, "### $1");
+  // Garante linha em branco antes de headings "### "
+  s = s.replace(/([^\n])\n(#{1,6} )/g, "$1\n\n$2");
+  // Garante linha em branco depois de headings
+  s = s.replace(/^(#{1,6} .+)\n(?!\n)/gm, "$1\n\n");
+  // Garante linha em branco antes de listas "- "
+  s = s.replace(/([^\n])\n(- )/g, "$1\n\n$2");
+  return s;
+};
+
 const Message = ({ role, content }: { role: "user" | "assistant"; content: string }) => {
   const isUser = role === "user";
   return (
@@ -191,7 +204,7 @@ const Message = ({ role, content }: { role: "user" | "assistant"; content: strin
         {isUser ? (
           <p className="whitespace-pre-wrap">{content}</p>
         ) : (
-          <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ul:pl-4 prose-ol:my-2 prose-ol:pl-4 prose-li:my-1 prose-li:marker:text-muted-foreground prose-strong:text-foreground prose-strong:font-semibold prose-headings:font-display prose-headings:mt-3 prose-headings:mb-1.5 prose-code:rounded prose-code:bg-background/60 prose-code:px-1 prose-code:py-0.5 prose-code:text-[12px] prose-code:before:content-none prose-code:after:content-none">
+          <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2.5 prose-p:leading-relaxed prose-ul:my-2.5 prose-ul:pl-4 prose-ol:my-2.5 prose-ol:pl-4 prose-li:my-1 prose-li:marker:text-muted-foreground prose-strong:text-foreground prose-strong:font-semibold prose-headings:font-display prose-headings:font-semibold prose-h3:mt-4 prose-h3:mb-1.5 prose-h3:text-[13px] prose-h3:uppercase prose-h3:tracking-wide prose-h3:text-muted-foreground first:prose-headings:mt-0 prose-code:rounded prose-code:bg-background/60 prose-code:px-1 prose-code:py-0.5 prose-code:text-[12px] prose-code:before:content-none prose-code:after:content-none">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
@@ -216,7 +229,7 @@ const Message = ({ role, content }: { role: "user" | "assistant"; content: strin
                 tr: (props) => <tr className="even:bg-background/30" {...props} />,
               }}
             >
-              {content}
+              {normalizeAssistant(content)}
             </ReactMarkdown>
           </div>
         )}
