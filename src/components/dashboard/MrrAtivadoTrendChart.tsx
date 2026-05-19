@@ -251,10 +251,10 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
               type="monotone"
               dataKey="pct"
               name="% Ativação"
-              stroke="hsl(var(--warning))"
+              stroke="hsl(210 90% 60%)"
               strokeWidth={2}
               strokeDasharray="4 4"
-              dot={{ r: 3, fill: "hsl(var(--warning))" }}
+              dot={{ r: 3, fill: "hsl(210 90% 60%)" }}
               activeDot={{ r: 5 }}
               hide={hidden.has("pct")}
             />
