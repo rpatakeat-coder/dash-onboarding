@@ -52,9 +52,11 @@ const Index = () => {
     );
   })();
 
-  // Em Gestão, o dropdown "Filtrar KPIs" não deve listar nem contar deals do pipeline Sucesso.
-  // Apenas o MRR Ativado (na Visão Geral) considera esses deals.
-  const filtersBase = isGestao ? personalRows.filter((r) => !isSucessoPipeline(r)) : personalRows;
+  // Os filtros (ativador/etapa) só listam e contam deals do pipeline "Onboarding".
+  // A regra do MRR Ativado (Visão Geral) não é afetada — ela continua usando macroRows.
+  const isOnboardingPipeline = (r: { pipeline_nome: string | null }) =>
+    (r.pipeline_nome?.trim().toLowerCase() ?? "") === "onboarding";
+  const filtersBase = personalRows.filter(isOnboardingPipeline);
 
   // Macros respeitam o escopo do usuário (RLS já garante, mas reforçamos)
   // e os filtros locais de ativador/etapa.
