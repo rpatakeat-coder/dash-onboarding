@@ -22,6 +22,8 @@ interface AdminUser {
   avatar_url: string | null;
   created_at: string;
   roles: string[];
+  /** Papel bruto do banco: 'super_admin' | 'admin' | 'user' | null se ainda não tem linha em user_roles_operations. */
+  rawRole: "super_admin" | "admin" | "user" | null;
   agente_ativacao?: string | null;
 }
 
