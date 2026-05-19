@@ -357,16 +357,34 @@ Deno.serve(async (req) => {
     if (!rateLimit(userData.user.id))
       return json({ error: "rate_limited", message: "Muitas mensagens em pouco tempo. Aguarde alguns segundos." }, 429);
 
+    // Verifica papel (admin/super_admin têm acesso total; demais ficam restritos ao próprio agente)
+    const { data: isAdminData } = await userClient.rpc("has_operations_role", {
+      _user_id: userData.user.id,
+      _role: "admin",
+    });
+    const isAdmin = Boolean(isAdminData);
+
+    // Nome do agente do usuário (para usuários comuns)
+    let userAgente = "";
+    if (!isAdmin) {
+      const { data: agenteData } = await userClient.rpc("current_user_agente");
+      userAgente = norm(agenteData);
+    }
+
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) return json({ error: "missing_api_key", message: "OPENAI_API_KEY não configurada." }, 500);
 
     const parsed = Body.safeParse(await req.json());
     if (!parsed.success) return json({ error: "invalid_payload", details: parsed.error.flatten() }, 400);
 
-    // Carrega rows uma vez por requisição (RLS aplicada)
+    // Carrega rows uma vez por requisição (RLS aplicada — ativadores só recebem suas próprias linhas)
     const rows = await fetchAllRows(userClient);
 
-    const SYSTEM = await loadSystemPrompt(userClient);
+    const SYSTEM_BASE = await loadSystemPrompt(userClient);
+    const SYSTEM = isAdmin
+      ? SYSTEM_BASE
+      : `${SYSTEM_BASE}\n\nESCOPO DO USUÁRIO: você está conversando com o ativador "${userAgente}". Considere apenas a carteira dele. Não cite outros ativadores; se perguntado, responda que não tem acesso a dados de outras pessoas.`;
+
     const messages: Array<Record<string, unknown>> = [
       { role: "system", content: SYSTEM },
       ...parsed.data.history.map((m) => ({ role: m.role, content: m.content })),
@@ -400,10 +418,16 @@ Deno.serve(async (req) => {
       return res.json();
     };
 
+    // Para usuários não-admin, força o filtro de ativador para o próprio agente
+    const enforceScope = (a: Record<string, unknown>): Record<string, unknown> => {
+      if (isAdmin) return a;
+      return { ...a, ativador: userAgente };
+    };
+
     const toolsExec: Record<string, (a: Record<string, unknown>) => unknown> = {
-      consultar_deals: (a) => execConsultarDeals(rows, a),
+      consultar_deals: (a) => execConsultarDeals(rows, enforceScope(a)),
       kpis_periodo: (a) => execKpisPeriodo(rows, a),
-      stats_ativador: (a) => execStatsAtivador(rows, a),
+      stats_ativador: (a) => execStatsAtivador(rows, enforceScope(a)),
       comparar_periodos: (a) => execCompararPeriodos(rows, a),
     };
 
