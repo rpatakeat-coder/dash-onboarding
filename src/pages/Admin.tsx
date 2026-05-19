@@ -22,6 +22,8 @@ interface AdminUser {
   avatar_url: string | null;
   created_at: string;
   roles: string[];
+  /** Papel bruto do banco: 'super_admin' | 'admin' | 'user' | null se ainda não tem linha em user_roles_operations. */
+  rawRole: "super_admin" | "admin" | "user" | null;
   agente_ativacao?: string | null;
 }
 
@@ -473,6 +475,10 @@ const AdminUsers = () => {
   const [editAgenteId, setEditAgenteId] = useState<string | null>(null);
   const [editAgenteValue, setEditAgenteValue] = useState("");
   const [savingAgente, setSavingAgente] = useState(false);
+  const [editProfileId, setEditProfileId] = useState<string | null>(null);
+  const [editProfileName, setEditProfileName] = useState("");
+  const [editProfileAvatar, setEditProfileAvatar] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -490,32 +496,45 @@ const AdminUsers = () => {
       toast.error("Erro ao carregar usuários", { description: (pErr ?? oErr)?.message });
       return;
     }
-    const opsMap = new Map<string, { role: string; agente_ativacao: string | null }>(
-      (opsData ?? []).map((o) => [o.user_id, { role: o.role, agente_ativacao: o.agente_ativacao }]),
+    const opsMap = new Map<string, { role: "super_admin" | "admin" | "user"; agente_ativacao: string | null }>(
+      (opsData ?? []).map((o) => [o.user_id, { role: o.role as "super_admin" | "admin" | "user", agente_ativacao: o.agente_ativacao }]),
     );
     const merged: AdminUser[] = (profilesData ?? []).map((p) => {
       const op = opsMap.get(p.id);
+      const rawRole = op?.role ?? null;
+      const roles =
+        rawRole === "super_admin" ? ["super-admin"]
+        : rawRole === "admin" ? ["admin"]
+        : rawRole === "user" ? ["user"]
+        : [];
       return {
         id: p.id,
         full_name: p.full_name,
         avatar_url: p.avatar_url,
         created_at: p.created_at,
-        roles: op?.role === "admin" ? ["admin"] : op ? ["user"] : [],
+        roles,
+        rawRole,
         agente_ativacao: op?.agente_ativacao ?? null,
       };
     });
     setUsers(merged);
   };
 
+  // O viewer atual é super-admin? (necessário para gerenciar outros super-admins.)
+  const mySelf = users.find((u) => u.id === user?.id);
+  const iAmSuperAdmin = mySelf?.rawRole === "super_admin";
+
   useEffect(() => { load(); }, []);
 
   const saveAgente = async (u: AdminUser) => {
     const value = editAgenteValue.trim() || null;
     setSavingAgente(true);
+    // Preserva o papel atual (inclusive super_admin); default 'user' quando ainda não existe linha.
+    const keepRole = u.rawRole ?? "user";
     const { error } = await supabase
       .from("user_roles_operations")
       .upsert(
-        { user_id: u.id, agente_ativacao: value, role: u.roles.includes("admin") ? "admin" : "user" },
+        { user_id: u.id, agente_ativacao: value, role: keepRole },
         { onConflict: "user_id" },
       );
     setSavingAgente(false);
@@ -532,10 +551,36 @@ const AdminUsers = () => {
     await load();
   };
 
+  const saveProfile = async (u: AdminUser) => {
+    setSavingProfile(true);
+    const name = editProfileName.trim() || null;
+    const avatar = editProfileAvatar.trim() || null;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ full_name: name, avatar_url: avatar })
+      .eq("id", u.id);
+    setSavingProfile(false);
+    if (error) return toast.error("Erro ao salvar perfil", { description: error.message });
+    toast.success("Perfil atualizado");
+    void logAudit({
+      action: "user.update_profile",
+      entity_type: "outro",
+      entity_id: u.id,
+      summary: `Atualizou perfil de ${u.full_name || u.id}`,
+      metadata: { target_user_id: u.id, full_name: name, avatar_url: avatar },
+    });
+    setEditProfileId(null);
+    await load();
+  };
+
   const toggleAdmin = async (u: AdminUser) => {
-    const isAdmin = u.roles.includes("admin");
+    // Super-admins não podem ser rebaixados por este botão (proteção de segurança).
+    if (u.rawRole === "super_admin") {
+      return toast.error("Super-admins não podem ser alterados por aqui");
+    }
+    const isAdmin = u.rawRole === "admin";
     setBusyId(u.id);
-    const newRole = isAdmin ? "user" : "admin";
+    const newRole: "admin" | "user" = isAdmin ? "user" : "admin";
     const { error } = await supabase
       .from("user_roles_operations")
       .upsert(
@@ -602,23 +647,67 @@ const AdminUsers = () => {
           <tbody>
             {users.map((u) => {
               const isMe = u.id === user?.id;
-              const isAdmin = u.roles.includes("admin");
+              const isAdmin = u.rawRole === "admin" || u.rawRole === "super_admin";
+              const isTargetSuper = u.rawRole === "super_admin";
+              // Apenas super-admins podem mexer em outros super-admins. Ninguém pode rebaixar a si mesmo.
+              const canToggleAdmin = !isMe && (!isTargetSuper || iAmSuperAdmin) && !isTargetSuper;
+              const canDelete = !isMe && (!isTargetSuper || iAmSuperAdmin);
               return (
                 <tr key={u.id} className="border-b border-border/50 last:border-0">
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      {u.avatar_url ? (
-                        <img src={u.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
-                      ) : (
-                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
-                          {(u.full_name || "?").slice(0, 1).toUpperCase()}
+                    {editProfileId === u.id ? (
+                      <div className="flex flex-col gap-1.5">
+                        <Input
+                          value={editProfileName}
+                          onChange={(e) => setEditProfileName(e.target.value)}
+                          placeholder="Nome completo"
+                          className="h-8 max-w-[220px] text-xs"
+                          autoFocus
+                        />
+                        <Input
+                          value={editProfileAvatar}
+                          onChange={(e) => setEditProfileAvatar(e.target.value)}
+                          placeholder="URL da foto (https://…)"
+                          className="h-8 max-w-[260px] text-xs"
+                        />
+                        <div className="flex items-center gap-1.5">
+                          <Button size="sm" onClick={() => saveProfile(u)} disabled={savingProfile} className="h-7 px-2 text-xs">
+                            {savingProfile ? <Loader2 className="h-3 w-3 animate-spin" /> : "Salvar"}
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditProfileId(null)} className="h-7 px-2 text-xs">
+                            Cancelar
+                          </Button>
                         </div>
-                      )}
-                      <span className="font-medium text-foreground">
-                        {u.full_name || <span className="text-muted-foreground">Sem nome</span>}
-                        {isMe && <span className="ml-2 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary">você</span>}
-                      </span>
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        {u.avatar_url ? (
+                          <img src={u.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
+                        ) : (
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                            {(u.full_name || "?").slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                        <span className="font-medium text-foreground">
+                          {u.full_name || <span className="text-muted-foreground">Sem nome</span>}
+                          {isMe && <span className="ml-2 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary">você</span>}
+                        </span>
+                        {iAmSuperAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditProfileId(u.id);
+                              setEditProfileName(u.full_name ?? "");
+                              setEditProfileAvatar(u.avatar_url ?? "");
+                            }}
+                            className="ml-1 rounded border border-dashed border-border px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground hover:border-primary hover:text-primary"
+                            title="Editar nome e foto"
+                          >
+                            editar
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     {u.roles.length === 0 ? (
@@ -626,7 +715,16 @@ const AdminUsers = () => {
                     ) : (
                       <div className="flex flex-wrap gap-1">
                         {u.roles.map((r) => (
-                          <span key={r} className="rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-foreground">
+                          <span
+                            key={r}
+                            className={`rounded-full border px-2 py-0.5 text-xs ${
+                              r === "super-admin"
+                                ? "border-amber-500/40 bg-amber-500/10 text-amber-500"
+                                : r === "admin"
+                                ? "border-primary/30 bg-primary/10 text-primary"
+                                : "border-border bg-muted text-foreground"
+                            }`}
+                          >
                             {r}
                           </span>
                         ))}
@@ -685,10 +783,16 @@ const AdminUsers = () => {
                       <Button
                         size="sm"
                         variant={isAdmin ? "outline" : "default"}
-                        disabled={busyId === u.id || isMe}
+                        disabled={busyId === u.id || !canToggleAdmin}
                         onClick={() => toggleAdmin(u)}
                         className="gap-1.5"
-                        title={isMe ? "Você não pode remover seu próprio admin" : undefined}
+                        title={
+                          isMe
+                            ? "Você não pode alterar seu próprio papel"
+                            : isTargetSuper
+                            ? "Super-admins não podem ser alterados por aqui"
+                            : undefined
+                        }
                       >
                         {busyId === u.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isAdmin ? <ShieldOff className="h-3.5 w-3.5" /> : <ShieldCheck className="h-3.5 w-3.5" />}
                         {isAdmin ? "Remover admin" : "Promover a admin"}
@@ -696,10 +800,16 @@ const AdminUsers = () => {
                       <Button
                         size="sm"
                         variant="ghost"
-                        disabled={delId === u.id || isMe}
+                        disabled={delId === u.id || !canDelete}
                         onClick={() => removeUser(u)}
                         className="gap-1.5 text-destructive hover:text-destructive"
-                        title={isMe ? "Você não pode excluir a si mesmo" : "Apagar usuário (auth + perfil + papel)"}
+                        title={
+                          isMe
+                            ? "Você não pode excluir a si mesmo"
+                            : isTargetSuper && !iAmSuperAdmin
+                            ? "Apenas super-admins podem excluir outro super-admin"
+                            : "Apagar usuário (auth + perfil + papel)"
+                        }
                       >
                         {delId === u.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                         Excluir
