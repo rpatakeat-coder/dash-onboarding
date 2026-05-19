@@ -149,7 +149,7 @@ const AdminOperators = () => {
 
   useEffect(() => { load(); }, []);
 
-  const invite = async () => {
+  const invite = async (channels: ("email" | "whatsapp" | "link_only")[]) => {
     if (!form.email.trim()) return toast.error("Informe o email");
     if (form.role !== "admin" && !form.agente_ativacao.trim()) {
       return toast.error("Informe o agente HubSpot");
@@ -161,6 +161,7 @@ const AdminOperators = () => {
         full_name: form.full_name.trim() || undefined,
         role: form.role,
         agente_ativacao: form.role === "admin" ? undefined : form.agente_ativacao,
+        channels,
       },
     });
     setBusy(false);
@@ -172,11 +173,15 @@ const AdminOperators = () => {
       (data as { short_link?: string })?.short_link ||
       (data as { action_link?: string })?.action_link ||
       null;
-    toast.success(`Convite gerado para ${form.email}`);
+    const labels: Record<string, string> = {
+      email: "Email enviado",
+      whatsapp: "WhatsApp acionado",
+      link_only: "Link copiado",
+    };
+    toast.success(`Convite criado para ${form.email} — ${channels.map((c) => labels[c]).join(" + ")}`);
     if (link) {
       try {
         await navigator.clipboard.writeText(link);
-        toast.success("Link copiado para a área de transferência");
       } catch {
         /* ignore clipboard errors */
       }
@@ -186,8 +191,8 @@ const AdminOperators = () => {
       action: "operator.invite",
       entity_type: "user_role",
       entity_id: form.email,
-      summary: `Convidou ${form.email} (${form.role}) — agente ${form.agente_ativacao || "—"}`,
-      metadata: { email: form.email, role: form.role, agente_ativacao: form.agente_ativacao },
+      summary: `Convidou ${form.email} (${form.role}) via ${channels.join(", ")} — agente ${form.agente_ativacao || "—"}`,
+      metadata: { email: form.email, role: form.role, agente_ativacao: form.agente_ativacao, channels },
     });
     setForm({ email: "", full_name: "", role: "user", agente_ativacao: "" });
     await load();
