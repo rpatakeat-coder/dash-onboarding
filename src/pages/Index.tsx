@@ -108,7 +108,7 @@ const Index = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div data-tour="filters" className="flex-1 min-w-0">
             <MacroFilters
-              rows={personalRows}
+              rows={filtersBase}
               ativadores={filtroAtivadores}
               etapas={filtroEtapas}
               onAtivadoresChange={setFiltroAtivadores}
