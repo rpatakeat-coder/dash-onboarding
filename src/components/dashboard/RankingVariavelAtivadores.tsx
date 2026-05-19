@@ -174,9 +174,18 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
               <th className="px-3 py-2 text-right">Clientes ativ./criados</th>
               <th className="px-3 py-2 text-right">% Clientes</th>
               <th className="px-3 py-2 text-right">Churn (real / máx)</th>
-              <th className="px-3 py-2 text-right">% Churn</th>
-              <th className="px-3 py-2 text-right">Score</th>
-              <th className="px-3 py-2 text-right">% do fixo</th>
+              <th className="px-3 py-2 text-right">
+                <span className="inline-flex items-center justify-end gap-1">
+                  % Churn
+                  <InfoTooltip text="Churn máx = 9% do MRR criado pelo próprio ativador no mês anterior (mesma base do % MRR). % Churn = (máx − real) / máx × 100. Pode ficar negativo quando o churn real estoura o limite — nesse caso, puxa o score para baixo (com piso 0)." />
+                </span>
+              </th>
+              <th className="px-3 py-2 text-right">
+                <span className="inline-flex items-center justify-end gap-1">
+                  Score
+                  <InfoTooltip text="Score = (% MRR × 60 + % Clientes × 30 + % Churn × 10) / 100. Mínimo 0 (clamp): mesmo com % Churn negativo, o score nunca fica abaixo de zero. Arredondamento ≥ .5 sobe para o próximo inteiro antes de cruzar a tabela de % do fixo." />
+                </span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
