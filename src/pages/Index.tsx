@@ -183,6 +183,11 @@ const Index = () => {
 
             <CarteiraPorAtivador rows={estoqueRows} />
 
+            <RankingVariavelAtivadores
+              rows={allRows}
+              onlyAgente={isAdmin ? null : (isAtivador ? myAgente : null)}
+            />
+
             <div data-tour="deals">
               <DealsTable
                 rows={personalRows}
