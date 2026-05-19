@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCopilot } from "@/hooks/useCopilot";
+import { useAtivadorScope } from "@/hooks/useAtivadorScope";
 import { toast } from "sonner";
 
 interface Props {
@@ -19,11 +20,18 @@ interface Props {
   onOpenChange: (o: boolean) => void;
 }
 
-const SUGGESTIONS = [
+const ADMIN_SUGGESTIONS = [
   "Quais deals estão críticos esta semana?",
   "Compare ativações de abril vs maio de 2026",
-  "Stats do Nuno Bisi",
+  "Ranking dos ativadores por SLA",
   "Resumo dos KPIs do mês atual",
+];
+
+const userSuggestions = (nome: string) => [
+  "Quais dos meus deals estão críticos?",
+  "Resumo da minha carteira",
+  `Stats do ${nome || "meu trabalho"}`,
+  "Compare minhas ativações de abril vs maio de 2026",
 ];
 
 export const CopilotDrawer = ({ open, onOpenChange }: Props) => {
