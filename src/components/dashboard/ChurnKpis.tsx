@@ -285,6 +285,7 @@ export const ChurnKpis = ({ rows, className }: Props) => {
           <div className="flex items-center gap-2 font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
             <ShieldAlert className="h-3.5 w-3.5" />
             Churn máximo (meta)
+            <InfoTooltip text="Limite máximo aceitável de churn no período. Calculado como 9% do MRR criado dentro do próprio período (somatório do MRR dos deals criados na janela selecionada)." />
           </div>
           <p className="mt-1 font-display text-2xl font-bold text-foreground tabular-nums">
             {fmtBRL(k.churnMaximo)}
