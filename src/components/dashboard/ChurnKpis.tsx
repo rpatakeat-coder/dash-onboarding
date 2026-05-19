@@ -209,7 +209,41 @@ export const ChurnKpis = ({ rows, className }: Props) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        {/* % Churn Real (planilha) */}
+        <div className="rounded-xl border border-border bg-background/40 p-4">
+          <div className="flex items-center justify-between gap-2 font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+            <span className="flex items-center gap-2">
+              <TrendingDown className="h-3.5 w-3.5" />
+              % Churn Real
+            </span>
+            <button
+              type="button"
+              onClick={fetchSheetPct}
+              disabled={sheetLoading}
+              className="rounded p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50"
+              title="Atualizar da planilha"
+            >
+              <RefreshCw className={cn("h-3 w-3", sheetLoading && "animate-spin")} />
+            </button>
+          </div>
+          <p className="mt-1 font-display text-2xl font-bold text-foreground tabular-nums">
+            {sheetLoading && sheetPct === null
+              ? "…"
+              : sheetPct !== null
+              ? `${sheetPct.toFixed(2).replace(".", ",")}%`
+              : "—"}
+          </p>
+          <p className="font-small text-xs text-muted-foreground">
+            {sheetError
+              ? `Erro: ${sheetError}`
+              : sheetFetchedAt
+              ? `Planilha · ${new Date(sheetFetchedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}`
+              : "Lendo direto do Google Sheets (Mensal 2026 · B2)"}
+          </p>
+        </div>
+
+
         {/* Churn Máximo */}
         <div className="rounded-xl border border-border bg-background/40 p-4">
           <div className="flex items-center gap-2 font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
