@@ -43,10 +43,12 @@ const pctFixoFromScore = (score: number): number => {
 
 interface Row {
   ativador: string;
-  mrrCriado: number;
+  mrrCriado: number;            // mês vigente (base do churn máx)
+  mrrCriadoAnterior: number;    // mês anterior (denominador do % MRR)
   mrrAtivado: number;
   pctMrr: number;
-  clientesCriados: number;
+  clientesCriados: number;            // mês vigente
+  clientesCriadosAnterior: number;    // mês anterior (denominador do % Clientes)
   clientesAtivados: number;
   pctClientes: number;
   churnMax: number;
@@ -61,8 +63,11 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), 1);
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevEnd = start;
 
     const inMonth = (d: Date | null) => !!d && d >= start && d < end;
+    const inPrevMonth = (d: Date | null) => !!d && d >= prevStart && d < prevEnd;
 
     const map = new Map<string, Row>();
     const ensure = (nome: string): Row => {
@@ -71,8 +76,8 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
       if (!cur) {
         cur = {
           ativador: k,
-          mrrCriado: 0, mrrAtivado: 0, pctMrr: 0,
-          clientesCriados: 0, clientesAtivados: 0, pctClientes: 0,
+          mrrCriado: 0, mrrCriadoAnterior: 0, mrrAtivado: 0, pctMrr: 0,
+          clientesCriados: 0, clientesCriadosAnterior: 0, clientesAtivados: 0, pctClientes: 0,
           churnMax: 0, churnReal: 0, pctChurn: 0,
           scoreFinal: 0, pctFixo: 0,
         };
@@ -85,11 +90,17 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
       const agente = r.agente_ativacao?.trim();
       if (!agente) continue;
       const mrr = toNum(r.mrr);
+      const dCriacao = parseDate(r.data_criacao);
 
-      if (inMonth(parseDate(r.data_criacao))) {
+      if (inMonth(dCriacao)) {
         const c = ensure(agente);
         c.mrrCriado += mrr;
         c.clientesCriados += 1;
+      }
+      if (inPrevMonth(dCriacao)) {
+        const c = ensure(agente);
+        c.mrrCriadoAnterior += mrr;
+        c.clientesCriadosAnterior += 1;
       }
       if (inMonth(parseActivationDate(r.data_ativacao))) {
         const c = ensure(agente);
@@ -109,8 +120,8 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
 
     const result: Row[] = [];
     map.forEach((c) => {
-      c.pctMrr = c.mrrCriado > 0 ? (c.mrrAtivado / c.mrrCriado) * 100 : 0;
-      c.pctClientes = c.clientesCriados > 0 ? (c.clientesAtivados / c.clientesCriados) * 100 : 0;
+      c.pctMrr = c.mrrCriadoAnterior > 0 ? (c.mrrAtivado / c.mrrCriadoAnterior) * 100 : 0;
+      c.pctClientes = c.clientesCriadosAnterior > 0 ? (c.clientesAtivados / c.clientesCriadosAnterior) * 100 : 0;
       c.churnMax = c.mrrCriado * 0.09;
       c.pctChurn = c.churnMax > 0 ? ((c.churnMax - c.churnReal) / c.churnMax) * 100 : 0;
       // Score ponderado: MRR 60 + Clientes 30 + Churn 10 (média ponderada / 100)
@@ -172,13 +183,13 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
                 </td>
                 <td className="px-3 py-2 font-semibold text-foreground">{r.ativador}</td>
                 <td className="px-3 py-2 text-right font-numeric tabular-nums text-muted-foreground">
-                  {fmtBRL(r.mrrAtivado)} / {fmtBRL(r.mrrCriado)}
+                  {fmtBRL(r.mrrAtivado)} / {fmtBRL(r.mrrCriadoAnterior)}
                 </td>
                 <td className={cn("px-3 py-2 text-right font-numeric font-semibold tabular-nums", scoreColor(r.pctMrr))}>
                   {fmtPct(r.pctMrr)}
                 </td>
                 <td className="px-3 py-2 text-right font-numeric tabular-nums text-muted-foreground">
-                  {r.clientesAtivados} / {r.clientesCriados}
+                  {r.clientesAtivados} / {r.clientesCriadosAnterior}
                 </td>
                 <td className={cn("px-3 py-2 text-right font-numeric font-semibold tabular-nums", scoreColor(r.pctClientes))}>
                   {fmtPct(r.pctClientes)}
