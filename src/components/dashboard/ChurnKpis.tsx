@@ -11,6 +11,8 @@ import {
   type DashRow,
 } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
+import { InfoTooltip } from "@/components/dashboard/InfoTooltip";
+
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -237,6 +239,7 @@ export const ChurnKpis = ({ rows, className }: Props) => {
             <span className="flex items-center gap-2">
               <TrendingDown className="h-3.5 w-3.5" />
               % Churn Real
+              <InfoTooltip text="Razão entre o valor total perdido em churn no período (Pré-Churn + Churn Sucesso + Cancelamento Onboarding) e o MRR de início do mês lido da planilha Mensal 2026 · B2. Fórmula: Churn Real ÷ MRR início do mês." />
             </span>
             <button
               type="button"
@@ -282,6 +285,7 @@ export const ChurnKpis = ({ rows, className }: Props) => {
           <div className="flex items-center gap-2 font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
             <ShieldAlert className="h-3.5 w-3.5" />
             Churn máximo (meta)
+            <InfoTooltip text="Limite máximo aceitável de churn no período. Calculado como 9% do MRR criado dentro do próprio período (somatório do MRR dos deals criados na janela selecionada)." />
           </div>
           <p className="mt-1 font-display text-2xl font-bold text-foreground tabular-nums">
             {fmtBRL(k.churnMaximo)}
@@ -296,6 +300,7 @@ export const ChurnKpis = ({ rows, className }: Props) => {
           <div className="flex items-center gap-2 font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
             <TrendingDown className="h-3.5 w-3.5" />
             Churn real
+            <InfoTooltip text="Soma de MRR perdido nos deals fechados no período nas etapas: Pré-Churn, Churn (pipeline Sucesso) e Cancelamento (pipeline Onboarding). A barra mostra o quanto isso representa do Churn Máximo." />
           </div>
           <p
             className={cn(
