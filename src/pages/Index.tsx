@@ -143,10 +143,8 @@ const Index = () => {
 
         {data && isGestao && (() => {
           // Gestão oculta clientes do pipeline "Sucesso" (a regra de MRR Ativado não é afetada — ela vive na Visão Geral).
-          const isSucesso = (r: typeof macroRows[number]) =>
-            (r.pipeline_nome?.trim().toLowerCase() ?? "") === "sucesso";
-          const gestaoMacro = macroRows.filter((r) => !isSucesso(r));
-          const gestaoPersonal = personalRows.filter((r) => !isSucesso(r));
+          const gestaoMacro = macroRows.filter((r) => !isSucessoPipeline(r));
+          const gestaoPersonal = personalRows.filter((r) => !isSucessoPipeline(r));
           return (
             <>
               <GestaoAlerts rows={gestaoMacro} onSelectOperator={focusOperator} />
