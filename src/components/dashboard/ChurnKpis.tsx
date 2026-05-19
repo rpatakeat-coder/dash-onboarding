@@ -29,6 +29,33 @@ export const ChurnKpis = ({ rows, className }: Props) => {
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [pickerOpen, setPickerOpen] = useState(false);
 
+  // % de Churn Real vinda da planilha (Google Sheets · Mensal 2026!B2)
+  const [sheetPct, setSheetPct] = useState<number | null>(null);
+  const [sheetLoading, setSheetLoading] = useState(false);
+  const [sheetError, setSheetError] = useState<string | null>(null);
+  const [sheetFetchedAt, setSheetFetchedAt] = useState<string | null>(null);
+
+  const fetchSheetPct = async () => {
+    setSheetLoading(true);
+    setSheetError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("churn-real-sheet");
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setSheetPct(typeof data?.pct === "number" ? data.pct : null);
+      setSheetFetchedAt(data?.fetchedAt ?? null);
+    } catch (e) {
+      setSheetError((e as Error).message);
+    } finally {
+      setSheetLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSheetPct();
+  }, []);
+
+
   const presets: Record<Exclude<PeriodKey, "custom">, { start: Date; end: Date; label: string }> = {
     hoje: { start: r.todayStart, end: r.tomorrow, label: "Hoje" },
     semana: { start: r.weekStart, end: r.nextWeek, label: "Esta semana" },
