@@ -3,6 +3,7 @@ import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { usePreferences } from "@/contexts/PreferencesContext";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -62,8 +63,7 @@ const AuthPage = () => {
         </div>
         <div>
           <label className="font-subtitle text-xs text-muted-foreground">Senha</label>
-          <Input
-            type="password"
+          <PasswordInput
             required
             minLength={6}
             value={password}
