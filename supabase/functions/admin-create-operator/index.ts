@@ -132,29 +132,32 @@ Deno.serve(async (req) => {
       }
     }
 
-    try {
-      await fetch("https://webhook.takeat.cloud/webhook/dash-onboarding", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event: "operator.invited",
-          user_id: newUserId,
-          email,
-          full_name: full_name ?? null,
-          role,
-          agente_ativacao: agente,
-          action_link: short_link ?? action_link,
-          action_link_full: action_link,
-          invited_by: userData.user.id,
-          invited_by_email: userData.user.email ?? null,
-          timestamp: new Date().toISOString(),
-        }),
-      });
-    } catch (e) {
-      console.error("webhook_failed", (e as Error).message);
+    if (channels.includes("whatsapp")) {
+      try {
+        await fetch("https://webhook.takeat.cloud/webhook/dash-onboarding", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event: "operator.invited",
+            user_id: newUserId,
+            email,
+            full_name: full_name ?? null,
+            role,
+            agente_ativacao: agente,
+            action_link: short_link ?? action_link,
+            action_link_full: action_link,
+            channels,
+            invited_by: userData.user.id,
+            invited_by_email: userData.user.email ?? null,
+            timestamp: new Date().toISOString(),
+          }),
+        });
+      } catch (e) {
+        console.error("webhook_failed", (e as Error).message);
+      }
     }
 
-    return json({ ok: true, user_id: newUserId, action_link, short_link });
+    return json({ ok: true, user_id: newUserId, action_link, short_link, channels });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }
