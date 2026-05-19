@@ -8,6 +8,7 @@ import { MrrAtivadoKpis } from "@/components/dashboard/MrrAtivadoKpis";
 import { MrrAtivadoTrendChart } from "@/components/dashboard/MrrAtivadoTrendChart";
 import { MacroFilters } from "@/components/dashboard/MacroFilters";
 import { CarteiraPorAtivador } from "@/components/dashboard/CarteiraPorAtivador";
+import { RankingVariavelAtivadores } from "@/components/dashboard/RankingVariavelAtivadores";
 import { DealsTable } from "@/components/dashboard/DealsTable";
 import { RefreshDataButton } from "@/components/dashboard/RefreshDataButton";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
