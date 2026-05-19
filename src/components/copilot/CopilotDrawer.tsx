@@ -229,7 +229,7 @@ const Message = ({ role, content }: { role: "user" | "assistant"; content: strin
                 tr: (props) => <tr className="even:bg-background/30" {...props} />,
               }}
             >
-              {content}
+              {normalizeAssistant(content)}
             </ReactMarkdown>
           </div>
         )}
