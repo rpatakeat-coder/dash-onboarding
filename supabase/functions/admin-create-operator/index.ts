@@ -92,11 +92,20 @@ Deno.serve(async (req) => {
     let short_link: string | null = null;
     if (action_link) {
       try {
-        const r = await fetch(
-          `https://is.gd/create.php?format=simple&url=${encodeURIComponent(action_link)}`,
-        );
-        const txt = (await r.text()).trim();
-        if (r.ok && txt.startsWith("http")) short_link = txt;
+        const tryShorten = async (shorturl?: string) => {
+          const params = new URLSearchParams({ format: "simple", url: action_link! });
+          if (shorturl) params.set("shorturl", shorturl);
+          const r = await fetch(`https://is.gd/create.php?${params.toString()}`);
+          const txt = (await r.text()).trim();
+          return r.ok && txt.startsWith("http") ? txt : null;
+        };
+
+        for (let i = 0; i < 8 && !short_link; i++) {
+          const suffix = crypto.randomUUID().replace(/-/g, "").slice(0, 10);
+          short_link = await tryShorten(`invite_acesso_${suffix}`);
+        }
+
+        if (!short_link) short_link = await tryShorten();
       } catch (e) {
         console.error("shorten_failed", (e as Error).message);
       }
@@ -124,7 +133,7 @@ Deno.serve(async (req) => {
       console.error("webhook_failed", (e as Error).message);
     }
 
-    return json({ ok: true, user_id: newUserId, action_link });
+    return json({ ok: true, user_id: newUserId, action_link, short_link });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }
