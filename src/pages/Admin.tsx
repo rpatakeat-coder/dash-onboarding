@@ -475,6 +475,10 @@ const AdminUsers = () => {
   const [editAgenteId, setEditAgenteId] = useState<string | null>(null);
   const [editAgenteValue, setEditAgenteValue] = useState("");
   const [savingAgente, setSavingAgente] = useState(false);
+  const [editProfileId, setEditProfileId] = useState<string | null>(null);
+  const [editProfileName, setEditProfileName] = useState("");
+  const [editProfileAvatar, setEditProfileAvatar] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -492,22 +496,33 @@ const AdminUsers = () => {
       toast.error("Erro ao carregar usuários", { description: (pErr ?? oErr)?.message });
       return;
     }
-    const opsMap = new Map<string, { role: string; agente_ativacao: string | null }>(
-      (opsData ?? []).map((o) => [o.user_id, { role: o.role, agente_ativacao: o.agente_ativacao }]),
+    const opsMap = new Map<string, { role: "super_admin" | "admin" | "user"; agente_ativacao: string | null }>(
+      (opsData ?? []).map((o) => [o.user_id, { role: o.role as "super_admin" | "admin" | "user", agente_ativacao: o.agente_ativacao }]),
     );
     const merged: AdminUser[] = (profilesData ?? []).map((p) => {
       const op = opsMap.get(p.id);
+      const rawRole = op?.role ?? null;
+      const roles =
+        rawRole === "super_admin" ? ["super-admin"]
+        : rawRole === "admin" ? ["admin"]
+        : rawRole === "user" ? ["user"]
+        : [];
       return {
         id: p.id,
         full_name: p.full_name,
         avatar_url: p.avatar_url,
         created_at: p.created_at,
-        roles: op?.role === "admin" ? ["admin"] : op ? ["user"] : [],
+        roles,
+        rawRole,
         agente_ativacao: op?.agente_ativacao ?? null,
       };
     });
     setUsers(merged);
   };
+
+  // O viewer atual é super-admin? (necessário para gerenciar outros super-admins.)
+  const mySelf = users.find((u) => u.id === user?.id);
+  const iAmSuperAdmin = mySelf?.rawRole === "super_admin";
 
   useEffect(() => { load(); }, []);
 
