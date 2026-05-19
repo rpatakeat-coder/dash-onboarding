@@ -189,8 +189,7 @@ const SetPasswordPage = () => {
         </div>
         <div>
           <label className="font-subtitle text-xs text-muted-foreground">Nova senha</label>
-          <Input
-            type="password"
+          <PasswordInput
             required
             minLength={8}
             value={password}
@@ -200,8 +199,7 @@ const SetPasswordPage = () => {
         </div>
         <div>
           <label className="font-subtitle text-xs text-muted-foreground">Confirmar senha</label>
-          <Input
-            type="password"
+          <PasswordInput
             required
             minLength={8}
             value={confirm}
