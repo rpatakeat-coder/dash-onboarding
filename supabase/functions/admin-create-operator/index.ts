@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
 
     const parsed = Body.safeParse(await req.json());
     if (!parsed.success) return json({ error: parsed.error.flatten() }, 400);
-    const { email, agente_ativacao, role, full_name } = parsed.data;
+    const { email, agente_ativacao, role, full_name, channels } = parsed.data;
 
     // Hierarquia: somente super-admin pode criar outros admins.
     if (role === "admin") {
@@ -65,18 +65,35 @@ Deno.serve(async (req) => {
     const origin = req.headers.get("origin") ?? "";
     const redirectTo = origin ? `${origin}/auth` : undefined;
 
-    const { data: invited, error: inviteErr } = await admin.auth.admin.generateLink({
-      type: "invite",
-      email,
-      options: {
+    const sendEmail = channels.includes("email");
+    let action_link: string | null = null;
+    let newUserId: string | null = null;
+
+    if (sendEmail) {
+      // inviteUserByEmail envia email automaticamente via Supabase Auth
+      const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
         data: { full_name: full_name ?? "" },
         redirectTo,
-      },
-    });
-    if (inviteErr || !invited.user) return json({ error: inviteErr?.message ?? "invite_failed" }, 400);
+      });
+      if (inviteErr || !invited.user) return json({ error: inviteErr?.message ?? "invite_failed" }, 400);
+      newUserId = invited.user.id;
+      action_link = (invited as { properties?: { action_link?: string } })?.properties?.action_link ?? null;
+    } else {
+      // Apenas gera link, sem enviar email
+      const { data: invited, error: inviteErr } = await admin.auth.admin.generateLink({
+        type: "invite",
+        email,
+        options: {
+          data: { full_name: full_name ?? "" },
+          redirectTo,
+        },
+      });
+      if (inviteErr || !invited.user) return json({ error: inviteErr?.message ?? "invite_failed" }, 400);
+      newUserId = invited.user.id;
+      action_link = invited.properties?.action_link ?? null;
+    }
 
-    const newUserId = invited.user.id;
-    const action_link = invited.properties?.action_link ?? null;
+    if (!newUserId) return json({ error: "invite_failed" }, 400);
 
     const agente = agente_ativacao ?? null;
 
