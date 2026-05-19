@@ -306,10 +306,31 @@ const AdminOperators = () => {
           </div>
         </div>
         <div className="mt-3 flex justify-end">
-          <Button onClick={invite} disabled={busy} className="gap-1.5">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-            Enviar convite
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button disabled={busy} className="gap-1.5">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                Enviar convite
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuLabel className="text-xs">Enviar convite via</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => invite(["email"])}>
+                <Mail className="mr-2 h-3.5 w-3.5" /> Email
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => invite(["whatsapp"])}>
+                <MessageCircle className="mr-2 h-3.5 w-3.5" /> WhatsApp (webhook)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => invite(["email", "whatsapp"])}>
+                <Send className="mr-2 h-3.5 w-3.5" /> Email + WhatsApp
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => invite(["link_only"])}>
+                <Link2 className="mr-2 h-3.5 w-3.5" /> Apenas copiar link
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         {inviteLink && (
           <div className="mt-4 rounded-xl border border-primary/30 bg-primary/5 p-3">
