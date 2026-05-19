@@ -42,7 +42,28 @@ export const ChurnKpis = ({ rows, className }: Props) => {
       const { data, error } = await supabase.functions.invoke("churn-real-sheet");
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setMrrBase(typeof data?.mrrBase === "number" ? data.mrrBase : null);
+
+      const resolveMrrBase = () => {
+        if (typeof data?.mrrBase === "number") return data.mrrBase;
+        if (typeof data?.raw === "number") return data.raw;
+        if (typeof data?.pct === "number") return data.pct;
+
+        const fallback = data?.raw ?? data?.mrrBase ?? data?.pct;
+        if (typeof fallback === "string") {
+          const normalized = fallback
+            .replace(/r\$/i, "")
+            .replace(/\s/g, "")
+            .replace(/\./g, "")
+            .replace(",", ".")
+            .trim();
+          const parsed = Number(normalized);
+          return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        return null;
+      };
+
+      setMrrBase(resolveMrrBase());
       setSheetFetchedAt(data?.fetchedAt ?? null);
     } catch (e) {
       setSheetError((e as Error).message);
