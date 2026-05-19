@@ -110,6 +110,7 @@ export type Database = {
           id_deal: number
           mes_ano_ativacao: string | null
           mrr: string | null
+          mrr_asaas: string | null
           nome_negocio: string | null
           perfil_cliente: string | null
           pipeline_nome: string | null
@@ -129,6 +130,7 @@ export type Database = {
           id_deal: number
           mes_ano_ativacao?: string | null
           mrr?: string | null
+          mrr_asaas?: string | null
           nome_negocio?: string | null
           perfil_cliente?: string | null
           pipeline_nome?: string | null
@@ -148,6 +150,7 @@ export type Database = {
           id_deal?: number
           mes_ano_ativacao?: string | null
           mrr?: string | null
+          mrr_asaas?: string | null
           nome_negocio?: string | null
           perfil_cliente?: string | null
           pipeline_nome?: string | null
