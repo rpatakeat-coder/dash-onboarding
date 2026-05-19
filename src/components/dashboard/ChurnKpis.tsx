@@ -12,7 +12,7 @@ import {
 } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
 import { InfoTooltip } from "@/components/dashboard/InfoTooltip";
-import { TooltipProvider } from "@/components/ui/tooltip";
+
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
