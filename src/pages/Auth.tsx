@@ -63,8 +63,7 @@ const AuthPage = () => {
         </div>
         <div>
           <label className="font-subtitle text-xs text-muted-foreground">Senha</label>
-          <Input
-            type="password"
+          <PasswordInput
             required
             minLength={6}
             value={password}
