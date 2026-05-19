@@ -252,8 +252,7 @@ export const ChurnKpis = ({ rows, className }: Props) => {
           </div>
           {(() => {
             const pct = mrrBase && mrrBase > 0 ? (k.churnReal / mrrBase) * 100 : null;
-  return (
-    <TooltipProvider>
+            return (
               <>
                 <p className="mt-1 font-display text-2xl font-bold text-foreground tabular-nums">
                   {sheetLoading && pct === null
