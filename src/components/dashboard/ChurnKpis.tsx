@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
-import { TrendingDown, ShieldAlert, CalendarIcon, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { TrendingDown, ShieldAlert, CalendarIcon, X, RefreshCw } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
@@ -27,6 +28,33 @@ export const ChurnKpis = ({ rows, className }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("mes");
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // % de Churn Real vinda da planilha (Google Sheets · Mensal 2026!B2)
+  const [sheetPct, setSheetPct] = useState<number | null>(null);
+  const [sheetLoading, setSheetLoading] = useState(false);
+  const [sheetError, setSheetError] = useState<string | null>(null);
+  const [sheetFetchedAt, setSheetFetchedAt] = useState<string | null>(null);
+
+  const fetchSheetPct = async () => {
+    setSheetLoading(true);
+    setSheetError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("churn-real-sheet");
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setSheetPct(typeof data?.pct === "number" ? data.pct : null);
+      setSheetFetchedAt(data?.fetchedAt ?? null);
+    } catch (e) {
+      setSheetError((e as Error).message);
+    } finally {
+      setSheetLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSheetPct();
+  }, []);
+
 
   const presets: Record<Exclude<PeriodKey, "custom">, { start: Date; end: Date; label: string }> = {
     hoje: { start: r.todayStart, end: r.tomorrow, label: "Hoje" },
@@ -181,7 +209,41 @@ export const ChurnKpis = ({ rows, className }: Props) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        {/* % Churn Real (planilha) */}
+        <div className="rounded-xl border border-border bg-background/40 p-4">
+          <div className="flex items-center justify-between gap-2 font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+            <span className="flex items-center gap-2">
+              <TrendingDown className="h-3.5 w-3.5" />
+              % Churn Real
+            </span>
+            <button
+              type="button"
+              onClick={fetchSheetPct}
+              disabled={sheetLoading}
+              className="rounded p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50"
+              title="Atualizar da planilha"
+            >
+              <RefreshCw className={cn("h-3 w-3", sheetLoading && "animate-spin")} />
+            </button>
+          </div>
+          <p className="mt-1 font-display text-2xl font-bold text-foreground tabular-nums">
+            {sheetLoading && sheetPct === null
+              ? "…"
+              : sheetPct !== null
+              ? `${sheetPct.toFixed(2).replace(".", ",")}%`
+              : "—"}
+          </p>
+          <p className="font-small text-xs text-muted-foreground">
+            {sheetError
+              ? `Erro: ${sheetError}`
+              : sheetFetchedAt
+              ? `Planilha · ${new Date(sheetFetchedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}`
+              : "Lendo direto do Google Sheets (Mensal 2026 · B2)"}
+          </p>
+        </div>
+
+
         {/* Churn Máximo */}
         <div className="rounded-xl border border-border bg-background/40 p-4">
           <div className="flex items-center gap-2 font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
