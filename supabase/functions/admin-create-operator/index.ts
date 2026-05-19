@@ -14,6 +14,10 @@ const Body = z
     // super_admin nunca pode ser criado via UI
     role: z.enum(["admin", "user"]).default("user"),
     full_name: z.string().max(120).optional(),
+    channels: z
+      .array(z.enum(["email", "whatsapp", "link_only"]))
+      .min(1)
+      .default(["email"]),
   })
   .refine((v) => v.role === "admin" || (v.agente_ativacao && v.agente_ativacao.trim().length > 0), {
     message: "agente_ativacao is required for non-admin users",
