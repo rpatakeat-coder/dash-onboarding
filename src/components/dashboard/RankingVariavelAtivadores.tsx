@@ -37,7 +37,8 @@ const SCORE_TABLE: { score: number; pctFixo: number }[] = [
 ];
 
 const pctFixoFromScore = (score: number): number => {
-  for (const t of SCORE_TABLE) if (score >= t.score) return t.pctFixo;
+  const rounded = Math.round(score); // >= .5 arredonda pra cima
+  for (const t of SCORE_TABLE) if (rounded >= t.score) return t.pctFixo;
   return 0;
 };
 
