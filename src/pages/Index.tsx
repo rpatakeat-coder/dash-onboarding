@@ -41,6 +41,9 @@ const Index = () => {
 
   const allRows = data?.rows ?? [];
 
+  const isSucessoPipeline = (r: { pipeline_nome: string | null }) =>
+    (r.pipeline_nome?.trim().toLowerCase() ?? "") === "sucesso";
+
   const personalRows = (() => {
     if (isAdmin || !isAtivador) return allRows;
     const me = myAgente.toLowerCase();
@@ -48,6 +51,10 @@ const Index = () => {
       (r) => (r.agente_ativacao?.trim().toLowerCase() ?? "") === me,
     );
   })();
+
+  // Em Gestão, o dropdown "Filtrar KPIs" não deve listar nem contar deals do pipeline Sucesso.
+  // Apenas o MRR Ativado (na Visão Geral) considera esses deals.
+  const filtersBase = isGestao ? personalRows.filter((r) => !isSucessoPipeline(r)) : personalRows;
 
   // Macros respeitam o escopo do usuário (RLS já garante, mas reforçamos)
   // e os filtros locais de ativador/etapa.
