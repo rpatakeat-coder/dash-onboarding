@@ -183,7 +183,7 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
                 </td>
                 <td className="px-3 py-2 font-semibold text-foreground">{r.ativador}</td>
                 <td className="px-3 py-2 text-right font-numeric tabular-nums text-muted-foreground">
-                  {fmtBRL(r.mrrAtivado)} / {fmtBRL(r.mrrCriado)}
+                  {fmtBRL(r.mrrAtivado)} / {fmtBRL(r.mrrCriadoAnterior)}
                 </td>
                 <td className={cn("px-3 py-2 text-right font-numeric font-semibold tabular-nums", scoreColor(r.pctMrr))}>
                   {fmtPct(r.pctMrr)}
