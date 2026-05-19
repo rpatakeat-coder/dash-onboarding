@@ -240,9 +240,9 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
               type="monotone"
               dataKey="qtd"
               name="Ativações"
-              stroke="hsl(var(--secondary))"
+              stroke="hsl(var(--chart-3))"
               strokeWidth={2.5}
-              dot={{ r: 3, fill: "hsl(var(--secondary))" }}
+              dot={{ r: 3, fill: "hsl(var(--chart-3))" }}
               activeDot={{ r: 5 }}
               hide={hidden.has("qtd")}
             />
@@ -263,9 +263,9 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
               type="monotone"
               dataKey="criados"
               name="Deals criados"
-              stroke="hsl(var(--primary-glow))"
+              stroke="hsl(var(--chart-5))"
               strokeWidth={2}
-              dot={{ r: 3, fill: "hsl(var(--primary-glow))" }}
+              dot={{ r: 3, fill: "hsl(var(--chart-5))" }}
               activeDot={{ r: 5 }}
               hide={hidden.has("criados")}
             />
