@@ -176,6 +176,19 @@ export const CopilotDrawer = ({ open, onOpenChange }: Props) => {
   );
 };
 
+const normalizeAssistant = (raw: string) => {
+  let s = raw.replace(/\r\n/g, "\n");
+  // Converte "**Título**" em linha própria para "### Título"
+  s = s.replace(/^[ \t]*\*\*([^*\n]{2,40})\*\*[ \t]*$/gm, "### $1");
+  // Garante linha em branco antes de headings "### "
+  s = s.replace(/([^\n])\n(#{1,6} )/g, "$1\n\n$2");
+  // Garante linha em branco depois de headings
+  s = s.replace(/^(#{1,6} .+)\n(?!\n)/gm, "$1\n\n");
+  // Garante linha em branco antes de listas "- "
+  s = s.replace(/([^\n])\n(- )/g, "$1\n\n$2");
+  return s;
+};
+
 const Message = ({ role, content }: { role: "user" | "assistant"; content: string }) => {
   const isUser = role === "user";
   return (
