@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Trophy } from "lucide-react";
+import { InfoTooltip } from "./InfoTooltip";
 import { cn } from "@/lib/utils";
 import {
   parseDate,
