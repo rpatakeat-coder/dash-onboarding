@@ -286,6 +286,9 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
               <TableHead><SortBtn k="etapa">Etapa</SortBtn></TableHead>
               <TableHead className="text-right"><SortBtn k="criacao">SLA criação</SortBtn></TableHead>
               <TableHead className="text-right"><SortBtn k="fase">SLA fase</SortBtn></TableHead>
+              <TableHead className="text-right"><SortBtn k="mrr">MRR Hub</SortBtn></TableHead>
+              <TableHead className="text-right"><SortBtn k="mrrAsaas">MRR Asaas</SortBtn></TableHead>
+              <TableHead className="text-right"><SortBtn k="delta">Δ</SortBtn></TableHead>
               {!hideAtivadorFilter && (
                 <TableHead><SortBtn k="ativador">Ativador</SortBtn></TableHead>
               )}
