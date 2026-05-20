@@ -85,6 +85,8 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
+  const [onlyDivergentes, setOnlyDivergentes] = useState(false);
+
 
   const etapaOpts = useMemo(
     () => [
