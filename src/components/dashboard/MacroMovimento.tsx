@@ -258,6 +258,71 @@ export const MacroMovimento = ({ rows }: Props) => {
           ))}
         </div>
       </div>
+
+      <Dialog open={entradasOpen} onOpenChange={setEntradasOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-lg">
+              Entradas hoje — {entradasHojeRows.length} {entradasHojeRows.length === 1 ? "deal" : "deals"}
+            </DialogTitle>
+            <DialogDescription>
+              Deals criados em {format(new Date(), "dd/MM/yyyy", { locale: ptBR })} (00:00 → 23:59).
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[60vh] overflow-auto rounded-lg border border-border">
+            <Table>
+              <TableHeader className="sticky top-0 bg-card">
+                <TableRow>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Perfil</TableHead>
+                  <TableHead>Etapa</TableHead>
+                  <TableHead>Ativador</TableHead>
+                  <TableHead className="text-right">MRR</TableHead>
+                  <TableHead>Criado em</TableHead>
+                  <TableHead className="w-10" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {entradasHojeRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-sm text-muted-foreground">
+                      Nenhuma entrada hoje.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  entradasHojeRows.map((r) => {
+                    const d = parseDate(r.data_criacao);
+                    return (
+                      <TableRow key={r.id_deal}>
+                        <TableCell className="font-medium">{r.nome_negocio || "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{r.perfil_cliente || "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{r.etapa_negocio || "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{r.agente_ativacao?.trim() || "—"}</TableCell>
+                        <TableCell className="text-right font-numeric">{fmtBRLk(Number(r.mrr) || 0)}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {d ? format(d, "dd/MM HH:mm", { locale: ptBR }) : "—"}
+                        </TableCell>
+                        <TableCell>
+                          <a
+                            href={hubspotDealUrl(r.id_deal)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center text-primary hover:text-primary/80"
+                            title="Abrir no HubSpot"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
