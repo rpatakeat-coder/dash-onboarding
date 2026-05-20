@@ -64,13 +64,24 @@ export const MrrAsaasKpis = ({ rows }: Props) => {
     const diff = totalAsaas - totalHubspot;
     const diffPct = totalHubspot > 0 ? (diff / totalHubspot) * 100 : 0;
 
-    const divergentes = withAsaas
+    type Motivo = "sem_asaas_id" | "sem_mrr_asaas" | "diferenca";
+    const divergentes = periodRows
       .map((r) => {
+        const hasAsaasId = (r.asaas_id?.trim() ?? "") !== "";
         const h = num(r.mrr);
         const a = num(r.mrr_asaas);
-        return { row: r, hubspot: h, asaas: a, delta: a - h };
+        const delta = a - h;
+        let motivo: Motivo | null = null;
+        if (!hasAsaasId) {
+          if (h > 0) motivo = "sem_asaas_id";
+        } else if (a === 0 && h > EPS) {
+          motivo = "sem_mrr_asaas";
+        } else if (Math.abs(delta) > EPS) {
+          motivo = "diferenca";
+        }
+        return { row: r, hubspot: h, asaas: a, delta, motivo: motivo as Motivo | null };
       })
-      .filter((x) => Math.abs(x.delta) > EPS)
+      .filter((x): x is { row: typeof x.row; hubspot: number; asaas: number; delta: number; motivo: Motivo } => x.motivo !== null)
       .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
 
     return {
