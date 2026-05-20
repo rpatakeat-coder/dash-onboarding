@@ -33,8 +33,12 @@ const toNum = (v: string | null | undefined) => {
 const perfilOf = (r: DashRow) =>
   (r.perfil_cliente?.trim().split(/\s+/)[0] || "—").toUpperCase();
 
-type SortKey = "nome" | "etapa" | "criacao" | "fase" | "ativador" | "perfil";
+type SortKey = "nome" | "etapa" | "criacao" | "fase" | "ativador" | "perfil" | "mrr" | "mrrAsaas" | "delta";
 type SortDir = "asc" | "desc";
+
+const EPS_DIV = 0.5;
+const fmtBRL0 = (n: number) =>
+  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
 const BandPill = ({ dias }: { dias: number }) => {
   const b = slaBand(dias);
@@ -81,6 +85,8 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
+  const [onlyDivergentes, setOnlyDivergentes] = useState(false);
+
 
   const etapaOpts = useMemo(
     () => [
@@ -132,9 +138,15 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
           .toLowerCase();
         if (!haystack.includes(q)) return false;
       }
+      if (onlyDivergentes) {
+        const hasAsaas = (r.asaas_id?.trim() ?? "") !== "";
+        if (!hasAsaas) return false;
+        const delta = toNum(r.mrr_asaas) - toNum(r.mrr);
+        if (Math.abs(delta) <= EPS_DIV) return false;
+      }
       return true;
     });
-  }, [rows, etapaSel, ativSel, perfilSel, bandKeys, busca]);
+  }, [rows, etapaSel, ativSel, perfilSel, bandKeys, busca, onlyDivergentes]);
 
   const sorted = useMemo(() => {
     const arr = [...filtered];
@@ -151,6 +163,12 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
           return dir * perfilOf(a).localeCompare(perfilOf(b));
         case "criacao":
           return dir * (toNum(a.sla_dias_criacao) - toNum(b.sla_dias_criacao));
+        case "mrr":
+          return dir * (toNum(a.mrr) - toNum(b.mrr));
+        case "mrrAsaas":
+          return dir * (toNum(a.mrr_asaas) - toNum(b.mrr_asaas));
+        case "delta":
+          return dir * ((toNum(a.mrr_asaas) - toNum(a.mrr)) - (toNum(b.mrr_asaas) - toNum(b.mrr)));
         case "fase":
         default:
           return dir * (toNum(a.sla_dias_etapa) - toNum(b.sla_dias_etapa));
@@ -183,9 +201,10 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
   const clearAll = () => {
     setBandSel(new Set()); setEtapaSel(new Set());
     setAtivSel(new Set()); setPerfilSel(new Set()); setBusca("");
+    setOnlyDivergentes(false);
     setPage(0);
   };
-  const anyFilter = bandSel.size || etapaSel.size || ativSel.size || perfilSel.size || busca;
+  const anyFilter = bandSel.size || etapaSel.size || ativSel.size || perfilSel.size || busca || onlyDivergentes;
 
   return (
     <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm-soft">
@@ -237,6 +256,19 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
           selected={perfilSel}
           onChange={(s) => { setPerfilSel(s); setPage(0); }}
         />
+        <button
+          type="button"
+          onClick={() => { setOnlyDivergentes((v) => !v); setPage(0); }}
+          className={cn(
+            "rounded-lg border px-3 py-2 font-subtitle text-xs transition",
+            onlyDivergentes
+              ? "border-secondary/60 bg-secondary/10 text-secondary"
+              : "border-border text-muted-foreground hover:border-secondary/40 hover:text-secondary",
+          )}
+          title="Mostrar apenas deals em que MRR Hubspot difere do MRR Asaas"
+        >
+          Só divergentes (Hub × Asaas)
+        </button>
         {anyFilter ? (
           <button
             onClick={clearAll}
@@ -255,6 +287,9 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
               <TableHead><SortBtn k="etapa">Etapa</SortBtn></TableHead>
               <TableHead className="text-right"><SortBtn k="criacao">SLA criação</SortBtn></TableHead>
               <TableHead className="text-right"><SortBtn k="fase">SLA fase</SortBtn></TableHead>
+              <TableHead className="text-right"><SortBtn k="mrr">MRR Hub</SortBtn></TableHead>
+              <TableHead className="text-right"><SortBtn k="mrrAsaas">MRR Asaas</SortBtn></TableHead>
+              <TableHead className="text-right"><SortBtn k="delta">Δ</SortBtn></TableHead>
               {!hideAtivadorFilter && (
                 <TableHead><SortBtn k="ativador">Ativador</SortBtn></TableHead>
               )}
@@ -264,41 +299,69 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
           <TableBody>
             {pageRows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={hideAtivadorFilter ? 5 : 6} className="text-center text-sm text-muted-foreground py-8">
+                <TableCell colSpan={hideAtivadorFilter ? 8 : 9} className="text-center text-sm text-muted-foreground py-8">
                   Nenhum deal encontrado.
                 </TableCell>
               </TableRow>
             )}
-            {pageRows.map((r) => (
-              <TableRow
-                key={r.id_deal}
-                onClick={() => openDeal(r)}
-                className="cursor-pointer"
-              >
-                <TableCell className="font-medium text-foreground">
-                  {r.nome_negocio || "—"}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {r.etapa_negocio || "—"}
-                </TableCell>
-                <TableCell className="text-right">
-                  <BandPill dias={toNum(r.sla_dias_criacao)} />
-                </TableCell>
-                <TableCell className="text-right">
-                  <BandPill dias={toNum(r.sla_dias_etapa)} />
-                </TableCell>
-                {!hideAtivadorFilter && (
-                  <TableCell className="text-muted-foreground">
-                    {r.agente_ativacao || "—"}
+            {pageRows.map((r) => {
+              const mrrHub = toNum(r.mrr);
+              const mrrAsaas = toNum(r.mrr_asaas);
+              const hasAsaas = (r.asaas_id?.trim() ?? "") !== "";
+              const delta = mrrAsaas - mrrHub;
+              const divergent = hasAsaas && Math.abs(delta) > EPS_DIV;
+              return (
+                <TableRow
+                  key={r.id_deal}
+                  onClick={() => openDeal(r)}
+                  className="cursor-pointer"
+                >
+                  <TableCell className="font-medium text-foreground">
+                    {r.nome_negocio || "—"}
                   </TableCell>
-                )}
-                <TableCell>
-                  <span className="rounded border border-border bg-muted px-1.5 py-0.5 font-numeric text-xs">
-                    {perfilOf(r)}
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
+                  <TableCell className="text-muted-foreground">
+                    {r.etapa_negocio || "—"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <BandPill dias={toNum(r.sla_dias_criacao)} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <BandPill dias={toNum(r.sla_dias_etapa)} />
+                  </TableCell>
+                  <TableCell className="text-right font-numeric tabular-nums">
+                    {mrrHub > 0 ? fmtBRL0(mrrHub) : <span className="text-muted-foreground">—</span>}
+                  </TableCell>
+                  <TableCell className="text-right font-numeric tabular-nums">
+                    {hasAsaas ? (
+                      fmtBRL0(mrrAsaas)
+                    ) : (
+                      <span className="text-muted-foreground" title="Sem vínculo com Asaas">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      "text-right font-numeric font-semibold tabular-nums",
+                      !hasAsaas && "text-muted-foreground",
+                      divergent && delta >= 0 && "text-success",
+                      divergent && delta < 0 && "text-destructive",
+                    )}
+                    title={hasAsaas ? "Asaas − Hubspot" : "Sem Asaas vinculado"}
+                  >
+                    {!hasAsaas ? "—" : divergent ? `${delta >= 0 ? "+" : ""}${fmtBRL0(delta)}` : "≈"}
+                  </TableCell>
+                  {!hideAtivadorFilter && (
+                    <TableCell className="text-muted-foreground">
+                      {r.agente_ativacao || "—"}
+                    </TableCell>
+                  )}
+                  <TableCell>
+                    <span className="rounded border border-border bg-muted px-1.5 py-0.5 font-numeric text-xs">
+                      {perfilOf(r)}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
