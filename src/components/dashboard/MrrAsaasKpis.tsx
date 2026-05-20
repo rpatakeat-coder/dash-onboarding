@@ -20,6 +20,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { fmtBRL, filterByPeriod, parseDate, type DashRow, type PeriodKey } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
 import { InfoTooltip } from "./InfoTooltip";
@@ -64,13 +65,24 @@ export const MrrAsaasKpis = ({ rows }: Props) => {
     const diff = totalAsaas - totalHubspot;
     const diffPct = totalHubspot > 0 ? (diff / totalHubspot) * 100 : 0;
 
-    const divergentes = withAsaas
+    type Motivo = "sem_asaas_id" | "sem_mrr_asaas" | "diferenca";
+    const divergentes = periodRows
       .map((r) => {
+        const hasAsaasId = (r.asaas_id?.trim() ?? "") !== "";
         const h = num(r.mrr);
         const a = num(r.mrr_asaas);
-        return { row: r, hubspot: h, asaas: a, delta: a - h };
+        const delta = a - h;
+        let motivo: Motivo | null = null;
+        if (!hasAsaasId) {
+          if (h > 0) motivo = "sem_asaas_id";
+        } else if (a === 0 && h > EPS) {
+          motivo = "sem_mrr_asaas";
+        } else if (Math.abs(delta) > EPS) {
+          motivo = "diferenca";
+        }
+        return { row: r, hubspot: h, asaas: a, delta, motivo: motivo as Motivo | null };
       })
-      .filter((x) => Math.abs(x.delta) > EPS)
+      .filter((x): x is { row: typeof x.row; hubspot: number; asaas: number; delta: number; motivo: Motivo } => x.motivo !== null)
       .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
 
     return {
@@ -264,19 +276,37 @@ export const MrrAsaasKpis = ({ rows }: Props) => {
                   <TableHead className="text-right">Hubspot</TableHead>
                   <TableHead className="text-right">Asaas</TableHead>
                   <TableHead className="text-right">Δ</TableHead>
+                  <TableHead>Motivo</TableHead>
                   <TableHead>Ativador</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.divergentes.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
                       Nenhum deal divergente.
                     </TableCell>
                   </TableRow>
                 )}
-                {data.divergentes.map(({ row, hubspot, asaas, delta }) => {
+                {data.divergentes.map(({ row, hubspot, asaas, delta, motivo }) => {
                   const pos = delta >= 0;
+                  const motivoMeta = {
+                    sem_asaas_id: {
+                      label: "Sem asaas_id",
+                      tip: "Deal não possui vínculo com cobrança no Asaas (asaas_id ausente), mas tem MRR no Hubspot.",
+                      cls: "border-secondary/40 bg-secondary/10 text-secondary",
+                    },
+                    sem_mrr_asaas: {
+                      label: "MRR Asaas faltante",
+                      tip: "Deal possui asaas_id, mas o valor de mrr_asaas está zerado — provavelmente cobrança não configurada/ativa.",
+                      cls: "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+                    },
+                    diferenca: {
+                      label: "Diferença real",
+                      tip: "Asaas e Hubspot possuem valores divergentes acima da tolerância (R$ 0,50).",
+                      cls: "border-destructive/40 bg-destructive/10 text-destructive",
+                    },
+                  }[motivo];
                   return (
                     <TableRow key={row.id_deal}>
                       <TableCell className="font-medium">
@@ -296,6 +326,23 @@ export const MrrAsaasKpis = ({ rows }: Props) => {
                       >
                         {pos ? "+" : ""}
                         {fmtBRL(delta)}
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip delayDuration={150}>
+                          <TooltipTrigger asChild>
+                            <span
+                              className={cn(
+                                "inline-flex cursor-help items-center rounded-md border px-2 py-0.5 text-[11px] font-medium",
+                                motivoMeta.cls,
+                              )}
+                            >
+                              {motivoMeta.label}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed">
+                            {motivoMeta.tip}
+                          </TooltipContent>
+                        </Tooltip>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {row.agente_ativacao || "—"}
