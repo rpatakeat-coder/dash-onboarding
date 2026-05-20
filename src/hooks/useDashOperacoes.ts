@@ -6,6 +6,10 @@ export interface DashRow {
   nome_negocio: string | null;
   perfil_cliente: string | null;
   mrr: string | null;
+  /** MRR informado no Asaas (cobrança real). */
+  mrr_asaas: string | null;
+  /** ID do cliente/assinatura no Asaas. */
+  asaas_id: string | null;
   agente_ativacao: string | null;
   /** SLA (dias) na etapa atual — vem de `sla_dias_etapa` na tabela. */
   sla_dias_etapa: string | null;
