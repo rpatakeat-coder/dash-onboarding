@@ -9,6 +9,7 @@ import { MrrAtivadoTrendChart } from "@/components/dashboard/MrrAtivadoTrendChar
 import { MrrAsaasKpis } from "@/components/dashboard/MrrAsaasKpis";
 import { MacroFilters } from "@/components/dashboard/MacroFilters";
 import { CarteiraPorAtivador } from "@/components/dashboard/CarteiraPorAtivador";
+import { MrrAtivadoPorAtivador } from "@/components/dashboard/MrrAtivadoPorAtivador";
 import { RankingVariavelAtivadores } from "@/components/dashboard/RankingVariavelAtivadores";
 import { DealsTable } from "@/components/dashboard/DealsTable";
 import { RefreshDataButton } from "@/components/dashboard/RefreshDataButton";
@@ -186,6 +187,8 @@ const Index = () => {
             <MacroMovimento rows={macroRows} />
 
             <CarteiraPorAtivador rows={estoqueRows} />
+
+            <MrrAtivadoPorAtivador rows={macroRows} />
 
             <RankingVariavelAtivadores
               rows={allRows}
