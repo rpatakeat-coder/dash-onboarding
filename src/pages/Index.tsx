@@ -6,6 +6,7 @@ import { MacroEstoque } from "@/components/dashboard/MacroEstoque";
 import { MacroMovimento } from "@/components/dashboard/MacroMovimento";
 import { MrrAtivadoKpis } from "@/components/dashboard/MrrAtivadoKpis";
 import { MrrAtivadoTrendChart } from "@/components/dashboard/MrrAtivadoTrendChart";
+import { MrrAsaasKpis } from "@/components/dashboard/MrrAsaasKpis";
 import { MacroFilters } from "@/components/dashboard/MacroFilters";
 import { CarteiraPorAtivador } from "@/components/dashboard/CarteiraPorAtivador";
 import { RankingVariavelAtivadores } from "@/components/dashboard/RankingVariavelAtivadores";
