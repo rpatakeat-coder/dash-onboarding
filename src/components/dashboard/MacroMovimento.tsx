@@ -125,8 +125,14 @@ export const MacroMovimento = ({ rows }: Props) => {
 
   return (
     <section className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-      <div className="relative rounded-2xl border border-success/30 bg-success/[0.04] p-5 lg:col-span-1">
-        <div className="absolute right-2 top-2"><InfoTooltip text="Entradas hoje = contagem de deals cuja data de criação é hoje (00:00 → 23:59), sem aplicar filtros de etapa." /></div>
+      <button
+        type="button"
+        onClick={() => setEntradasOpen(true)}
+        className="group relative rounded-2xl border border-success/30 bg-success/[0.04] p-5 text-left transition hover:border-success/60 hover:bg-success/[0.08] focus:outline-none focus:ring-2 focus:ring-success/40 lg:col-span-1"
+      >
+        <div className="absolute right-2 top-2" onClick={(e) => e.stopPropagation()}>
+          <InfoTooltip text="Entradas hoje = contagem de deals cuja data de criação é hoje (00:00 → 23:59), sem aplicar filtros de etapa. Clique para ver os deals." />
+        </div>
         <div className="flex items-start justify-between">
           <div>
             <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
@@ -139,9 +145,10 @@ export const MacroMovimento = ({ rows }: Props) => {
               {novosHoje === 1 ? "cliente entrou" : "clientes entraram"} no pipeline hoje
             </p>
           </div>
-          <Sparkles className="h-6 w-6 text-success/70" />
+          <Sparkles className="h-6 w-6 text-success/70 transition group-hover:scale-110" />
         </div>
-      </div>
+      </button>
+
 
       <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm-soft lg:col-span-4">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
