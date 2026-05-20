@@ -84,6 +84,8 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
     for (let i = 0; i < buckets.length; i++) {
       const prev = i > 0 ? buckets[i - 1].mrrCriados : 0;
       buckets[i].pct = prev > 0 ? (buckets[i].mrr / prev) * 100 : 0;
+      // expõe o MRR criado do mês anterior para o tooltip
+      (buckets[i] as any).mrrCriadosPrev = prev;
     }
     // Remove o mês extra (apenas denominador) antes de renderizar
     return buckets.slice(1);
@@ -201,17 +203,39 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
             />
             <Tooltip
               cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
-              contentStyle={{
-                background: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "0.75rem",
-                fontFamily: "Nunito Sans",
-              }}
-              formatter={(value: number, name) => {
-                if (name === "MRR Ativado") return [fmtBRL(value), name];
-                if (name === "% Ativação")
-                  return [`${value.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`, name];
-                return [value.toLocaleString("pt-BR"), name];
+              content={({ active, payload, label }: any) => {
+                if (!active || !payload?.length) return null;
+                const p = payload[0]?.payload ?? {};
+                const items = payload.filter((it: any) => !hidden.has(String(it.dataKey)));
+                return (
+                  <div
+                    style={{
+                      background: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "0.75rem",
+                      fontFamily: "Nunito Sans",
+                      padding: "8px 12px",
+                      fontSize: 12,
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{label}</div>
+                    {items.map((it: any) => {
+                      let val: string;
+                      if (it.name === "MRR Ativado") val = fmtBRL(it.value);
+                      else if (it.name === "% Ativação")
+                        val = `${Number(it.value).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`;
+                      else val = Number(it.value).toLocaleString("pt-BR");
+                      return (
+                        <div key={it.dataKey} style={{ color: it.color }}>
+                          {it.name} : {val}
+                        </div>
+                      );
+                    })}
+                    <div style={{ color: "hsl(var(--muted-foreground))", marginTop: 4 }}>
+                      MRR Criados (mês ant.) : {fmtBRL(p.mrrCriadosPrev ?? 0)}
+                    </div>
+                  </div>
+                );
               }}
             />
             <Legend
