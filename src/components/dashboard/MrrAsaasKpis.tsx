@@ -14,9 +14,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { fmtBRL, type DashRow } from "@/hooks/useDashOperacoes";
+import { fmtBRL, filterByPeriod, type DashRow, type PeriodKey } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
 import { InfoTooltip } from "./InfoTooltip";
+import { PeriodFilter } from "./PeriodFilter";
 
 interface Props {
   rows: DashRow[];
@@ -32,10 +33,13 @@ const EPS = 0.5;
 
 export const MrrAsaasKpis = ({ rows }: Props) => {
   const [open, setOpen] = useState(false);
+  const [period, setPeriod] = useState<PeriodKey>("tudo");
+
+  const periodRows = useMemo(() => filterByPeriod(rows, period), [rows, period]);
 
   const data = useMemo(() => {
     // Considera apenas deals que possuem vínculo com Asaas (asaas_id presente).
-    const withAsaas = rows.filter((r) => (r.asaas_id?.trim() ?? "") !== "");
+    const withAsaas = periodRows.filter((r) => (r.asaas_id?.trim() ?? "") !== "");
     const totalHubspot = withAsaas.reduce((s, r) => s + num(r.mrr), 0);
     const totalAsaas = withAsaas.reduce((s, r) => s + num(r.mrr_asaas), 0);
     const diff = totalAsaas - totalHubspot;
@@ -56,16 +60,16 @@ export const MrrAsaasKpis = ({ rows }: Props) => {
       diff,
       diffPct,
       countWithAsaas: withAsaas.length,
-      countSemAsaas: rows.length - withAsaas.length,
+      countSemAsaas: periodRows.length - withAsaas.length,
       divergentes,
     };
-  }, [rows]);
+  }, [periodRows]);
 
   const positive = data.diff >= 0;
 
   return (
     <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm-soft">
-      <div className="mb-4 flex items-end justify-between gap-2">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
         <div>
           <h2 className="font-display text-base font-semibold text-secondary">
             MRR Hubspot × Asaas
@@ -74,7 +78,9 @@ export const MrrAsaasKpis = ({ rows }: Props) => {
             Comparativo entre o MRR registrado no Hubspot e o MRR efetivamente cobrado no Asaas
           </p>
         </div>
+        <PeriodFilter value={period} onChange={setPeriod} />
       </div>
+
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {/* MRR Hubspot */}
