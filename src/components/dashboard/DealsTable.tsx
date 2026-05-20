@@ -151,9 +151,25 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
         const delta = toNum(r.mrr_asaas) - toNum(r.mrr);
         if (Math.abs(delta) <= EPS_DIV) return false;
       }
+      // Filtros por condição (estilo Google Sheets, por coluna)
+      const checks: [string, string | number | null | undefined][] = [
+        ["nome", r.nome_negocio],
+        ["etapa", r.etapa_negocio],
+        ["ativador", r.agente_ativacao],
+        ["perfil", perfilOf(r)],
+        ["criacao", toNum(r.sla_dias_criacao)],
+        ["fase", toNum(r.sla_dias_etapa)],
+        ["mrr", toNum(r.mrr)],
+        ["mrrAsaas", toNum(r.mrr_asaas)],
+        ["delta", toNum(r.mrr_asaas) - toNum(r.mrr)],
+      ];
+      for (const [k, v] of checks) {
+        const c = conds[k];
+        if (c && !evalCondition(c, v)) return false;
+      }
       return true;
     });
-  }, [rows, etapaSel, ativSel, perfilSel, bandKeys, busca, onlyDivergentes]);
+  }, [rows, etapaSel, ativSel, perfilSel, bandKeys, busca, onlyDivergentes, conds]);
 
   const sorted = useMemo(() => {
     const arr = [...filtered];
