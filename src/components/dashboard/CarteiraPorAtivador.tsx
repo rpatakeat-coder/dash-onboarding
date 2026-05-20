@@ -85,6 +85,8 @@ const PERFIL_FALLBACKS = [
 
 export const CarteiraPorAtivador = ({ rows }: Props) => {
   const [etapasExcluidas, setEtapasExcluidas] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<string | null>(null);
+
 
   const { etapaOpts, etapaCounts } = useMemo(() => {
     const c = new Map<string, number>();
