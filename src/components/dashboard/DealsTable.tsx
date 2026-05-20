@@ -87,6 +87,12 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
   const [onlyDivergentes, setOnlyDivergentes] = useState(false);
+  const [conds, setConds] = useState<Record<string, ConditionValue>>({});
+  const setCond = (k: string, v: ConditionValue) => {
+    setConds((c) => ({ ...c, [k]: v }));
+    setPage(0);
+  };
+
 
 
   const etapaOpts = useMemo(
