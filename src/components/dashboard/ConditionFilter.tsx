@@ -38,15 +38,15 @@ const NUM_OPS: { op: NumOp; label: string; needs: 0 | 1 | 2 }[] = [
 ];
 
 const TEXT_OPS: { op: TextOp; label: string; needs: 0 | 1 }[] = [
-  { op: "contains", label: "Contém" },
-  { op: "not_contains", label: "Não contém" },
-  { op: "starts_with", label: "Começa com" },
-  { op: "ends_with", label: "Termina com" },
-  { op: "eq", label: "É igual a" },
-  { op: "neq", label: "É diferente de" },
-  { op: "empty", label: "Está vazio" },
-  { op: "not_empty", label: "Não está vazio" },
-].map((x) => ({ ...x, needs: (x.op === "empty" || x.op === "not_empty" ? 0 : 1) as 0 | 1 }));
+  { op: "contains", label: "Contém", needs: 1 },
+  { op: "not_contains", label: "Não contém", needs: 1 },
+  { op: "starts_with", label: "Começa com", needs: 1 },
+  { op: "ends_with", label: "Termina com", needs: 1 },
+  { op: "eq", label: "É igual a", needs: 1 },
+  { op: "neq", label: "É diferente de", needs: 1 },
+  { op: "empty", label: "Está vazio", needs: 0 },
+  { op: "not_empty", label: "Não está vazio", needs: 0 },
+];
 
 export function evalCondition(cond: ConditionValue, raw: string | number | null | undefined): boolean {
   if (!cond) return true;
