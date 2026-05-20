@@ -46,7 +46,7 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
     const now = new Date();
     // Inclui 1 mês extra antes do range para servir de denominador (mês anterior)
     const buckets: { key: string; label: string; mrr: number; qtd: number; criados: number; mrrCriados: number; pct: number; isCurrent: boolean }[] = [];
-    for (let i = range; i >= 0; i--) {
+    for (let i: number = range; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       buckets.push({
         key: `${d.getFullYear()}-${d.getMonth()}`,
