@@ -255,6 +255,19 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
           selected={perfilSel}
           onChange={(s) => { setPerfilSel(s); setPage(0); }}
         />
+        <button
+          type="button"
+          onClick={() => { setOnlyDivergentes((v) => !v); setPage(0); }}
+          className={cn(
+            "rounded-lg border px-3 py-2 font-subtitle text-xs transition",
+            onlyDivergentes
+              ? "border-secondary/60 bg-secondary/10 text-secondary"
+              : "border-border text-muted-foreground hover:border-secondary/40 hover:text-secondary",
+          )}
+          title="Mostrar apenas deals em que MRR Hubspot difere do MRR Asaas"
+        >
+          Só divergentes (Hub × Asaas)
+        </button>
         {anyFilter ? (
           <button
             onClick={clearAll}
