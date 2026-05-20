@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { DollarSign, TrendingDown, TrendingUp, AlertTriangle } from "lucide-react";
+import { DollarSign, TrendingDown, TrendingUp, AlertTriangle, CalendarIcon, X } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import type { DateRange } from "react-day-picker";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +17,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { fmtBRL, filterByPeriod, type DashRow, type PeriodKey } from "@/hooks/useDashOperacoes";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import { fmtBRL, filterByPeriod, parseDate, type DashRow, type PeriodKey } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
 import { InfoTooltip } from "./InfoTooltip";
 import { PeriodFilter } from "./PeriodFilter";
@@ -34,8 +40,21 @@ const EPS = 0.5;
 export const MrrAsaasKpis = ({ rows }: Props) => {
   const [open, setOpen] = useState(false);
   const [period, setPeriod] = useState<PeriodKey>("tudo");
+  const [range, setRange] = useState<DateRange | undefined>();
 
-  const periodRows = useMemo(() => filterByPeriod(rows, period), [rows, period]);
+  const periodRows = useMemo(() => {
+    if (range?.from) {
+      const start = new Date(range.from); start.setHours(0, 0, 0, 0);
+      const endBase = range.to ?? range.from;
+      const end = new Date(endBase); end.setHours(0, 0, 0, 0); end.setDate(end.getDate() + 1);
+      return rows.filter((r) => {
+        const d = parseDate(r.data_criacao);
+        return d && d >= start && d < end;
+      });
+    }
+    return filterByPeriod(rows, period);
+  }, [rows, period, range]);
+
 
   const data = useMemo(() => {
     // Considera apenas deals que possuem vínculo com Asaas (asaas_id presente).
