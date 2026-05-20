@@ -102,7 +102,7 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
             <h2 className="font-display text-base font-semibold text-secondary">
               MRR Ativado · Comparativo mensal
             </h2>
-            <InfoTooltip text="Soma do MRR dos deals com data_ativacao em cada mês civil. A linha mostra a quantidade de ativações no período. Mês corrente em destaque." />
+            <InfoTooltip text="Barras: soma do MRR dos deals com data_ativacao em cada mês civil. % Ativação = MRR Ativado do mês ÷ MRR Criados do mês anterior × 100. Mês corrente em destaque." />
           </div>
           <p className="font-small text-xs text-muted-foreground">
             Evolução do MRR ativado nos últimos {range} meses
