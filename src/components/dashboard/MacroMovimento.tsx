@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { CalendarDays, Sparkles, CalendarIcon, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { CalendarDays, Sparkles, CalendarIcon, X, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
@@ -9,6 +9,7 @@ import {
   fmtBRLk,
   getPeriodRanges,
   mrrAtivadoNoPeriodo,
+  parseDate,
   type DashRow,
 } from "@/hooks/useDashOperacoes";
 import { InfoTooltip } from "./InfoTooltip";
@@ -16,6 +17,9 @@ import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { hubspotDealUrl } from "@/lib/hubspot";
 
 interface Props {
   rows: DashRow[];
@@ -29,6 +33,24 @@ export const MacroMovimento = ({ rows }: Props) => {
   const [filter, setFilter] = useState<PeriodKey>("todos");
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [entradasOpen, setEntradasOpen] = useState(false);
+
+  const entradasHojeRows = useMemo(() => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    return rows
+      .filter((r) => {
+        const d = parseDate(r.data_criacao);
+        return d && d >= start && d < end;
+      })
+      .sort((a, b) => {
+        const da = parseDate(a.data_criacao)?.getTime() ?? 0;
+        const db = parseDate(b.data_criacao)?.getTime() ?? 0;
+        return db - da;
+      });
+  }, [rows]);
 
   const periods = [
     { key: "hoje", label: "Hoje", start: r.todayStart, end: r.tomorrow, accent: "text-primary" },
@@ -103,8 +125,14 @@ export const MacroMovimento = ({ rows }: Props) => {
 
   return (
     <section className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-      <div className="relative rounded-2xl border border-success/30 bg-success/[0.04] p-5 lg:col-span-1">
-        <div className="absolute right-2 top-2"><InfoTooltip text="Entradas hoje = contagem de deals cuja data de criação é hoje (00:00 → 23:59), sem aplicar filtros de etapa." /></div>
+      <button
+        type="button"
+        onClick={() => setEntradasOpen(true)}
+        className="group relative rounded-2xl border border-success/30 bg-success/[0.04] p-5 text-left transition hover:border-success/60 hover:bg-success/[0.08] focus:outline-none focus:ring-2 focus:ring-success/40 lg:col-span-1"
+      >
+        <div className="absolute right-2 top-2" onClick={(e) => e.stopPropagation()}>
+          <InfoTooltip text="Entradas hoje = contagem de deals cuja data de criação é hoje (00:00 → 23:59), sem aplicar filtros de etapa. Clique para ver os deals." />
+        </div>
         <div className="flex items-start justify-between">
           <div>
             <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
@@ -117,9 +145,10 @@ export const MacroMovimento = ({ rows }: Props) => {
               {novosHoje === 1 ? "cliente entrou" : "clientes entraram"} no pipeline hoje
             </p>
           </div>
-          <Sparkles className="h-6 w-6 text-success/70" />
+          <Sparkles className="h-6 w-6 text-success/70 transition group-hover:scale-110" />
         </div>
-      </div>
+      </button>
+
 
       <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm-soft lg:col-span-4">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -229,6 +258,71 @@ export const MacroMovimento = ({ rows }: Props) => {
           ))}
         </div>
       </div>
+
+      <Dialog open={entradasOpen} onOpenChange={setEntradasOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-lg">
+              Entradas hoje — {entradasHojeRows.length} {entradasHojeRows.length === 1 ? "deal" : "deals"}
+            </DialogTitle>
+            <DialogDescription>
+              Deals criados em {format(new Date(), "dd/MM/yyyy", { locale: ptBR })} (00:00 → 23:59).
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[60vh] overflow-auto rounded-lg border border-border">
+            <Table>
+              <TableHeader className="sticky top-0 bg-card">
+                <TableRow>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Perfil</TableHead>
+                  <TableHead>Etapa</TableHead>
+                  <TableHead>Ativador</TableHead>
+                  <TableHead className="text-right">MRR</TableHead>
+                  <TableHead>Criado em</TableHead>
+                  <TableHead className="w-10" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {entradasHojeRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-sm text-muted-foreground">
+                      Nenhuma entrada hoje.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  entradasHojeRows.map((r) => {
+                    const d = parseDate(r.data_criacao);
+                    return (
+                      <TableRow key={r.id_deal}>
+                        <TableCell className="font-medium">{r.nome_negocio || "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{r.perfil_cliente || "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{r.etapa_negocio || "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{r.agente_ativacao?.trim() || "—"}</TableCell>
+                        <TableCell className="text-right font-numeric">{fmtBRLk(Number(r.mrr) || 0)}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {d ? format(d, "dd/MM HH:mm", { locale: ptBR }) : "—"}
+                        </TableCell>
+                        <TableCell>
+                          <a
+                            href={hubspotDealUrl(r.id_deal)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center text-primary hover:text-primary/80"
+                            title="Abrir no HubSpot"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
