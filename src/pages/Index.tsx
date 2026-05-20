@@ -176,6 +176,9 @@ const Index = () => {
               <MrrAtivadoKpis rows={macroRows} />
             </div>
 
+            <MrrAsaasKpis rows={estoqueRows} />
+
+
             <ChurnKpis rows={personalRows} />
 
             <MrrAtivadoTrendChart rows={macroRows} />
