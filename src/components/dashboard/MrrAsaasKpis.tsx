@@ -80,7 +80,7 @@ export const MrrAsaasKpis = ({ rows }: Props) => {
         </div>
         <PeriodFilter value={period} onChange={setPeriod} />
       </div>
-      </div>
+
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {/* MRR Hubspot */}
