@@ -308,17 +308,62 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead><SortBtn k="nome">Negócio</SortBtn></TableHead>
-              <TableHead><SortBtn k="etapa">Etapa</SortBtn></TableHead>
-              <TableHead className="text-right"><SortBtn k="criacao">SLA criação</SortBtn></TableHead>
-              <TableHead className="text-right"><SortBtn k="fase">SLA fase</SortBtn></TableHead>
-              <TableHead className="text-right"><SortBtn k="mrr">MRR Hub</SortBtn></TableHead>
-              <TableHead className="text-right"><SortBtn k="mrrAsaas">MRR Asaas</SortBtn></TableHead>
-              <TableHead className="text-right"><SortBtn k="delta">Δ</SortBtn></TableHead>
+              <TableHead>
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="nome">Negócio</SortBtn>
+                  <ConditionFilter kind="text" value={conds.nome ?? null} onChange={(v) => setCond("nome", v)} label="Negócio" />
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="etapa">Etapa</SortBtn>
+                  <ConditionFilter kind="text" value={conds.etapa ?? null} onChange={(v) => setCond("etapa", v)} label="Etapa" />
+                </div>
+              </TableHead>
+              <TableHead className="text-right">
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="criacao">SLA criação</SortBtn>
+                  <ConditionFilter kind="number" value={conds.criacao ?? null} onChange={(v) => setCond("criacao", v)} label="SLA criação (dias)" />
+                </div>
+              </TableHead>
+              <TableHead className="text-right">
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="fase">SLA fase</SortBtn>
+                  <ConditionFilter kind="number" value={conds.fase ?? null} onChange={(v) => setCond("fase", v)} label="SLA fase (dias)" />
+                </div>
+              </TableHead>
+              <TableHead className="text-right">
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="mrr">MRR Hub</SortBtn>
+                  <ConditionFilter kind="number" value={conds.mrr ?? null} onChange={(v) => setCond("mrr", v)} label="MRR Hub (R$)" />
+                </div>
+              </TableHead>
+              <TableHead className="text-right">
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="mrrAsaas">MRR Asaas</SortBtn>
+                  <ConditionFilter kind="number" value={conds.mrrAsaas ?? null} onChange={(v) => setCond("mrrAsaas", v)} label="MRR Asaas (R$)" />
+                </div>
+              </TableHead>
+              <TableHead className="text-right">
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="delta">Δ</SortBtn>
+                  <ConditionFilter kind="number" value={conds.delta ?? null} onChange={(v) => setCond("delta", v)} label="Δ (Asaas − Hub)" />
+                </div>
+              </TableHead>
               {!hideAtivadorFilter && (
-                <TableHead><SortBtn k="ativador">Ativador</SortBtn></TableHead>
+                <TableHead>
+                  <div className="inline-flex items-center gap-1">
+                    <SortBtn k="ativador">Ativador</SortBtn>
+                    <ConditionFilter kind="text" value={conds.ativador ?? null} onChange={(v) => setCond("ativador", v)} label="Ativador" />
+                  </div>
+                </TableHead>
               )}
-              <TableHead><SortBtn k="perfil">Perfil</SortBtn></TableHead>
+              <TableHead>
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="perfil">Perfil</SortBtn>
+                  <ConditionFilter kind="text" value={conds.perfil ?? null} onChange={(v) => setCond("perfil", v)} label="Perfil" />
+                </div>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
