@@ -163,6 +163,12 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
           return dir * perfilOf(a).localeCompare(perfilOf(b));
         case "criacao":
           return dir * (toNum(a.sla_dias_criacao) - toNum(b.sla_dias_criacao));
+        case "mrr":
+          return dir * (toNum(a.mrr) - toNum(b.mrr));
+        case "mrrAsaas":
+          return dir * (toNum(a.mrr_asaas) - toNum(b.mrr_asaas));
+        case "delta":
+          return dir * ((toNum(a.mrr_asaas) - toNum(a.mrr)) - (toNum(b.mrr_asaas) - toNum(b.mrr)));
         case "fase":
         default:
           return dir * (toNum(a.sla_dias_etapa) - toNum(b.sla_dias_etapa));
