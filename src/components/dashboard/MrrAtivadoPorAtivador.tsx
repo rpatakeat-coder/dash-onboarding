@@ -63,6 +63,8 @@ const PERIODS: { key: PeriodKey; label: string }[] = [
 export const MrrAtivadoPorAtivador = ({ rows }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("mes");
   const [range, setRange] = useState<DateRange | undefined>();
+  const [selected, setSelected] = useState<string | null>(null);
+
 
   const { start, end, label } = useMemo(() => {
     if (range?.from) {
