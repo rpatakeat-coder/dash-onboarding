@@ -298,41 +298,69 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
           <TableBody>
             {pageRows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={hideAtivadorFilter ? 5 : 6} className="text-center text-sm text-muted-foreground py-8">
+                <TableCell colSpan={hideAtivadorFilter ? 8 : 9} className="text-center text-sm text-muted-foreground py-8">
                   Nenhum deal encontrado.
                 </TableCell>
               </TableRow>
             )}
-            {pageRows.map((r) => (
-              <TableRow
-                key={r.id_deal}
-                onClick={() => openDeal(r)}
-                className="cursor-pointer"
-              >
-                <TableCell className="font-medium text-foreground">
-                  {r.nome_negocio || "—"}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {r.etapa_negocio || "—"}
-                </TableCell>
-                <TableCell className="text-right">
-                  <BandPill dias={toNum(r.sla_dias_criacao)} />
-                </TableCell>
-                <TableCell className="text-right">
-                  <BandPill dias={toNum(r.sla_dias_etapa)} />
-                </TableCell>
-                {!hideAtivadorFilter && (
-                  <TableCell className="text-muted-foreground">
-                    {r.agente_ativacao || "—"}
+            {pageRows.map((r) => {
+              const mrrHub = toNum(r.mrr);
+              const mrrAsaas = toNum(r.mrr_asaas);
+              const hasAsaas = (r.asaas_id?.trim() ?? "") !== "";
+              const delta = mrrAsaas - mrrHub;
+              const divergent = hasAsaas && Math.abs(delta) > EPS_DIV;
+              return (
+                <TableRow
+                  key={r.id_deal}
+                  onClick={() => openDeal(r)}
+                  className="cursor-pointer"
+                >
+                  <TableCell className="font-medium text-foreground">
+                    {r.nome_negocio || "—"}
                   </TableCell>
-                )}
-                <TableCell>
-                  <span className="rounded border border-border bg-muted px-1.5 py-0.5 font-numeric text-xs">
-                    {perfilOf(r)}
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
+                  <TableCell className="text-muted-foreground">
+                    {r.etapa_negocio || "—"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <BandPill dias={toNum(r.sla_dias_criacao)} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <BandPill dias={toNum(r.sla_dias_etapa)} />
+                  </TableCell>
+                  <TableCell className="text-right font-numeric tabular-nums">
+                    {mrrHub > 0 ? fmtBRL0(mrrHub) : <span className="text-muted-foreground">—</span>}
+                  </TableCell>
+                  <TableCell className="text-right font-numeric tabular-nums">
+                    {hasAsaas ? (
+                      fmtBRL0(mrrAsaas)
+                    ) : (
+                      <span className="text-muted-foreground" title="Sem vínculo com Asaas">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      "text-right font-numeric font-semibold tabular-nums",
+                      !hasAsaas && "text-muted-foreground",
+                      divergent && delta >= 0 && "text-success",
+                      divergent && delta < 0 && "text-destructive",
+                    )}
+                    title={hasAsaas ? "Asaas − Hubspot" : "Sem Asaas vinculado"}
+                  >
+                    {!hasAsaas ? "—" : divergent ? `${delta >= 0 ? "+" : ""}${fmtBRL0(delta)}` : "≈"}
+                  </TableCell>
+                  {!hideAtivadorFilter && (
+                    <TableCell className="text-muted-foreground">
+                      {r.agente_ativacao || "—"}
+                    </TableCell>
+                  )}
+                  <TableCell>
+                    <span className="rounded border border-border bg-muted px-1.5 py-0.5 font-numeric text-xs">
+                      {perfilOf(r)}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
