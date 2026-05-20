@@ -186,6 +186,10 @@ export const CarteiraPorAtivador = ({ rows }: Props) => {
               layout="vertical"
               margin={{ top: 4, right: 36, left: 8, bottom: 4 }}
               barCategoryGap={6}
+              onClick={(s) => {
+                const nome = (s?.activePayload?.[0]?.payload as { nome?: string } | undefined)?.nome;
+                if (nome) setSelected(nome);
+              }}
             >
               <XAxis type="number" hide />
 
@@ -223,6 +227,7 @@ export const CarteiraPorAtivador = ({ rows }: Props) => {
                     stackId="carteira"
                     fill={PERFIL_COLORS[p] ?? PERFIL_FALLBACKS[i % PERFIL_FALLBACKS.length]}
                     radius={isLast ? [0, 4, 4, 0] : [0, 0, 0, 0]}
+                    cursor="pointer"
                   >
                     {isLast && (
                       <LabelList
@@ -238,6 +243,12 @@ export const CarteiraPorAtivador = ({ rows }: Props) => {
           </ResponsiveContainer>
         </div>
       )}
+
+      <OperatorCarteiraModal
+        open={!!selected}
+        onOpenChange={(o) => !o && setSelected(null)}
+        operador={selected ? buildOperatorStat(selected, filteredRows.filter((r) => (r.agente_ativacao?.trim() || SEM_RESP) === selected)) : null}
+      />
     </section>
   );
 };
