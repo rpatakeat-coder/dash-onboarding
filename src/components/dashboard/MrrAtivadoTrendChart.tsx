@@ -44,8 +44,9 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
 
   const data = useMemo(() => {
     const now = new Date();
-    const buckets: { key: string; label: string; mrr: number; qtd: number; criados: number; pct: number; isCurrent: boolean }[] = [];
-    for (let i = range - 1; i >= 0; i--) {
+    // Inclui 1 mês extra antes do range para servir de denominador (mês anterior)
+    const buckets: { key: string; label: string; mrr: number; qtd: number; criados: number; mrrCriados: number; pct: number; isCurrent: boolean }[] = [];
+    for (let i = range; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       buckets.push({
         key: `${d.getFullYear()}-${d.getMonth()}`,
@@ -53,6 +54,7 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
         mrr: 0,
         qtd: 0,
         criados: 0,
+        mrrCriados: 0,
         pct: 0,
         isCurrent: i === 0,
       });
@@ -72,13 +74,19 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
       if (dc) {
         const k = `${dc.getFullYear()}-${dc.getMonth()}`;
         const i = idx.get(k);
-        if (i !== undefined) buckets[i].criados += 1;
+        if (i !== undefined) {
+          buckets[i].criados += 1;
+          buckets[i].mrrCriados += toNum(row.mrr);
+        }
       }
     }
-    for (const b of buckets) {
-      b.pct = b.criados > 0 ? (b.qtd / b.criados) * 100 : 0;
+    // % Ativação = MRR Ativado (mês vigente) / MRR Criados (mês anterior) × 100
+    for (let i = 0; i < buckets.length; i++) {
+      const prev = i > 0 ? buckets[i - 1].mrrCriados : 0;
+      buckets[i].pct = prev > 0 ? (buckets[i].mrr / prev) * 100 : 0;
     }
-    return buckets;
+    // Remove o mês extra (apenas denominador) antes de renderizar
+    return buckets.slice(1);
   }, [rows, range]);
 
   const totalMrr = data.reduce((s, b) => s + b.mrr, 0);
