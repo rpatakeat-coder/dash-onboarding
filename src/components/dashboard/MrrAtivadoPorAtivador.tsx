@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CalendarIcon, Users, X } from "lucide-react";
+import { CalendarIcon, ExternalLink, Search, Users, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
@@ -15,13 +15,32 @@ import {
 import {
   fmtBRL,
   fmtBRLk,
+  formatActivationDate,
   mrrAtivadoNoPeriodo,
   getPeriodRanges,
+  parseActivationDate,
   type DashRow,
 } from "@/hooks/useDashOperacoes";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { hubspotDealUrl } from "@/lib/hubspot";
 import { cn } from "@/lib/utils";
 import { InfoTooltip } from "./InfoTooltip";
 
@@ -44,6 +63,8 @@ const PERIODS: { key: PeriodKey; label: string }[] = [
 export const MrrAtivadoPorAtivador = ({ rows }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("mes");
   const [range, setRange] = useState<DateRange | undefined>();
+  const [selected, setSelected] = useState<string | null>(null);
+
 
   const { start, end, label } = useMemo(() => {
     if (range?.from) {
@@ -205,7 +226,13 @@ export const MrrAtivadoPorAtivador = ({ rows }: Props) => {
                 }}
                 labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
               />
-              <Bar dataKey="mrr" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]}>
+              <Bar
+                dataKey="mrr"
+                fill="hsl(var(--primary))"
+                radius={[0, 4, 4, 0]}
+                cursor="pointer"
+                onClick={(d: { nome?: string }) => d?.nome && setSelected(d.nome)}
+              >
                 <LabelList
                   dataKey="mrr"
                   position="right"
@@ -217,6 +244,232 @@ export const MrrAtivadoPorAtivador = ({ rows }: Props) => {
           </ResponsiveContainer>
         </div>
       )}
+
+      <AtivadorDealsModal
+        open={!!selected}
+        onOpenChange={(o) => !o && setSelected(null)}
+        ativador={selected}
+        rows={rows}
+        start={start}
+        end={end}
+        periodLabel={label}
+      />
     </section>
+  );
+};
+
+// ============================================================
+// Modal: deals ativados de um ativador no período selecionado
+// ============================================================
+
+const toNum = (v: string | null | undefined) => {
+  if (!v) return 0;
+  const n = parseFloat(String(v).replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+};
+
+interface ModalProps {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  ativador: string | null;
+  rows: DashRow[];
+  start: Date;
+  end: Date;
+  periodLabel: string;
+}
+
+type SortKey = "cliente" | "perfil" | "mrr" | "data" | "sla";
+
+const AtivadorDealsModal = ({
+  open,
+  onOpenChange,
+  ativador,
+  rows,
+  start,
+  end,
+  periodLabel,
+}: ModalProps) => {
+  const [q, setQ] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("data");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const ativados = useMemo(() => {
+    if (!ativador) return [];
+    return rows
+      .map((row) => {
+        const nome = row.agente_ativacao?.trim() || SEM_RESP;
+        if (nome !== ativador) return null;
+        const d = parseActivationDate(row.data_ativacao);
+        if (!d || d < start || d >= end) return null;
+        const perfilRaw = row.perfil_cliente?.trim() || "";
+        const perfilKey = perfilRaw.split(/\s+/)[0]?.toUpperCase() || "—";
+        return {
+          id: row.id_deal,
+          cliente: row.nome_negocio?.trim() || "—",
+          perfil: perfilKey === "ISENTO" ? "Isento" : perfilKey,
+          mrr: toNum(row.mrr),
+          dataStr: formatActivationDate(row.data_ativacao),
+          dataObj: d,
+          sla: toNum(row.sla_dias_real) || toNum(row.sla_dias_etapa),
+        };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null);
+  }, [rows, ativador, start, end]);
+
+  const totalMrr = ativados.reduce((s, x) => s + x.mrr, 0);
+  const totalQtd = ativados.length;
+  const ticketMedio = totalQtd > 0 ? totalMrr / totalQtd : 0;
+
+  const filtered = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    const list = term
+      ? ativados.filter((a) => a.cliente.toLowerCase().includes(term))
+      : ativados;
+    const dir = sortDir === "asc" ? 1 : -1;
+    return [...list].sort((a, b) => {
+      let va: string | number;
+      let vb: string | number;
+      if (sortKey === "data") {
+        va = a.dataObj.getTime();
+        vb = b.dataObj.getTime();
+      } else {
+        va = a[sortKey] as string | number;
+        vb = b[sortKey] as string | number;
+      }
+      if (typeof va === "number" && typeof vb === "number") return (va - vb) * dir;
+      return String(va).localeCompare(String(vb)) * dir;
+    });
+  }, [ativados, q, sortKey, sortDir]);
+
+  const toggleSort = (k: SortKey) => {
+    if (sortKey === k) setSortDir(sortDir === "asc" ? "desc" : "asc");
+    else {
+      setSortKey(k);
+      setSortDir(k === "cliente" || k === "perfil" ? "asc" : "desc");
+    }
+  };
+
+  const Th = ({
+    k,
+    children,
+    className,
+  }: {
+    k: SortKey;
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <TableHead
+      onClick={() => toggleSort(k)}
+      className={cn("cursor-pointer select-none hover:text-foreground", className)}
+    >
+      {children}
+      {sortKey === k && <span className="ml-1 text-xs">{sortDir === "asc" ? "▲" : "▼"}</span>}
+    </TableHead>
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto sm:rounded-2xl">
+        <DialogHeader>
+          <DialogTitle className="font-display text-2xl">
+            {ativador} · MRR Ativado
+          </DialogTitle>
+          <DialogDescription>
+            {periodLabel} · {totalQtd} ativação{totalQtd === 1 ? "" : "es"}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-success/30 bg-success/[0.04] p-4">
+            <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+              MRR Total
+            </p>
+            <p className="mt-2 font-numeric text-2xl font-bold text-success">{fmtBRL(totalMrr)}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+              Ativações
+            </p>
+            <p className="mt-2 font-numeric text-2xl font-bold text-foreground">
+              {totalQtd.toLocaleString("pt-BR")}
+            </p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+              Ticket médio
+            </p>
+            <p className="mt-2 font-numeric text-2xl font-bold text-foreground">
+              {fmtBRL(ticketMedio)}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-display text-sm font-semibold text-secondary">
+              Deals ({filtered.length.toLocaleString("pt-BR")})
+            </h3>
+            <div className="relative w-full max-w-xs">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Buscar cliente…"
+                className="pl-9"
+              />
+            </div>
+          </div>
+
+          <div className="max-h-[55vh] overflow-auto rounded-lg border">
+            <Table>
+              <TableHeader className="sticky top-0 bg-card">
+                <TableRow>
+                  <Th k="cliente">Cliente</Th>
+                  <Th k="perfil">Perfil</Th>
+                  <Th k="mrr" className="text-right">MRR</Th>
+                  <Th k="data">Data Ativação</Th>
+                  <Th k="sla" className="text-right">SLA (d)</Th>
+                  <TableHead className="text-right">Ação</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell className="font-medium">{row.cliente}</TableCell>
+                    <TableCell className="text-muted-foreground">{row.perfil}</TableCell>
+                    <TableCell className="text-right font-numeric tabular-nums">
+                      {fmtBRL(row.mrr)}
+                    </TableCell>
+                    <TableCell className="font-numeric tabular-nums text-muted-foreground">
+                      {row.dataStr || "—"}
+                    </TableCell>
+                    <TableCell className="text-right font-numeric tabular-nums text-muted-foreground">
+                      {row.sla ? row.sla.toFixed(0) : "—"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <a
+                        href={hubspotDealUrl(row.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 font-subtitle text-xs text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+                      >
+                        HubSpot <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {filtered.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                      Nenhuma ativação encontrada
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
