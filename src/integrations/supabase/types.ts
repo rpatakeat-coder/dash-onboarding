@@ -101,6 +101,7 @@ export type Database = {
       dash_operacoes: {
         Row: {
           agente_ativacao: string | null
+          asaas_id: string | null
           data_ativacao: string | null
           data_criacao: string | null
           data_entrada_fase: string | null
@@ -121,6 +122,7 @@ export type Database = {
         }
         Insert: {
           agente_ativacao?: string | null
+          asaas_id?: string | null
           data_ativacao?: string | null
           data_criacao?: string | null
           data_entrada_fase?: string | null
@@ -141,6 +143,7 @@ export type Database = {
         }
         Update: {
           agente_ativacao?: string | null
+          asaas_id?: string | null
           data_ativacao?: string | null
           data_criacao?: string | null
           data_entrada_fase?: string | null
