@@ -138,9 +138,15 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
           .toLowerCase();
         if (!haystack.includes(q)) return false;
       }
+      if (onlyDivergentes) {
+        const hasAsaas = (r.asaas_id?.trim() ?? "") !== "";
+        if (!hasAsaas) return false;
+        const delta = toNum(r.mrr_asaas) - toNum(r.mrr);
+        if (Math.abs(delta) <= EPS_DIV) return false;
+      }
       return true;
     });
-  }, [rows, etapaSel, ativSel, perfilSel, bandKeys, busca]);
+  }, [rows, etapaSel, ativSel, perfilSel, bandKeys, busca, onlyDivergentes]);
 
   const sorted = useMemo(() => {
     const arr = [...filtered];
