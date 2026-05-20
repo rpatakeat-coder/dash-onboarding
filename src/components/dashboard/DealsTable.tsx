@@ -201,9 +201,10 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
   const clearAll = () => {
     setBandSel(new Set()); setEtapaSel(new Set());
     setAtivSel(new Set()); setPerfilSel(new Set()); setBusca("");
+    setOnlyDivergentes(false);
     setPage(0);
   };
-  const anyFilter = bandSel.size || etapaSel.size || ativSel.size || perfilSel.size || busca;
+  const anyFilter = bandSel.size || etapaSel.size || ativSel.size || perfilSel.size || busca || onlyDivergentes;
 
   return (
     <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm-soft">
