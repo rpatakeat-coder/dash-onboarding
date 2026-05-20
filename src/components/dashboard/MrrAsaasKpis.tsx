@@ -97,8 +97,56 @@ export const MrrAsaasKpis = ({ rows }: Props) => {
             Comparativo entre o MRR registrado no Hubspot e o MRR efetivamente cobrado no Asaas
           </p>
         </div>
-        <PeriodFilter value={period} onChange={setPeriod} />
+        <div className="flex flex-wrap items-center gap-2">
+          <PeriodFilter
+            value={period}
+            onChange={(v) => { setPeriod(v); setRange(undefined); }}
+          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "h-9 gap-1.5 rounded-xl font-subtitle text-xs",
+                  range?.from && "border-primary/50 bg-primary/5 text-primary",
+                )}
+              >
+                <CalendarIcon className="h-3.5 w-3.5" />
+                {range?.from ? (
+                  range.to ? (
+                    <>
+                      {format(range.from, "dd/MM/yy", { locale: ptBR })} – {format(range.to, "dd/MM/yy", { locale: ptBR })}
+                    </>
+                  ) : (
+                    format(range.from, "dd/MM/yy", { locale: ptBR })
+                  )
+                ) : (
+                  "Personalizado"
+                )}
+                {range?.from && (
+                  <X
+                    className="ml-1 h-3 w-3 opacity-70 hover:opacity-100"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRange(undefined); }}
+                  />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="range"
+                selected={range}
+                onSelect={(r) => { setRange(r); if (r?.from) setPeriod("tudo"); }}
+                numberOfMonths={2}
+                locale={ptBR}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
+
 
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
