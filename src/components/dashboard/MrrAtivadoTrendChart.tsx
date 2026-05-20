@@ -84,6 +84,8 @@ export const MrrAtivadoTrendChart = ({ rows }: Props) => {
     for (let i = 0; i < buckets.length; i++) {
       const prev = i > 0 ? buckets[i - 1].mrrCriados : 0;
       buckets[i].pct = prev > 0 ? (buckets[i].mrr / prev) * 100 : 0;
+      // expõe o MRR criado do mês anterior para o tooltip
+      (buckets[i] as any).mrrCriadosPrev = prev;
     }
     // Remove o mês extra (apenas denominador) antes de renderizar
     return buckets.slice(1);
