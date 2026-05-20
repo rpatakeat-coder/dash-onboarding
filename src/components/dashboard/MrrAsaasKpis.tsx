@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { DollarSign, TrendingDown, TrendingUp, AlertTriangle } from "lucide-react";
+import { DollarSign, TrendingDown, TrendingUp, AlertTriangle, CalendarIcon, X } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import type { DateRange } from "react-day-picker";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +17,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { fmtBRL, filterByPeriod, type DashRow, type PeriodKey } from "@/hooks/useDashOperacoes";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import { fmtBRL, filterByPeriod, parseDate, type DashRow, type PeriodKey } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
 import { InfoTooltip } from "./InfoTooltip";
 import { PeriodFilter } from "./PeriodFilter";
@@ -34,8 +40,21 @@ const EPS = 0.5;
 export const MrrAsaasKpis = ({ rows }: Props) => {
   const [open, setOpen] = useState(false);
   const [period, setPeriod] = useState<PeriodKey>("tudo");
+  const [range, setRange] = useState<DateRange | undefined>();
 
-  const periodRows = useMemo(() => filterByPeriod(rows, period), [rows, period]);
+  const periodRows = useMemo(() => {
+    if (range?.from) {
+      const start = new Date(range.from); start.setHours(0, 0, 0, 0);
+      const endBase = range.to ?? range.from;
+      const end = new Date(endBase); end.setHours(0, 0, 0, 0); end.setDate(end.getDate() + 1);
+      return rows.filter((r) => {
+        const d = parseDate(r.data_criacao);
+        return d && d >= start && d < end;
+      });
+    }
+    return filterByPeriod(rows, period);
+  }, [rows, period, range]);
+
 
   const data = useMemo(() => {
     // Considera apenas deals que possuem vínculo com Asaas (asaas_id presente).
@@ -78,8 +97,56 @@ export const MrrAsaasKpis = ({ rows }: Props) => {
             Comparativo entre o MRR registrado no Hubspot e o MRR efetivamente cobrado no Asaas
           </p>
         </div>
-        <PeriodFilter value={period} onChange={setPeriod} />
+        <div className="flex flex-wrap items-center gap-2">
+          <PeriodFilter
+            value={period}
+            onChange={(v) => { setPeriod(v); setRange(undefined); }}
+          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "h-9 gap-1.5 rounded-xl font-subtitle text-xs",
+                  range?.from && "border-primary/50 bg-primary/5 text-primary",
+                )}
+              >
+                <CalendarIcon className="h-3.5 w-3.5" />
+                {range?.from ? (
+                  range.to ? (
+                    <>
+                      {format(range.from, "dd/MM/yy", { locale: ptBR })} – {format(range.to, "dd/MM/yy", { locale: ptBR })}
+                    </>
+                  ) : (
+                    format(range.from, "dd/MM/yy", { locale: ptBR })
+                  )
+                ) : (
+                  "Personalizado"
+                )}
+                {range?.from && (
+                  <X
+                    className="ml-1 h-3 w-3 opacity-70 hover:opacity-100"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRange(undefined); }}
+                  />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="range"
+                selected={range}
+                onSelect={(r) => { setRange(r); if (r?.from) setPeriod("tudo"); }}
+                numberOfMonths={2}
+                locale={ptBR}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
+
 
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
