@@ -473,4 +473,3 @@ const AtivadorDealsModal = ({
     </Dialog>
   );
 };
-};
