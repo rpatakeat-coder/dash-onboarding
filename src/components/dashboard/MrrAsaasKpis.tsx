@@ -14,9 +14,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { fmtBRL, type DashRow } from "@/hooks/useDashOperacoes";
+import { fmtBRL, filterByPeriod, type DashRow, type PeriodKey } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
 import { InfoTooltip } from "./InfoTooltip";
+import { PeriodFilter } from "./PeriodFilter";
 
 interface Props {
   rows: DashRow[];
