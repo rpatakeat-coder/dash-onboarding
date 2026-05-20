@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { CalendarDays, Sparkles, CalendarIcon, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { CalendarDays, Sparkles, CalendarIcon, X, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
@@ -9,6 +9,7 @@ import {
   fmtBRLk,
   getPeriodRanges,
   mrrAtivadoNoPeriodo,
+  parseDate,
   type DashRow,
 } from "@/hooks/useDashOperacoes";
 import { InfoTooltip } from "./InfoTooltip";
@@ -16,6 +17,9 @@ import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { hubspotDealUrl } from "@/lib/hubspot";
 
 interface Props {
   rows: DashRow[];
