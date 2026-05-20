@@ -14,6 +14,7 @@ import { ExportCsvButton } from "./ExportCsvButton";
 import { useDealDrawer } from "@/contexts/DealDrawer";
 import { cn } from "@/lib/utils";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
+import { ConditionFilter, evalCondition, type ConditionValue } from "./ConditionFilter";
 import {
   SLA_BAND_META,
   slaBand,
@@ -86,6 +87,12 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
   const [onlyDivergentes, setOnlyDivergentes] = useState(false);
+  const [conds, setConds] = useState<Record<string, ConditionValue>>({});
+  const setCond = (k: string, v: ConditionValue) => {
+    setConds((c) => ({ ...c, [k]: v }));
+    setPage(0);
+  };
+
 
 
   const etapaOpts = useMemo(
@@ -144,9 +151,25 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
         const delta = toNum(r.mrr_asaas) - toNum(r.mrr);
         if (Math.abs(delta) <= EPS_DIV) return false;
       }
+      // Filtros por condição (estilo Google Sheets, por coluna)
+      const checks: [string, string | number | null | undefined][] = [
+        ["nome", r.nome_negocio],
+        ["etapa", r.etapa_negocio],
+        ["ativador", r.agente_ativacao],
+        ["perfil", perfilOf(r)],
+        ["criacao", toNum(r.sla_dias_criacao)],
+        ["fase", toNum(r.sla_dias_etapa)],
+        ["mrr", toNum(r.mrr)],
+        ["mrrAsaas", toNum(r.mrr_asaas)],
+        ["delta", toNum(r.mrr_asaas) - toNum(r.mrr)],
+      ];
+      for (const [k, v] of checks) {
+        const c = conds[k];
+        if (c && !evalCondition(c, v)) return false;
+      }
       return true;
     });
-  }, [rows, etapaSel, ativSel, perfilSel, bandKeys, busca, onlyDivergentes]);
+  }, [rows, etapaSel, ativSel, perfilSel, bandKeys, busca, onlyDivergentes, conds]);
 
   const sorted = useMemo(() => {
     const arr = [...filtered];
@@ -202,9 +225,11 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
     setBandSel(new Set()); setEtapaSel(new Set());
     setAtivSel(new Set()); setPerfilSel(new Set()); setBusca("");
     setOnlyDivergentes(false);
+    setConds({});
     setPage(0);
   };
-  const anyFilter = bandSel.size || etapaSel.size || ativSel.size || perfilSel.size || busca || onlyDivergentes;
+  const condsActive = Object.values(conds).filter(Boolean).length;
+  const anyFilter = bandSel.size || etapaSel.size || ativSel.size || perfilSel.size || busca || onlyDivergentes || condsActive;
 
   return (
     <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm-soft">
@@ -283,17 +308,62 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead><SortBtn k="nome">Negócio</SortBtn></TableHead>
-              <TableHead><SortBtn k="etapa">Etapa</SortBtn></TableHead>
-              <TableHead className="text-right"><SortBtn k="criacao">SLA criação</SortBtn></TableHead>
-              <TableHead className="text-right"><SortBtn k="fase">SLA fase</SortBtn></TableHead>
-              <TableHead className="text-right"><SortBtn k="mrr">MRR Hub</SortBtn></TableHead>
-              <TableHead className="text-right"><SortBtn k="mrrAsaas">MRR Asaas</SortBtn></TableHead>
-              <TableHead className="text-right"><SortBtn k="delta">Δ</SortBtn></TableHead>
+              <TableHead>
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="nome">Negócio</SortBtn>
+                  <ConditionFilter kind="text" value={conds.nome ?? null} onChange={(v) => setCond("nome", v)} label="Negócio" />
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="etapa">Etapa</SortBtn>
+                  <ConditionFilter kind="text" value={conds.etapa ?? null} onChange={(v) => setCond("etapa", v)} label="Etapa" />
+                </div>
+              </TableHead>
+              <TableHead className="text-right">
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="criacao">SLA criação</SortBtn>
+                  <ConditionFilter kind="number" value={conds.criacao ?? null} onChange={(v) => setCond("criacao", v)} label="SLA criação (dias)" />
+                </div>
+              </TableHead>
+              <TableHead className="text-right">
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="fase">SLA fase</SortBtn>
+                  <ConditionFilter kind="number" value={conds.fase ?? null} onChange={(v) => setCond("fase", v)} label="SLA fase (dias)" />
+                </div>
+              </TableHead>
+              <TableHead className="text-right">
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="mrr">MRR Hub</SortBtn>
+                  <ConditionFilter kind="number" value={conds.mrr ?? null} onChange={(v) => setCond("mrr", v)} label="MRR Hub (R$)" />
+                </div>
+              </TableHead>
+              <TableHead className="text-right">
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="mrrAsaas">MRR Asaas</SortBtn>
+                  <ConditionFilter kind="number" value={conds.mrrAsaas ?? null} onChange={(v) => setCond("mrrAsaas", v)} label="MRR Asaas (R$)" />
+                </div>
+              </TableHead>
+              <TableHead className="text-right">
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="delta">Δ</SortBtn>
+                  <ConditionFilter kind="number" value={conds.delta ?? null} onChange={(v) => setCond("delta", v)} label="Δ (Asaas − Hub)" />
+                </div>
+              </TableHead>
               {!hideAtivadorFilter && (
-                <TableHead><SortBtn k="ativador">Ativador</SortBtn></TableHead>
+                <TableHead>
+                  <div className="inline-flex items-center gap-1">
+                    <SortBtn k="ativador">Ativador</SortBtn>
+                    <ConditionFilter kind="text" value={conds.ativador ?? null} onChange={(v) => setCond("ativador", v)} label="Ativador" />
+                  </div>
+                </TableHead>
               )}
-              <TableHead><SortBtn k="perfil">Perfil</SortBtn></TableHead>
+              <TableHead>
+                <div className="inline-flex items-center gap-1">
+                  <SortBtn k="perfil">Perfil</SortBtn>
+                  <ConditionFilter kind="text" value={conds.perfil ?? null} onChange={(v) => setCond("perfil", v)} label="Perfil" />
+                </div>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
