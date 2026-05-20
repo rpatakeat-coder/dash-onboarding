@@ -10,9 +10,58 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { DashRow } from "@/hooks/useDashOperacoes";
+import {
+  slaBand,
+  slaReal,
+  type DashRow,
+  type OperatorClient,
+  type OperatorStat,
+  type SlaBand,
+} from "@/hooks/useDashOperacoes";
 import { MultiSelectFilter } from "./MultiSelectFilter";
+import { OperatorCarteiraModal } from "./OperatorCarteiraModal";
 
+const TRAVADO_DIAS = 7;
+
+const toNum = (v: string | null | undefined) => {
+  if (!v) return 0;
+  const n = parseFloat(String(v).replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+};
+const emptyBands = (): Record<SlaBand, number> => ({
+  critico: 0, atencao: 0, alerta: 0, saudavel: 0,
+});
+
+function buildOperatorStat(nome: string, rows: DashRow[]): OperatorStat {
+  const clientes: OperatorClient[] = [];
+  let ativos = 0, mrr = 0, soma = 0, travados = 0;
+  const bands = emptyBands();
+  const bandsMrr = emptyBands();
+  for (const r of rows) {
+    const d = slaReal(r);
+    const m = toNum(r.mrr);
+    const band = slaBand(d);
+    ativos += 1; mrr += m; soma += d;
+    if (d > TRAVADO_DIAS) travados += 1;
+    bands[band] += 1;
+    bandsMrr[band] += m;
+    clientes.push({
+      id: r.id_deal,
+      cliente: r.nome_negocio?.trim() || "—",
+      etapa: r.etapa_negocio?.trim() || "—",
+      perfil: (r.perfil_cliente?.trim().split(/\s+/)[0] || "—").toUpperCase(),
+      sla: d,
+      mrr: m,
+      band,
+    });
+  }
+  clientes.sort((a, b) => b.sla - a.sla);
+  return {
+    nome, ativos, mrr,
+    tempoMedio: ativos ? soma / ativos : 0,
+    travados, bands, bandsMrr, clientes,
+  };
+}
 
 interface Props {
   rows: DashRow[];
@@ -36,6 +85,8 @@ const PERFIL_FALLBACKS = [
 
 export const CarteiraPorAtivador = ({ rows }: Props) => {
   const [etapasExcluidas, setEtapasExcluidas] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<string | null>(null);
+
 
   const { etapaOpts, etapaCounts } = useMemo(() => {
     const c = new Map<string, number>();
@@ -135,6 +186,10 @@ export const CarteiraPorAtivador = ({ rows }: Props) => {
               layout="vertical"
               margin={{ top: 4, right: 36, left: 8, bottom: 4 }}
               barCategoryGap={6}
+              onClick={(s) => {
+                const nome = (s?.activePayload?.[0]?.payload as { nome?: string } | undefined)?.nome;
+                if (nome) setSelected(nome);
+              }}
             >
               <XAxis type="number" hide />
 
@@ -172,6 +227,7 @@ export const CarteiraPorAtivador = ({ rows }: Props) => {
                     stackId="carteira"
                     fill={PERFIL_COLORS[p] ?? PERFIL_FALLBACKS[i % PERFIL_FALLBACKS.length]}
                     radius={isLast ? [0, 4, 4, 0] : [0, 0, 0, 0]}
+                    cursor="pointer"
                   >
                     {isLast && (
                       <LabelList
@@ -187,6 +243,12 @@ export const CarteiraPorAtivador = ({ rows }: Props) => {
           </ResponsiveContainer>
         </div>
       )}
+
+      <OperatorCarteiraModal
+        open={!!selected}
+        onOpenChange={(o) => !o && setSelected(null)}
+        operador={selected ? buildOperatorStat(selected, filteredRows.filter((r) => (r.agente_ativacao?.trim() || SEM_RESP) === selected)) : null}
+      />
     </section>
   );
 };
