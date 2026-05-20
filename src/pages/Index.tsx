@@ -188,6 +188,8 @@ const Index = () => {
 
             <CarteiraPorAtivador rows={estoqueRows} />
 
+            <MrrAtivadoPorAtivador rows={macroRows} />
+
             <RankingVariavelAtivadores
               rows={allRows}
               onlyAgente={isAdmin ? null : (isAtivador ? myAgente : null)}
