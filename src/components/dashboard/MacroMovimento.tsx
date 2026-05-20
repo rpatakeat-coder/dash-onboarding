@@ -33,6 +33,24 @@ export const MacroMovimento = ({ rows }: Props) => {
   const [filter, setFilter] = useState<PeriodKey>("todos");
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [entradasOpen, setEntradasOpen] = useState(false);
+
+  const entradasHojeRows = useMemo(() => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    return rows
+      .filter((r) => {
+        const d = parseDate(r.data_criacao);
+        return d && d >= start && d < end;
+      })
+      .sort((a, b) => {
+        const da = parseDate(a.data_criacao)?.getTime() ?? 0;
+        const db = parseDate(b.data_criacao)?.getTime() ?? 0;
+        return db - da;
+      });
+  }, [rows]);
 
   const periods = [
     { key: "hoje", label: "Hoje", start: r.todayStart, end: r.tomorrow, accent: "text-primary" },
