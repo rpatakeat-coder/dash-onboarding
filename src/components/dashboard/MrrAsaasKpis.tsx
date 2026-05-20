@@ -20,6 +20,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { fmtBRL, filterByPeriod, parseDate, type DashRow, type PeriodKey } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
 import { InfoTooltip } from "./InfoTooltip";
