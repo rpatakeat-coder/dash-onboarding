@@ -177,13 +177,13 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
               <th className="px-3 py-2 text-right">
                 <span className="inline-flex items-center justify-end gap-1">
                   % Churn
-                  <InfoTooltip text="Churn máx = 9% do MRR criado pelo próprio ativador no mês anterior (mesma base do % MRR). % Churn = (máx − real) / máx × 100. Pode ficar negativo quando o churn real estoura o limite — nesse caso, puxa o score para baixo (com piso 0)." />
+                  <InfoTooltip text="Como é calculado o Churn máx: pegamos o MRR criado pelo próprio ativador no MÊS ANTERIOR (mesma base usada no % MRR, pois o churn de hoje normalmente vem de clientes ativados no ciclo anterior) e aplicamos 9% sobre esse total. Fórmula: Churn máx = MRR criado mês anterior × 0,09. Já o % Churn = (Churn máx − Churn real) / Churn máx × 100 — quanto maior, melhor. Pode ficar negativo quando o churn real estoura o limite máximo permitido, indicando que o ativador perdeu mais do que o teto da meta." />
                 </span>
               </th>
               <th className="px-3 py-2 text-right">
                 <span className="inline-flex items-center justify-end gap-1">
                   Score
-                  <InfoTooltip text="Score = (% MRR × 60 + % Clientes × 30 + % Churn × 10) / 100. Mínimo 0 (clamp): mesmo com % Churn negativo, o score nunca fica abaixo de zero. Arredondamento ≥ .5 sobe para o próximo inteiro antes de cruzar a tabela de % do fixo." />
+                  <InfoTooltip text="Score = (% MRR × 60 + % Clientes × 30 + % Churn × 10) / 100 — média ponderada dos três indicadores. Por que o clamp de 0 a 100 (na verdade, piso 0 e topo natural de ~130): cada componente é uma porcentagem que pode variar bastante (ex.: % MRR pode passar de 100% se o ativador entrega mais que o criado no mês anterior; % Churn pode ficar negativo quando estoura o teto). Sem o piso 0, um churn muito ruim zeraria injustamente todo o esforço de MRR/Clientes; com o piso, o score nunca fica abaixo de zero e o ativador sempre é avaliado pelo conjunto. Arredondamento ≥ .5 sobe para o próximo inteiro antes de consultar a tabela de % do fixo." />
                 </span>
               </th>
               <th className="px-3 py-2 text-right">% do fixo</th>
