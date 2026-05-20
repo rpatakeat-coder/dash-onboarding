@@ -33,10 +33,13 @@ const EPS = 0.5;
 
 export const MrrAsaasKpis = ({ rows }: Props) => {
   const [open, setOpen] = useState(false);
+  const [period, setPeriod] = useState<PeriodKey>("tudo");
+
+  const periodRows = useMemo(() => filterByPeriod(rows, period), [rows, period]);
 
   const data = useMemo(() => {
     // Considera apenas deals que possuem vínculo com Asaas (asaas_id presente).
-    const withAsaas = rows.filter((r) => (r.asaas_id?.trim() ?? "") !== "");
+    const withAsaas = periodRows.filter((r) => (r.asaas_id?.trim() ?? "") !== "");
     const totalHubspot = withAsaas.reduce((s, r) => s + num(r.mrr), 0);
     const totalAsaas = withAsaas.reduce((s, r) => s + num(r.mrr_asaas), 0);
     const diff = totalAsaas - totalHubspot;
