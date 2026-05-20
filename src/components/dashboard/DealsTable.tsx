@@ -14,6 +14,7 @@ import { ExportCsvButton } from "./ExportCsvButton";
 import { useDealDrawer } from "@/contexts/DealDrawer";
 import { cn } from "@/lib/utils";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
+import { ConditionFilter, evalCondition, type ConditionValue } from "./ConditionFilter";
 import {
   SLA_BAND_META,
   slaBand,
