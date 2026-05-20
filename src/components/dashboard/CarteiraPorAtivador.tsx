@@ -10,9 +10,58 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { DashRow } from "@/hooks/useDashOperacoes";
+import {
+  slaBand,
+  slaReal,
+  type DashRow,
+  type OperatorClient,
+  type OperatorStat,
+  type SlaBand,
+} from "@/hooks/useDashOperacoes";
 import { MultiSelectFilter } from "./MultiSelectFilter";
+import { OperatorCarteiraModal } from "./OperatorCarteiraModal";
 
+const TRAVADO_DIAS = 7;
+
+const toNum = (v: string | null | undefined) => {
+  if (!v) return 0;
+  const n = parseFloat(String(v).replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+};
+const emptyBands = (): Record<SlaBand, number> => ({
+  critico: 0, atencao: 0, alerta: 0, saudavel: 0,
+});
+
+function buildOperatorStat(nome: string, rows: DashRow[]): OperatorStat {
+  const clientes: OperatorClient[] = [];
+  let ativos = 0, mrr = 0, soma = 0, travados = 0;
+  const bands = emptyBands();
+  const bandsMrr = emptyBands();
+  for (const r of rows) {
+    const d = slaReal(r);
+    const m = toNum(r.mrr);
+    const band = slaBand(d);
+    ativos += 1; mrr += m; soma += d;
+    if (d > TRAVADO_DIAS) travados += 1;
+    bands[band] += 1;
+    bandsMrr[band] += m;
+    clientes.push({
+      id: r.id_deal,
+      cliente: r.nome_negocio?.trim() || "—",
+      etapa: r.etapa_negocio?.trim() || "—",
+      perfil: (r.perfil_cliente?.trim().split(/\s+/)[0] || "—").toUpperCase(),
+      sla: d,
+      mrr: m,
+      band,
+    });
+  }
+  clientes.sort((a, b) => b.sla - a.sla);
+  return {
+    nome, ativos, mrr,
+    tempoMedio: ativos ? soma / ativos : 0,
+    travados, bands, bandsMrr, clientes,
+  };
+}
 
 interface Props {
   rows: DashRow[];
