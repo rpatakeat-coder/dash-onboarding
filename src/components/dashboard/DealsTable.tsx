@@ -33,8 +33,12 @@ const toNum = (v: string | null | undefined) => {
 const perfilOf = (r: DashRow) =>
   (r.perfil_cliente?.trim().split(/\s+/)[0] || "—").toUpperCase();
 
-type SortKey = "nome" | "etapa" | "criacao" | "fase" | "ativador" | "perfil";
+type SortKey = "nome" | "etapa" | "criacao" | "fase" | "ativador" | "perfil" | "mrr" | "mrrAsaas" | "delta";
 type SortDir = "asc" | "desc";
+
+const EPS_DIV = 0.5;
+const fmtBRL0 = (n: number) =>
+  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
 const BandPill = ({ dias }: { dias: number }) => {
   const b = slaBand(dias);
