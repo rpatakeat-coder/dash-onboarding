@@ -1,5 +1,39 @@
 import { useMemo, useState } from "react";
-import { DollarSign, TrendingDown, TrendingUp, AlertTriangle, CalendarIcon, X } from "lucide-react";
+import { DollarSign, TrendingDown, TrendingUp, AlertTriangle, CalendarIcon, X, Copy, ExternalLink, Check } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { hubspotDealUrl } from "@/lib/hubspot";
+
+const asaasCustomerUrl = (id: string) =>
+  `https://www.asaas.com/customerAccount/show/${encodeURIComponent(id)}`;
+
+const CopyIdButton = ({ id }: { id: string | number }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <Tooltip delayDuration={150}>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={async (e) => {
+            e.stopPropagation();
+            try {
+              await navigator.clipboard.writeText(String(id));
+              setCopied(true);
+              toast({ description: `ID ${id} copiado` });
+              setTimeout(() => setCopied(false), 1200);
+            } catch {
+              toast({ description: "Falha ao copiar", variant: "destructive" });
+            }
+          }}
+        >
+          {copied ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs">Copiar ID do deal</TooltipContent>
+    </Tooltip>
+  );
+};
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
@@ -298,12 +332,13 @@ export const MrrAsaasKpis = ({ rows }: Props) => {
                   <TableHead className="text-right">Δ</TableHead>
                   <TableHead>Motivo</TableHead>
                   <TableHead>Ativador</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.divergentes.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
                       Nenhum deal divergente.
                     </TableCell>
                   </TableRow>
@@ -367,6 +402,59 @@ export const MrrAsaasKpis = ({ rows }: Props) => {
                       <TableCell className="text-muted-foreground">
                         {row.agente_ativacao || "—"}
                       </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-0.5">
+                          <CopyIdButton id={row.id_deal} />
+                          <Tooltip delayDuration={150}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                asChild
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                              >
+                                <a
+                                  href={hubspotDealUrl(row.id_deal)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5 text-primary" />
+                                </a>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="text-xs">Abrir no HubSpot</TooltipContent>
+                          </Tooltip>
+                          <Tooltip delayDuration={150}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                asChild={!!row.asaas_id?.trim()}
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 disabled:opacity-40"
+                                disabled={!row.asaas_id?.trim()}
+                              >
+                                {row.asaas_id?.trim() ? (
+                                  <a
+                                    href={asaasCustomerUrl(row.asaas_id.trim())}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <ExternalLink className="h-3.5 w-3.5 text-success" />
+                                  </a>
+                                ) : (
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="text-xs">
+                              {row.asaas_id?.trim() ? "Abrir cobrança no Asaas" : "Sem asaas_id"}
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </TableCell>
+
                     </TableRow>
                   );
                 })}
