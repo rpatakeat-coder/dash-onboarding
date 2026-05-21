@@ -128,8 +128,11 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
       c.churnMax = c.mrrCriadoAnterior * 0.09;
       // % Churn = (max - real)/max * 100 — pode ser negativa quando estoura o máximo
       c.pctChurn = c.churnMax > 0 ? ((c.churnMax - c.churnReal) / c.churnMax) * 100 : 100;
-      // Score ponderado: MRR 60 + Clientes 30 + Churn 10 (média ponderada / 100)
-      c.scoreFinal = Math.max(0, (c.pctMrr * 60 + c.pctClientes * 30 + c.pctChurn * 10) / 100);
+      // Score ponderado (fórmula da planilha):
+      //   = 60×%MRR + 30×%Clientes + SE(%Churn<0; %Churn×10; 0)
+      // Churn só penaliza quando estoura o teto (negativo); dentro do limite não soma nada.
+      const churnTerm = c.pctChurn < 0 ? c.pctChurn * 10 : 0;
+      c.scoreFinal = Math.max(0, (c.pctMrr * 60 + c.pctClientes * 30 + churnTerm) / 100);
       c.pctFixo = pctFixoFromScore(c.scoreFinal);
       result.push(c);
     });
