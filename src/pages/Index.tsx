@@ -11,6 +11,7 @@ import { MacroFilters } from "@/components/dashboard/MacroFilters";
 import { CarteiraPorAtivador } from "@/components/dashboard/CarteiraPorAtivador";
 import { MrrAtivadoPorAtivador } from "@/components/dashboard/MrrAtivadoPorAtivador";
 import { RankingVariavelAtivadores } from "@/components/dashboard/RankingVariavelAtivadores";
+import { RankingMetasMedalhas } from "@/components/dashboard/RankingMetasMedalhas";
 import { DealsTable } from "@/components/dashboard/DealsTable";
 import { RefreshDataButton } from "@/components/dashboard/RefreshDataButton";
 import { EstoqueModal } from "@/components/dashboard/EstoqueModal";
@@ -189,6 +190,8 @@ const Index = () => {
             <CarteiraPorAtivador rows={estoqueRows} />
 
             <MrrAtivadoPorAtivador rows={macroRows} />
+
+            <RankingMetasMedalhas rows={allRows} />
 
             <RankingVariavelAtivadores
               rows={allRows}
