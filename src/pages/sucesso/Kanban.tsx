@@ -1,6 +1,7 @@
 import { Columns3 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { KanbanFilters } from "@/components/sucesso/KanbanFilters";
+import { KanbanBoard } from "@/components/sucesso/KanbanBoard";
 
 export default function SucessoKanban() {
   return (
@@ -20,11 +21,9 @@ export default function SucessoKanban() {
         </div>
 
         <KanbanFilters />
-
-        <div className="rounded-2xl border border-dashed border-border bg-card/40 p-10 text-center font-small text-sm text-muted-foreground">
-          Quadro Kanban em construção. Em breve as colunas com os cards dos clientes aparecem aqui.
-        </div>
+        <KanbanBoard />
       </main>
     </div>
   );
 }
+
