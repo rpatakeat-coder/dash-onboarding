@@ -11,6 +11,7 @@ import { APP_VERSION } from "@/lib/version";
 import { usePreferencesDialog } from "@/contexts/PreferencesDialogContext";
 import { CopilotButton } from "@/components/copilot/CopilotButton";
 import { getEffectiveLastUpdated, LAST_UPDATED_EVENT } from "@/lib/lastUpdated";
+import { AreaSwitcher } from "@/components/AreaSwitcher";
 
 export const DashboardHeader = () => {
   const today = new Date().toLocaleDateString("pt-BR", {
@@ -67,7 +68,7 @@ export const DashboardHeader = () => {
                 Painel de Operações
               </p>
               <h1 className="flex items-center gap-2 font-display text-sm font-semibold text-secondary leading-tight sm:text-base">
-                Onboarding
+                <AreaSwitcher />
                 <span className="rounded border border-border bg-muted px-1.5 py-0.5 font-subtitle text-[10px] font-medium uppercase tracking-wider text-muted-foreground" title="Versão do app">
                   v{APP_VERSION}
                 </span>

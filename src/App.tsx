@@ -15,13 +15,21 @@ import SetPassword from "./pages/SetPassword.tsx";
 import { DealDrawerProvider } from "./contexts/DealDrawer";
 import { PreferencesProvider } from "./contexts/PreferencesContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
+import { AreaProvider } from "./contexts/AreaContext";
 import { CommandPalette } from "./components/CommandPalette";
 import { PreferencesDialog } from "./components/PreferencesDialog";
 import { PreferencesDialogContext } from "./contexts/PreferencesDialogContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AdminOnlyRoute } from "./components/AdminOnlyRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { PageTransition } from "./components/PageTransition";
 import { TutorialProvider } from "./contexts/TutorialContext";
+import SucessoDashboard from "./pages/sucesso/Dashboard";
+import SucessoClientes from "./pages/sucesso/Clientes";
+import SucessoLista from "./pages/sucesso/Lista";
+import SucessoKanban from "./pages/sucesso/Kanban";
+import SucessoGestor from "./pages/sucesso/AreaGestor";
+import SucessoConfig from "./pages/sucesso/Config";
 
 const queryClient = new QueryClient();
 
