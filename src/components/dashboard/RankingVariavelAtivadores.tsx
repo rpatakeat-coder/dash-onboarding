@@ -183,13 +183,14 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
               <th className="px-3 py-2 text-right">
                 <span className="inline-flex items-center justify-end gap-1">
                   % Churn
-                  <InfoTooltip text="Como é calculado o Churn máx: pegamos o MRR criado pelo próprio ativador no MÊS ANTERIOR (mesma base usada no % MRR, pois o churn de hoje normalmente vem de clientes ativados no ciclo anterior) e aplicamos 9% sobre esse total. Fórmula: Churn máx = MRR criado mês anterior × 0,09. Já o % Churn = (Churn máx − Churn real) / Churn máx × 100 — quanto maior, melhor. Pode ficar negativo quando o churn real estoura o limite máximo permitido, indicando que o ativador perdeu mais do que o teto da meta." />
+                  <InfoTooltip text="Churn máx = 9% do MRR criado pelo próprio ativador no MÊS ANTERIOR. % Churn = (Churn real ÷ Churn máx) × 100 — mostra quanto do teto foi consumido. Quanto MENOR, melhor: 0% = nenhum churn, 100% = bateu no teto, >100% = estourou (vira penalidade no score)." />
                 </span>
               </th>
               <th className="px-3 py-2 text-right">
                 <span className="inline-flex items-center justify-end gap-1">
                   Score
-                  <InfoTooltip text="Score = (60×%MRR + 30×%Clientes + termo de churn) / 100. Termo de churn = %Churn × 10 SOMENTE quando %Churn < 0 (penaliza quem estoura o teto de 9%); quando o churn está dentro do limite, não soma nada — bater a meta de churn é obrigação, não bônus. Piso 0 e topo natural ~130. Arredondamento ≥ .5 sobe antes de consultar a tabela de % do fixo." />
+                  <InfoTooltip text="Score = (60×%MRR + 30×%Clientes − penalidade de churn) / 100. Penalidade = (%Churn − 100) × 10 SOMENTE quando %Churn > 100 (estourou o teto). Dentro do limite, churn não afeta o score — bater a meta é obrigação, não bônus. Piso 0. Arredondamento ≥ .5 sobe antes de consultar a tabela de % do fixo." />
+
                 </span>
               </th>
               <th className="px-3 py-2 text-right">% do fixo</th>
