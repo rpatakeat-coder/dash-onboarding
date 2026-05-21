@@ -8,6 +8,7 @@ import { BottleneckHeatmap } from "@/components/dashboard/BottleneckHeatmap";
 import { TrendChart } from "@/components/dashboard/TrendChart";
 import { Highlights } from "@/components/dashboard/Highlights";
 import { ChurnKpis } from "@/components/dashboard/ChurnKpis";
+import { RankingMetasMedalhas } from "@/components/dashboard/RankingMetasMedalhas";
 import logo from "@/assets/logo-takeat.png";
 
 const ROTATE_MS = 20_000;
