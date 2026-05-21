@@ -116,7 +116,8 @@ const computeRanking = (rows: DashRow[], period: PeriodKey): ScoreRow[] => {
     const pctClientes = c.clientesCriadosAnterior > 0 ? (c.clientesAtivados / c.clientesCriadosAnterior) * 100 : 0;
     const churnMax = c.mrrCriadoAnterior * 0.09;
     const pctChurn = churnMax > 0 ? ((churnMax - c.churnReal) / churnMax) * 100 : 100;
-    const scoreFinal = Math.max(0, (pctMrr * 60 + pctClientes * 30 + pctChurn * 10) / 100);
+    const churnTerm = pctChurn < 0 ? pctChurn * 10 : 0;
+    const scoreFinal = Math.max(0, (pctMrr * 60 + pctClientes * 30 + churnTerm) / 100);
     out.push({
       ativador, pctMrr, pctClientes, pctChurn, scoreFinal,
       mrrAtivado: c.mrrAtivado, clientesAtivados: c.clientesAtivados,
