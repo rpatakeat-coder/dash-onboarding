@@ -124,15 +124,15 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
     map.forEach((c) => {
       c.pctMrr = c.mrrCriadoAnterior > 0 ? (c.mrrAtivado / c.mrrCriadoAnterior) * 100 : 0;
       c.pctClientes = c.clientesCriadosAnterior > 0 ? (c.clientesAtivados / c.clientesCriadosAnterior) * 100 : 0;
-      // Churn máx = 9% do MRR criado pelo ativador no mês anterior (mesma base usada no % MRR)
+      // Churn máx = 9% do MRR criado pelo ativador no mês anterior
       c.churnMax = c.mrrCriadoAnterior * 0.09;
-      // % Churn = (max - real)/max * 100 — pode ser negativa quando estoura o máximo
-      c.pctChurn = c.churnMax > 0 ? ((c.churnMax - c.churnReal) / c.churnMax) * 100 : 100;
+      // % Churn = quanto do teto foi consumido (real / máx × 100). Quanto menor, melhor.
+      c.pctChurn = c.churnMax > 0 ? (c.churnReal / c.churnMax) * 100 : 0;
       // Score ponderado (fórmula da planilha):
-      //   = 60×%MRR + 30×%Clientes + SE(%Churn<0; %Churn×10; 0)
-      // Churn só penaliza quando estoura o teto (negativo); dentro do limite não soma nada.
-      const churnTerm = c.pctChurn < 0 ? c.pctChurn * 10 : 0;
-      c.scoreFinal = Math.max(0, (c.pctMrr * 60 + c.pctClientes * 30 + churnTerm) / 100);
+      //   = 60×%MRR + 30×%Clientes − penalidade de churn
+      // Penalidade = (%Churn − 100) × 10 SOMENTE quando %Churn > 100 (estourou o teto).
+      const churnPenalty = c.pctChurn > 100 ? (c.pctChurn - 100) * 10 : 0;
+      c.scoreFinal = Math.max(0, (c.pctMrr * 60 + c.pctClientes * 30 - churnPenalty) / 100);
       c.pctFixo = pctFixoFromScore(c.scoreFinal);
       result.push(c);
     });
@@ -147,6 +147,9 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
 
   const scoreColor = (s: number) =>
     s >= 90 ? "text-success" : s >= 70 ? "text-foreground" : s >= 50 ? "text-warning" : "text-destructive";
+  // Para % Churn, quanto MENOR melhor: 0–60% ótimo, 60–100% atenção, >100% estourou.
+  const pctChurnColor = (p: number) =>
+    p > 100 ? "text-destructive" : p >= 60 ? "text-warning" : "text-success";
   const pctFixoColor = (p: number) =>
     p >= 100 ? "text-success" : p >= 60 ? "text-foreground" : p >= 30 ? "text-warning" : "text-destructive";
 
@@ -180,13 +183,14 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
               <th className="px-3 py-2 text-right">
                 <span className="inline-flex items-center justify-end gap-1">
                   % Churn
-                  <InfoTooltip text="Como é calculado o Churn máx: pegamos o MRR criado pelo próprio ativador no MÊS ANTERIOR (mesma base usada no % MRR, pois o churn de hoje normalmente vem de clientes ativados no ciclo anterior) e aplicamos 9% sobre esse total. Fórmula: Churn máx = MRR criado mês anterior × 0,09. Já o % Churn = (Churn máx − Churn real) / Churn máx × 100 — quanto maior, melhor. Pode ficar negativo quando o churn real estoura o limite máximo permitido, indicando que o ativador perdeu mais do que o teto da meta." />
+                  <InfoTooltip text="Churn máx = 9% do MRR criado pelo próprio ativador no MÊS ANTERIOR. % Churn = (Churn real ÷ Churn máx) × 100 — mostra quanto do teto foi consumido. Quanto MENOR, melhor: 0% = nenhum churn, 100% = bateu no teto, >100% = estourou (vira penalidade no score)." />
                 </span>
               </th>
               <th className="px-3 py-2 text-right">
                 <span className="inline-flex items-center justify-end gap-1">
                   Score
-                  <InfoTooltip text="Score = (60×%MRR + 30×%Clientes + termo de churn) / 100. Termo de churn = %Churn × 10 SOMENTE quando %Churn < 0 (penaliza quem estoura o teto de 9%); quando o churn está dentro do limite, não soma nada — bater a meta de churn é obrigação, não bônus. Piso 0 e topo natural ~130. Arredondamento ≥ .5 sobe antes de consultar a tabela de % do fixo." />
+                  <InfoTooltip text="Score = (60×%MRR + 30×%Clientes − penalidade de churn) / 100. Penalidade = (%Churn − 100) × 10 SOMENTE quando %Churn > 100 (estourou o teto). Dentro do limite, churn não afeta o score — bater a meta é obrigação, não bônus. Piso 0. Arredondamento ≥ .5 sobe antes de consultar a tabela de % do fixo." />
+
                 </span>
               </th>
               <th className="px-3 py-2 text-right">% do fixo</th>
@@ -214,7 +218,7 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
                 <td className="px-3 py-2 text-right font-numeric tabular-nums text-muted-foreground">
                   {fmtBRL(r.churnReal)} / {fmtBRL(r.churnMax)}
                 </td>
-                <td className={cn("px-3 py-2 text-right font-numeric font-semibold tabular-nums", scoreColor(r.pctChurn))}>
+                <td className={cn("px-3 py-2 text-right font-numeric font-semibold tabular-nums", pctChurnColor(r.pctChurn))}>
                   {fmtPct(r.pctChurn)}
                 </td>
                 <td className={cn("px-3 py-2 text-right font-numeric font-bold tabular-nums", scoreColor(r.scoreFinal))}>
