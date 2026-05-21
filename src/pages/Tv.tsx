@@ -57,6 +57,10 @@ const Tv = () => {
         node: <RiskRanking rows={rows} limit={12} variant="vertical" />,
       },
       {
+        title: "Ranking de metas",
+        node: <RankingMetasMedalhas rows={allRows} variant="tv" />,
+      },
+      {
         title: "Churn do mês",
         node: <ChurnKpis rows={allRows} />,
       },
