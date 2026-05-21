@@ -15,13 +15,21 @@ import SetPassword from "./pages/SetPassword.tsx";
 import { DealDrawerProvider } from "./contexts/DealDrawer";
 import { PreferencesProvider } from "./contexts/PreferencesContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
+import { AreaProvider } from "./contexts/AreaContext";
 import { CommandPalette } from "./components/CommandPalette";
 import { PreferencesDialog } from "./components/PreferencesDialog";
 import { PreferencesDialogContext } from "./contexts/PreferencesDialogContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AdminOnlyRoute } from "./components/AdminOnlyRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { PageTransition } from "./components/PageTransition";
 import { TutorialProvider } from "./contexts/TutorialContext";
+import SucessoDashboard from "./pages/sucesso/Dashboard";
+import SucessoClientes from "./pages/sucesso/Clientes";
+import SucessoLista from "./pages/sucesso/Lista";
+import SucessoKanban from "./pages/sucesso/Kanban";
+import SucessoGestor from "./pages/sucesso/AreaGestor";
+import SucessoConfig from "./pages/sucesso/Config";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +46,12 @@ const Shell = () => {
           <Route path="/minha-carteira" element={<ProtectedRoute><MinhaCarteira /></ProtectedRoute>} />
           <Route path="/tv" element={<ProtectedRoute><Tv /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+          <Route path="/sucesso" element={<ProtectedRoute><AdminOnlyRoute><SucessoDashboard /></AdminOnlyRoute></ProtectedRoute>} />
+          <Route path="/sucesso/clientes" element={<ProtectedRoute><AdminOnlyRoute><SucessoClientes /></AdminOnlyRoute></ProtectedRoute>} />
+          <Route path="/sucesso/lista" element={<ProtectedRoute><AdminOnlyRoute><SucessoLista /></AdminOnlyRoute></ProtectedRoute>} />
+          <Route path="/sucesso/kanban" element={<ProtectedRoute><AdminOnlyRoute><SucessoKanban /></AdminOnlyRoute></ProtectedRoute>} />
+          <Route path="/sucesso/gestor" element={<ProtectedRoute><AdminOnlyRoute><SucessoGestor /></AdminOnlyRoute></ProtectedRoute>} />
+          <Route path="/sucesso/config" element={<ProtectedRoute><AdminOnlyRoute><SucessoConfig /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </PageTransition>
@@ -50,6 +64,7 @@ const Shell = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <PreferencesProvider>
+      <AreaProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -65,6 +80,7 @@ const App = () => (
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
+      </AreaProvider>
     </PreferencesProvider>
   </QueryClientProvider>
 );

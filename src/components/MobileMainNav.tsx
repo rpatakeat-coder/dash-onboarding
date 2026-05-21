@@ -3,7 +3,8 @@ import { ChevronDown, Menu } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { MainNav, NAV_ITEMS } from "@/components/MainNav";
+import { MainNav, getNavItemsForArea } from "@/components/MainNav";
+import { useArea } from "@/contexts/AreaContext";
 
 /**
  * Mobile version of MainNav: a single full-width trigger that expands a
@@ -22,7 +23,8 @@ export const MobileMainNav = ({ className }: { className?: string }) => {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelId = "mobile-mainnav-panel";
 
-  const items = NAV_ITEMS.filter((i) => !i.adminOnly || isAdmin);
+  const { area } = useArea();
+  const items = getNavItemsForArea(area).filter((i) => !i.adminOnly || isAdmin);
   const currentTab = new URLSearchParams(location.search).get("tab");
   const current =
     items.find((i) => {

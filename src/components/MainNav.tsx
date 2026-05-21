@@ -1,7 +1,19 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Briefcase, Tv as TvIcon, Shield, Users2, type LucideIcon } from "lucide-react";
+import {
+  LayoutDashboard,
+  Briefcase,
+  Tv as TvIcon,
+  Shield,
+  Users2,
+  Users,
+  List,
+  Columns3,
+  Settings as SettingsIcon,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useArea, type AppArea } from "@/contexts/AreaContext";
 
 interface NavItem {
   to: string;
@@ -11,13 +23,28 @@ interface NavItem {
   adminOnly?: boolean;
 }
 
-export const NAV_ITEMS: NavItem[] = [
+export const NAV_ITEMS_ONBOARDING: NavItem[] = [
   { to: "/", label: "Visão geral", icon: LayoutDashboard },
   { to: "/?tab=gestao", label: "Gestão", icon: Users2, title: "Visão gerencial por operador", adminOnly: true },
   { to: "/minha-carteira", label: "Minha carteira", icon: Briefcase },
   { to: "/tv", label: "Modo TV", icon: TvIcon, title: "Tela cheia para TV da operação" },
   { to: "/admin", label: "Admin", icon: Shield, title: "Painel de administração", adminOnly: true },
 ];
+
+export const NAV_ITEMS_SUCESSO: NavItem[] = [
+  { to: "/sucesso", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/sucesso/clientes", label: "Clientes", icon: Users },
+  { to: "/sucesso/lista", label: "Lista", icon: List },
+  { to: "/sucesso/kanban", label: "Kanban", icon: Columns3 },
+  { to: "/sucesso/gestor", label: "Área do Gestor", icon: Users2 },
+  { to: "/sucesso/config", label: "Config", icon: SettingsIcon },
+];
+
+// Back-compat export (used by MobileMainNav fallback / steps)
+export const NAV_ITEMS = NAV_ITEMS_ONBOARDING;
+
+export const getNavItemsForArea = (area: AppArea): NavItem[] =>
+  area === "sucesso" ? NAV_ITEMS_SUCESSO : NAV_ITEMS_ONBOARDING;
 
 interface Props {
   className?: string;
@@ -29,7 +56,8 @@ export const MainNav = ({ className, orientation = "horizontal", onNavigate }: P
   const vertical = orientation === "vertical";
   const { isAdmin } = useIsAdmin();
   const location = useLocation();
-  const items = NAV_ITEMS.filter((i) => !i.adminOnly || isAdmin);
+  const { area } = useArea();
+  const items = getNavItemsForArea(area).filter((i) => !i.adminOnly || isAdmin);
   const currentTab = new URLSearchParams(location.search).get("tab");
   return (
     <nav
@@ -47,13 +75,18 @@ export const MainNav = ({ className, orientation = "horizontal", onNavigate }: P
         const [path, query] = to.split("?");
         const itemTab = query ? new URLSearchParams(query).get("tab") : null;
         const isHome = path === "/";
-        const pathMatches = isHome ? location.pathname === "/" : location.pathname.startsWith(path);
+        const isSucessoHome = path === "/sucesso";
+        const pathMatches = isHome
+          ? location.pathname === "/"
+          : isSucessoHome
+            ? location.pathname === "/sucesso"
+            : location.pathname.startsWith(path);
         const active = pathMatches && (itemTab ? currentTab === itemTab : !(isHome && currentTab));
         return (
           <NavLink
             key={to}
             to={to}
-            end={path === "/"}
+            end={path === "/" || path === "/sucesso"}
             title={title}
             onClick={onNavigate}
             style={vertical ? { animationDelay: `${idx * 60}ms`, animationFillMode: "both" } : undefined}
