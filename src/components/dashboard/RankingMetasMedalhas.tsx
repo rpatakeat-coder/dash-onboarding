@@ -115,9 +115,11 @@ const computeRanking = (rows: DashRow[], period: PeriodKey): ScoreRow[] => {
     const pctMrr = c.mrrCriadoAnterior > 0 ? (c.mrrAtivado / c.mrrCriadoAnterior) * 100 : 0;
     const pctClientes = c.clientesCriadosAnterior > 0 ? (c.clientesAtivados / c.clientesCriadosAnterior) * 100 : 0;
     const churnMax = c.mrrCriadoAnterior * 0.09;
-    const pctChurn = churnMax > 0 ? ((churnMax - c.churnReal) / churnMax) * 100 : 100;
-    const churnTerm = pctChurn < 0 ? pctChurn * 10 : 0;
-    const scoreFinal = Math.max(0, (pctMrr * 60 + pctClientes * 30 + churnTerm) / 100);
+    // % Churn = quanto do teto foi consumido (real / máx × 100). Menor = melhor.
+    const pctChurn = churnMax > 0 ? (c.churnReal / churnMax) * 100 : 0;
+    // Penalidade só quando estoura o teto (> 100%).
+    const churnPenalty = pctChurn > 100 ? (pctChurn - 100) * 10 : 0;
+    const scoreFinal = Math.max(0, (pctMrr * 60 + pctClientes * 30 - churnPenalty) / 100);
     out.push({
       ativador, pctMrr, pctClientes, pctChurn, scoreFinal,
       mrrAtivado: c.mrrAtivado, clientesAtivados: c.clientesAtivados,
