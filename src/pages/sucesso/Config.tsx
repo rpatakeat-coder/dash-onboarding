@@ -6,6 +6,7 @@ export default function SucessoConfig() {
       title="Configurações"
       description="Parâmetros, automações e integrações específicas da operação de Sucesso."
       icon={Settings}
+      hideFilters
     />
   );
 }
