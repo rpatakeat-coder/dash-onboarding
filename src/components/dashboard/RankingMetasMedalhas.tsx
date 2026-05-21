@@ -261,7 +261,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
                       {fmtBRL(r.mrrAtivado)} · {r.clientesAtivados} cli
                     </span>
                     <span className="font-numeric text-sm font-bold tabular-nums text-foreground">
-                      {r.scoreFinal.toFixed(1)}
+                      {Math.round(r.scoreFinal)}
                     </span>
                   </div>
                 </div>
