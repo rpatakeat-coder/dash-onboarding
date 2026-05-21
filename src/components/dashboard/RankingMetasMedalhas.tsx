@@ -164,7 +164,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
               Ranking de metas
             </h2>
             <p className="font-small text-xs text-muted-foreground">
-              Top 3 do período · Score = MRR×60 + Clientes×30 + Churn×10
+              Top 3 do período · Score = (60×%MRR + 30×%Cli + penalidade de churn) / 100
             </p>
           </div>
         </div>
