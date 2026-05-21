@@ -402,6 +402,59 @@ export const MrrAsaasKpis = ({ rows }: Props) => {
                       <TableCell className="text-muted-foreground">
                         {row.agente_ativacao || "—"}
                       </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-0.5">
+                          <CopyIdButton id={row.id_deal} />
+                          <Tooltip delayDuration={150}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                asChild
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                              >
+                                <a
+                                  href={hubspotDealUrl(row.id_deal)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5 text-primary" />
+                                </a>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="text-xs">Abrir no HubSpot</TooltipContent>
+                          </Tooltip>
+                          <Tooltip delayDuration={150}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                asChild={!!row.asaas_id?.trim()}
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 disabled:opacity-40"
+                                disabled={!row.asaas_id?.trim()}
+                              >
+                                {row.asaas_id?.trim() ? (
+                                  <a
+                                    href={asaasCustomerUrl(row.asaas_id.trim())}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <ExternalLink className="h-3.5 w-3.5 text-success" />
+                                  </a>
+                                ) : (
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="text-xs">
+                              {row.asaas_id?.trim() ? "Abrir cobrança no Asaas" : "Sem asaas_id"}
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </TableCell>
+
                     </TableRow>
                   );
                 })}
