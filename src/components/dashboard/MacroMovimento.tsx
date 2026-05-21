@@ -53,10 +53,46 @@ export const MacroMovimento = ({ rows }: Props) => {
   }, [rows]);
 
   const periods = [
-    { key: "hoje", label: "Hoje", start: r.todayStart, end: r.tomorrow, accent: "text-primary" },
-    { key: "semana", label: "Esta semana", start: r.weekStart, end: r.nextWeek, accent: "text-foreground" },
-    { key: "mes", label: "Este mês", start: r.monthStart, end: r.nextMonth, accent: "text-success" },
-    { key: "mesAnt", label: "Mês anterior", start: r.lastMonthStart, end: r.monthStart, accent: "text-muted-foreground" },
+    {
+      key: "hoje",
+      label: "Hoje",
+      start: r.todayStart,
+      end: r.tomorrow,
+      prevStart: new Date(r.todayStart.getFullYear(), r.todayStart.getMonth(), r.todayStart.getDate() - 1),
+      prevEnd: r.todayStart,
+      prevLabel: "ontem",
+      accent: "text-primary",
+    },
+    {
+      key: "semana",
+      label: "Esta semana",
+      start: r.weekStart,
+      end: r.nextWeek,
+      prevStart: new Date(r.weekStart.getFullYear(), r.weekStart.getMonth(), r.weekStart.getDate() - 7),
+      prevEnd: r.weekStart,
+      prevLabel: "semana anterior",
+      accent: "text-foreground",
+    },
+    {
+      key: "mes",
+      label: "Este mês",
+      start: r.monthStart,
+      end: r.nextMonth,
+      prevStart: r.lastMonthStart,
+      prevEnd: r.monthStart,
+      prevLabel: "mês anterior",
+      accent: "text-success",
+    },
+    {
+      key: "mesAnt",
+      label: "Mês anterior",
+      start: r.lastMonthStart,
+      end: r.monthStart,
+      prevStart: new Date(r.lastMonthStart.getFullYear(), r.lastMonthStart.getMonth() - 1, 1),
+      prevEnd: r.lastMonthStart,
+      prevLabel: "mês retrasado",
+      accent: "text-muted-foreground",
+    },
   ] as const;
 
   const filterOpts: { key: PeriodKey; label: string }[] = [
@@ -66,6 +102,16 @@ export const MacroMovimento = ({ rows }: Props) => {
     { key: "mes", label: "Mês" },
     { key: "mesAnt", label: "Mês anterior" },
   ];
+
+  // MRR Criado no período = soma do mrr dos deals com data_criacao no intervalo
+  const mrrCriadoNoPeriodo = (start: Date, end: Date) => {
+    let sum = 0;
+    for (const row of rows) {
+      const d = parseDate(row.data_criacao);
+      if (d && d >= start && d < end) sum += Number(row.mrr) || 0;
+    }
+    return sum;
+  };
 
   // Build the cards list according to the active filter.
   let cards: {
@@ -83,9 +129,13 @@ export const MacroMovimento = ({ rows }: Props) => {
     // end is exclusive — add 1 day to include "to"
     const toBase = customRange.to ?? customRange.from;
     const end = new Date(toBase.getFullYear(), toBase.getMonth(), toBase.getDate() + 1);
+    const spanMs = end.getTime() - start.getTime();
+    const prevEnd = start;
+    const prevStart = new Date(start.getTime() - spanMs);
     const ativ = mrrAtivadoNoPeriodo(rows, start, end);
     const entrados = countEntradosNoPeriodo(rows, start, end);
-    const pctAtiv = entrados > 0 ? (ativ.count / entrados) * 100 : 0;
+    const mrrCriadoPrev = mrrCriadoNoPeriodo(prevStart, prevEnd);
+    const pctAtiv = mrrCriadoPrev > 0 ? (ativ.mrr / mrrCriadoPrev) * 100 : 0;
     const label = `${format(start, "dd/MM/yyyy", { locale: ptBR })} → ${format(toBase, "dd/MM/yyyy", { locale: ptBR })}`;
     cards = [
       {
@@ -93,9 +143,9 @@ export const MacroMovimento = ({ rows }: Props) => {
         value: fmtBRLk(ativ.mrr),
         sub: `${ativ.count} ativados · ${entrados} entrados`,
         pctAtiv,
-        pctLabel: entrados > 0 ? `${pctAtiv.toFixed(1).replace(".", ",")}% ativados` : "— sem entradas",
+        pctLabel: mrrCriadoPrev > 0 ? `${pctAtiv.toFixed(1).replace(".", ",")}% ativação` : "— sem base anterior",
         accent: "text-primary",
-        formula: `MRR ativado no intervalo personalizado = soma de mrr dos deals com data_ativacao dentro de ${label}. "Entrados" = deals com data de criação no mesmo intervalo. % Ativados = ativados ÷ entrados × 100.`,
+        formula: `% Ativação = MRR ativado no período (${fmtBRLk(ativ.mrr)}) ÷ MRR criado na janela anterior de mesma duração (${fmtBRLk(mrrCriadoPrev)}) × 100. Mesma regra do gráfico "MRR Ativado · Comparativo mensal".`,
       },
     ];
   } else {
@@ -103,15 +153,16 @@ export const MacroMovimento = ({ rows }: Props) => {
     cards = visiblePeriods.map((p) => {
       const ativ = mrrAtivadoNoPeriodo(rows, p.start, p.end);
       const entrados = countEntradosNoPeriodo(rows, p.start, p.end);
-      const pctAtiv = entrados > 0 ? (ativ.count / entrados) * 100 : 0;
+      const mrrCriadoPrev = mrrCriadoNoPeriodo(p.prevStart, p.prevEnd);
+      const pctAtiv = mrrCriadoPrev > 0 ? (ativ.mrr / mrrCriadoPrev) * 100 : 0;
       return {
         label: p.label,
         value: fmtBRLk(ativ.mrr),
         sub: `${ativ.count} ativados · ${entrados} entrados`,
         pctAtiv,
-        pctLabel: entrados > 0 ? `${pctAtiv.toFixed(1).replace(".", ",")}% ativados` : "— sem entradas",
+        pctLabel: mrrCriadoPrev > 0 ? `${pctAtiv.toFixed(1).replace(".", ",")}% ativação` : "— sem base anterior",
         accent: p.accent,
-        formula: `MRR ativado em ${p.label.toLowerCase()} = soma de mrr dos deals com data_ativacao dentro do período. "Entrados" = deals com data de criação no mesmo período. % Ativados = ativados ÷ entrados × 100.`,
+        formula: `% Ativação = MRR ativado em ${p.label.toLowerCase()} (${fmtBRLk(ativ.mrr)}) ÷ MRR criado no(a) ${p.prevLabel} (${fmtBRLk(mrrCriadoPrev)}) × 100. Mesma regra do gráfico "MRR Ativado · Comparativo mensal".`,
       };
     });
   }
