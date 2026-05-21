@@ -218,7 +218,8 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
                     </div>
                     <div className="text-right">
                       <p className={cn("font-numeric font-bold tabular-nums", isTv ? "text-3xl" : "text-2xl", m.text)}>
-                        {r.scoreFinal.toFixed(1)}
+                        {Math.round(r.scoreFinal)}
+
                       </p>
                       <p className="font-small text-[10px] uppercase tracking-wider text-muted-foreground">Score</p>
                     </div>
@@ -260,7 +261,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
                       {fmtBRL(r.mrrAtivado)} · {r.clientesAtivados} cli
                     </span>
                     <span className="font-numeric text-sm font-bold tabular-nums text-foreground">
-                      {r.scoreFinal.toFixed(1)}
+                      {Math.round(r.scoreFinal)}
                     </span>
                   </div>
                 </div>
