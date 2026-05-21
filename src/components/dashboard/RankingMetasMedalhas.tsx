@@ -116,7 +116,8 @@ const computeRanking = (rows: DashRow[], period: PeriodKey): ScoreRow[] => {
     const pctClientes = c.clientesCriadosAnterior > 0 ? (c.clientesAtivados / c.clientesCriadosAnterior) * 100 : 0;
     const churnMax = c.mrrCriadoAnterior * 0.09;
     const pctChurn = churnMax > 0 ? ((churnMax - c.churnReal) / churnMax) * 100 : 100;
-    const scoreFinal = Math.max(0, (pctMrr * 60 + pctClientes * 30 + pctChurn * 10) / 100);
+    const churnTerm = pctChurn < 0 ? pctChurn * 10 : 0;
+    const scoreFinal = Math.max(0, (pctMrr * 60 + pctClientes * 30 + churnTerm) / 100);
     out.push({
       ativador, pctMrr, pctClientes, pctChurn, scoreFinal,
       mrrAtivado: c.mrrAtivado, clientesAtivados: c.clientesAtivados,
@@ -163,7 +164,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
               Ranking de metas
             </h2>
             <p className="font-small text-xs text-muted-foreground">
-              Top 3 do período · Score = MRR×60 + Clientes×30 + Churn×10
+              Top 3 do período · Score = (60×%MRR + 30×%Cli + penalidade de churn) / 100
             </p>
           </div>
         </div>

@@ -128,8 +128,11 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
       c.churnMax = c.mrrCriadoAnterior * 0.09;
       // % Churn = (max - real)/max * 100 — pode ser negativa quando estoura o máximo
       c.pctChurn = c.churnMax > 0 ? ((c.churnMax - c.churnReal) / c.churnMax) * 100 : 100;
-      // Score ponderado: MRR 60 + Clientes 30 + Churn 10 (média ponderada / 100)
-      c.scoreFinal = Math.max(0, (c.pctMrr * 60 + c.pctClientes * 30 + c.pctChurn * 10) / 100);
+      // Score ponderado (fórmula da planilha):
+      //   = 60×%MRR + 30×%Clientes + SE(%Churn<0; %Churn×10; 0)
+      // Churn só penaliza quando estoura o teto (negativo); dentro do limite não soma nada.
+      const churnTerm = c.pctChurn < 0 ? c.pctChurn * 10 : 0;
+      c.scoreFinal = Math.max(0, (c.pctMrr * 60 + c.pctClientes * 30 + churnTerm) / 100);
       c.pctFixo = pctFixoFromScore(c.scoreFinal);
       result.push(c);
     });
@@ -183,7 +186,7 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
               <th className="px-3 py-2 text-right">
                 <span className="inline-flex items-center justify-end gap-1">
                   Score
-                  <InfoTooltip text="Score = (% MRR × 60 + % Clientes × 30 + % Churn × 10) / 100 — média ponderada dos três indicadores. Por que o clamp de 0 a 100 (na verdade, piso 0 e topo natural de ~130): cada componente é uma porcentagem que pode variar bastante (ex.: % MRR pode passar de 100% se o ativador entrega mais que o criado no mês anterior; % Churn pode ficar negativo quando estoura o teto). Sem o piso 0, um churn muito ruim zeraria injustamente todo o esforço de MRR/Clientes; com o piso, o score nunca fica abaixo de zero e o ativador sempre é avaliado pelo conjunto. Arredondamento ≥ .5 sobe para o próximo inteiro antes de consultar a tabela de % do fixo." />
+                  <InfoTooltip text="Score = (60×%MRR + 30×%Clientes + termo de churn) / 100. Termo de churn = %Churn × 10 SOMENTE quando %Churn < 0 (penaliza quem estoura o teto de 9%); quando o churn está dentro do limite, não soma nada — bater a meta de churn é obrigação, não bônus. Piso 0 e topo natural ~130. Arredondamento ≥ .5 sobe antes de consultar a tabela de % do fixo." />
                 </span>
               </th>
               <th className="px-3 py-2 text-right">% do fixo</th>
