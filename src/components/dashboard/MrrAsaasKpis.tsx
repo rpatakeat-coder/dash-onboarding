@@ -1,5 +1,39 @@
 import { useMemo, useState } from "react";
-import { DollarSign, TrendingDown, TrendingUp, AlertTriangle, CalendarIcon, X } from "lucide-react";
+import { DollarSign, TrendingDown, TrendingUp, AlertTriangle, CalendarIcon, X, Copy, ExternalLink, Check } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { hubspotDealUrl } from "@/lib/hubspot";
+
+const asaasCustomerUrl = (id: string) =>
+  `https://www.asaas.com/customerAccount/show/${encodeURIComponent(id)}`;
+
+const CopyIdButton = ({ id }: { id: string | number }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <Tooltip delayDuration={150}>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={async (e) => {
+            e.stopPropagation();
+            try {
+              await navigator.clipboard.writeText(String(id));
+              setCopied(true);
+              toast({ description: `ID ${id} copiado` });
+              setTimeout(() => setCopied(false), 1200);
+            } catch {
+              toast({ description: "Falha ao copiar", variant: "destructive" });
+            }
+          }}
+        >
+          {copied ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs">Copiar ID do deal</TooltipContent>
+    </Tooltip>
+  );
+};
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
