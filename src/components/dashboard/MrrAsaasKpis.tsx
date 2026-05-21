@@ -268,7 +268,27 @@ export const MrrAsaasKpis = ({ rows }: Props) => {
           <DialogHeader>
             <DialogTitle>Deals com divergência Hubspot × Asaas</DialogTitle>
           </DialogHeader>
+          <div className="rounded-lg border border-border bg-muted/30 p-3">
+            <p className="mb-2 font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
+              Legenda dos motivos
+            </p>
+            <div className="flex flex-wrap gap-2 text-xs">
+              <span className="inline-flex items-center gap-2 rounded-md border border-secondary/40 bg-secondary/10 px-2 py-1 text-secondary">
+                <span className="font-semibold">Sem asaas_id</span>
+                <span className="text-muted-foreground">Deal sem vínculo com cobrança no Asaas</span>
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-amber-600 dark:text-amber-400">
+                <span className="font-semibold">MRR Asaas faltante</span>
+                <span className="text-muted-foreground">Tem asaas_id, mas mrr_asaas zerado</span>
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-destructive">
+                <span className="font-semibold">Diferença real</span>
+                <span className="text-muted-foreground">Valores divergem acima de R$ 0,50</span>
+              </span>
+            </div>
+          </div>
           <div className="max-h-[60vh] overflow-auto rounded-lg border border-border">
+
             <Table>
               <TableHeader>
                 <TableRow>
