@@ -3,8 +3,8 @@ import { DollarSign, TrendingDown, TrendingUp, AlertTriangle, CalendarIcon, X, C
 import { toast } from "@/hooks/use-toast";
 import { hubspotDealUrl } from "@/lib/hubspot";
 
-const asaasCustomerUrl = (id: string) =>
-  `https://www.asaas.com/customerAccount/show/${encodeURIComponent(id)}`;
+const asaasCustomerUrl = (asaasId: string) =>
+  `https://www.asaas.com/customerAccount/show/${asaasId.trim()}`;
 
 const CopyIdButton = ({ id }: { id: string | number }) => {
   const [copied, setCopied] = useState(false);
@@ -449,7 +449,7 @@ export const MrrAsaasKpis = ({ rows }: Props) => {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="text-xs">
-                              {row.asaas_id?.trim() ? "Abrir cobrança no Asaas" : "Sem asaas_id"}
+                              {row.asaas_id?.trim() ? "Abrir cliente no Asaas" : "Sem asaas_id"}
                             </TooltipContent>
                           </Tooltip>
                         </div>
