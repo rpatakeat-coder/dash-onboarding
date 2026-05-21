@@ -124,15 +124,15 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
     map.forEach((c) => {
       c.pctMrr = c.mrrCriadoAnterior > 0 ? (c.mrrAtivado / c.mrrCriadoAnterior) * 100 : 0;
       c.pctClientes = c.clientesCriadosAnterior > 0 ? (c.clientesAtivados / c.clientesCriadosAnterior) * 100 : 0;
-      // Churn máx = 9% do MRR criado pelo ativador no mês anterior (mesma base usada no % MRR)
+      // Churn máx = 9% do MRR criado pelo ativador no mês anterior
       c.churnMax = c.mrrCriadoAnterior * 0.09;
-      // % Churn = (max - real)/max * 100 — pode ser negativa quando estoura o máximo
-      c.pctChurn = c.churnMax > 0 ? ((c.churnMax - c.churnReal) / c.churnMax) * 100 : 100;
+      // % Churn = quanto do teto foi consumido (real / máx × 100). Quanto menor, melhor.
+      c.pctChurn = c.churnMax > 0 ? (c.churnReal / c.churnMax) * 100 : 0;
       // Score ponderado (fórmula da planilha):
-      //   = 60×%MRR + 30×%Clientes + SE(%Churn<0; %Churn×10; 0)
-      // Churn só penaliza quando estoura o teto (negativo); dentro do limite não soma nada.
-      const churnTerm = c.pctChurn < 0 ? c.pctChurn * 10 : 0;
-      c.scoreFinal = Math.max(0, (c.pctMrr * 60 + c.pctClientes * 30 + churnTerm) / 100);
+      //   = 60×%MRR + 30×%Clientes − penalidade de churn
+      // Penalidade = (%Churn − 100) × 10 SOMENTE quando %Churn > 100 (estourou o teto).
+      const churnPenalty = c.pctChurn > 100 ? (c.pctChurn - 100) * 10 : 0;
+      c.scoreFinal = Math.max(0, (c.pctMrr * 60 + c.pctClientes * 30 - churnPenalty) / 100);
       c.pctFixo = pctFixoFromScore(c.scoreFinal);
       result.push(c);
     });
