@@ -147,6 +147,9 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
 
   const scoreColor = (s: number) =>
     s >= 90 ? "text-success" : s >= 70 ? "text-foreground" : s >= 50 ? "text-warning" : "text-destructive";
+  // Para % Churn, quanto MENOR melhor: 0–60% ótimo, 60–100% atenção, >100% estourou.
+  const pctChurnColor = (p: number) =>
+    p > 100 ? "text-destructive" : p >= 60 ? "text-warning" : "text-success";
   const pctFixoColor = (p: number) =>
     p >= 100 ? "text-success" : p >= 60 ? "text-foreground" : p >= 30 ? "text-warning" : "text-destructive";
 
