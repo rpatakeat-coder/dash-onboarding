@@ -191,6 +191,8 @@ const Index = () => {
 
             <MrrAtivadoPorAtivador rows={macroRows} />
 
+            <RankingMetasMedalhas rows={allRows} />
+
             <RankingVariavelAtivadores
               rows={allRows}
               onlyAgente={isAdmin ? null : (isAtivador ? myAgente : null)}
