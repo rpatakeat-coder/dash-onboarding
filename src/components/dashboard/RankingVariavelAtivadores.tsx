@@ -218,7 +218,7 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
                 <td className="px-3 py-2 text-right font-numeric tabular-nums text-muted-foreground">
                   {fmtBRL(r.churnReal)} / {fmtBRL(r.churnMax)}
                 </td>
-                <td className={cn("px-3 py-2 text-right font-numeric font-semibold tabular-nums", scoreColor(r.pctChurn))}>
+                <td className={cn("px-3 py-2 text-right font-numeric font-semibold tabular-nums", pctChurnColor(r.pctChurn))}>
                   {fmtPct(r.pctChurn)}
                 </td>
                 <td className={cn("px-3 py-2 text-right font-numeric font-bold tabular-nums", scoreColor(r.scoreFinal))}>
