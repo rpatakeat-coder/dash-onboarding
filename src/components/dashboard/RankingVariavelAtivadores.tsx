@@ -222,7 +222,7 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
                   {fmtPct(r.pctChurn)}
                 </td>
                 <td className={cn("px-3 py-2 text-right font-numeric font-bold tabular-nums", scoreColor(r.scoreFinal))}>
-                  {r.scoreFinal.toFixed(1)}
+                  {Math.round(r.scoreFinal)}
                 </td>
                 <td className={cn("px-3 py-2 text-right font-numeric font-bold tabular-nums", pctFixoColor(r.pctFixo))}>
                   {r.pctFixo}%
