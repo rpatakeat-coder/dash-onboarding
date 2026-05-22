@@ -397,6 +397,68 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
 
         </>
       )}
+
+      <Dialog open={!!selectedAtivador} onOpenChange={(o) => !o && setSelectedAtivador(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display">
+              {selectedAtivador} · {PERIOD_LABELS[period]}
+            </DialogTitle>
+            <DialogDescription className="font-small">
+              Detalhe dos deals do ativador no período selecionado.
+            </DialogDescription>
+          </DialogHeader>
+          {breakdown && (
+            <div className="space-y-5">
+              {[
+                { title: "MRR ativado", deals: breakdown.ativados, dateField: "data_ativacao" as const, dateLabel: "Ativação", accent: "text-emerald-500" },
+                { title: "Clientes criados", deals: breakdown.criados, dateField: "data_criacao" as const, dateLabel: "Criação", accent: "text-primary" },
+                { title: "Churns realizados", deals: breakdown.churns, dateField: "data_fechamento" as const, dateLabel: "Fechamento", accent: "text-destructive" },
+              ].map((section) => {
+                const total = section.deals.reduce((s, r) => s + toNum(r.mrr), 0);
+                return (
+                  <section key={section.title}>
+                    <div className="mb-2 flex items-baseline justify-between">
+                      <h3 className={cn("font-subtitle text-sm font-semibold", section.accent)}>
+                        {section.title}
+                      </h3>
+                      <span className="font-numeric text-xs tabular-nums text-muted-foreground">
+                        {section.deals.length} deals · {fmtBRL(total)}
+                      </span>
+                    </div>
+                    {section.deals.length === 0 ? (
+                      <p className="rounded-md border border-dashed border-border px-3 py-4 text-center font-small text-xs text-muted-foreground">
+                        Nenhum registro no período.
+                      </p>
+                    ) : (
+                      <div className="divide-y divide-border rounded-md border border-border">
+                        {section.deals
+                          .slice()
+                          .sort((a, b) => toNum(b.mrr) - toNum(a.mrr))
+                          .map((d) => (
+                            <div key={`${section.title}-${d.id_deal}`} className="flex items-center justify-between gap-3 px-3 py-2">
+                              <div className="min-w-0">
+                                <DealLink id={d.id_deal} className="font-subtitle text-sm font-medium text-foreground truncate block">
+                                  {d.nome_negocio ?? `Deal ${d.id_deal}`}
+                                </DealLink>
+                                <p className="font-small text-[11px] text-muted-foreground">
+                                  {section.dateLabel}: {d[section.dateField] ?? "—"}
+                                </p>
+                              </div>
+                              <span className="font-numeric text-sm font-semibold tabular-nums text-foreground whitespace-nowrap">
+                                {fmtBRL(toNum(d.mrr))}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
