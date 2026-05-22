@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { MrrAtivadoMesModal } from "./MrrAtivadoMesModal";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { hubspotDealUrl } from "@/lib/hubspot";
 
@@ -34,6 +35,7 @@ export const MacroMovimento = ({ rows }: Props) => {
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [entradasOpen, setEntradasOpen] = useState(false);
+  const [drillCard, setDrillCard] = useState<{ start: Date; end: Date; titulo: string; descricao: string } | null>(null);
 
   const entradasHojeRows = useMemo(() => {
     const start = new Date();
@@ -122,6 +124,10 @@ export const MacroMovimento = ({ rows }: Props) => {
     pctLabel: string;
     accent?: string;
     formula: string;
+    start: Date;
+    end: Date;
+    titulo: string;
+    descricao: string;
   }[] = [];
 
   if (filter === "custom" && customRange?.from) {
@@ -146,6 +152,10 @@ export const MacroMovimento = ({ rows }: Props) => {
         pctLabel: mrrCriadoPrev > 0 ? `${pctAtiv.toFixed(1).replace(".", ",")}% ativação` : "— sem base anterior",
         accent: "text-primary",
         formula: `% Ativação = MRR ativado no período (${fmtBRLk(ativ.mrr)}) ÷ MRR criado na janela anterior de mesma duração (${fmtBRLk(mrrCriadoPrev)}) × 100. Mesma regra do gráfico "MRR Ativado · Comparativo mensal".`,
+        start,
+        end,
+        titulo: `MRR Ativado · ${label}`,
+        descricao: "Detalhamento das ativações no período personalizado",
       },
     ];
   } else {
@@ -163,6 +173,10 @@ export const MacroMovimento = ({ rows }: Props) => {
         pctLabel: mrrCriadoPrev > 0 ? `${pctAtiv.toFixed(1).replace(".", ",")}% ativação` : "— sem base anterior",
         accent: p.accent,
         formula: `% Ativação = MRR ativado em ${p.label.toLowerCase()} (${fmtBRLk(ativ.mrr)}) ÷ MRR criado no(a) ${p.prevLabel} (${fmtBRLk(mrrCriadoPrev)}) × 100. Mesma regra do gráfico "MRR Ativado · Comparativo mensal".`,
+        start: p.start,
+        end: p.end,
+        titulo: `MRR Ativado · ${p.label}`,
+        descricao: `Detalhamento das ativações em ${p.label.toLowerCase()}`,
       };
     });
   }
@@ -290,8 +304,15 @@ export const MacroMovimento = ({ rows }: Props) => {
         </div>
         <div className={cn("grid gap-3", cards.length === 1 ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-4")}>
           {cards.map((c) => (
-            <div key={c.label} className="relative rounded-xl border border-border bg-card/60 p-4">
-              <div className="absolute right-2 top-2"><InfoTooltip text={c.formula} /></div>
+            <button
+              type="button"
+              key={c.label}
+              onClick={() => setDrillCard({ start: c.start, end: c.end, titulo: c.titulo, descricao: c.descricao })}
+              className="group relative rounded-xl border border-border bg-card/60 p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md-soft focus:outline-none focus:ring-2 focus:ring-primary/40"
+            >
+              <div className="absolute right-2 top-2" onClick={(e) => e.stopPropagation()}>
+                <InfoTooltip text={c.formula} />
+              </div>
               <p className="font-subtitle text-xs text-muted-foreground">{c.label}</p>
               <p className={`mt-2 font-numeric text-2xl font-bold ${c.accent ?? ""}`}>
                 {c.value}
@@ -305,7 +326,10 @@ export const MacroMovimento = ({ rows }: Props) => {
               >
                 {c.pctLabel}
               </p>
-            </div>
+              <span className="pdf-hide mt-1 inline-block font-small text-[10px] text-primary/0 transition group-hover:text-primary">
+                Clique para detalhar →
+              </span>
+            </button>
           ))}
         </div>
       </div>
@@ -374,6 +398,17 @@ export const MacroMovimento = ({ rows }: Props) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <MrrAtivadoMesModal
+        open={drillCard !== null}
+        onOpenChange={(o) => !o && setDrillCard(null)}
+        rows={rows}
+        mesLabel={drillCard?.titulo ?? ""}
+        periodStart={drillCard?.start}
+        periodEnd={drillCard?.end}
+        titulo={drillCard?.titulo}
+        descricao={drillCard?.descricao}
+      />
     </section>
   );
 };
