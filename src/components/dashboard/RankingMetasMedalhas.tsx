@@ -9,7 +9,9 @@ import {
   type DashRow,
 } from "@/hooks/useDashOperacoes";
 
-type PeriodKey = "semana" | "mes" | "trimestre";
+type PeriodKey = "semana" | "mes" | "trimestre" | "custom";
+
+interface CustomRange { start: Date; end: Date }
 
 interface Props {
   rows: DashRow[];
@@ -47,8 +49,17 @@ const startOfQuarter = (d: Date) => {
   return new Date(d.getFullYear(), q * 3, 1);
 };
 
-const getRanges = (period: PeriodKey) => {
+const getRanges = (period: PeriodKey, custom?: CustomRange) => {
   const now = new Date();
+  if (period === "custom" && custom) {
+    const start = new Date(custom.start.getFullYear(), custom.start.getMonth(), custom.start.getDate());
+    const end = new Date(custom.end.getFullYear(), custom.end.getMonth(), custom.end.getDate());
+    end.setDate(end.getDate() + 1); // inclusive end
+    const ms = end.getTime() - start.getTime();
+    const prevEnd = start;
+    const prevStart = new Date(start.getTime() - ms);
+    return { start, end, prevStart, prevEnd };
+  }
   if (period === "semana") {
     const start = startOfWeek(now);
     const end = new Date(start); end.setDate(end.getDate() + 7);
@@ -68,8 +79,8 @@ const getRanges = (period: PeriodKey) => {
   return { start, end, prevStart, prevEnd: start };
 };
 
-const computeRanking = (rows: DashRow[], period: PeriodKey): { ranked: ScoreRow[]; team: ScoreRow } => {
-  const { start, end, prevStart, prevEnd } = getRanges(period);
+const computeRanking = (rows: DashRow[], period: PeriodKey, custom?: CustomRange): { ranked: ScoreRow[]; team: ScoreRow } => {
+  const { start, end, prevStart, prevEnd } = getRanges(period, custom);
   const inCur = (d: Date | null) => !!d && d >= start && d < end;
   const inPrev = (d: Date | null) => !!d && d >= prevStart && d < prevEnd;
 
@@ -156,11 +167,31 @@ const PERIOD_LABELS: Record<PeriodKey, string> = {
   semana: "Semana",
   mes: "Mês",
   trimestre: "Trimestre",
+  custom: "Personalizado",
+};
+
+const toInputDate = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const fromInputDate = (s: string) => {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
 };
 
 export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("mes");
-  const { ranked, team } = useMemo(() => computeRanking(rows, period), [rows, period]);
+  const today = new Date();
+  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const [customStart, setCustomStart] = useState<Date>(firstOfMonth);
+  const [customEnd, setCustomEnd] = useState<Date>(today);
+  const { ranked, team } = useMemo(
+    () => computeRanking(rows, period, { start: customStart, end: customEnd }),
+    [rows, period, customStart, customEnd],
+  );
   const top3 = ranked.slice(0, 3);
   const rest = ranked.slice(3);
 
@@ -203,6 +234,27 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
           ))}
         </div>
       </div>
+
+      {period === "custom" && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <label className="font-small text-xs text-muted-foreground">De</label>
+          <input
+            type="date"
+            value={toInputDate(customStart)}
+            max={toInputDate(customEnd)}
+            onChange={(e) => e.target.value && setCustomStart(fromInputDate(e.target.value))}
+            className="rounded-md border border-border bg-card px-2 py-1 font-numeric text-xs text-foreground"
+          />
+          <label className="font-small text-xs text-muted-foreground">até</label>
+          <input
+            type="date"
+            value={toInputDate(customEnd)}
+            min={toInputDate(customStart)}
+            onChange={(e) => e.target.value && setCustomEnd(fromInputDate(e.target.value))}
+            className="rounded-md border border-border bg-card px-2 py-1 font-numeric text-xs text-foreground"
+          />
+        </div>
+      )}
 
       {ranked.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-10 text-center font-subtitle text-sm text-muted-foreground">
