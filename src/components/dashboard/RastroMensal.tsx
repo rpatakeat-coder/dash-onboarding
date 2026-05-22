@@ -156,6 +156,38 @@ export const RastroMensal = ({ rows }: Props) => {
               <td className="sticky left-0 z-10 bg-card px-3 py-2.5 font-subtitle text-xs font-semibold">
                 MRR Ativado
               </td>
+              {data.map((m) => {
+                const pctVigente = m.mrrCriado > 0 ? (m.mrrAtivado / m.mrrCriado) * 100 : 0;
+                return (
+                  <td
+                    key={m.mes}
+                    className={cn(
+                      "px-3 py-2.5 text-center font-numeric text-xs tabular-nums",
+                      cellTone(m),
+                      m.isCurrent && "bg-primary/5",
+                    )}
+                    title={m.isFuture ? undefined : `${fmtBRL(m.mrrAtivado)} · ${pctVigente.toFixed(1)}% do MRR criado no mês`}
+                  >
+                    {m.isFuture ? (
+                      "—"
+                    ) : m.mrrAtivado > 0 ? (
+                      <span className="inline-flex items-baseline gap-1">
+                        <span>{fmtBRLk(m.mrrAtivado)}</span>
+                        <span className="font-small text-[10px] text-muted-foreground">
+                          {pctVigente > 0 ? `(${pctVigente.toFixed(1)}%)` : ""}
+                        </span>
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+            <tr className="border-b border-border/60">
+              <td className="sticky left-0 z-10 bg-card px-3 py-2.5 font-subtitle text-xs font-semibold">
+                MRR Criado
+              </td>
               {data.map((m) => (
                 <td
                   key={m.mes}
@@ -164,9 +196,9 @@ export const RastroMensal = ({ rows }: Props) => {
                     cellTone(m),
                     m.isCurrent && "bg-primary/5",
                   )}
-                  title={m.isFuture ? undefined : fmtBRL(m.mrrAtivado)}
+                  title={m.isFuture ? undefined : fmtBRL(m.mrrCriado)}
                 >
-                  {m.isFuture ? "—" : m.mrrAtivado > 0 ? fmtBRLk(m.mrrAtivado) : "—"}
+                  {m.isFuture ? "—" : m.mrrCriado > 0 ? fmtBRLk(m.mrrCriado) : "—"}
                 </td>
               ))}
             </tr>
