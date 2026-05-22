@@ -222,7 +222,7 @@ const Index = () => {
 
             <MrrAsaasKpis rows={estoqueRows} />
 
-            <ClientesCriadosKpi rows={macroRows} />
+
 
 
             <ChurnKpis rows={personalRows} />
