@@ -189,7 +189,7 @@ export const ChurnDetailModal = ({
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">Churn · {periodLabel}</DialogTitle>
           <DialogDescription>
-            Deals em Pré-Churn, Churn (Sucesso) e Cancelamento (Onboarding) fechados no período
+            Deals na etapa Churn · pipeline Sucesso · origem Onboarding, fechados no período
           </DialogDescription>
         </DialogHeader>
 
