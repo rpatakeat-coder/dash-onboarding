@@ -36,6 +36,7 @@ const Index = () => {
   const [aiOpen, setAiOpen] = useState(false);
   const [filtroAtivadores, setFiltroAtivadores] = usePersistedSet("index:ativadores");
   const [filtroEtapas, setFiltroEtapas] = usePersistedSet("index:etapas");
+  const [filtroPeriodo, setFiltroPeriodo] = useState<MacroPeriodKey>("tudo");
   const [gestaoOp, setGestaoOp] = useState<string | null>(null);
 
   const focusOperator = (name: string) => {
