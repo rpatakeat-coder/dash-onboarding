@@ -128,7 +128,16 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
         {cards.map((c) => {
           const Icon = c.icon;
           return (
-            <div key={c.key} className={cn("relative rounded-xl border p-4", c.border, c.bg)}>
+            <button
+              key={c.key}
+              type="button"
+              onClick={() => setModalPeriod(c.key as BigPeriod)}
+              className={cn(
+                "group relative rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md-soft",
+                c.border,
+                c.bg,
+              )}
+            >
               <div className="flex items-start justify-between">
                 <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
                   {c.label}
@@ -142,7 +151,10 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
                 {fmtPct(c.pct, 1)}
               </p>
               <p className="mt-1 font-small text-xs text-muted-foreground">{c.sub}</p>
-            </div>
+              <span className="pdf-hide mt-1 inline-block font-small text-[10px] text-primary/0 transition group-hover:text-primary">
+                Clique para detalhar →
+              </span>
+            </button>
           );
         })}
 
