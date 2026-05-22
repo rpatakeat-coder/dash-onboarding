@@ -288,10 +288,12 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
               const m = MEDAL_STYLES[i];
               const isFirst = i === 0;
               return (
-                <div
+                <button
+                  type="button"
                   key={r.ativador}
+                  onClick={() => setSelectedAtivador(r.ativador)}
                   className={cn(
-                    "relative overflow-hidden rounded-xl bg-gradient-to-br p-4 ring-1",
+                    "relative overflow-hidden rounded-xl bg-gradient-to-br p-4 ring-1 text-left transition hover:ring-2 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer",
                     m.bg, m.ring,
                     isFirst && "sm:scale-[1.02]",
                   )}
