@@ -120,10 +120,7 @@ const computeRanking = (rows: DashRow[], period: PeriodKey, custom?: CustomRange
       c.mrrAtivado += mrr;
       c.clientesAtivados += 1;
     }
-    const etapa = (r.etapa_negocio ?? "").trim();
-    const cancel = (r.etapa_de_cancelamento ?? "").trim().toLowerCase();
-    const isChurn = CHURN_STAGE_IDS.has(etapa) || cancel === CHURN_CANCELAMENTO_PIPELINE.toLowerCase();
-    if (isChurn && inCur(parseDate(r.data_fechamento))) {
+    if (isChurnRow(r) && inCur(parseDate(r.data_fechamento))) {
       ensure(agente).churnReal += mrr;
     }
   }
