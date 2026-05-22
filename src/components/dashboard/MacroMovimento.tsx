@@ -35,6 +35,7 @@ export const MacroMovimento = ({ rows }: Props) => {
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [entradasOpen, setEntradasOpen] = useState(false);
+  const [drillCard, setDrillCard] = useState<{ start: Date; end: Date; titulo: string; descricao: string } | null>(null);
 
   const entradasHojeRows = useMemo(() => {
     const start = new Date();
