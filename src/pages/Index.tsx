@@ -8,7 +8,7 @@ import { MacroMovimento } from "@/components/dashboard/MacroMovimento";
 import { MrrAtivadoTrendChart } from "@/components/dashboard/MrrAtivadoTrendChart";
 import { RastroMensal } from "@/components/dashboard/RastroMensal";
 import { MrrAsaasKpis } from "@/components/dashboard/MrrAsaasKpis";
-import { ClientesCriadosKpi } from "@/components/dashboard/ClientesCriadosKpi";
+
 import { MacroFilters } from "@/components/dashboard/MacroFilters";
 import { CarteiraPorAtivador } from "@/components/dashboard/CarteiraPorAtivador";
 import { MrrAtivadoPorAtivador } from "@/components/dashboard/MrrAtivadoPorAtivador";
