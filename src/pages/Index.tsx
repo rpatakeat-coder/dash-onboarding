@@ -23,7 +23,8 @@ import { TrendByOperator } from "@/components/dashboard/TrendByOperator";
 import { ChurnKpis } from "@/components/dashboard/ChurnKpis";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
-import { useDashOperacoes, type PerfilStat } from "@/hooks/useDashOperacoes";
+import { useDashOperacoes, parseDate, type PerfilStat } from "@/hooks/useDashOperacoes";
+import type { MacroPeriodKey } from "@/components/dashboard/MacroFilters";
 
 const Index = () => {
   const { data, isLoading, error } = useDashOperacoes();
