@@ -274,7 +274,7 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
               <th className="px-3 py-2 text-right">
                 <span className="inline-flex items-center justify-end gap-1">
                   Score
-                  <InfoTooltip text="Score = (60×%MRR + 30×%Clientes − penalidade de churn) / 100. Penalidade = (%Churn − 100) × 10 SOMENTE quando %Churn > 100 (estourou o teto). Dentro do limite, churn não afeta o score — bater a meta é obrigação, não bônus. Piso 0. Arredondamento ≥ .5 sobe antes de consultar a tabela de % do fixo." />
+                  <InfoTooltip text="Score = 60×%MRR + 30×%Clientes + SE(margemChurn<0; margemChurn×10; 0). margemChurn = (Churn máx − Churn real) / Churn máx. Dentro do teto (margem ≥ 0): churn não soma nem subtrai. Estourou (margem < 0): cada 1% de estouro tira 0,1 ponto. Piso 0. Arredondamento ≥ .5 sobe antes de consultar a tabela de % do fixo." />
 
                 </span>
               </th>
