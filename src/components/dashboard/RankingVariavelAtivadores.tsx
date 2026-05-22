@@ -232,7 +232,7 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {data.map((r, i) => (
+            {tableRows.map((r, i) => (
               <tr key={r.ativador} className="transition-colors hover:bg-muted/40">
                 <td className="px-3 py-2 font-numeric font-bold tabular-nums text-muted-foreground">
                   {i + 1}
@@ -265,6 +265,39 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
               </tr>
             ))}
           </tbody>
+          {!onlyAgente && (
+            <tfoot>
+              <tr className="border-t-2 border-border bg-muted/40 font-semibold">
+                <td className="px-3 py-2.5 text-muted-foreground" />
+                <td className="px-3 py-2.5 font-display text-foreground">Time (consolidado)</td>
+                <td className="px-3 py-2.5 text-right font-numeric tabular-nums text-muted-foreground">
+                  {fmtBRL(team.mrrAtivado)} / {fmtBRL(team.mrrCriadoAnterior)}
+                </td>
+                <td className={cn("px-3 py-2.5 text-right font-numeric font-bold tabular-nums", scoreColor(team.pctMrr))}>
+                  {fmtPct(team.pctMrr)}
+                </td>
+                <td className="px-3 py-2.5 text-right font-numeric tabular-nums text-muted-foreground">
+                  {team.clientesAtivados} / {team.clientesCriadosAnterior}
+                </td>
+                <td className={cn("px-3 py-2.5 text-right font-numeric font-bold tabular-nums", scoreColor(team.pctClientes))}>
+                  {fmtPct(team.pctClientes)}
+                </td>
+                <td className="px-3 py-2.5 text-right font-numeric tabular-nums text-muted-foreground">
+                  {fmtBRL(team.churnReal)} / {fmtBRL(team.churnMax)}
+                </td>
+                <td className={cn("px-3 py-2.5 text-right font-numeric font-bold tabular-nums", pctChurnColor(team.pctChurn))}>
+                  {fmtPct(team.pctChurn)}
+                </td>
+                <td className={cn("px-3 py-2.5 text-right font-numeric font-bold tabular-nums", scoreColor(team.scoreFinal))}>
+                  {Math.round(team.scoreFinal)}
+                </td>
+                <td className={cn("px-3 py-2.5 text-right font-numeric font-bold tabular-nums", pctFixoColor(team.pctFixo))}>
+                  {team.pctFixo}%
+                </td>
+              </tr>
+            </tfoot>
+          )}
+
         </table>
       </div>
 
