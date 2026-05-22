@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { Medal, Trophy } from "lucide-react";
+import { Medal, Trophy, CalendarIcon, X } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import type { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import {
   parseDate,
@@ -10,6 +13,9 @@ import {
 } from "@/hooks/useDashOperacoes";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DealLink } from "./DealLink";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
 
 type PeriodKey = "semana" | "mes" | "trimestre" | "custom";
 
@@ -188,9 +194,19 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("mes");
   const today = new Date();
   const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const [customStart, setCustomStart] = useState<Date>(firstOfMonth);
-  const [customEnd, setCustomEnd] = useState<Date>(today);
+  const [customRange, setCustomRange] = useState<DateRange | undefined>({ from: firstOfMonth, to: today });
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedAtivador, setSelectedAtivador] = useState<string | null>(null);
+
+  const customStart = customRange?.from ?? firstOfMonth;
+  const customEnd = customRange?.to ?? customRange?.from ?? today;
+
+  const customLabel = customRange?.from
+    ? customRange.to
+      ? `${format(customRange.from, "dd/MM/yyyy", { locale: ptBR })} → ${format(customRange.to, "dd/MM/yyyy", { locale: ptBR })}`
+      : format(customRange.from, "dd/MM/yyyy", { locale: ptBR })
+    : "Personalizado";
+
   const { ranked, team } = useMemo(
     () => computeRanking(rows, period, { start: customStart, end: customEnd }),
     [rows, period, customStart, customEnd],
@@ -237,45 +253,78 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
             </p>
           </div>
         </div>
-        <div className="inline-flex rounded-lg border border-border bg-muted/30 p-0.5">
-          {(Object.keys(PERIOD_LABELS) as PeriodKey[]).map((k) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setPeriod(k)}
-              className={cn(
-                "rounded-md px-3 py-1.5 font-subtitle text-xs transition",
-                period === k
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex rounded-lg border border-border bg-muted/30 p-0.5">
+            {(["semana", "mes", "trimestre"] as PeriodKey[]).map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setPeriod(k)}
+                className={cn(
+                  "rounded-md px-3 py-1.5 font-subtitle text-xs transition",
+                  period === k
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {PERIOD_LABELS[k]}
+              </button>
+            ))}
+          </div>
+          <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "h-8 gap-1.5 rounded-md font-subtitle text-xs font-semibold",
+                  period === "custom"
+                    ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+                    : "text-muted-foreground",
+                )}
+              >
+                <CalendarIcon className="h-3.5 w-3.5" />
+                {period === "custom" ? customLabel : "Personalizado"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="range"
+                numberOfMonths={2}
+                selected={customRange}
+                onSelect={(range) => {
+                  setCustomRange(range);
+                  if (range?.from) setPeriod("custom");
+                  if (range?.from && range?.to) setPickerOpen(false);
+                }}
+                locale={ptBR}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+              {period === "custom" && (
+                <div className="flex items-center justify-end gap-2 border-t border-border p-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 text-xs"
+                    onClick={() => {
+                      setCustomRange({ from: firstOfMonth, to: today });
+                      setPeriod("mes");
+                      setPickerOpen(false);
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                    Limpar
+                  </Button>
+                </div>
               )}
-            >
-              {PERIOD_LABELS[k]}
-            </button>
-          ))}
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
-      {period === "custom" && (
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <label className="font-small text-xs text-muted-foreground">De</label>
-          <input
-            type="date"
-            value={toInputDate(customStart)}
-            max={toInputDate(customEnd)}
-            onChange={(e) => e.target.value && setCustomStart(fromInputDate(e.target.value))}
-            className="rounded-md border border-border bg-card px-2 py-1 font-numeric text-xs text-foreground"
-          />
-          <label className="font-small text-xs text-muted-foreground">até</label>
-          <input
-            type="date"
-            value={toInputDate(customEnd)}
-            min={toInputDate(customStart)}
-            onChange={(e) => e.target.value && setCustomEnd(fromInputDate(e.target.value))}
-            className="rounded-md border border-border bg-card px-2 py-1 font-numeric text-xs text-foreground"
-          />
-        </div>
-      )}
 
       {ranked.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-10 text-center font-subtitle text-sm text-muted-foreground">
