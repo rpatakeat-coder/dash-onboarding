@@ -39,12 +39,15 @@ export const RastroMensal = ({ rows }: Props) => {
       churnMrr: 0,
       dealsCriados: 0,
       dealsAtivados: 0,
+      pmCount: 0,
+      ggCount: 0,
     }));
 
     // mês 0 (dezembro do ano anterior) para servir de denominador do janeiro
     let mrrCriadoDezAnt = 0;
 
     for (const row of rows) {
+      const perfil = (row.perfil_cliente ?? "").trim().split(/\s+/)[0]?.toUpperCase() ?? "";
       const da = parseActivationDate(row.data_ativacao);
       if (da && da.getFullYear() === year) {
         months[da.getMonth()].mrrAtivado += toNum(row.mrr);
@@ -55,6 +58,8 @@ export const RastroMensal = ({ rows }: Props) => {
         if (dc.getFullYear() === year) {
           months[dc.getMonth()].mrrCriado += toNum(row.mrr);
           months[dc.getMonth()].dealsCriados += 1;
+          if (perfil === "P" || perfil === "M") months[dc.getMonth()].pmCount += 1;
+          else if (perfil === "G" || perfil === "GG") months[dc.getMonth()].ggCount += 1;
         } else if (dc.getFullYear() === year - 1 && dc.getMonth() === 11) {
           mrrCriadoDezAnt += toNum(row.mrr);
         }
@@ -78,16 +83,22 @@ export const RastroMensal = ({ rows }: Props) => {
       const denomAtivacao = i === 0 ? mrrCriadoDezAnt : months[i - 1].mrrCriado;
       const pctAtivacao = denomAtivacao > 0 ? (m.mrrAtivado / denomAtivacao) * 100 : 0;
       const pctChurn = m.mrrCriado > 0 ? (m.churnMrr / m.mrrCriado) * 100 : 0;
+      const totalPerfil = m.pmCount + m.ggCount;
+      const pctPm = totalPerfil > 0 ? (m.pmCount / totalPerfil) * 100 : 0;
+      const pctGg = totalPerfil > 0 ? (m.ggCount / totalPerfil) * 100 : 0;
       return {
         ...m,
         pctAtivacao,
         pctChurn,
+        pctPm,
+        pctGg,
         isPast: i < currentMonth,
         isCurrent: i === currentMonth,
         isFuture: i > currentMonth,
       };
     });
   }, [rows, year, currentMonth]);
+
 
 
   const fmtPct = (v: number) =>
