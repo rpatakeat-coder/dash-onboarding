@@ -12,6 +12,7 @@ import {
 } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
 import { InfoTooltip } from "@/components/dashboard/InfoTooltip";
+import { ChurnDetailModal } from "@/components/dashboard/ChurnDetailModal";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
