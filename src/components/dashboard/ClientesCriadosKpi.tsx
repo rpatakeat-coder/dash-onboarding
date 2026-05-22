@@ -1,8 +1,26 @@
 import { useMemo, useState } from "react";
 import { UserPlus, TrendingUp, TrendingDown } from "lucide-react";
-import { parseDate, type DashRow } from "@/hooks/useDashOperacoes";
+import { parseDate, fmtBRL, type DashRow } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
 import { InfoTooltip } from "./InfoTooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { DealLink } from "@/components/dashboard/DealLink";
 
 interface Props {
   /** Já vem filtrado por ativador/etapa via filtros globais (macroRows). */
