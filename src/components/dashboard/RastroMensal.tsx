@@ -99,7 +99,7 @@ export const RastroMensal = ({ rows }: Props) => {
         <div>
           <div className="flex items-center gap-2">
             <span className="font-subtitle text-[10px] uppercase tracking-widest text-primary">
-              B · Rastro mensal
+              · Rastro mensal
             </span>
             <h2 className="font-display text-base font-semibold text-secondary">
               Como cada mês fechou · jan → dez/{year}
