@@ -272,8 +272,35 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
                 </span>
               </div>
             ))}
+        <div className="rounded-xl border border-border bg-card p-4">
+          <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+            Por perfil
+          </p>
+          <div className="mt-2 max-h-44 space-y-1 overflow-y-auto pr-1">
+            {byPerfil.length === 0 && (
+              <p className="font-small text-xs text-muted-foreground">Sem dados no período.</p>
+            )}
+            {byPerfil.map(([perfil, n]) => {
+              const color =
+                perfil === "P" ? "text-success"
+                : perfil === "M" ? "text-warning"
+                : perfil === "G" ? "text-destructive"
+                : perfil === "GG" ? "text-secondary"
+                : "text-muted-foreground";
+              const pct = count > 0 ? (n / count) * 100 : 0;
+              return (
+                <div key={perfil} className="flex items-center justify-between gap-2 font-subtitle text-xs">
+                  <span className={cn("font-semibold", color)}>{perfil}</span>
+                  <span className="font-numeric font-semibold tabular-nums text-foreground">
+                    {n.toLocaleString("pt-BR")} <span className="text-muted-foreground">({pct.toFixed(0)}%)</span>
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
+      </div>
+
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
