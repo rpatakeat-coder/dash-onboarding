@@ -124,6 +124,10 @@ export const MacroMovimento = ({ rows }: Props) => {
     pctLabel: string;
     accent?: string;
     formula: string;
+    start: Date;
+    end: Date;
+    titulo: string;
+    descricao: string;
   }[] = [];
 
   if (filter === "custom" && customRange?.from) {
