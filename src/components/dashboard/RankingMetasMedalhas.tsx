@@ -190,10 +190,29 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
   const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const [customStart, setCustomStart] = useState<Date>(firstOfMonth);
   const [customEnd, setCustomEnd] = useState<Date>(today);
+  const [selectedAtivador, setSelectedAtivador] = useState<string | null>(null);
   const { ranked, team } = useMemo(
     () => computeRanking(rows, period, { start: customStart, end: customEnd }),
     [rows, period, customStart, customEnd],
   );
+
+  const breakdown = useMemo(() => {
+    if (!selectedAtivador) return null;
+    const { start, end } = getRanges(period, { start: customStart, end: customEnd });
+    const inCur = (d: Date | null) => !!d && d >= start && d < end;
+    const norm = selectedAtivador.trim().toLowerCase();
+    const mine = rows.filter((r) => (r.agente_ativacao ?? "").trim().toLowerCase() === norm);
+    const ativados = mine.filter((r) => inCur(parseActivationDate(r.data_ativacao)));
+    const criados = mine.filter((r) => inCur(parseDate(r.data_criacao)));
+    const churns = mine.filter((r) => {
+      const etapa = (r.etapa_negocio ?? "").trim();
+      const cancel = (r.etapa_de_cancelamento ?? "").trim().toLowerCase();
+      const isChurn = CHURN_STAGE_IDS.has(etapa) || cancel === CHURN_CANCELAMENTO_PIPELINE.toLowerCase();
+      return isChurn && inCur(parseDate(r.data_fechamento));
+    });
+    return { ativados, criados, churns, start, end };
+  }, [selectedAtivador, rows, period, customStart, customEnd]);
+
   const top3 = ranked.slice(0, 3);
   const rest = ranked.slice(3);
 
