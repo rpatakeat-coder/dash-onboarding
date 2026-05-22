@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import { InfoTooltip } from "./InfoTooltip";
 import { cn } from "@/lib/utils";
