@@ -300,7 +300,7 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
                       {r.criacao ? r.criacao.toLocaleDateString("pt-BR") : "—"}
                     </TableCell>
                     <TableCell className="text-right font-numeric tabular-nums">
-                      {r.mrr ? fmtBRL(r.mrr) : "—"}
+                      {r.mrr ? fmtBRL(parseFloat(String(r.mrr).replace(",", "."))) : "—"}
                     </TableCell>
                   </TableRow>
                 ))}
