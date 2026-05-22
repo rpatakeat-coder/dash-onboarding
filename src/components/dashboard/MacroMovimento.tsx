@@ -54,6 +54,16 @@ export const MacroMovimento = ({ rows }: Props) => {
       });
   }, [rows]);
 
+  const perfisHoje = useMemo(() => {
+    const order = ["P", "M", "G", "GG"] as const;
+    const map = new Map<string, number>();
+    for (const r of entradasHojeRows) {
+      const k = r.perfil_cliente?.trim().split(/\s+/)[0]?.toUpperCase() || "—";
+      map.set(k, (map.get(k) ?? 0) + 1);
+    }
+    return order.map((k) => ({ perfil: k, count: map.get(k) ?? 0 }));
+  }, [entradasHojeRows]);
+
   const periods = [
     {
       key: "hoje",
