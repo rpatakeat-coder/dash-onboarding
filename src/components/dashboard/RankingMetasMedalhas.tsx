@@ -283,6 +283,38 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
               ))}
             </div>
           )}
+
+          <div className="mt-4 rounded-xl border border-primary/40 bg-primary/5 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-small text-[10px] uppercase tracking-wider text-primary">Time · consolidado</p>
+                <p className={cn("font-display font-semibold text-foreground", isTv ? "text-xl" : "text-base")}>
+                  Score agregado do período
+                </p>
+              </div>
+              <div className="text-right">
+                <p className={cn("font-numeric font-bold tabular-nums text-primary", isTv ? "text-3xl" : "text-2xl")}>
+                  {Math.round(team.scoreFinal)}
+                </p>
+                <p className="font-small text-[10px] uppercase tracking-wider text-muted-foreground">Score</p>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+              <div>
+                <p className="font-numeric text-sm font-semibold tabular-nums text-foreground">{team.pctMrr.toFixed(0)}%</p>
+                <p className="font-small text-[10px] text-muted-foreground">MRR</p>
+              </div>
+              <div>
+                <p className="font-numeric text-sm font-semibold tabular-nums text-foreground">{team.pctClientes.toFixed(0)}%</p>
+                <p className="font-small text-[10px] text-muted-foreground">Clientes</p>
+              </div>
+              <div>
+                <p className="font-numeric text-sm font-semibold tabular-nums text-foreground">{team.pctChurn.toFixed(0)}%</p>
+                <p className="font-small text-[10px] text-muted-foreground">Churn</p>
+              </div>
+            </div>
+          </div>
+
         </>
       )}
     </div>
