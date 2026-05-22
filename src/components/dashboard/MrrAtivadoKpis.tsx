@@ -25,7 +25,7 @@ type BigPeriod = "hoje" | "semana" | "mes" | "tudo";
 
 export const MrrAtivadoKpis = ({ rows }: Props) => {
   const r = getPeriodRanges();
-  const [mesModalOpen, setMesModalOpen] = useState(false);
+  const [modalPeriod, setModalPeriod] = useState<BigPeriod | null>(null);
   const [bigPeriod, setBigPeriod] = useState<BigPeriod>("mes");
   const mrrTotalEstoque = rows.reduce((s, x) => s + num(x.mrr), 0);
 
@@ -54,6 +54,33 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
 
   const mesLabelRaw = r.monthStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   const mesLabel = mesLabelRaw.charAt(0).toUpperCase() + mesLabelRaw.slice(1).replace(" de ", "/");
+
+  const modalRanges: Record<BigPeriod, { start: Date; end: Date; titulo: string; descricao: string }> = {
+    hoje: {
+      start: r.todayStart,
+      end: r.tomorrow,
+      titulo: "MRR Ativado · Hoje",
+      descricao: "Ativações registradas hoje",
+    },
+    semana: {
+      start: r.weekStart,
+      end: r.nextWeek,
+      titulo: "MRR Ativado · Esta semana",
+      descricao: "Ativações de segunda a domingo",
+    },
+    mes: {
+      start: r.monthStart,
+      end: r.nextMonth,
+      titulo: `MRR Ativado · ${mesLabel}`,
+      descricao: "Detalhamento das ativações do mês vigente",
+    },
+    tudo: {
+      start: new Date(0),
+      end: new Date(8640000000000000),
+      titulo: "MRR Ativado · Tudo",
+      descricao: "Histórico completo de ativações",
+    },
+  };
 
   const cards = [
     {
@@ -101,7 +128,16 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
         {cards.map((c) => {
           const Icon = c.icon;
           return (
-            <div key={c.key} className={cn("relative rounded-xl border p-4", c.border, c.bg)}>
+            <button
+              key={c.key}
+              type="button"
+              onClick={() => setModalPeriod(c.key as BigPeriod)}
+              className={cn(
+                "group relative rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md-soft",
+                c.border,
+                c.bg,
+              )}
+            >
               <div className="flex items-start justify-between">
                 <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
                   {c.label}
@@ -115,7 +151,10 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
                 {fmtPct(c.pct, 1)}
               </p>
               <p className="mt-1 font-small text-xs text-muted-foreground">{c.sub}</p>
-            </div>
+              <span className="pdf-hide mt-1 inline-block font-small text-[10px] text-primary/0 transition group-hover:text-primary">
+                Clique para detalhar →
+              </span>
+            </button>
           );
         })}
 
@@ -162,28 +201,19 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
                   </button>
                 ))}
               </div>
-              {isMes ? (
-                <button
-                  type="button"
-                  onClick={() => setMesModalOpen(true)}
-                  className="mt-1 block w-full text-left transition hover:opacity-80"
-                >
-                  <p className="font-numeric text-3xl font-bold text-success">
-                    {fmtBRL(cur.mrr)}
-                  </p>
-                  <p className="mt-1 font-small text-xs text-muted-foreground">{subText}</p>
-                  <span className="pdf-hide mt-1 inline-block font-small text-[10px] text-primary/0 transition group-hover:text-primary">
-                    Clique para detalhar →
-                  </span>
-                </button>
-              ) : (
-                <>
-                  <p className="mt-2 font-numeric text-3xl font-bold text-success">
-                    {fmtBRL(cur.mrr)}
-                  </p>
-                  <p className="mt-1 font-small text-xs text-muted-foreground">{subText}</p>
-                </>
-              )}
+              <button
+                type="button"
+                onClick={() => setModalPeriod(bigPeriod)}
+                className="mt-1 block w-full text-left transition hover:opacity-80"
+              >
+                <p className="font-numeric text-3xl font-bold text-success">
+                  {fmtBRL(cur.mrr)}
+                </p>
+                <p className="mt-1 font-small text-xs text-muted-foreground">{subText}</p>
+                <span className="pdf-hide mt-1 inline-block font-small text-[10px] text-primary/0 transition group-hover:text-primary">
+                  Clique para detalhar →
+                </span>
+              </button>
             </div>
           );
         })()}
@@ -222,10 +252,14 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
       </div>
 
       <MrrAtivadoMesModal
-        open={mesModalOpen}
-        onOpenChange={setMesModalOpen}
+        open={modalPeriod !== null}
+        onOpenChange={(o) => !o && setModalPeriod(null)}
         rows={rows}
         mesLabel={mesLabel}
+        periodStart={modalPeriod ? modalRanges[modalPeriod].start : undefined}
+        periodEnd={modalPeriod ? modalRanges[modalPeriod].end : undefined}
+        titulo={modalPeriod ? modalRanges[modalPeriod].titulo : undefined}
+        descricao={modalPeriod ? modalRanges[modalPeriod].descricao : undefined}
       />
     </section>
   );

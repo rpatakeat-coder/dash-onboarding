@@ -31,6 +31,10 @@ interface Props {
   onOpenChange: (o: boolean) => void;
   rows: DashRow[];
   mesLabel: string;
+  periodStart?: Date;
+  periodEnd?: Date;
+  titulo?: string;
+  descricao?: string;
 }
 
 const toNum = (v: string | null | undefined) => {
@@ -45,14 +49,25 @@ type SortKey = "cliente" | "agente" | "perfil" | "mrr" | "data" | "sla";
 
 const PAGE_SIZE = 50;
 
-export const MrrAtivadoMesModal = ({ open, onOpenChange, rows, mesLabel }: Props) => {
+export const MrrAtivadoMesModal = ({
+  open,
+  onOpenChange,
+  rows,
+  mesLabel,
+  periodStart,
+  periodEnd,
+  titulo,
+  descricao,
+}: Props) => {
   const r = getPeriodRanges();
+  const start = periodStart ?? r.monthStart;
+  const end = periodEnd ?? r.nextMonth;
 
   const ativados = useMemo(() => {
     return rows
       .map((row) => {
         const d = parseActivationDate(row.data_ativacao);
-        if (!d || d < r.monthStart || d >= r.nextMonth) return null;
+        if (!d || d < start || d >= end) return null;
         const perfilRaw = row.perfil_cliente?.trim() || "";
         const perfilKey = perfilRaw.split(/\s+/)[0]?.toUpperCase() || "—";
         return {
@@ -67,7 +82,7 @@ export const MrrAtivadoMesModal = ({ open, onOpenChange, rows, mesLabel }: Props
         };
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);
-  }, [rows, r.monthStart, r.nextMonth]);
+  }, [rows, start, end]);
 
   const totalMrr = ativados.reduce((s, x) => s + x.mrr, 0);
   const totalQtd = ativados.length;
@@ -170,9 +185,9 @@ export const MrrAtivadoMesModal = ({ open, onOpenChange, rows, mesLabel }: Props
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto sm:rounded-2xl rounded-none w-[100vw] sm:w-auto h-[100vh] sm:h-auto">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl">MRR Ativado · {mesLabel}</DialogTitle>
+          <DialogTitle className="font-display text-2xl">{titulo ?? `MRR Ativado · ${mesLabel}`}</DialogTitle>
           <DialogDescription>
-            Detalhamento das ativações do mês vigente
+            {descricao ?? "Detalhamento das ativações do mês vigente"}
           </DialogDescription>
         </DialogHeader>
 
