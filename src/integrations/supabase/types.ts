@@ -251,6 +251,24 @@ export type Database = {
         }
         Relationships: []
       }
+      faturamento: {
+        Row: {
+          id: number
+          mes: string | null
+          mrr: string | null
+        }
+        Insert: {
+          id?: number
+          mes?: string | null
+          mrr?: string | null
+        }
+        Update: {
+          id?: number
+          mes?: string | null
+          mrr?: string | null
+        }
+        Relationships: []
+      }
       "Leads Criados Hubspot": {
         Row: {
           data_criacao: string | null
