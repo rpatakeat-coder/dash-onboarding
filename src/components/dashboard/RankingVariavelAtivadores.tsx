@@ -60,13 +60,43 @@ interface Row {
   pctFixo: number;
 }
 
+type PeriodKey = "semana" | "mes" | "trimestre";
+const PERIOD_LABELS: Record<PeriodKey, string> = { semana: "Semana", mes: "Mês", trimestre: "Trimestre" };
+
+const startOfWeek = (d: Date) => {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day = (x.getDay() + 6) % 7;
+  x.setDate(x.getDate() - day);
+  return x;
+};
+const startOfQuarter = (d: Date) => {
+  const q = Math.floor(d.getMonth() / 3);
+  return new Date(d.getFullYear(), q * 3, 1);
+};
+const getRanges = (period: PeriodKey) => {
+  const now = new Date();
+  if (period === "semana") {
+    const start = startOfWeek(now);
+    const end = new Date(start); end.setDate(end.getDate() + 7);
+    const prevStart = new Date(start); prevStart.setDate(prevStart.getDate() - 7);
+    return { start, end, prevStart, prevEnd: start };
+  }
+  if (period === "trimestre") {
+    const start = startOfQuarter(now);
+    const end = new Date(start.getFullYear(), start.getMonth() + 3, 1);
+    const prevStart = new Date(start.getFullYear(), start.getMonth() - 3, 1);
+    return { start, end, prevStart, prevEnd: start };
+  }
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  return { start, end, prevStart, prevEnd: start };
+};
+
 export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
+  const [period, setPeriod] = useState<PeriodKey>("mes");
   const data = useMemo(() => {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const prevEnd = start;
+    const { start, end, prevStart, prevEnd } = getRanges(period);
 
     const inMonth = (d: Date | null) => !!d && d >= start && d < end;
     const inPrevMonth = (d: Date | null) => !!d && d >= prevStart && d < prevEnd;
