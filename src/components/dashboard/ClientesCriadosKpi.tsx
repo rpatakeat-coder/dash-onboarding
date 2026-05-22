@@ -154,6 +154,7 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
       cliente: r.nome_negocio?.trim() || "—",
       etapa: r.etapa_negocio?.trim() || "—",
       ativador: r.agente_ativacao?.trim() || "—",
+      perfil: normPerfil(r.perfil_cliente),
       criacao: parseDate(r.data_criacao),
       mrr: r.mrr,
     }));
