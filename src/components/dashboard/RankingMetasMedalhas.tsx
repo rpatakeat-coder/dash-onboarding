@@ -8,6 +8,8 @@ import {
   CHURN_CANCELAMENTO_PIPELINE,
   type DashRow,
 } from "@/hooks/useDashOperacoes";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { DealLink } from "./DealLink";
 
 type PeriodKey = "semana" | "mes" | "trimestre" | "custom";
 
