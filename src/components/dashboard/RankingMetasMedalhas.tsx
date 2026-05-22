@@ -194,10 +194,6 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("mes");
   const today = new Date();
   const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
-  const [period, setPeriod] = useState<PeriodKey>("mes");
-  const today = new Date();
-  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const [customRange, setCustomRange] = useState<DateRange | undefined>({ from: firstOfMonth, to: today });
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedAtivador, setSelectedAtivador] = useState<string | null>(null);
