@@ -9,7 +9,9 @@ import {
   type DashRow,
 } from "@/hooks/useDashOperacoes";
 
-type PeriodKey = "semana" | "mes" | "trimestre";
+type PeriodKey = "semana" | "mes" | "trimestre" | "custom";
+
+interface CustomRange { start: Date; end: Date }
 
 interface Props {
   rows: DashRow[];
