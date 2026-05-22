@@ -31,6 +31,7 @@ export const ChurnKpis = ({ rows, className }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("mes");
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   // MRR início do mês vindo da planilha (Google Sheets · Mensal 2026!B2)
   const [mrrBase, setMrrBase] = useState<number | null>(null);
