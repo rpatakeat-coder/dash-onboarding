@@ -185,9 +185,9 @@ export const MrrAtivadoMesModal = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto sm:rounded-2xl rounded-none w-[100vw] sm:w-auto h-[100vh] sm:h-auto">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl">MRR Ativado · {mesLabel}</DialogTitle>
+          <DialogTitle className="font-display text-2xl">{titulo ?? `MRR Ativado · ${mesLabel}`}</DialogTitle>
           <DialogDescription>
-            Detalhamento das ativações do mês vigente
+            {descricao ?? "Detalhamento das ativações do mês vigente"}
           </DialogDescription>
         </DialogHeader>
 
