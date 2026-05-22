@@ -68,7 +68,7 @@ interface Props {
   hideAtivadorFilter?: boolean;
 }
 
-const PAGE_SIZE_OPTS = [25, 50, 100, 200];
+const PAGE_SIZE_OPTS = [10, 25, 50, 100, 200];
 
 export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
   // Lista de deals oculta a pipeline "Sucesso" (mas KPIs de MRR Ativado seguem considerando).
