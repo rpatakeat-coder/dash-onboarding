@@ -154,6 +154,8 @@ const Index = () => {
               etapas={filtroEtapas}
               onAtivadoresChange={setFiltroAtivadores}
               onEtapasChange={setFiltroEtapas}
+              periodo={filtroPeriodo}
+              onPeriodoChange={setFiltroPeriodo}
               hideAtivador={isAtivador && !isAdmin}
             />
           </div>
