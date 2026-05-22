@@ -25,7 +25,7 @@ type BigPeriod = "hoje" | "semana" | "mes" | "tudo";
 
 export const MrrAtivadoKpis = ({ rows }: Props) => {
   const r = getPeriodRanges();
-  const [mesModalOpen, setMesModalOpen] = useState(false);
+  const [modalPeriod, setModalPeriod] = useState<BigPeriod | null>(null);
   const [bigPeriod, setBigPeriod] = useState<BigPeriod>("mes");
   const mrrTotalEstoque = rows.reduce((s, x) => s + num(x.mrr), 0);
 
@@ -54,6 +54,33 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
 
   const mesLabelRaw = r.monthStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   const mesLabel = mesLabelRaw.charAt(0).toUpperCase() + mesLabelRaw.slice(1).replace(" de ", "/");
+
+  const modalRanges: Record<BigPeriod, { start: Date; end: Date; titulo: string; descricao: string }> = {
+    hoje: {
+      start: r.todayStart,
+      end: r.tomorrow,
+      titulo: "MRR Ativado · Hoje",
+      descricao: "Ativações registradas hoje",
+    },
+    semana: {
+      start: r.weekStart,
+      end: r.nextWeek,
+      titulo: "MRR Ativado · Esta semana",
+      descricao: "Ativações de segunda a domingo",
+    },
+    mes: {
+      start: r.monthStart,
+      end: r.nextMonth,
+      titulo: `MRR Ativado · ${mesLabel}`,
+      descricao: "Detalhamento das ativações do mês vigente",
+    },
+    tudo: {
+      start: new Date(0),
+      end: new Date(8640000000000000),
+      titulo: "MRR Ativado · Tudo",
+      descricao: "Histórico completo de ativações",
+    },
+  };
 
   const cards = [
     {
