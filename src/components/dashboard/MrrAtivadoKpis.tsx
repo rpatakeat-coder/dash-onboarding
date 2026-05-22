@@ -201,28 +201,19 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
                   </button>
                 ))}
               </div>
-              {isMes ? (
-                <button
-                  type="button"
-                  onClick={() => setMesModalOpen(true)}
-                  className="mt-1 block w-full text-left transition hover:opacity-80"
-                >
-                  <p className="font-numeric text-3xl font-bold text-success">
-                    {fmtBRL(cur.mrr)}
-                  </p>
-                  <p className="mt-1 font-small text-xs text-muted-foreground">{subText}</p>
-                  <span className="pdf-hide mt-1 inline-block font-small text-[10px] text-primary/0 transition group-hover:text-primary">
-                    Clique para detalhar →
-                  </span>
-                </button>
-              ) : (
-                <>
-                  <p className="mt-2 font-numeric text-3xl font-bold text-success">
-                    {fmtBRL(cur.mrr)}
-                  </p>
-                  <p className="mt-1 font-small text-xs text-muted-foreground">{subText}</p>
-                </>
-              )}
+              <button
+                type="button"
+                onClick={() => setModalPeriod(bigPeriod)}
+                className="mt-1 block w-full text-left transition hover:opacity-80"
+              >
+                <p className="font-numeric text-3xl font-bold text-success">
+                  {fmtBRL(cur.mrr)}
+                </p>
+                <p className="mt-1 font-small text-xs text-muted-foreground">{subText}</p>
+                <span className="pdf-hide mt-1 inline-block font-small text-[10px] text-primary/0 transition group-hover:text-primary">
+                  Clique para detalhar →
+                </span>
+              </button>
             </div>
           );
         })()}
