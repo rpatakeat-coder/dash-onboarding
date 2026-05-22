@@ -4,7 +4,7 @@ import { Sparkles } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { MacroEstoque } from "@/components/dashboard/MacroEstoque";
 import { MacroMovimento } from "@/components/dashboard/MacroMovimento";
-import { MrrAtivadoKpis } from "@/components/dashboard/MrrAtivadoKpis";
+
 import { MrrAtivadoTrendChart } from "@/components/dashboard/MrrAtivadoTrendChart";
 import { RastroMensal } from "@/components/dashboard/RastroMensal";
 import { MrrAsaasKpis } from "@/components/dashboard/MrrAsaasKpis";
@@ -217,7 +217,7 @@ const Index = () => {
             />
 
             <div data-tour="kpis">
-              <MrrAtivadoKpis rows={macroRows} />
+              <MacroMovimento rows={macroRows} />
             </div>
 
             <MrrAsaasKpis rows={estoqueRows} />
@@ -230,8 +230,6 @@ const Index = () => {
             <MrrAtivadoTrendChart rows={macroRows} />
 
             <RastroMensal rows={macroRows} />
-
-            <MacroMovimento rows={macroRows} />
 
             <CarteiraPorAtivador rows={estoqueRows} />
 
