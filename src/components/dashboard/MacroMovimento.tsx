@@ -219,6 +219,26 @@ export const MacroMovimento = ({ rows }: Props) => {
             <p className="mt-1 font-small text-xs text-muted-foreground">
               {novosHoje === 1 ? "cliente entrou" : "clientes entraram"} no pipeline hoje
             </p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {perfisHoje.map((p) => {
+                const color =
+                  p.perfil === "P" ? "text-success border-success/30 bg-success/10"
+                  : p.perfil === "M" ? "text-warning border-warning/30 bg-warning/10"
+                  : p.perfil === "G" ? "text-destructive border-destructive/30 bg-destructive/10"
+                  : "text-secondary border-secondary/30 bg-secondary/10";
+                return (
+                  <span
+                    key={p.perfil}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 font-subtitle text-[10px] font-semibold",
+                      color,
+                    )}
+                  >
+                    {p.perfil} <span className="font-numeric tabular-nums">{p.count}</span>
+                  </span>
+                );
+              })}
+            </div>
           </div>
           <Sparkles className="h-6 w-6 text-success/70 transition group-hover:scale-110" />
         </div>
