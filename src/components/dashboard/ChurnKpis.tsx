@@ -33,8 +33,8 @@ export const ChurnKpis = ({ rows, className }: Props) => {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
 
-  // MRR início do mês vindo da planilha (Google Sheets · Mensal 2026!B2)
-  const [mrrBase, setMrrBase] = useState<number | null>(null);
+  // MRR início do mês vindo da planilha (Google Sheets · Dados 2026 · A3:B14)
+  const [mrrBaseByMonth, setMrrBaseByMonth] = useState<(number | null)[]>(() => Array(12).fill(null));
   const [sheetLoading, setSheetLoading] = useState(false);
   const [sheetError, setSheetError] = useState<string | null>(null);
   const [sheetFetchedAt, setSheetFetchedAt] = useState<string | null>(null);
@@ -47,27 +47,11 @@ export const ChurnKpis = ({ rows, className }: Props) => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      const resolveMrrBase = () => {
-        if (typeof data?.mrrBase === "number") return data.mrrBase;
-        if (typeof data?.raw === "number") return data.raw;
-        if (typeof data?.pct === "number") return data.pct;
-
-        const fallback = data?.raw ?? data?.mrrBase ?? data?.pct;
-        if (typeof fallback === "string") {
-          const normalized = fallback
-            .replace(/r\$/i, "")
-            .replace(/\s/g, "")
-            .replace(/\./g, "")
-            .replace(",", ".")
-            .trim();
-          const parsed = Number(normalized);
-          return Number.isFinite(parsed) ? parsed : null;
-        }
-
-        return null;
-      };
-
-      setMrrBase(resolveMrrBase());
+      if (Array.isArray(data?.mrrBaseByMonth)) {
+        setMrrBaseByMonth(
+          data.mrrBaseByMonth.map((v: unknown) => (typeof v === "number" ? v : null)),
+        );
+      }
       setSheetFetchedAt(data?.fetchedAt ?? null);
     } catch (e) {
       setSheetError((e as Error).message);
@@ -79,6 +63,7 @@ export const ChurnKpis = ({ rows, className }: Props) => {
   useEffect(() => {
     fetchSheetPct();
   }, []);
+
 
 
   const presets: Record<Exclude<PeriodKey, "custom">, { start: Date; end: Date; label: string }> = {
@@ -245,7 +230,7 @@ export const ChurnKpis = ({ rows, className }: Props) => {
             <span className="flex items-center gap-2">
               <TrendingDown className="h-3.5 w-3.5" />
               % Churn Real
-              <InfoTooltip text="Razão entre o valor total perdido em churn no período (Pré-Churn + Churn Sucesso + Cancelamento Onboarding) e o MRR de início do mês lido da planilha Mensal 2026 · B2. Fórmula: Churn Real ÷ MRR início do mês." />
+              <InfoTooltip text="Razão entre o valor total perdido em churn no período (Pré-Churn + Churn Sucesso + Cancelamento Onboarding) e o MRR de início do mês do período selecionado, lido da planilha Dados 2026. Fórmula: Churn Real ÷ MRR início do mês." />
             </span>
             <span
               role="button"
@@ -268,6 +253,8 @@ export const ChurnKpis = ({ rows, className }: Props) => {
             </span>
           </div>
           {(() => {
+            const periodMonth = activeRange.start.getMonth();
+            const mrrBase = mrrBaseByMonth[periodMonth] ?? null;
             const pct = mrrBase && mrrBase > 0 ? (k.churnReal / mrrBase) * 100 : null;
             return (
               <>
@@ -283,8 +270,9 @@ export const ChurnKpis = ({ rows, className }: Props) => {
                     ? `Erro: ${sheetError}`
                     : mrrBase !== null
                     ? `${fmtBRL(k.churnReal)} ÷ ${fmtBRL(mrrBase)} (MRR início do mês)`
-                    : "Lendo MRR início do mês (Mensal 2026 · B2)…"}
+                    : "Lendo MRR início do mês (Dados 2026)…"}
                 </p>
+
                 {sheetFetchedAt && (
                   <p className="font-small text-[10px] text-muted-foreground/70">
                     Planilha · {new Date(sheetFetchedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
