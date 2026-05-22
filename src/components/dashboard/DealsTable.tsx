@@ -68,7 +68,7 @@ interface Props {
   hideAtivadorFilter?: boolean;
 }
 
-const PAGE_SIZE_OPTS = [25, 50, 100, 200];
+const PAGE_SIZE_OPTS = [10, 25, 50, 100, 200];
 
 export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
   // Lista de deals oculta a pipeline "Sucesso" (mas KPIs de MRR Ativado seguem considerando).
@@ -85,7 +85,7 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
   const [sortKey, setSortKey] = useState<SortKey>("fase");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(10);
   const [onlyDivergentes, setOnlyDivergentes] = useState(false);
   const [conds, setConds] = useState<Record<string, ConditionValue>>({});
   const setCond = (k: string, v: ConditionValue) => {
