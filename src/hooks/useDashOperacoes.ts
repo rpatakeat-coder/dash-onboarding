@@ -75,14 +75,7 @@ export function computeChurnKpis(
     .reduce((s, r) => s + toNum(r.mrr), 0);
   const churnMaximo = mrrCriadoMes * 0.09;
 
-  const churnRows = rows.filter((r) => {
-    const etapa = (r.etapa_negocio ?? "").trim();
-    const cancel = (r.etapa_de_cancelamento ?? "").trim().toLowerCase();
-    const isChurn =
-      CHURN_STAGE_IDS.has(etapa) ||
-      cancel === CHURN_CANCELAMENTO_PIPELINE.toLowerCase();
-    return isChurn && inRange(r.data_fechamento);
-  });
+  const churnRows = rows.filter((r) => isChurnRow(r) && inRange(r.data_fechamento));
   const churnReal = churnRows.reduce((s, r) => s + toNum(r.mrr), 0);
   const pctDoMaximo = churnMaximo > 0 ? (churnReal / churnMaximo) * 100 : 0;
 
