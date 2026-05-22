@@ -212,22 +212,75 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
             {label} · respeita os filtros de ativador e etapa
           </p>
         </div>
-        <div className="inline-flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5">
-          {PERIODS.map((p) => (
-            <button
-              key={p.key}
-              type="button"
-              onClick={() => setPeriod(p.key)}
-              className={cn(
-                "rounded px-2 py-1 font-subtitle text-[11px] font-semibold transition",
-                period === p.key
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground",
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5">
+            {PERIODS.map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => setPeriod(p.key)}
+                className={cn(
+                  "rounded px-2 py-1 font-subtitle text-[11px] font-semibold transition",
+                  period === p.key
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "h-7 gap-1.5 rounded-md font-subtitle text-[11px] font-semibold",
+                  period === "custom"
+                    ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+                    : "text-muted-foreground",
+                )}
+              >
+                <CalendarIcon className="h-3 w-3" />
+                {period === "custom" ? customLabel : "Personalizado"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="range"
+                numberOfMonths={2}
+                selected={customRange}
+                onSelect={(range) => {
+                  setCustomRange(range);
+                  if (range?.from) setPeriod("custom");
+                  if (range?.from && range?.to) setPickerOpen(false);
+                }}
+                locale={ptBR}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+              {period === "custom" && (
+                <div className="flex items-center justify-end gap-2 border-t border-border p-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 text-xs"
+                    onClick={() => {
+                      setCustomRange(undefined);
+                      setPeriod("hoje");
+                      setPickerOpen(false);
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                    Limpar
+                  </Button>
+                </div>
               )}
-            >
-              {p.label}
-            </button>
-          ))}
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
