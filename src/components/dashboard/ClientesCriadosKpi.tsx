@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { UserPlus, TrendingUp, TrendingDown } from "lucide-react";
+import { UserPlus, TrendingUp, TrendingDown, CalendarIcon, X } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import type { DateRange } from "react-day-picker";
 import { parseDate, fmtBRL, type DashRow } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
 import { InfoTooltip } from "./InfoTooltip";
@@ -21,13 +24,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { DealLink } from "@/components/dashboard/DealLink";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   /** Já vem filtrado por ativador/etapa via filtros globais (macroRows). */
   rows: DashRow[];
 }
 
-type PeriodKey = "hoje" | "semana" | "mes" | "trimestre" | "tudo";
+type PeriodKey = "hoje" | "semana" | "mes" | "trimestre" | "tudo" | "custom";
 
 const PERIODS: { key: PeriodKey; label: string }[] = [
   { key: "hoje", label: "Hoje" },
@@ -36,6 +42,7 @@ const PERIODS: { key: PeriodKey; label: string }[] = [
   { key: "trimestre", label: "Trimestre" },
   { key: "tudo", label: "Tudo" },
 ];
+
 
 const startOfDay = (d: Date) => {
   const x = new Date(d); x.setHours(0, 0, 0, 0); return x;
@@ -53,7 +60,7 @@ const startOfQuarter = (d: Date) => {
   return new Date(d.getFullYear(), q * 3, 1);
 };
 
-function getRanges(period: PeriodKey) {
+function getRanges(period: PeriodKey, customRange?: DateRange) {
   const now = new Date();
   if (period === "tudo") {
     return {
@@ -62,6 +69,18 @@ function getRanges(period: PeriodKey) {
       prevStart: null as Date | null,
       prevEnd: null as Date | null,
     };
+  }
+  if (period === "custom") {
+    if (!customRange?.from) {
+      return { start: new Date(0), end: new Date(0), prevStart: null, prevEnd: null };
+    }
+    const start = startOfDay(customRange.from);
+    const toBase = customRange.to ?? customRange.from;
+    const end = new Date(toBase.getFullYear(), toBase.getMonth(), toBase.getDate() + 1);
+    const spanMs = end.getTime() - start.getTime();
+    const prevEnd = start;
+    const prevStart = new Date(start.getTime() - spanMs);
+    return { start, end, prevStart, prevEnd };
   }
   if (period === "hoje") {
     const start = startOfDay(now);
@@ -90,6 +109,8 @@ function getRanges(period: PeriodKey) {
 
 export const ClientesCriadosKpi = ({ rows }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("hoje");
+  const [customRange, setCustomRange] = useState<DateRange | undefined>();
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
 
@@ -102,8 +123,14 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
     return "—";
   };
 
+  const customLabel = customRange?.from
+    ? customRange.to
+      ? `${format(customRange.from, "dd/MM/yyyy", { locale: ptBR })} → ${format(customRange.to, "dd/MM/yyyy", { locale: ptBR })}`
+      : format(customRange.from, "dd/MM/yyyy", { locale: ptBR })
+    : "Personalizado";
+
   const { count, prevCount, byAtivador, byEtapa, byPerfil, label, filtered } = useMemo(() => {
-    const { start, end, prevStart, prevEnd } = getRanges(period);
+    const { start, end, prevStart, prevEnd } = getRanges(period, customRange);
     const inRange = (raw: string | null, s: Date, e: Date) => {
       const d = parseDate(raw);
       return d ? d >= s && d < e : false;
@@ -131,6 +158,7 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
       mes: "Este mês",
       trimestre: "Este trimestre",
       tudo: "Histórico completo",
+      custom: customLabel,
     };
 
     const perfilOrder = ["P", "M", "G", "GG", "—"];
@@ -145,7 +173,7 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
       label: labelMap[period],
       filtered,
     };
-  }, [rows, period]);
+  }, [rows, period, customRange, customLabel]);
 
   const term = q.trim().toLowerCase();
   const listaModal = useMemo(() => {
@@ -184,22 +212,75 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
             {label} · respeita os filtros de ativador e etapa
           </p>
         </div>
-        <div className="inline-flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5">
-          {PERIODS.map((p) => (
-            <button
-              key={p.key}
-              type="button"
-              onClick={() => setPeriod(p.key)}
-              className={cn(
-                "rounded px-2 py-1 font-subtitle text-[11px] font-semibold transition",
-                period === p.key
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground",
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5">
+            {PERIODS.map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => setPeriod(p.key)}
+                className={cn(
+                  "rounded px-2 py-1 font-subtitle text-[11px] font-semibold transition",
+                  period === p.key
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "h-7 gap-1.5 rounded-md font-subtitle text-[11px] font-semibold",
+                  period === "custom"
+                    ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+                    : "text-muted-foreground",
+                )}
+              >
+                <CalendarIcon className="h-3 w-3" />
+                {period === "custom" ? customLabel : "Personalizado"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="range"
+                numberOfMonths={2}
+                selected={customRange}
+                onSelect={(range) => {
+                  setCustomRange(range);
+                  if (range?.from) setPeriod("custom");
+                  if (range?.from && range?.to) setPickerOpen(false);
+                }}
+                locale={ptBR}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+              {period === "custom" && (
+                <div className="flex items-center justify-end gap-2 border-t border-border p-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 text-xs"
+                    onClick={() => {
+                      setCustomRange(undefined);
+                      setPeriod("hoje");
+                      setPickerOpen(false);
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                    Limpar
+                  </Button>
+                </div>
               )}
-            >
-              {p.label}
-            </button>
-          ))}
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
