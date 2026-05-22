@@ -193,6 +193,41 @@ export const RastroMensal = ({ rows }: Props) => {
                 </td>
               ))}
             </tr>
+            <tr className="border-b border-border/60">
+              <td className="sticky left-0 z-10 bg-card px-3 py-2.5 font-subtitle text-xs font-semibold">
+                Deals Criados
+              </td>
+              {data.map((m) => (
+                <td
+                  key={m.mes}
+                  className={cn(
+                    "px-3 py-2.5 text-center font-numeric text-xs tabular-nums",
+                    cellTone(m),
+                    m.isCurrent && "bg-primary/5",
+                  )}
+                >
+                  {m.isFuture ? "—" : m.dealsCriados > 0 ? m.dealsCriados.toLocaleString("pt-BR") : "—"}
+                </td>
+              ))}
+            </tr>
+            <tr className="border-b border-border/60">
+              <td className="sticky left-0 z-10 bg-card px-3 py-2.5 font-subtitle text-xs font-semibold">
+                Deals Ativados
+              </td>
+              {data.map((m) => (
+                <td
+                  key={m.mes}
+                  className={cn(
+                    "px-3 py-2.5 text-center font-numeric text-xs tabular-nums",
+                    cellTone(m),
+                    m.isCurrent && "bg-primary/5",
+                  )}
+                >
+                  {m.isFuture ? "—" : m.dealsAtivados > 0 ? m.dealsAtivados.toLocaleString("pt-BR") : "—"}
+                </td>
+              ))}
+            </tr>
+
             <tr>
               <td className="sticky left-0 z-10 bg-card px-3 py-2.5 font-subtitle text-xs font-semibold">
                 % Churn Onboarding
