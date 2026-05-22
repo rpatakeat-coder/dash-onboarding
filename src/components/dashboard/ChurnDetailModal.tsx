@@ -20,8 +20,7 @@ import { cn } from "@/lib/utils";
 import {
   fmtBRL,
   parseDate,
-  CHURN_STAGE_IDS,
-  CHURN_CANCELAMENTO_PIPELINE,
+  isChurnRow,
   type DashRow,
 } from "@/hooks/useDashOperacoes";
 import { hubspotDealUrl } from "@/lib/hubspot";
