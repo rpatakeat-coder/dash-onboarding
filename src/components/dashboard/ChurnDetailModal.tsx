@@ -56,12 +56,7 @@ export const ChurnDetailModal = ({
   const churn = useMemo(() => {
     return rows
       .map((row) => {
-        const etapa = (row.etapa_negocio ?? "").trim();
-        const cancel = (row.etapa_de_cancelamento ?? "").trim().toLowerCase();
-        const isChurn =
-          CHURN_STAGE_IDS.has(etapa) ||
-          cancel === CHURN_CANCELAMENTO_PIPELINE.toLowerCase();
-        if (!isChurn) return null;
+        if (!isChurnRow(row)) return null;
         const d = parseDate(row.data_fechamento);
         if (!d || d < periodStart || d >= periodEnd) return null;
         const perfilRaw = row.perfil_cliente?.trim() || "";
