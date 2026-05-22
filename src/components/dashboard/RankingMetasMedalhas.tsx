@@ -204,7 +204,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
         </div>
       </div>
 
-      {data.length === 0 ? (
+      {ranked.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-10 text-center font-subtitle text-sm text-muted-foreground">
           Sem dados suficientes para o período selecionado.
         </div>
