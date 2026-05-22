@@ -173,6 +173,10 @@ export const MacroMovimento = ({ rows }: Props) => {
         pctLabel: mrrCriadoPrev > 0 ? `${pctAtiv.toFixed(1).replace(".", ",")}% ativação` : "— sem base anterior",
         accent: p.accent,
         formula: `% Ativação = MRR ativado em ${p.label.toLowerCase()} (${fmtBRLk(ativ.mrr)}) ÷ MRR criado no(a) ${p.prevLabel} (${fmtBRLk(mrrCriadoPrev)}) × 100. Mesma regra do gráfico "MRR Ativado · Comparativo mensal".`,
+        start: p.start,
+        end: p.end,
+        titulo: `MRR Ativado · ${p.label}`,
+        descricao: `Detalhamento das ativações em ${p.label.toLowerCase()}`,
       };
     });
   }
