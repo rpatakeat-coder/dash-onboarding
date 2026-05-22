@@ -194,9 +194,23 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("mes");
   const today = new Date();
   const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const [customStart, setCustomStart] = useState<Date>(firstOfMonth);
-  const [customEnd, setCustomEnd] = useState<Date>(today);
+export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
+  const [period, setPeriod] = useState<PeriodKey>("mes");
+  const today = new Date();
+  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const [customRange, setCustomRange] = useState<DateRange | undefined>({ from: firstOfMonth, to: today });
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedAtivador, setSelectedAtivador] = useState<string | null>(null);
+
+  const customStart = customRange?.from ?? firstOfMonth;
+  const customEnd = customRange?.to ?? customRange?.from ?? today;
+
+  const customLabel = customRange?.from
+    ? customRange.to
+      ? `${format(customRange.from, "dd/MM/yyyy", { locale: ptBR })} → ${format(customRange.to, "dd/MM/yyyy", { locale: ptBR })}`
+      : format(customRange.from, "dd/MM/yyyy", { locale: ptBR })
+    : "Personalizado";
+
   const { ranked, team } = useMemo(
     () => computeRanking(rows, period, { start: customStart, end: customEnd }),
     [rows, period, customStart, customEnd],
