@@ -173,7 +173,7 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
       label: labelMap[period],
       filtered,
     };
-  }, [rows, period]);
+  }, [rows, period, customRange, customLabel]);
 
   const term = q.trim().toLowerCase();
   const listaModal = useMemo(() => {
