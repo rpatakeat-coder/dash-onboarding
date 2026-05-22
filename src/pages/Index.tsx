@@ -158,6 +158,8 @@ const Index = () => {
               onEtapasChange={setFiltroEtapas}
               periodo={filtroPeriodo}
               onPeriodoChange={setFiltroPeriodo}
+              customRange={filtroCustomRange}
+              onCustomRangeChange={setFiltroCustomRange}
               hideAtivador={isAtivador && !isAdmin}
             />
           </div>
