@@ -129,7 +129,7 @@ export const ChurnKpis = ({ rows, className }: Props) => {
             Churn · {headerLabel}
           </h2>
           <p className="font-small text-xs text-muted-foreground">
-            Pré-Churn + Churn (Sucesso) + Cancelamento (Onboarding) — fechados no período
+            Etapa <strong>Churn</strong> · pipeline <strong>Sucesso</strong> · origem <strong>Onboarding</strong> — por data de fechamento
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

@@ -26,9 +26,23 @@ export interface DashRow {
   pipeline_nome: string | null;
 }
 
-/** IDs/nomes de etapa considerados churn. */
-export const CHURN_STAGE_IDS = new Set(["162579097", "1122729590"]); // Pré-Churn, Churn (pipeline Sucesso)
-export const CHURN_CANCELAMENTO_PIPELINE = "Onboarding"; // etapa_de_cancelamento = Onboarding
+/**
+ * Regra de Churn Real:
+ * - etapa_negocio = "Churn"
+ * - pipeline_nome = "Sucesso"
+ * - etapa_de_cancelamento = "Onboarding"
+ * (todas obrigatórias; corte de período por data_fechamento)
+ */
+export function isChurnRow(r: {
+  etapa_negocio: string | null;
+  pipeline_nome: string | null;
+  etapa_de_cancelamento: string | null;
+}): boolean {
+  const etapa = (r.etapa_negocio ?? "").trim().toLowerCase();
+  const pipeline = (r.pipeline_nome ?? "").trim().toLowerCase();
+  const cancel = (r.etapa_de_cancelamento ?? "").trim().toLowerCase();
+  return etapa === "churn" && pipeline === "sucesso" && cancel === "onboarding";
+}
 
 export interface ChurnKpis {
   /** 9% do MRR dos deals criados no mês vigente (referência de meta). */
@@ -61,14 +75,7 @@ export function computeChurnKpis(
     .reduce((s, r) => s + toNum(r.mrr), 0);
   const churnMaximo = mrrCriadoMes * 0.09;
 
-  const churnRows = rows.filter((r) => {
-    const etapa = (r.etapa_negocio ?? "").trim();
-    const cancel = (r.etapa_de_cancelamento ?? "").trim().toLowerCase();
-    const isChurn =
-      CHURN_STAGE_IDS.has(etapa) ||
-      cancel === CHURN_CANCELAMENTO_PIPELINE.toLowerCase();
-    return isChurn && inRange(r.data_fechamento);
-  });
+  const churnRows = rows.filter((r) => isChurnRow(r) && inRange(r.data_fechamento));
   const churnReal = churnRows.reduce((s, r) => s + toNum(r.mrr), 0);
   const pctDoMaximo = churnMaximo > 0 ? (churnReal / churnMaximo) * 100 : 0;
 

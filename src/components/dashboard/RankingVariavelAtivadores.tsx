@@ -5,8 +5,7 @@ import { cn } from "@/lib/utils";
 import {
   parseDate,
   parseActivationDate,
-  CHURN_STAGE_IDS,
-  CHURN_CANCELAMENTO_PIPELINE,
+  isChurnRow,
   type DashRow,
 } from "@/hooks/useDashOperacoes";
 
@@ -139,12 +138,7 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
         c.mrrAtivado += mrr;
         c.clientesAtivados += 1;
       }
-      const etapa = (r.etapa_negocio ?? "").trim();
-      const cancel = (r.etapa_de_cancelamento ?? "").trim().toLowerCase();
-      const isChurn =
-        CHURN_STAGE_IDS.has(etapa) ||
-        cancel === CHURN_CANCELAMENTO_PIPELINE.toLowerCase();
-      if (isChurn && inMonth(parseDate(r.data_fechamento))) {
+      if (isChurnRow(r) && inMonth(parseDate(r.data_fechamento))) {
         const c = ensure(agente);
         c.churnReal += mrr;
       }
