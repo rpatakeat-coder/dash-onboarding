@@ -205,7 +205,7 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
     };
 
     return { rows: filtered, team };
-  }, [rows, onlyAgente]);
+  }, [rows, onlyAgente, period]);
 
   if (!data.rows.length) return null;
   const { rows: tableRows, team } = data;
