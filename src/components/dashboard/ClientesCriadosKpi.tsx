@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { UserPlus, TrendingUp, TrendingDown } from "lucide-react";
+import { UserPlus, TrendingUp, TrendingDown, CalendarIcon, X } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import type { DateRange } from "react-day-picker";
 import { parseDate, fmtBRL, type DashRow } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
 import { InfoTooltip } from "./InfoTooltip";
@@ -21,13 +24,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { DealLink } from "@/components/dashboard/DealLink";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   /** Já vem filtrado por ativador/etapa via filtros globais (macroRows). */
   rows: DashRow[];
 }
 
-type PeriodKey = "hoje" | "semana" | "mes" | "trimestre" | "tudo";
+type PeriodKey = "hoje" | "semana" | "mes" | "trimestre" | "tudo" | "custom";
 
 const PERIODS: { key: PeriodKey; label: string }[] = [
   { key: "hoje", label: "Hoje" },
@@ -36,6 +42,7 @@ const PERIODS: { key: PeriodKey; label: string }[] = [
   { key: "trimestre", label: "Trimestre" },
   { key: "tudo", label: "Tudo" },
 ];
+
 
 const startOfDay = (d: Date) => {
   const x = new Date(d); x.setHours(0, 0, 0, 0); return x;
