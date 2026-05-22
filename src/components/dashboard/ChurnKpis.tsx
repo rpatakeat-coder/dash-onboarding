@@ -230,7 +230,7 @@ export const ChurnKpis = ({ rows, className }: Props) => {
             <span className="flex items-center gap-2">
               <TrendingDown className="h-3.5 w-3.5" />
               % Churn Real
-              <InfoTooltip text="Razão entre o valor total perdido em churn no período (Pré-Churn + Churn Sucesso + Cancelamento Onboarding) e o MRR de início do mês lido da planilha Mensal 2026 · B2. Fórmula: Churn Real ÷ MRR início do mês." />
+              <InfoTooltip text="Razão entre o valor total perdido em churn no período (Pré-Churn + Churn Sucesso + Cancelamento Onboarding) e o MRR de início do mês do período selecionado, lido da planilha Dados 2026. Fórmula: Churn Real ÷ MRR início do mês." />
             </span>
             <span
               role="button"
