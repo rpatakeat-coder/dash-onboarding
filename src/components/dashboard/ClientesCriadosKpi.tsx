@@ -93,7 +93,16 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
 
-  const { count, prevCount, byAtivador, byEtapa, label, filtered } = useMemo(() => {
+  const normPerfil = (raw: string | null | undefined): "P" | "M" | "G" | "GG" | "—" => {
+    const v = (raw ?? "").trim().toUpperCase();
+    if (v.startsWith("GG")) return "GG";
+    if (v.startsWith("G")) return "G";
+    if (v.startsWith("M")) return "M";
+    if (v.startsWith("P")) return "P";
+    return "—";
+  };
+
+  const { count, prevCount, byAtivador, byEtapa, byPerfil, label, filtered } = useMemo(() => {
     const { start, end, prevStart, prevEnd } = getRanges(period);
     const inRange = (raw: string | null, s: Date, e: Date) => {
       const d = parseDate(raw);
@@ -106,11 +115,14 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
 
     const ativMap = new Map<string, number>();
     const etapaMap = new Map<string, number>();
+    const perfilMap = new Map<string, number>();
     for (const r of filtered) {
       const a = r.agente_ativacao?.trim() || "Sem responsável";
       const e = r.etapa_negocio?.trim() || "Sem etapa";
+      const p = normPerfil(r.perfil_cliente);
       ativMap.set(a, (ativMap.get(a) ?? 0) + 1);
       if (!/^\d+$/.test(e)) etapaMap.set(e, (etapaMap.get(e) ?? 0) + 1);
+      perfilMap.set(p, (perfilMap.get(p) ?? 0) + 1);
     }
 
     const labelMap: Record<PeriodKey, string> = {
@@ -121,11 +133,15 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
       tudo: "Histórico completo",
     };
 
+    const perfilOrder = ["P", "M", "G", "GG", "—"];
     return {
       count: filtered.length,
       prevCount: prevFiltered.length,
       byAtivador: [...ativMap.entries()].sort((a, b) => b[1] - a[1]),
       byEtapa: [...etapaMap.entries()].sort((a, b) => b[1] - a[1]),
+      byPerfil: [...perfilMap.entries()].sort(
+        (a, b) => perfilOrder.indexOf(a[0]) - perfilOrder.indexOf(b[0]),
+      ),
       label: labelMap[period],
       filtered,
     };
