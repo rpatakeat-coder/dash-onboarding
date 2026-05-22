@@ -305,7 +305,7 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
         </div>
       </div>
 
-      </div>
+
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-4xl">
