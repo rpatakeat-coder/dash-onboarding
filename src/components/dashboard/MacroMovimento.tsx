@@ -398,6 +398,17 @@ export const MacroMovimento = ({ rows }: Props) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <MrrAtivadoMesModal
+        open={drillCard !== null}
+        onOpenChange={(o) => !o && setDrillCard(null)}
+        rows={rows}
+        mesLabel={drillCard?.titulo ?? ""}
+        periodStart={drillCard?.start}
+        periodEnd={drillCard?.end}
+        titulo={drillCard?.titulo}
+        descricao={drillCard?.descricao}
+      />
     </section>
   );
 };
