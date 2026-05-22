@@ -238,6 +238,42 @@ export const RastroMensal = ({ rows }: Props) => {
                 </td>
               ))}
             </tr>
+            <tr className="border-b border-border/60">
+              <td className="sticky left-0 z-10 bg-card px-3 py-2.5 font-subtitle text-xs font-semibold">
+                % Mês P + M
+              </td>
+              {data.map((m) => (
+                <td
+                  key={m.mes}
+                  className={cn(
+                    "px-3 py-2.5 text-center font-numeric text-xs tabular-nums",
+                    cellTone(m),
+                    m.isCurrent && "bg-primary/5",
+                  )}
+                >
+                  {m.isFuture ? "—" : fmtPct(m.pctPm)}
+                </td>
+              ))}
+            </tr>
+            <tr className="border-b border-border/60">
+              <td className="sticky left-0 z-10 bg-card px-3 py-2.5 font-subtitle text-xs font-semibold">
+                % Mês G + GG
+              </td>
+              {data.map((m) => (
+                <td
+                  key={m.mes}
+                  className={cn(
+                    "px-3 py-2.5 text-center font-numeric text-xs tabular-nums",
+                    cellTone(m),
+                    m.isCurrent && "bg-primary/5",
+                  )}
+                >
+                  {m.isFuture ? "—" : fmtPct(m.pctGg)}
+                </td>
+              ))}
+            </tr>
+
+
 
             <tr>
               <td className="sticky left-0 z-10 bg-card px-3 py-2.5 font-subtitle text-xs font-semibold">
