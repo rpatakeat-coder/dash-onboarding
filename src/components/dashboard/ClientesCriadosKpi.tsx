@@ -93,7 +93,16 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
 
-  const { count, prevCount, byAtivador, byEtapa, label, filtered } = useMemo(() => {
+  const normPerfil = (raw: string | null | undefined): "P" | "M" | "G" | "GG" | "—" => {
+    const v = (raw ?? "").trim().toUpperCase();
+    if (v.startsWith("GG")) return "GG";
+    if (v.startsWith("G")) return "G";
+    if (v.startsWith("M")) return "M";
+    if (v.startsWith("P")) return "P";
+    return "—";
+  };
+
+  const { count, prevCount, byAtivador, byEtapa, byPerfil, label, filtered } = useMemo(() => {
     const { start, end, prevStart, prevEnd } = getRanges(period);
     const inRange = (raw: string | null, s: Date, e: Date) => {
       const d = parseDate(raw);
@@ -106,11 +115,14 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
 
     const ativMap = new Map<string, number>();
     const etapaMap = new Map<string, number>();
+    const perfilMap = new Map<string, number>();
     for (const r of filtered) {
       const a = r.agente_ativacao?.trim() || "Sem responsável";
       const e = r.etapa_negocio?.trim() || "Sem etapa";
+      const p = normPerfil(r.perfil_cliente);
       ativMap.set(a, (ativMap.get(a) ?? 0) + 1);
       if (!/^\d+$/.test(e)) etapaMap.set(e, (etapaMap.get(e) ?? 0) + 1);
+      perfilMap.set(p, (perfilMap.get(p) ?? 0) + 1);
     }
 
     const labelMap: Record<PeriodKey, string> = {
@@ -121,11 +133,15 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
       tudo: "Histórico completo",
     };
 
+    const perfilOrder = ["P", "M", "G", "GG", "—"];
     return {
       count: filtered.length,
       prevCount: prevFiltered.length,
       byAtivador: [...ativMap.entries()].sort((a, b) => b[1] - a[1]),
       byEtapa: [...etapaMap.entries()].sort((a, b) => b[1] - a[1]),
+      byPerfil: [...perfilMap.entries()].sort(
+        (a, b) => perfilOrder.indexOf(a[0]) - perfilOrder.indexOf(b[0]),
+      ),
       label: labelMap[period],
       filtered,
     };
@@ -138,6 +154,7 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
       cliente: r.nome_negocio?.trim() || "—",
       etapa: r.etapa_negocio?.trim() || "—",
       ativador: r.agente_ativacao?.trim() || "—",
+      perfil: normPerfil(r.perfil_cliente),
       criacao: parseDate(r.data_criacao),
       mrr: r.mrr,
     }));
@@ -146,7 +163,8 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
           (r) =>
             r.cliente.toLowerCase().includes(term) ||
             r.etapa.toLowerCase().includes(term) ||
-            r.ativador.toLowerCase().includes(term),
+            r.ativador.toLowerCase().includes(term) ||
+            r.perfil.toLowerCase().includes(term),
         )
       : arr;
     return f.sort((a, b) => (b.criacao?.getTime() ?? 0) - (a.criacao?.getTime() ?? 0));
@@ -185,7 +203,7 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -256,7 +274,38 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
             ))}
           </div>
         </div>
+
+        <div className="rounded-xl border border-border bg-card p-4">
+
+          <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+            Por perfil
+          </p>
+          <div className="mt-2 max-h-44 space-y-1 overflow-y-auto pr-1">
+            {byPerfil.length === 0 && (
+              <p className="font-small text-xs text-muted-foreground">Sem dados no período.</p>
+            )}
+            {byPerfil.map(([perfil, n]) => {
+              const color =
+                perfil === "P" ? "text-success"
+                : perfil === "M" ? "text-warning"
+                : perfil === "G" ? "text-destructive"
+                : perfil === "GG" ? "text-secondary"
+                : "text-muted-foreground";
+              const pct = count > 0 ? (n / count) * 100 : 0;
+              return (
+                <div key={perfil} className="flex items-center justify-between gap-2 font-subtitle text-xs">
+                  <span className={cn("font-semibold", color)}>{perfil}</span>
+                  <span className="font-numeric font-semibold tabular-nums text-foreground">
+                    {n.toLocaleString("pt-BR")} <span className="text-muted-foreground">({pct.toFixed(0)}%)</span>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
+
+
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-4xl">
@@ -282,6 +331,7 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
               <TableHeader className="sticky top-0 bg-card">
                 <TableRow>
                   <TableHead>Cliente</TableHead>
+                  <TableHead>Perfil</TableHead>
                   <TableHead>Etapa</TableHead>
                   <TableHead>Ativador</TableHead>
                   <TableHead>Criação</TableHead>
@@ -289,10 +339,20 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {listaModal.map((r) => (
+                {listaModal.map((r) => {
+                  const pColor =
+                    r.perfil === "P" ? "text-success"
+                    : r.perfil === "M" ? "text-warning"
+                    : r.perfil === "G" ? "text-destructive"
+                    : r.perfil === "GG" ? "text-secondary"
+                    : "text-muted-foreground";
+                  return (
                   <TableRow key={r.id}>
                     <TableCell className="font-medium">
                       <DealLink id={r.id}>{r.cliente}</DealLink>
+                    </TableCell>
+                    <TableCell>
+                      <span className={cn("font-subtitle text-xs font-bold", pColor)}>{r.perfil}</span>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{r.etapa}</TableCell>
                     <TableCell className="text-muted-foreground">{r.ativador}</TableCell>
@@ -303,10 +363,11 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
                       {r.mrr ? fmtBRL(parseFloat(String(r.mrr).replace(",", "."))) : "—"}
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
                 {listaModal.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
                       Nenhum cliente encontrado
                     </TableCell>
                   </TableRow>
