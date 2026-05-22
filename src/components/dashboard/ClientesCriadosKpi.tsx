@@ -163,7 +163,8 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
           (r) =>
             r.cliente.toLowerCase().includes(term) ||
             r.etapa.toLowerCase().includes(term) ||
-            r.ativador.toLowerCase().includes(term),
+            r.ativador.toLowerCase().includes(term) ||
+            r.perfil.toLowerCase().includes(term),
         )
       : arr;
     return f.sort((a, b) => (b.criacao?.getTime() ?? 0) - (a.criacao?.getTime() ?? 0));
