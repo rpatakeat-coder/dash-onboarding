@@ -304,8 +304,15 @@ export const MacroMovimento = ({ rows }: Props) => {
         </div>
         <div className={cn("grid gap-3", cards.length === 1 ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-4")}>
           {cards.map((c) => (
-            <div key={c.label} className="relative rounded-xl border border-border bg-card/60 p-4">
-              <div className="absolute right-2 top-2"><InfoTooltip text={c.formula} /></div>
+            <button
+              type="button"
+              key={c.label}
+              onClick={() => setDrillCard({ start: c.start, end: c.end, titulo: c.titulo, descricao: c.descricao })}
+              className="group relative rounded-xl border border-border bg-card/60 p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md-soft focus:outline-none focus:ring-2 focus:ring-primary/40"
+            >
+              <div className="absolute right-2 top-2" onClick={(e) => e.stopPropagation()}>
+                <InfoTooltip text={c.formula} />
+              </div>
               <p className="font-subtitle text-xs text-muted-foreground">{c.label}</p>
               <p className={`mt-2 font-numeric text-2xl font-bold ${c.accent ?? ""}`}>
                 {c.value}
@@ -319,7 +326,10 @@ export const MacroMovimento = ({ rows }: Props) => {
               >
                 {c.pctLabel}
               </p>
-            </div>
+              <span className="pdf-hide mt-1 inline-block font-small text-[10px] text-primary/0 transition group-hover:text-primary">
+                Clique para detalhar →
+              </span>
+            </button>
           ))}
         </div>
       </div>
