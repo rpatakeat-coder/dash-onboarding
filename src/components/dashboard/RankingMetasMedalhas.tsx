@@ -160,9 +160,9 @@ const PERIOD_LABELS: Record<PeriodKey, string> = {
 
 export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("mes");
-  const data = useMemo(() => computeRanking(rows, period), [rows, period]);
-  const top3 = data.slice(0, 3);
-  const rest = data.slice(3);
+  const { ranked, team } = useMemo(() => computeRanking(rows, period), [rows, period]);
+  const top3 = ranked.slice(0, 3);
+  const rest = ranked.slice(3);
 
   const isTv = variant === "tv";
 
