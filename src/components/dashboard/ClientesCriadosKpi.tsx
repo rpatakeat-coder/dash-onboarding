@@ -272,7 +272,11 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+
         <div className="rounded-xl border border-border bg-card p-4">
+
           <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
             Por perfil
           </p>
