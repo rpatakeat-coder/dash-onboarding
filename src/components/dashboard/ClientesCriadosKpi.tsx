@@ -123,8 +123,14 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
     return "—";
   };
 
+  const customLabel = customRange?.from
+    ? customRange.to
+      ? `${format(customRange.from, "dd/MM/yyyy", { locale: ptBR })} → ${format(customRange.to, "dd/MM/yyyy", { locale: ptBR })}`
+      : format(customRange.from, "dd/MM/yyyy", { locale: ptBR })
+    : "Personalizado";
+
   const { count, prevCount, byAtivador, byEtapa, byPerfil, label, filtered } = useMemo(() => {
-    const { start, end, prevStart, prevEnd } = getRanges(period);
+    const { start, end, prevStart, prevEnd } = getRanges(period, customRange);
     const inRange = (raw: string | null, s: Date, e: Date) => {
       const d = parseDate(raw);
       return d ? d >= s && d < e : false;
@@ -152,6 +158,7 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
       mes: "Este mês",
       trimestre: "Este trimestre",
       tudo: "Histórico completo",
+      custom: customLabel,
     };
 
     const perfilOrder = ["P", "M", "G", "GG", "—"];
