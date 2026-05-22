@@ -49,14 +49,25 @@ type SortKey = "cliente" | "agente" | "perfil" | "mrr" | "data" | "sla";
 
 const PAGE_SIZE = 50;
 
-export const MrrAtivadoMesModal = ({ open, onOpenChange, rows, mesLabel }: Props) => {
+export const MrrAtivadoMesModal = ({
+  open,
+  onOpenChange,
+  rows,
+  mesLabel,
+  periodStart,
+  periodEnd,
+  titulo,
+  descricao,
+}: Props) => {
   const r = getPeriodRanges();
+  const start = periodStart ?? r.monthStart;
+  const end = periodEnd ?? r.nextMonth;
 
   const ativados = useMemo(() => {
     return rows
       .map((row) => {
         const d = parseActivationDate(row.data_ativacao);
-        if (!d || d < r.monthStart || d >= r.nextMonth) return null;
+        if (!d || d < start || d >= end) return null;
         const perfilRaw = row.perfil_cliente?.trim() || "";
         const perfilKey = perfilRaw.split(/\s+/)[0]?.toUpperCase() || "—";
         return {
@@ -71,7 +82,7 @@ export const MrrAtivadoMesModal = ({ open, onOpenChange, rows, mesLabel }: Props
         };
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);
-  }, [rows, r.monthStart, r.nextMonth]);
+  }, [rows, start, end]);
 
   const totalMrr = ativados.reduce((s, x) => s + x.mrr, 0);
   const totalQtd = ativados.length;
