@@ -7,6 +7,7 @@ import { MacroMovimento } from "@/components/dashboard/MacroMovimento";
 import { MrrAtivadoKpis } from "@/components/dashboard/MrrAtivadoKpis";
 import { MrrAtivadoTrendChart } from "@/components/dashboard/MrrAtivadoTrendChart";
 import { MrrAsaasKpis } from "@/components/dashboard/MrrAsaasKpis";
+import { ClientesCriadosKpi } from "@/components/dashboard/ClientesCriadosKpi";
 import { MacroFilters } from "@/components/dashboard/MacroFilters";
 import { CarteiraPorAtivador } from "@/components/dashboard/CarteiraPorAtivador";
 import { MrrAtivadoPorAtivador } from "@/components/dashboard/MrrAtivadoPorAtivador";
@@ -179,6 +180,8 @@ const Index = () => {
             </div>
 
             <MrrAsaasKpis rows={estoqueRows} />
+
+            <ClientesCriadosKpi rows={macroRows} />
 
 
             <ChurnKpis rows={personalRows} />
