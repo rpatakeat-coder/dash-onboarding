@@ -253,6 +253,8 @@ export const ChurnKpis = ({ rows, className }: Props) => {
             </span>
           </div>
           {(() => {
+            const periodMonth = activeRange.start.getMonth();
+            const mrrBase = mrrBaseByMonth[periodMonth] ?? null;
             const pct = mrrBase && mrrBase > 0 ? (k.churnReal / mrrBase) * 100 : null;
             return (
               <>
@@ -268,8 +270,9 @@ export const ChurnKpis = ({ rows, className }: Props) => {
                     ? `Erro: ${sheetError}`
                     : mrrBase !== null
                     ? `${fmtBRL(k.churnReal)} ÷ ${fmtBRL(mrrBase)} (MRR início do mês)`
-                    : "Lendo MRR início do mês (Mensal 2026 · B2)…"}
+                    : "Lendo MRR início do mês (Dados 2026)…"}
                 </p>
+
                 {sheetFetchedAt && (
                   <p className="font-small text-[10px] text-muted-foreground/70">
                     Planilha · {new Date(sheetFetchedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
