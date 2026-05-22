@@ -318,7 +318,7 @@ export const ChurnKpis = ({ rows, className }: Props) => {
           <div className="flex items-center gap-2 font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
             <TrendingDown className="h-3.5 w-3.5" />
             Churn real
-            <InfoTooltip text="Soma de MRR perdido nos deals fechados no período nas etapas: Pré-Churn, Churn (pipeline Sucesso) e Cancelamento (pipeline Onboarding). A barra mostra o quanto isso representa do Churn Máximo." />
+            <InfoTooltip text="Soma de MRR dos deals na etapa Churn, pipeline Sucesso e origem Onboarding, fechados no período (data de fechamento). A barra mostra o quanto isso representa do Churn Máximo." />
           </div>
           <p
             className={cn(
