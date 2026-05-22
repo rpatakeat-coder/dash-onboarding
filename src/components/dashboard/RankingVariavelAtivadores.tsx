@@ -220,17 +220,34 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4 shadow-sm-soft sm:p-6">
-      <div className="mb-5 flex items-center gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-          <Trophy className="h-5 w-5 text-primary" />
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+            <Trophy className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="font-display text-lg font-semibold text-secondary">
+              Ranking de variável por ativador
+            </h2>
+            <p className="font-small text-xs text-muted-foreground">
+              {PERIOD_LABELS[period]} vigente · MRR (peso 60) + Clientes (peso 30) + Churn (peso 10)
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="font-display text-lg font-semibold text-secondary">
-            Ranking de variável por ativador
-          </h2>
-          <p className="font-small text-xs text-muted-foreground">
-            Mês vigente · MRR (peso 60) + Clientes (peso 30) + Churn (peso 10)
-          </p>
+        <div className="inline-flex rounded-lg border border-border bg-muted/30 p-0.5">
+          {(Object.keys(PERIOD_LABELS) as PeriodKey[]).map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setPeriod(k)}
+              className={cn(
+                "rounded-md px-3 py-1.5 font-subtitle text-xs transition",
+                period === k ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {PERIOD_LABELS[k]}
+            </button>
+          ))}
         </div>
       </div>
 
