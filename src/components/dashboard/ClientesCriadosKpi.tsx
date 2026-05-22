@@ -60,7 +60,7 @@ const startOfQuarter = (d: Date) => {
   return new Date(d.getFullYear(), q * 3, 1);
 };
 
-function getRanges(period: PeriodKey) {
+function getRanges(period: PeriodKey, customRange?: DateRange) {
   const now = new Date();
   if (period === "tudo") {
     return {
@@ -69,6 +69,18 @@ function getRanges(period: PeriodKey) {
       prevStart: null as Date | null,
       prevEnd: null as Date | null,
     };
+  }
+  if (period === "custom") {
+    if (!customRange?.from) {
+      return { start: new Date(0), end: new Date(0), prevStart: null, prevEnd: null };
+    }
+    const start = startOfDay(customRange.from);
+    const toBase = customRange.to ?? customRange.from;
+    const end = new Date(toBase.getFullYear(), toBase.getMonth(), toBase.getDate() + 1);
+    const spanMs = end.getTime() - start.getTime();
+    const prevEnd = start;
+    const prevStart = new Date(start.getTime() - spanMs);
+    return { start, end, prevStart, prevEnd };
   }
   if (period === "hoje") {
     const start = startOfDay(now);
@@ -97,6 +109,8 @@ function getRanges(period: PeriodKey) {
 
 export const ClientesCriadosKpi = ({ rows }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("hoje");
+  const [customRange, setCustomRange] = useState<DateRange | undefined>();
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
 
