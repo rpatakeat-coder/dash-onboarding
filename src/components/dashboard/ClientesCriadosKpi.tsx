@@ -257,6 +257,65 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
           </div>
         </div>
       </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Clientes criados · {label}</DialogTitle>
+            <DialogDescription>
+              {listaModal.length.toLocaleString("pt-BR")} cliente{listaModal.length === 1 ? "" : "s"} · respeita filtros globais de ativador e etapa
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Buscar por cliente, etapa ou ativador…"
+              className="pl-9"
+            />
+          </div>
+
+          <div className="max-h-[60vh] overflow-auto rounded-lg border">
+            <Table>
+              <TableHeader className="sticky top-0 bg-card">
+                <TableRow>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Etapa</TableHead>
+                  <TableHead>Ativador</TableHead>
+                  <TableHead>Criação</TableHead>
+                  <TableHead className="text-right">MRR</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {listaModal.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="font-medium">
+                      <DealLink id={r.id}>{r.cliente}</DealLink>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{r.etapa}</TableCell>
+                    <TableCell className="text-muted-foreground">{r.ativador}</TableCell>
+                    <TableCell className="text-muted-foreground font-numeric tabular-nums">
+                      {r.criacao ? r.criacao.toLocaleDateString("pt-BR") : "—"}
+                    </TableCell>
+                    <TableCell className="text-right font-numeric tabular-nums">
+                      {r.mrr ? fmtBRL(r.mrr) : "—"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {listaModal.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                      Nenhum cliente encontrado
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
