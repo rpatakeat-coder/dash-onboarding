@@ -37,6 +37,7 @@ const Index = () => {
   const [filtroAtivadores, setFiltroAtivadores] = usePersistedSet("index:ativadores");
   const [filtroEtapas, setFiltroEtapas] = usePersistedSet("index:etapas");
   const [filtroPeriodo, setFiltroPeriodo] = useState<MacroPeriodKey>("tudo");
+  const [filtroCustomRange, setFiltroCustomRange] = useState<CustomRange | null>(null);
   const [gestaoOp, setGestaoOp] = useState<string | null>(null);
 
   const focusOperator = (name: string) => {
