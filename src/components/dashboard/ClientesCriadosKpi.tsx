@@ -331,6 +331,7 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
               <TableHeader className="sticky top-0 bg-card">
                 <TableRow>
                   <TableHead>Cliente</TableHead>
+                  <TableHead>Perfil</TableHead>
                   <TableHead>Etapa</TableHead>
                   <TableHead>Ativador</TableHead>
                   <TableHead>Criação</TableHead>
@@ -338,10 +339,20 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {listaModal.map((r) => (
+                {listaModal.map((r) => {
+                  const pColor =
+                    r.perfil === "P" ? "text-success"
+                    : r.perfil === "M" ? "text-warning"
+                    : r.perfil === "G" ? "text-destructive"
+                    : r.perfil === "GG" ? "text-secondary"
+                    : "text-muted-foreground";
+                  return (
                   <TableRow key={r.id}>
                     <TableCell className="font-medium">
                       <DealLink id={r.id}>{r.cliente}</DealLink>
+                    </TableCell>
+                    <TableCell>
+                      <span className={cn("font-subtitle text-xs font-bold", pColor)}>{r.perfil}</span>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{r.etapa}</TableCell>
                     <TableCell className="text-muted-foreground">{r.ativador}</TableCell>
@@ -352,10 +363,11 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
                       {r.mrr ? fmtBRL(parseFloat(String(r.mrr).replace(",", "."))) : "—"}
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
                 {listaModal.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
                       Nenhum cliente encontrado
                     </TableCell>
                   </TableRow>
