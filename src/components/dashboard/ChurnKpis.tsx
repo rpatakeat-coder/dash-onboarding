@@ -12,6 +12,7 @@ import {
 } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
 import { InfoTooltip } from "@/components/dashboard/InfoTooltip";
+import { ChurnDetailModal } from "@/components/dashboard/ChurnDetailModal";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -30,6 +31,7 @@ export const ChurnKpis = ({ rows, className }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("mes");
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   // MRR início do mês vindo da planilha (Google Sheets · Mensal 2026!B2)
   const [mrrBase, setMrrBase] = useState<number | null>(null);
@@ -234,22 +236,36 @@ export const ChurnKpis = ({ rows, className }: Props) => {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {/* % Churn Real (planilha) */}
-        <div className="rounded-xl border border-border bg-background/40 p-4">
+        <button
+          type="button"
+          onClick={() => setDetailOpen(true)}
+          className="group rounded-xl border border-border bg-background/40 p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md-soft"
+        >
           <div className="flex items-center justify-between gap-2 font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
             <span className="flex items-center gap-2">
               <TrendingDown className="h-3.5 w-3.5" />
               % Churn Real
               <InfoTooltip text="Razão entre o valor total perdido em churn no período (Pré-Churn + Churn Sucesso + Cancelamento Onboarding) e o MRR de início do mês lido da planilha Mensal 2026 · B2. Fórmula: Churn Real ÷ MRR início do mês." />
             </span>
-            <button
-              type="button"
-              onClick={fetchSheetPct}
-              disabled={sheetLoading}
-              className="rounded p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50"
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                fetchSheetPct();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.stopPropagation();
+                  fetchSheetPct();
+                }
+              }}
+              aria-disabled={sheetLoading}
+              className="rounded p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground aria-disabled:opacity-50"
               title="Atualizar da planilha"
             >
               <RefreshCw className={cn("h-3 w-3", sheetLoading && "animate-spin")} />
-            </button>
+            </span>
           </div>
           {(() => {
             const pct = mrrBase && mrrBase > 0 ? (k.churnReal / mrrBase) * 100 : null;
@@ -277,11 +293,18 @@ export const ChurnKpis = ({ rows, className }: Props) => {
               </>
             );
           })()}
-        </div>
+          <span className="pdf-hide mt-1 inline-block font-small text-[10px] text-primary/0 transition group-hover:text-primary">
+            Clique para detalhar →
+          </span>
+        </button>
 
 
         {/* Churn Máximo */}
-        <div className="rounded-xl border border-border bg-background/40 p-4">
+        <button
+          type="button"
+          onClick={() => setDetailOpen(true)}
+          className="group rounded-xl border border-border bg-background/40 p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md-soft"
+        >
           <div className="flex items-center gap-2 font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
             <ShieldAlert className="h-3.5 w-3.5" />
             Churn máximo (meta)
@@ -293,10 +316,17 @@ export const ChurnKpis = ({ rows, className }: Props) => {
           <p className="font-small text-xs text-muted-foreground">
             9% × {fmtBRL(k.mrrCriadoMes)} de MRR criado no período
           </p>
-        </div>
+          <span className="pdf-hide mt-1 inline-block font-small text-[10px] text-primary/0 transition group-hover:text-primary">
+            Clique para detalhar →
+          </span>
+        </button>
 
         {/* Churn Real */}
-        <div className="rounded-xl border border-border bg-background/40 p-4">
+        <button
+          type="button"
+          onClick={() => setDetailOpen(true)}
+          className="group rounded-xl border border-border bg-background/40 p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md-soft"
+        >
           <div className="flex items-center gap-2 font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
             <TrendingDown className="h-3.5 w-3.5" />
             Churn real
@@ -333,8 +363,20 @@ export const ChurnKpis = ({ rows, className }: Props) => {
               style={{ width: `${pctClamped}%` }}
             />
           </div>
-        </div>
+          <span className="pdf-hide mt-1 inline-block font-small text-[10px] text-primary/0 transition group-hover:text-primary">
+            Clique para detalhar →
+          </span>
+        </button>
       </div>
+
+      <ChurnDetailModal
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        rows={rows}
+        periodStart={activeRange.start}
+        periodEnd={activeRange.end}
+        periodLabel={headerLabel}
+      />
     </section>
   );
 };
