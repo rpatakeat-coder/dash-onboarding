@@ -37,6 +37,8 @@ export const RastroMensal = ({ rows }: Props) => {
       mrrAtivado: 0,
       mrrCriado: 0,
       churnMrr: 0,
+      dealsCriados: 0,
+      dealsAtivados: 0,
     }));
 
     // mês 0 (dezembro do ano anterior) para servir de denominador do janeiro
@@ -46,11 +48,13 @@ export const RastroMensal = ({ rows }: Props) => {
       const da = parseActivationDate(row.data_ativacao);
       if (da && da.getFullYear() === year) {
         months[da.getMonth()].mrrAtivado += toNum(row.mrr);
+        months[da.getMonth()].dealsAtivados += 1;
       }
       const dc = parseDate(row.data_criacao);
       if (dc) {
         if (dc.getFullYear() === year) {
           months[dc.getMonth()].mrrCriado += toNum(row.mrr);
+          months[dc.getMonth()].dealsCriados += 1;
         } else if (dc.getFullYear() === year - 1 && dc.getMonth() === 11) {
           mrrCriadoDezAnt += toNum(row.mrr);
         }
@@ -84,6 +88,7 @@ export const RastroMensal = ({ rows }: Props) => {
       };
     });
   }, [rows, year, currentMonth]);
+
 
   const fmtPct = (v: number) =>
     v > 0
