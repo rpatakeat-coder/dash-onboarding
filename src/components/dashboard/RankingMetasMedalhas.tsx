@@ -111,13 +111,15 @@ const computeRanking = (rows: DashRow[], period: PeriodKey): ScoreRow[] => {
   }
 
   const out: ScoreRow[] = [];
+  let tMrrAt = 0, tMrrAnt = 0, tCliAt = 0, tCliAnt = 0, tChurn = 0;
   map.forEach((c, ativador) => {
+    tMrrAt += c.mrrAtivado; tMrrAnt += c.mrrCriadoAnterior;
+    tCliAt += c.clientesAtivados; tCliAnt += c.clientesCriadosAnterior;
+    tChurn += c.churnReal;
     const pctMrr = c.mrrCriadoAnterior > 0 ? (c.mrrAtivado / c.mrrCriadoAnterior) * 100 : 0;
     const pctClientes = c.clientesCriadosAnterior > 0 ? (c.clientesAtivados / c.clientesCriadosAnterior) * 100 : 0;
     const churnMax = c.mrrCriadoAnterior * 0.09;
-    // % Churn = quanto do teto foi consumido (real / máx × 100). Menor = melhor.
     const pctChurn = churnMax > 0 ? (c.churnReal / churnMax) * 100 : 0;
-    // Penalidade só quando estoura o teto (> 100%).
     const churnPenalty = pctChurn > 100 ? (pctChurn - 100) * 10 : 0;
     const scoreFinal = Math.max(0, (pctMrr * 60 + pctClientes * 30 - churnPenalty) / 100);
     out.push({
@@ -126,9 +128,21 @@ const computeRanking = (rows: DashRow[], period: PeriodKey): ScoreRow[] => {
     });
   });
 
-  return out
+  const tPctMrr = tMrrAnt > 0 ? (tMrrAt / tMrrAnt) * 100 : 0;
+  const tPctCli = tCliAnt > 0 ? (tCliAt / tCliAnt) * 100 : 0;
+  const tChurnMax = tMrrAnt * 0.09;
+  const tPctChurn = tChurnMax > 0 ? (tChurn / tChurnMax) * 100 : 0;
+  const tPen = tPctChurn > 100 ? (tPctChurn - 100) * 10 : 0;
+  const teamScore = Math.max(0, (tPctMrr * 60 + tPctCli * 30 - tPen) / 100);
+  const team = {
+    pctMrr: tPctMrr, pctClientes: tPctCli, pctChurn: tPctChurn,
+    scoreFinal: teamScore, mrrAtivado: tMrrAt, clientesAtivados: tCliAt,
+  };
+
+  const ranked = out
     .filter((r) => r.scoreFinal > 0 || r.mrrAtivado > 0 || r.clientesAtivados > 0)
     .sort((a, b) => b.scoreFinal - a.scoreFinal);
+  return { ranked, team };
 };
 
 const MEDAL_STYLES = [
