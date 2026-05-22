@@ -79,8 +79,8 @@ const getRanges = (period: PeriodKey, custom?: CustomRange) => {
   return { start, end, prevStart, prevEnd: start };
 };
 
-const computeRanking = (rows: DashRow[], period: PeriodKey): { ranked: ScoreRow[]; team: ScoreRow } => {
-  const { start, end, prevStart, prevEnd } = getRanges(period);
+const computeRanking = (rows: DashRow[], period: PeriodKey, custom?: CustomRange): { ranked: ScoreRow[]; team: ScoreRow } => {
+  const { start, end, prevStart, prevEnd } = getRanges(period, custom);
   const inCur = (d: Date | null) => !!d && d >= start && d < end;
   const inPrev = (d: Date | null) => !!d && d >= prevStart && d < prevEnd;
 
