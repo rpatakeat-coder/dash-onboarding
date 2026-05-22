@@ -138,12 +138,47 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
     });
 
     result.sort((a, b) => b.scoreFinal - a.scoreFinal);
-    return onlyAgente
+    const filtered = onlyAgente
       ? result.filter((r) => r.ativador.toLowerCase() === onlyAgente.toLowerCase())
       : result;
+
+    // Consolidado do time (soma de todos os ativadores, sem filtro)
+    const totals = result.reduce(
+      (acc, r) => {
+        acc.mrrCriadoAnterior += r.mrrCriadoAnterior;
+        acc.mrrAtivado += r.mrrAtivado;
+        acc.clientesCriadosAnterior += r.clientesCriadosAnterior;
+        acc.clientesAtivados += r.clientesAtivados;
+        acc.churnReal += r.churnReal;
+        return acc;
+      },
+      { mrrCriadoAnterior: 0, mrrAtivado: 0, clientesCriadosAnterior: 0, clientesAtivados: 0, churnReal: 0 },
+    );
+    const tPctMrr = totals.mrrCriadoAnterior > 0 ? (totals.mrrAtivado / totals.mrrCriadoAnterior) * 100 : 0;
+    const tPctClientes = totals.clientesCriadosAnterior > 0 ? (totals.clientesAtivados / totals.clientesCriadosAnterior) * 100 : 0;
+    const tChurnMax = totals.mrrCriadoAnterior * 0.09;
+    const tPctChurn = tChurnMax > 0 ? (totals.churnReal / tChurnMax) * 100 : 0;
+    const tChurnPenalty = tPctChurn > 100 ? (tPctChurn - 100) * 10 : 0;
+    const tScore = Math.max(0, (tPctMrr * 60 + tPctClientes * 30 - tChurnPenalty) / 100);
+    const team = {
+      mrrAtivado: totals.mrrAtivado,
+      mrrCriadoAnterior: totals.mrrCriadoAnterior,
+      clientesAtivados: totals.clientesAtivados,
+      clientesCriadosAnterior: totals.clientesCriadosAnterior,
+      churnReal: totals.churnReal,
+      churnMax: tChurnMax,
+      pctMrr: tPctMrr,
+      pctClientes: tPctClientes,
+      pctChurn: tPctChurn,
+      scoreFinal: tScore,
+      pctFixo: pctFixoFromScore(tScore),
+    };
+
+    return { rows: filtered, team };
   }, [rows, onlyAgente]);
 
-  if (!data.length) return null;
+  if (!data.rows.length) return null;
+  const { rows: tableRows, team } = data;
 
   const scoreColor = (s: number) =>
     s >= 90 ? "text-success" : s >= 70 ? "text-foreground" : s >= 50 ? "text-warning" : "text-destructive";
