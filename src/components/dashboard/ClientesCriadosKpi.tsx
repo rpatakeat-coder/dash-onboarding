@@ -90,8 +90,10 @@ function getRanges(period: PeriodKey) {
 
 export const ClientesCriadosKpi = ({ rows }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("mes");
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
 
-  const { count, prevCount, byAtivador, byEtapa, label } = useMemo(() => {
+  const { count, prevCount, byAtivador, byEtapa, label, filtered } = useMemo(() => {
     const { start, end, prevStart, prevEnd } = getRanges(period);
     const inRange = (raw: string | null, s: Date, e: Date) => {
       const d = parseDate(raw);
@@ -125,8 +127,30 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
       byAtivador: [...ativMap.entries()].sort((a, b) => b[1] - a[1]),
       byEtapa: [...etapaMap.entries()].sort((a, b) => b[1] - a[1]),
       label: labelMap[period],
+      filtered,
     };
   }, [rows, period]);
+
+  const term = q.trim().toLowerCase();
+  const listaModal = useMemo(() => {
+    const arr = filtered.map((r) => ({
+      id: r.id_deal,
+      cliente: r.nome_negocio?.trim() || "—",
+      etapa: r.etapa_negocio?.trim() || "—",
+      ativador: r.agente_ativacao?.trim() || "—",
+      criacao: parseDate(r.data_criacao),
+      mrr: r.mrr,
+    }));
+    const f = term
+      ? arr.filter(
+          (r) =>
+            r.cliente.toLowerCase().includes(term) ||
+            r.etapa.toLowerCase().includes(term) ||
+            r.ativador.toLowerCase().includes(term),
+        )
+      : arr;
+    return f.sort((a, b) => (b.criacao?.getTime() ?? 0) - (a.criacao?.getTime() ?? 0));
+  }, [filtered, term]);
 
   const delta = prevCount > 0 ? ((count - prevCount) / prevCount) * 100 : count > 0 ? 100 : 0;
   const showDelta = period !== "tudo";
