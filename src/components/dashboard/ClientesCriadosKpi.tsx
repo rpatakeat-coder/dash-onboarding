@@ -186,13 +186,18 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <div className="rounded-xl border border-primary/30 bg-primary/[0.04] p-4">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="rounded-xl border border-primary/30 bg-primary/[0.04] p-4 text-left transition hover:border-primary/60 hover:bg-primary/[0.08] focus:outline-none focus:ring-2 focus:ring-primary/40"
+          title="Ver lista de clientes criados no período"
+        >
           <div className="flex items-start justify-between">
             <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
               Total criado
             </p>
             <div className="flex items-center gap-1.5">
-              <InfoTooltip text="Quantidade de deals com data_criacao dentro do período selecionado, respeitando filtros globais de ativador e etapa." />
+              <InfoTooltip text="Quantidade de deals com data_criacao dentro do período selecionado, respeitando filtros globais de ativador e etapa. Clique para ver a lista." />
               <UserPlus className="h-4 w-4 text-primary/70" />
             </div>
           </div>
@@ -212,7 +217,7 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
               <span>vs. período anterior ({prevCount})</span>
             </p>
           )}
-        </div>
+        </button>
 
         <div className="rounded-xl border border-border bg-card p-4">
           <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
