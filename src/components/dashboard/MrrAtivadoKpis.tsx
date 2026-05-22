@@ -252,10 +252,14 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
       </div>
 
       <MrrAtivadoMesModal
-        open={mesModalOpen}
-        onOpenChange={setMesModalOpen}
+        open={modalPeriod !== null}
+        onOpenChange={(o) => !o && setModalPeriod(null)}
         rows={rows}
         mesLabel={mesLabel}
+        periodStart={modalPeriod ? modalRanges[modalPeriod].start : undefined}
+        periodEnd={modalPeriod ? modalRanges[modalPeriod].end : undefined}
+        titulo={modalPeriod ? modalRanges[modalPeriod].titulo : undefined}
+        descricao={modalPeriod ? modalRanges[modalPeriod].descricao : undefined}
       />
     </section>
   );
