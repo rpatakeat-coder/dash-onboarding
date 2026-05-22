@@ -65,12 +65,7 @@ export const RastroMensal = ({ rows }: Props) => {
       }
 
       // churn fechado no mês
-      const etapa = (row.etapa_negocio ?? "").trim();
-      const cancel = (row.etapa_de_cancelamento ?? "").trim().toLowerCase();
-      const isChurn =
-        CHURN_STAGE_IDS.has(etapa) ||
-        cancel === CHURN_CANCELAMENTO_PIPELINE.toLowerCase();
-      if (isChurn) {
+      if (isChurnRow(row)) {
         const df = parseDate(row.data_fechamento);
         if (df && df.getFullYear() === year) {
           months[df.getMonth()].churnMrr += toNum(row.mrr);
