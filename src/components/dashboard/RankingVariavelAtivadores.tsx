@@ -190,8 +190,9 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
     const tPctClientes = totals.clientesCriadosAnterior > 0 ? (totals.clientesAtivados / totals.clientesCriadosAnterior) * 100 : 0;
     const tChurnMax = totals.mrrCriadoAnterior * 0.09;
     const tPctChurn = tChurnMax > 0 ? (totals.churnReal / tChurnMax) * 100 : 0;
-    const tChurnPenalty = tPctChurn > 100 ? (tPctChurn - 100) * 10 : 0;
-    const tScore = Math.max(0, (tPctMrr * 60 + tPctClientes * 30 - tChurnPenalty) / 100);
+    const tChurnMargem = tChurnMax > 0 ? (tChurnMax - totals.churnReal) / tChurnMax : 0;
+    const tChurnTerm = tChurnMargem < 0 ? tChurnMargem * 10 : 0;
+    const tScore = Math.max(0, (tPctMrr * 60 + tPctClientes * 30) / 100 + tChurnTerm);
     const team = {
       mrrAtivado: totals.mrrAtivado,
       mrrCriadoAnterior: totals.mrrCriadoAnterior,
