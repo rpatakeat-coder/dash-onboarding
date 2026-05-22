@@ -85,7 +85,7 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
   const [sortKey, setSortKey] = useState<SortKey>("fase");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(10);
   const [onlyDivergentes, setOnlyDivergentes] = useState(false);
   const [conds, setConds] = useState<Record<string, ConditionValue>>({});
   const setCond = (k: string, v: ConditionValue) => {
