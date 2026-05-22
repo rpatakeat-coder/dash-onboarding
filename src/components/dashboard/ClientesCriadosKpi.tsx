@@ -1,8 +1,26 @@
 import { useMemo, useState } from "react";
 import { UserPlus, TrendingUp, TrendingDown } from "lucide-react";
-import { parseDate, type DashRow } from "@/hooks/useDashOperacoes";
+import { parseDate, fmtBRL, type DashRow } from "@/hooks/useDashOperacoes";
 import { cn } from "@/lib/utils";
 import { InfoTooltip } from "./InfoTooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { DealLink } from "@/components/dashboard/DealLink";
 
 interface Props {
   /** Já vem filtrado por ativador/etapa via filtros globais (macroRows). */
@@ -72,8 +90,10 @@ function getRanges(period: PeriodKey) {
 
 export const ClientesCriadosKpi = ({ rows }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("mes");
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
 
-  const { count, prevCount, byAtivador, byEtapa, label } = useMemo(() => {
+  const { count, prevCount, byAtivador, byEtapa, label, filtered } = useMemo(() => {
     const { start, end, prevStart, prevEnd } = getRanges(period);
     const inRange = (raw: string | null, s: Date, e: Date) => {
       const d = parseDate(raw);
@@ -107,8 +127,30 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
       byAtivador: [...ativMap.entries()].sort((a, b) => b[1] - a[1]),
       byEtapa: [...etapaMap.entries()].sort((a, b) => b[1] - a[1]),
       label: labelMap[period],
+      filtered,
     };
   }, [rows, period]);
+
+  const term = q.trim().toLowerCase();
+  const listaModal = useMemo(() => {
+    const arr = filtered.map((r) => ({
+      id: r.id_deal,
+      cliente: r.nome_negocio?.trim() || "—",
+      etapa: r.etapa_negocio?.trim() || "—",
+      ativador: r.agente_ativacao?.trim() || "—",
+      criacao: parseDate(r.data_criacao),
+      mrr: r.mrr,
+    }));
+    const f = term
+      ? arr.filter(
+          (r) =>
+            r.cliente.toLowerCase().includes(term) ||
+            r.etapa.toLowerCase().includes(term) ||
+            r.ativador.toLowerCase().includes(term),
+        )
+      : arr;
+    return f.sort((a, b) => (b.criacao?.getTime() ?? 0) - (a.criacao?.getTime() ?? 0));
+  }, [filtered, term]);
 
   const delta = prevCount > 0 ? ((count - prevCount) / prevCount) * 100 : count > 0 ? 100 : 0;
   const showDelta = period !== "tudo";
@@ -144,13 +186,18 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <div className="rounded-xl border border-primary/30 bg-primary/[0.04] p-4">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="rounded-xl border border-primary/30 bg-primary/[0.04] p-4 text-left transition hover:border-primary/60 hover:bg-primary/[0.08] focus:outline-none focus:ring-2 focus:ring-primary/40"
+          title="Ver lista de clientes criados no período"
+        >
           <div className="flex items-start justify-between">
             <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
               Total criado
             </p>
             <div className="flex items-center gap-1.5">
-              <InfoTooltip text="Quantidade de deals com data_criacao dentro do período selecionado, respeitando filtros globais de ativador e etapa." />
+              <InfoTooltip text="Quantidade de deals com data_criacao dentro do período selecionado, respeitando filtros globais de ativador e etapa. Clique para ver a lista." />
               <UserPlus className="h-4 w-4 text-primary/70" />
             </div>
           </div>
@@ -170,7 +217,7 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
               <span>vs. período anterior ({prevCount})</span>
             </p>
           )}
-        </div>
+        </button>
 
         <div className="rounded-xl border border-border bg-card p-4">
           <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
@@ -210,6 +257,65 @@ export const ClientesCriadosKpi = ({ rows }: Props) => {
           </div>
         </div>
       </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Clientes criados · {label}</DialogTitle>
+            <DialogDescription>
+              {listaModal.length.toLocaleString("pt-BR")} cliente{listaModal.length === 1 ? "" : "s"} · respeita filtros globais de ativador e etapa
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Buscar por cliente, etapa ou ativador…"
+              className="pl-9"
+            />
+          </div>
+
+          <div className="max-h-[60vh] overflow-auto rounded-lg border">
+            <Table>
+              <TableHeader className="sticky top-0 bg-card">
+                <TableRow>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Etapa</TableHead>
+                  <TableHead>Ativador</TableHead>
+                  <TableHead>Criação</TableHead>
+                  <TableHead className="text-right">MRR</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {listaModal.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="font-medium">
+                      <DealLink id={r.id}>{r.cliente}</DealLink>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{r.etapa}</TableCell>
+                    <TableCell className="text-muted-foreground">{r.ativador}</TableCell>
+                    <TableCell className="text-muted-foreground font-numeric tabular-nums">
+                      {r.criacao ? r.criacao.toLocaleDateString("pt-BR") : "—"}
+                    </TableCell>
+                    <TableCell className="text-right font-numeric tabular-nums">
+                      {r.mrr ? fmtBRL(parseFloat(String(r.mrr).replace(",", "."))) : "—"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {listaModal.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                      Nenhum cliente encontrado
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
