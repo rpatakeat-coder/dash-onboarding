@@ -49,8 +49,17 @@ const startOfQuarter = (d: Date) => {
   return new Date(d.getFullYear(), q * 3, 1);
 };
 
-const getRanges = (period: PeriodKey) => {
+const getRanges = (period: PeriodKey, custom?: CustomRange) => {
   const now = new Date();
+  if (period === "custom" && custom) {
+    const start = new Date(custom.start.getFullYear(), custom.start.getMonth(), custom.start.getDate());
+    const end = new Date(custom.end.getFullYear(), custom.end.getMonth(), custom.end.getDate());
+    end.setDate(end.getDate() + 1); // inclusive end
+    const ms = end.getTime() - start.getTime();
+    const prevEnd = start;
+    const prevStart = new Date(start.getTime() - ms);
+    return { start, end, prevStart, prevEnd };
+  }
   if (period === "semana") {
     const start = startOfWeek(now);
     const end = new Date(start); end.setDate(end.getDate() + 7);
