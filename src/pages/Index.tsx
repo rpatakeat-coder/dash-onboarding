@@ -71,6 +71,7 @@ const Index = () => {
   const macroBase = personalRows;
   const periodoRange = useMemo<{ start: Date; end: Date } | null>(() => {
     if (filtroPeriodo === "tudo") return null;
+    if (filtroPeriodo === "custom") return filtroCustomRange;
     const now = new Date();
     const startOfDay = (d: Date) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
     if (filtroPeriodo === "hoje") {
@@ -93,7 +94,7 @@ const Index = () => {
     const s = new Date(now.getFullYear(), q * 3, 1);
     const e = new Date(now.getFullYear(), q * 3 + 3, 1);
     return { start: s, end: e };
-  }, [filtroPeriodo]);
+  }, [filtroPeriodo, filtroCustomRange]);
 
   const macroRows = useMemo(() => {
     return macroBase.filter((r) => {
