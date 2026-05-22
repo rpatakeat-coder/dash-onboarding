@@ -38,7 +38,7 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
             className="w-full rounded-2xl border border-primary/30 bg-primary/[0.04] p-5 text-left transition hover:-translate-y-0.5 hover:shadow-md-soft"
           >
             <div className="flex items-start justify-between">
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
                   Estoque atual
                 </p>
@@ -48,8 +48,40 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
                 <p className="mt-1 font-small text-xs text-muted-foreground">
                   no pipeline Onboarding
                 </p>
+                {(() => {
+                  const get = (p: string) => perfis.find((x) => x.perfil === p)?.count ?? 0;
+                  const gGG = get("G") + get("GG");
+                  const mP = get("M") + get("P");
+                  const pct = (n: number) => (k.total > 0 ? (n / k.total) * 100 : 0);
+                  return (
+                    <div className="mt-3 grid grid-cols-2 gap-2 border-t border-primary/15 pt-3">
+                      <div>
+                        <p className="font-subtitle text-[10px] uppercase tracking-widest text-muted-foreground">
+                          G + GG
+                        </p>
+                        <p className="mt-0.5 font-numeric text-lg font-bold text-destructive tabular-nums">
+                          {fmtPct(pct(gGG), 1)}
+                        </p>
+                        <p className="font-small text-[10px] text-muted-foreground tabular-nums">
+                          {gGG.toLocaleString("pt-BR")} deals
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-subtitle text-[10px] uppercase tracking-widest text-muted-foreground">
+                          M + P
+                        </p>
+                        <p className="mt-0.5 font-numeric text-lg font-bold text-success tabular-nums">
+                          {fmtPct(pct(mP), 1)}
+                        </p>
+                        <p className="font-small text-[10px] text-muted-foreground tabular-nums">
+                          {mP.toLocaleString("pt-BR")} deals
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
-              <Package className="h-6 w-6 text-primary/70" />
+              <Package className="h-6 w-6 shrink-0 text-primary/70" />
             </div>
           </button>
         </div>
