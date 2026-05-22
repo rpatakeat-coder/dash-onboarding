@@ -24,7 +24,7 @@ import { ChurnKpis } from "@/components/dashboard/ChurnKpis";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
 import { useDashOperacoes, parseDate, type PerfilStat } from "@/hooks/useDashOperacoes";
-import type { MacroPeriodKey } from "@/components/dashboard/MacroFilters";
+import type { MacroPeriodKey, CustomRange } from "@/components/dashboard/MacroFilters";
 
 const Index = () => {
   const { data, isLoading, error } = useDashOperacoes();
@@ -37,6 +37,7 @@ const Index = () => {
   const [filtroAtivadores, setFiltroAtivadores] = usePersistedSet("index:ativadores");
   const [filtroEtapas, setFiltroEtapas] = usePersistedSet("index:etapas");
   const [filtroPeriodo, setFiltroPeriodo] = useState<MacroPeriodKey>("tudo");
+  const [filtroCustomRange, setFiltroCustomRange] = useState<CustomRange | null>(null);
   const [gestaoOp, setGestaoOp] = useState<string | null>(null);
 
   const focusOperator = (name: string) => {
@@ -70,6 +71,7 @@ const Index = () => {
   const macroBase = personalRows;
   const periodoRange = useMemo<{ start: Date; end: Date } | null>(() => {
     if (filtroPeriodo === "tudo") return null;
+    if (filtroPeriodo === "custom") return filtroCustomRange;
     const now = new Date();
     const startOfDay = (d: Date) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
     if (filtroPeriodo === "hoje") {
@@ -92,7 +94,7 @@ const Index = () => {
     const s = new Date(now.getFullYear(), q * 3, 1);
     const e = new Date(now.getFullYear(), q * 3 + 3, 1);
     return { start: s, end: e };
-  }, [filtroPeriodo]);
+  }, [filtroPeriodo, filtroCustomRange]);
 
   const macroRows = useMemo(() => {
     return macroBase.filter((r) => {
@@ -156,6 +158,8 @@ const Index = () => {
               onEtapasChange={setFiltroEtapas}
               periodo={filtroPeriodo}
               onPeriodoChange={setFiltroPeriodo}
+              customRange={filtroCustomRange}
+              onCustomRangeChange={setFiltroCustomRange}
               hideAtivador={isAtivador && !isAdmin}
             />
           </div>
