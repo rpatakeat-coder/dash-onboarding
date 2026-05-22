@@ -8,6 +8,8 @@ import {
   CHURN_CANCELAMENTO_PIPELINE,
   type DashRow,
 } from "@/hooks/useDashOperacoes";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { DealLink } from "./DealLink";
 
 type PeriodKey = "semana" | "mes" | "trimestre" | "custom";
 
@@ -188,10 +190,29 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
   const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const [customStart, setCustomStart] = useState<Date>(firstOfMonth);
   const [customEnd, setCustomEnd] = useState<Date>(today);
+  const [selectedAtivador, setSelectedAtivador] = useState<string | null>(null);
   const { ranked, team } = useMemo(
     () => computeRanking(rows, period, { start: customStart, end: customEnd }),
     [rows, period, customStart, customEnd],
   );
+
+  const breakdown = useMemo(() => {
+    if (!selectedAtivador) return null;
+    const { start, end } = getRanges(period, { start: customStart, end: customEnd });
+    const inCur = (d: Date | null) => !!d && d >= start && d < end;
+    const norm = selectedAtivador.trim().toLowerCase();
+    const mine = rows.filter((r) => (r.agente_ativacao ?? "").trim().toLowerCase() === norm);
+    const ativados = mine.filter((r) => inCur(parseActivationDate(r.data_ativacao)));
+    const criados = mine.filter((r) => inCur(parseDate(r.data_criacao)));
+    const churns = mine.filter((r) => {
+      const etapa = (r.etapa_negocio ?? "").trim();
+      const cancel = (r.etapa_de_cancelamento ?? "").trim().toLowerCase();
+      const isChurn = CHURN_STAGE_IDS.has(etapa) || cancel === CHURN_CANCELAMENTO_PIPELINE.toLowerCase();
+      return isChurn && inCur(parseDate(r.data_fechamento));
+    });
+    return { ativados, criados, churns, start, end };
+  }, [selectedAtivador, rows, period, customStart, customEnd]);
+
   const top3 = ranked.slice(0, 3);
   const rest = ranked.slice(3);
 
@@ -267,10 +288,12 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
               const m = MEDAL_STYLES[i];
               const isFirst = i === 0;
               return (
-                <div
+                <button
+                  type="button"
                   key={r.ativador}
+                  onClick={() => setSelectedAtivador(r.ativador)}
                   className={cn(
-                    "relative overflow-hidden rounded-xl bg-gradient-to-br p-4 ring-1",
+                    "relative overflow-hidden rounded-xl bg-gradient-to-br p-4 ring-1 text-left transition hover:ring-2 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer",
                     m.bg, m.ring,
                     isFirst && "sm:scale-[1.02]",
                   )}
@@ -308,7 +331,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
                       <p className="font-small text-[10px] text-muted-foreground">Churn</p>
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -316,7 +339,12 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
           {rest.length > 0 && (
             <div className="mt-4 divide-y divide-border rounded-xl border border-border">
               {rest.map((r, i) => (
-                <div key={r.ativador} className="flex items-center justify-between px-4 py-2.5">
+                <button
+                  type="button"
+                  key={r.ativador}
+                  onClick={() => setSelectedAtivador(r.ativador)}
+                  className="flex w-full items-center justify-between px-4 py-2.5 text-left transition hover:bg-muted/40 focus:bg-muted/40 focus:outline-none"
+                >
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="font-numeric text-sm font-bold tabular-nums text-muted-foreground w-6">
                       {i + 4}º
@@ -331,7 +359,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
                       {Math.round(r.scoreFinal)}
                     </span>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -369,6 +397,68 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
 
         </>
       )}
+
+      <Dialog open={!!selectedAtivador} onOpenChange={(o) => !o && setSelectedAtivador(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display">
+              {selectedAtivador} · {PERIOD_LABELS[period]}
+            </DialogTitle>
+            <DialogDescription className="font-small">
+              Detalhe dos deals do ativador no período selecionado.
+            </DialogDescription>
+          </DialogHeader>
+          {breakdown && (
+            <div className="space-y-5">
+              {[
+                { title: "MRR ativado", deals: breakdown.ativados, dateField: "data_ativacao" as const, dateLabel: "Ativação", accent: "text-emerald-500" },
+                { title: "Clientes criados", deals: breakdown.criados, dateField: "data_criacao" as const, dateLabel: "Criação", accent: "text-primary" },
+                { title: "Churns realizados", deals: breakdown.churns, dateField: "data_fechamento" as const, dateLabel: "Fechamento", accent: "text-destructive" },
+              ].map((section) => {
+                const total = section.deals.reduce((s, r) => s + toNum(r.mrr), 0);
+                return (
+                  <section key={section.title}>
+                    <div className="mb-2 flex items-baseline justify-between">
+                      <h3 className={cn("font-subtitle text-sm font-semibold", section.accent)}>
+                        {section.title}
+                      </h3>
+                      <span className="font-numeric text-xs tabular-nums text-muted-foreground">
+                        {section.deals.length} deals · {fmtBRL(total)}
+                      </span>
+                    </div>
+                    {section.deals.length === 0 ? (
+                      <p className="rounded-md border border-dashed border-border px-3 py-4 text-center font-small text-xs text-muted-foreground">
+                        Nenhum registro no período.
+                      </p>
+                    ) : (
+                      <div className="divide-y divide-border rounded-md border border-border">
+                        {section.deals
+                          .slice()
+                          .sort((a, b) => toNum(b.mrr) - toNum(a.mrr))
+                          .map((d) => (
+                            <div key={`${section.title}-${d.id_deal}`} className="flex items-center justify-between gap-3 px-3 py-2">
+                              <div className="min-w-0">
+                                <DealLink id={d.id_deal} className="font-subtitle text-sm font-medium text-foreground truncate block">
+                                  {d.nome_negocio ?? `Deal ${d.id_deal}`}
+                                </DealLink>
+                                <p className="font-small text-[11px] text-muted-foreground">
+                                  {section.dateLabel}: {d[section.dateField] ?? "—"}
+                                </p>
+                              </div>
+                              <span className="font-numeric text-sm font-semibold tabular-nums text-foreground whitespace-nowrap">
+                                {fmtBRL(toNum(d.mrr))}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
