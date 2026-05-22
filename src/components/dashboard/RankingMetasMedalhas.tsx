@@ -235,6 +235,27 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
         </div>
       </div>
 
+      {period === "custom" && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <label className="font-small text-xs text-muted-foreground">De</label>
+          <input
+            type="date"
+            value={toInputDate(customStart)}
+            max={toInputDate(customEnd)}
+            onChange={(e) => e.target.value && setCustomStart(fromInputDate(e.target.value))}
+            className="rounded-md border border-border bg-card px-2 py-1 font-numeric text-xs text-foreground"
+          />
+          <label className="font-small text-xs text-muted-foreground">até</label>
+          <input
+            type="date"
+            value={toInputDate(customEnd)}
+            min={toInputDate(customStart)}
+            onChange={(e) => e.target.value && setCustomEnd(fromInputDate(e.target.value))}
+            className="rounded-md border border-border bg-card px-2 py-1 font-numeric text-xs text-foreground"
+          />
+        </div>
+      )}
+
       {ranked.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-10 text-center font-subtitle text-sm text-muted-foreground">
           Sem dados suficientes para o período selecionado.
