@@ -31,6 +31,10 @@ interface Props {
   onOpenChange: (o: boolean) => void;
   rows: DashRow[];
   mesLabel: string;
+  periodStart?: Date;
+  periodEnd?: Date;
+  titulo?: string;
+  descricao?: string;
 }
 
 const toNum = (v: string | null | undefined) => {
