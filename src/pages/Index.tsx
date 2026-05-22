@@ -217,7 +217,7 @@ const Index = () => {
             />
 
             <div data-tour="kpis">
-              <MrrAtivadoKpis rows={macroRows} />
+              <MacroMovimento rows={macroRows} />
             </div>
 
             <MrrAsaasKpis rows={estoqueRows} />
@@ -230,8 +230,6 @@ const Index = () => {
             <MrrAtivadoTrendChart rows={macroRows} />
 
             <RastroMensal rows={macroRows} />
-
-            <MacroMovimento rows={macroRows} />
 
             <CarteiraPorAtivador rows={estoqueRows} />
 
