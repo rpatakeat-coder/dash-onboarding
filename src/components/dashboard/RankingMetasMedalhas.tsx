@@ -216,12 +216,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
     const mine = rows.filter((r) => (r.agente_ativacao ?? "").trim().toLowerCase() === norm);
     const ativados = mine.filter((r) => inCur(parseActivationDate(r.data_ativacao)));
     const criados = mine.filter((r) => inCur(parseDate(r.data_criacao)));
-    const churns = mine.filter((r) => {
-      const etapa = (r.etapa_negocio ?? "").trim();
-      const cancel = (r.etapa_de_cancelamento ?? "").trim().toLowerCase();
-      const isChurn = CHURN_STAGE_IDS.has(etapa) || cancel === CHURN_CANCELAMENTO_PIPELINE.toLowerCase();
-      return isChurn && inCur(parseDate(r.data_fechamento));
-    });
+    const churns = mine.filter((r) => isChurnRow(r) && inCur(parseDate(r.data_fechamento)));
     return { ativados, criados, churns, start, end };
   }, [selectedAtivador, rows, period, customStart, customEnd]);
 
