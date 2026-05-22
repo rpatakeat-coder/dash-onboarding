@@ -23,7 +23,8 @@ import { TrendByOperator } from "@/components/dashboard/TrendByOperator";
 import { ChurnKpis } from "@/components/dashboard/ChurnKpis";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
-import { useDashOperacoes, type PerfilStat } from "@/hooks/useDashOperacoes";
+import { useDashOperacoes, parseDate, type PerfilStat } from "@/hooks/useDashOperacoes";
+import type { MacroPeriodKey } from "@/components/dashboard/MacroFilters";
 
 const Index = () => {
   const { data, isLoading, error } = useDashOperacoes();
@@ -35,6 +36,7 @@ const Index = () => {
   const [aiOpen, setAiOpen] = useState(false);
   const [filtroAtivadores, setFiltroAtivadores] = usePersistedSet("index:ativadores");
   const [filtroEtapas, setFiltroEtapas] = usePersistedSet("index:etapas");
+  const [filtroPeriodo, setFiltroPeriodo] = useState<MacroPeriodKey>("tudo");
   const [gestaoOp, setGestaoOp] = useState<string | null>(null);
 
   const focusOperator = (name: string) => {
@@ -66,6 +68,32 @@ const Index = () => {
   // Macros respeitam o escopo do usuário (RLS já garante, mas reforçamos)
   // e os filtros locais de ativador/etapa.
   const macroBase = personalRows;
+  const periodoRange = useMemo<{ start: Date; end: Date } | null>(() => {
+    if (filtroPeriodo === "tudo") return null;
+    const now = new Date();
+    const startOfDay = (d: Date) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+    if (filtroPeriodo === "hoje") {
+      const s = startOfDay(now); const e = new Date(s); e.setDate(e.getDate() + 1);
+      return { start: s, end: e };
+    }
+    if (filtroPeriodo === "semana") {
+      const s = startOfDay(now); const day = s.getDay(); const diff = day === 0 ? 6 : day - 1;
+      s.setDate(s.getDate() - diff);
+      const e = new Date(s); e.setDate(e.getDate() + 7);
+      return { start: s, end: e };
+    }
+    if (filtroPeriodo === "mes") {
+      const s = new Date(now.getFullYear(), now.getMonth(), 1);
+      const e = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      return { start: s, end: e };
+    }
+    // trimestre
+    const q = Math.floor(now.getMonth() / 3);
+    const s = new Date(now.getFullYear(), q * 3, 1);
+    const e = new Date(now.getFullYear(), q * 3 + 3, 1);
+    return { start: s, end: e };
+  }, [filtroPeriodo]);
+
   const macroRows = useMemo(() => {
     return macroBase.filter((r) => {
       if (filtroAtivadores.size > 0) {
@@ -76,9 +104,15 @@ const Index = () => {
         const e = r.etapa_negocio?.trim() || "Sem etapa";
         if (filtroEtapas.has(e)) return false;
       }
+      if (periodoRange) {
+        const da = parseDate(r.data_ativacao);
+        const dc = parseDate(r.data_criacao);
+        const inRange = (d: Date | null) => !!d && d >= periodoRange.start && d < periodoRange.end;
+        if (!inRange(da) && !inRange(dc)) return false;
+      }
       return true;
     });
-  }, [macroBase, filtroAtivadores, filtroEtapas]);
+  }, [macroBase, filtroAtivadores, filtroEtapas, periodoRange]);
 
   // Estoque atual: todos os deals atualmente no pipeline "Onboarding".
   const estoqueRows = useMemo(() => {
@@ -120,6 +154,8 @@ const Index = () => {
               etapas={filtroEtapas}
               onAtivadoresChange={setFiltroAtivadores}
               onEtapasChange={setFiltroEtapas}
+              periodo={filtroPeriodo}
+              onPeriodoChange={setFiltroPeriodo}
               hideAtivador={isAtivador && !isAdmin}
             />
           </div>
