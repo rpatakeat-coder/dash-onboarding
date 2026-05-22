@@ -134,7 +134,8 @@ const computeRanking = (rows: DashRow[], period: PeriodKey): { ranked: ScoreRow[
   const tPctChurn = tChurnMax > 0 ? (tChurn / tChurnMax) * 100 : 0;
   const tPen = tPctChurn > 100 ? (tPctChurn - 100) * 10 : 0;
   const teamScore = Math.max(0, (tPctMrr * 60 + tPctCli * 30 - tPen) / 100);
-  const team = {
+  const team: ScoreRow = {
+    ativador: "Time",
     pctMrr: tPctMrr, pctClientes: tPctCli, pctChurn: tPctChurn,
     scoreFinal: teamScore, mrrAtivado: tMrrAt, clientesAtivados: tCliAt,
   };
