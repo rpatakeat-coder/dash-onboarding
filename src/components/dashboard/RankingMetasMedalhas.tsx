@@ -7,8 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   parseDate,
   parseActivationDate,
-  CHURN_STAGE_IDS,
-  CHURN_CANCELAMENTO_PIPELINE,
+  isChurnRow,
   type DashRow,
 } from "@/hooks/useDashOperacoes";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
