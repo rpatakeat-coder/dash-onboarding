@@ -5,8 +5,7 @@ import {
   fmtBRLk,
   parseActivationDate,
   parseDate,
-  CHURN_STAGE_IDS,
-  CHURN_CANCELAMENTO_PIPELINE,
+  isChurnRow,
   type DashRow,
 } from "@/hooks/useDashOperacoes";
 import { InfoTooltip } from "./InfoTooltip";
