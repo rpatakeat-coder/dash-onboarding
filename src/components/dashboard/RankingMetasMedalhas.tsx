@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { Medal, Trophy } from "lucide-react";
+import { Medal, Trophy, CalendarIcon, X } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import type { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import {
   parseDate,
@@ -10,6 +13,9 @@ import {
 } from "@/hooks/useDashOperacoes";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DealLink } from "./DealLink";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
 
 type PeriodKey = "semana" | "mes" | "trimestre" | "custom";
 
