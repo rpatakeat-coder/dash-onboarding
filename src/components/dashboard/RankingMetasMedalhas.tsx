@@ -331,7 +331,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
                       <p className="font-small text-[10px] text-muted-foreground">Churn</p>
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
