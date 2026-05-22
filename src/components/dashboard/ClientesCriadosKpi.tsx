@@ -89,7 +89,7 @@ function getRanges(period: PeriodKey) {
 }
 
 export const ClientesCriadosKpi = ({ rows }: Props) => {
-  const [period, setPeriod] = useState<PeriodKey>("mes");
+  const [period, setPeriod] = useState<PeriodKey>("hoje");
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
 
