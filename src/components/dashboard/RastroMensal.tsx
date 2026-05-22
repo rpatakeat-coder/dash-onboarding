@@ -37,6 +37,8 @@ export const RastroMensal = ({ rows }: Props) => {
       mrrAtivado: 0,
       mrrCriado: 0,
       churnMrr: 0,
+      dealsCriados: 0,
+      dealsAtivados: 0,
     }));
 
     // mês 0 (dezembro do ano anterior) para servir de denominador do janeiro
@@ -46,11 +48,13 @@ export const RastroMensal = ({ rows }: Props) => {
       const da = parseActivationDate(row.data_ativacao);
       if (da && da.getFullYear() === year) {
         months[da.getMonth()].mrrAtivado += toNum(row.mrr);
+        months[da.getMonth()].dealsAtivados += 1;
       }
       const dc = parseDate(row.data_criacao);
       if (dc) {
         if (dc.getFullYear() === year) {
           months[dc.getMonth()].mrrCriado += toNum(row.mrr);
+          months[dc.getMonth()].dealsCriados += 1;
         } else if (dc.getFullYear() === year - 1 && dc.getMonth() === 11) {
           mrrCriadoDezAnt += toNum(row.mrr);
         }
@@ -84,6 +88,7 @@ export const RastroMensal = ({ rows }: Props) => {
       };
     });
   }, [rows, year, currentMonth]);
+
 
   const fmtPct = (v: number) =>
     v > 0
@@ -188,6 +193,41 @@ export const RastroMensal = ({ rows }: Props) => {
                 </td>
               ))}
             </tr>
+            <tr className="border-b border-border/60">
+              <td className="sticky left-0 z-10 bg-card px-3 py-2.5 font-subtitle text-xs font-semibold">
+                Deals Criados
+              </td>
+              {data.map((m) => (
+                <td
+                  key={m.mes}
+                  className={cn(
+                    "px-3 py-2.5 text-center font-numeric text-xs tabular-nums",
+                    cellTone(m),
+                    m.isCurrent && "bg-primary/5",
+                  )}
+                >
+                  {m.isFuture ? "—" : m.dealsCriados > 0 ? m.dealsCriados.toLocaleString("pt-BR") : "—"}
+                </td>
+              ))}
+            </tr>
+            <tr className="border-b border-border/60">
+              <td className="sticky left-0 z-10 bg-card px-3 py-2.5 font-subtitle text-xs font-semibold">
+                Deals Ativados
+              </td>
+              {data.map((m) => (
+                <td
+                  key={m.mes}
+                  className={cn(
+                    "px-3 py-2.5 text-center font-numeric text-xs tabular-nums",
+                    cellTone(m),
+                    m.isCurrent && "bg-primary/5",
+                  )}
+                >
+                  {m.isFuture ? "—" : m.dealsAtivados > 0 ? m.dealsAtivados.toLocaleString("pt-BR") : "—"}
+                </td>
+              ))}
+            </tr>
+
             <tr>
               <td className="sticky left-0 z-10 bg-card px-3 py-2.5 font-subtitle text-xs font-semibold">
                 % Churn Onboarding
