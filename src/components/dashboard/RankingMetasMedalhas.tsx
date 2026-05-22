@@ -339,7 +339,12 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
           {rest.length > 0 && (
             <div className="mt-4 divide-y divide-border rounded-xl border border-border">
               {rest.map((r, i) => (
-                <div key={r.ativador} className="flex items-center justify-between px-4 py-2.5">
+                <button
+                  type="button"
+                  key={r.ativador}
+                  onClick={() => setSelectedAtivador(r.ativador)}
+                  className="flex w-full items-center justify-between px-4 py-2.5 text-left transition hover:bg-muted/40 focus:bg-muted/40 focus:outline-none"
+                >
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="font-numeric text-sm font-bold tabular-nums text-muted-foreground w-6">
                       {i + 4}º
@@ -354,7 +359,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
                       {Math.round(r.scoreFinal)}
                     </span>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
