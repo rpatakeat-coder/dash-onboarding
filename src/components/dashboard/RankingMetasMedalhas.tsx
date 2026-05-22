@@ -167,11 +167,31 @@ const PERIOD_LABELS: Record<PeriodKey, string> = {
   semana: "Semana",
   mes: "Mês",
   trimestre: "Trimestre",
+  custom: "Personalizado",
+};
+
+const toInputDate = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const fromInputDate = (s: string) => {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
 };
 
 export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("mes");
-  const { ranked, team } = useMemo(() => computeRanking(rows, period), [rows, period]);
+  const today = new Date();
+  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const [customStart, setCustomStart] = useState<Date>(firstOfMonth);
+  const [customEnd, setCustomEnd] = useState<Date>(today);
+  const { ranked, team } = useMemo(
+    () => computeRanking(rows, period, { start: customStart, end: customEnd }),
+    [rows, period, customStart, customEnd],
+  );
   const top3 = ranked.slice(0, 3);
   const rest = ranked.slice(3);
 
