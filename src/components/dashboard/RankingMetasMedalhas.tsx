@@ -68,7 +68,7 @@ const getRanges = (period: PeriodKey) => {
   return { start, end, prevStart, prevEnd: start };
 };
 
-const computeRanking = (rows: DashRow[], period: PeriodKey): ScoreRow[] => {
+const computeRanking = (rows: DashRow[], period: PeriodKey): { ranked: ScoreRow[]; team: ScoreRow } => {
   const { start, end, prevStart, prevEnd } = getRanges(period);
   const inCur = (d: Date | null) => !!d && d >= start && d < end;
   const inPrev = (d: Date | null) => !!d && d >= prevStart && d < prevEnd;
@@ -111,13 +111,15 @@ const computeRanking = (rows: DashRow[], period: PeriodKey): ScoreRow[] => {
   }
 
   const out: ScoreRow[] = [];
+  let tMrrAt = 0, tMrrAnt = 0, tCliAt = 0, tCliAnt = 0, tChurn = 0;
   map.forEach((c, ativador) => {
+    tMrrAt += c.mrrAtivado; tMrrAnt += c.mrrCriadoAnterior;
+    tCliAt += c.clientesAtivados; tCliAnt += c.clientesCriadosAnterior;
+    tChurn += c.churnReal;
     const pctMrr = c.mrrCriadoAnterior > 0 ? (c.mrrAtivado / c.mrrCriadoAnterior) * 100 : 0;
     const pctClientes = c.clientesCriadosAnterior > 0 ? (c.clientesAtivados / c.clientesCriadosAnterior) * 100 : 0;
     const churnMax = c.mrrCriadoAnterior * 0.09;
-    // % Churn = quanto do teto foi consumido (real / máx × 100). Menor = melhor.
     const pctChurn = churnMax > 0 ? (c.churnReal / churnMax) * 100 : 0;
-    // Penalidade só quando estoura o teto (> 100%).
     const churnPenalty = pctChurn > 100 ? (pctChurn - 100) * 10 : 0;
     const scoreFinal = Math.max(0, (pctMrr * 60 + pctClientes * 30 - churnPenalty) / 100);
     out.push({
@@ -126,9 +128,22 @@ const computeRanking = (rows: DashRow[], period: PeriodKey): ScoreRow[] => {
     });
   });
 
-  return out
+  const tPctMrr = tMrrAnt > 0 ? (tMrrAt / tMrrAnt) * 100 : 0;
+  const tPctCli = tCliAnt > 0 ? (tCliAt / tCliAnt) * 100 : 0;
+  const tChurnMax = tMrrAnt * 0.09;
+  const tPctChurn = tChurnMax > 0 ? (tChurn / tChurnMax) * 100 : 0;
+  const tPen = tPctChurn > 100 ? (tPctChurn - 100) * 10 : 0;
+  const teamScore = Math.max(0, (tPctMrr * 60 + tPctCli * 30 - tPen) / 100);
+  const team: ScoreRow = {
+    ativador: "Time",
+    pctMrr: tPctMrr, pctClientes: tPctCli, pctChurn: tPctChurn,
+    scoreFinal: teamScore, mrrAtivado: tMrrAt, clientesAtivados: tCliAt,
+  };
+
+  const ranked = out
     .filter((r) => r.scoreFinal > 0 || r.mrrAtivado > 0 || r.clientesAtivados > 0)
     .sort((a, b) => b.scoreFinal - a.scoreFinal);
+  return { ranked, team };
 };
 
 const MEDAL_STYLES = [
@@ -145,9 +160,9 @@ const PERIOD_LABELS: Record<PeriodKey, string> = {
 
 export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("mes");
-  const data = useMemo(() => computeRanking(rows, period), [rows, period]);
-  const top3 = data.slice(0, 3);
-  const rest = data.slice(3);
+  const { ranked, team } = useMemo(() => computeRanking(rows, period), [rows, period]);
+  const top3 = ranked.slice(0, 3);
+  const rest = ranked.slice(3);
 
   const isTv = variant === "tv";
 
@@ -189,7 +204,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
         </div>
       </div>
 
-      {data.length === 0 ? (
+      {ranked.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-10 text-center font-subtitle text-sm text-muted-foreground">
           Sem dados suficientes para o período selecionado.
         </div>
@@ -268,6 +283,38 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
               ))}
             </div>
           )}
+
+          <div className="mt-4 rounded-xl border border-primary/40 bg-primary/5 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-small text-[10px] uppercase tracking-wider text-primary">Time · consolidado</p>
+                <p className={cn("font-display font-semibold text-foreground", isTv ? "text-xl" : "text-base")}>
+                  Score agregado do período
+                </p>
+              </div>
+              <div className="text-right">
+                <p className={cn("font-numeric font-bold tabular-nums text-primary", isTv ? "text-3xl" : "text-2xl")}>
+                  {Math.round(team.scoreFinal)}
+                </p>
+                <p className="font-small text-[10px] uppercase tracking-wider text-muted-foreground">Score</p>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+              <div>
+                <p className="font-numeric text-sm font-semibold tabular-nums text-foreground">{team.pctMrr.toFixed(0)}%</p>
+                <p className="font-small text-[10px] text-muted-foreground">MRR</p>
+              </div>
+              <div>
+                <p className="font-numeric text-sm font-semibold tabular-nums text-foreground">{team.pctClientes.toFixed(0)}%</p>
+                <p className="font-small text-[10px] text-muted-foreground">Clientes</p>
+              </div>
+              <div>
+                <p className="font-numeric text-sm font-semibold tabular-nums text-foreground">{team.pctChurn.toFixed(0)}%</p>
+                <p className="font-small text-[10px] text-muted-foreground">Churn</p>
+              </div>
+            </div>
+          </div>
+
         </>
       )}
     </div>

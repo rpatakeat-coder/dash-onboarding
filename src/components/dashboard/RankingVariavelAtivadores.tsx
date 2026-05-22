@@ -138,12 +138,47 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
     });
 
     result.sort((a, b) => b.scoreFinal - a.scoreFinal);
-    return onlyAgente
+    const filtered = onlyAgente
       ? result.filter((r) => r.ativador.toLowerCase() === onlyAgente.toLowerCase())
       : result;
+
+    // Consolidado do time (soma de todos os ativadores, sem filtro)
+    const totals = result.reduce(
+      (acc, r) => {
+        acc.mrrCriadoAnterior += r.mrrCriadoAnterior;
+        acc.mrrAtivado += r.mrrAtivado;
+        acc.clientesCriadosAnterior += r.clientesCriadosAnterior;
+        acc.clientesAtivados += r.clientesAtivados;
+        acc.churnReal += r.churnReal;
+        return acc;
+      },
+      { mrrCriadoAnterior: 0, mrrAtivado: 0, clientesCriadosAnterior: 0, clientesAtivados: 0, churnReal: 0 },
+    );
+    const tPctMrr = totals.mrrCriadoAnterior > 0 ? (totals.mrrAtivado / totals.mrrCriadoAnterior) * 100 : 0;
+    const tPctClientes = totals.clientesCriadosAnterior > 0 ? (totals.clientesAtivados / totals.clientesCriadosAnterior) * 100 : 0;
+    const tChurnMax = totals.mrrCriadoAnterior * 0.09;
+    const tPctChurn = tChurnMax > 0 ? (totals.churnReal / tChurnMax) * 100 : 0;
+    const tChurnPenalty = tPctChurn > 100 ? (tPctChurn - 100) * 10 : 0;
+    const tScore = Math.max(0, (tPctMrr * 60 + tPctClientes * 30 - tChurnPenalty) / 100);
+    const team = {
+      mrrAtivado: totals.mrrAtivado,
+      mrrCriadoAnterior: totals.mrrCriadoAnterior,
+      clientesAtivados: totals.clientesAtivados,
+      clientesCriadosAnterior: totals.clientesCriadosAnterior,
+      churnReal: totals.churnReal,
+      churnMax: tChurnMax,
+      pctMrr: tPctMrr,
+      pctClientes: tPctClientes,
+      pctChurn: tPctChurn,
+      scoreFinal: tScore,
+      pctFixo: pctFixoFromScore(tScore),
+    };
+
+    return { rows: filtered, team };
   }, [rows, onlyAgente]);
 
-  if (!data.length) return null;
+  if (!data.rows.length) return null;
+  const { rows: tableRows, team } = data;
 
   const scoreColor = (s: number) =>
     s >= 90 ? "text-success" : s >= 70 ? "text-foreground" : s >= 50 ? "text-warning" : "text-destructive";
@@ -197,7 +232,7 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {data.map((r, i) => (
+            {tableRows.map((r, i) => (
               <tr key={r.ativador} className="transition-colors hover:bg-muted/40">
                 <td className="px-3 py-2 font-numeric font-bold tabular-nums text-muted-foreground">
                   {i + 1}
@@ -230,6 +265,39 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
               </tr>
             ))}
           </tbody>
+          {!onlyAgente && (
+            <tfoot>
+              <tr className="border-t-2 border-border bg-muted/40 font-semibold">
+                <td className="px-3 py-2.5 text-muted-foreground" />
+                <td className="px-3 py-2.5 font-display text-foreground">Time (consolidado)</td>
+                <td className="px-3 py-2.5 text-right font-numeric tabular-nums text-muted-foreground">
+                  {fmtBRL(team.mrrAtivado)} / {fmtBRL(team.mrrCriadoAnterior)}
+                </td>
+                <td className={cn("px-3 py-2.5 text-right font-numeric font-bold tabular-nums", scoreColor(team.pctMrr))}>
+                  {fmtPct(team.pctMrr)}
+                </td>
+                <td className="px-3 py-2.5 text-right font-numeric tabular-nums text-muted-foreground">
+                  {team.clientesAtivados} / {team.clientesCriadosAnterior}
+                </td>
+                <td className={cn("px-3 py-2.5 text-right font-numeric font-bold tabular-nums", scoreColor(team.pctClientes))}>
+                  {fmtPct(team.pctClientes)}
+                </td>
+                <td className="px-3 py-2.5 text-right font-numeric tabular-nums text-muted-foreground">
+                  {fmtBRL(team.churnReal)} / {fmtBRL(team.churnMax)}
+                </td>
+                <td className={cn("px-3 py-2.5 text-right font-numeric font-bold tabular-nums", pctChurnColor(team.pctChurn))}>
+                  {fmtPct(team.pctChurn)}
+                </td>
+                <td className={cn("px-3 py-2.5 text-right font-numeric font-bold tabular-nums", scoreColor(team.scoreFinal))}>
+                  {Math.round(team.scoreFinal)}
+                </td>
+                <td className={cn("px-3 py-2.5 text-right font-numeric font-bold tabular-nums", pctFixoColor(team.pctFixo))}>
+                  {team.pctFixo}%
+                </td>
+              </tr>
+            </tfoot>
+          )}
+
         </table>
       </div>
 
