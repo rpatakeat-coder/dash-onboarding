@@ -146,43 +146,15 @@ export const MacroMovimento = ({ rows }: Props) => {
     descricao: string;
   }[] = [];
 
-  if (filter === "custom" && customRange?.from) {
-    const start = customRange.from;
-    // end is exclusive — add 1 day to include "to"
-    const toBase = customRange.to ?? customRange.from;
-    const end = new Date(toBase.getFullYear(), toBase.getMonth(), toBase.getDate() + 1);
-    const spanMs = end.getTime() - start.getTime();
-    const prevEnd = start;
-    const prevStart = new Date(start.getTime() - spanMs);
-    const ativ = mrrAtivadoNoPeriodo(rows, start, end);
-    const entrados = countEntradosNoPeriodo(rows, start, end);
-    const mrrCriadoPrev = mrrCriadoNoPeriodo(prevStart, prevEnd);
-    const pctAtiv = mrrCriadoPrev > 0 ? (ativ.mrr / mrrCriadoPrev) * 100 : 0;
-    const label = `${format(start, "dd/MM/yyyy", { locale: ptBR })} → ${format(toBase, "dd/MM/yyyy", { locale: ptBR })}`;
-    cards = [
-      {
-        label,
-        value: fmtBRLk(ativ.mrr),
-        sub: `${ativ.count} ativados · ${entrados} entrados`,
-        pctAtiv,
-        pctLabel: mrrCriadoPrev > 0 ? `${pctAtiv.toFixed(1).replace(".", ",")}% ativação` : "— sem base anterior",
-        accent: "text-primary",
-        formula: `% Ativação = MRR ativado no período (${fmtBRLk(ativ.mrr)}) ÷ MRR criado na janela anterior de mesma duração (${fmtBRLk(mrrCriadoPrev)}) × 100. Mesma regra do gráfico "MRR Ativado · Comparativo mensal".`,
-        start,
-        end,
-        titulo: `MRR Ativado · ${label}`,
-        descricao: "Detalhamento das ativações no período personalizado",
-      },
-    ];
-  } else {
+  {
     const visiblePeriods = filter === "todos" ? periods : periods.filter((p) => p.key === filter);
     cards = visiblePeriods.map((p) => {
       const ativ = mrrAtivadoNoPeriodo(rows, p.start, p.end);
       const entrados = countEntradosNoPeriodo(rows, p.start, p.end);
       // Regras especiais:
       // - "Hoje": denominador = MRR criado no mês anterior ÷ 30 (aproximação diária)
-      // - "Esta semana": denominador = MRR criado no mês anterior ÷ 4 (aproximação semanal)
-      const isSemana = p.key === "semana";
+      // - "Esta semana" e "Semana anterior": denominador = MRR criado no mês anterior ÷ 4
+      const isSemana = p.key === "semana" || p.key === "semanaAnt";
       const isHoje = p.key === "hoje";
       const mrrCriadoMesAnt = mrrCriadoNoPeriodo(r.lastMonthStart, r.monthStart);
       const mrrCriadoPrev = isSemana
@@ -191,8 +163,9 @@ export const MacroMovimento = ({ rows }: Props) => {
         ? mrrCriadoMesAnt / 30
         : mrrCriadoNoPeriodo(p.prevStart, p.prevEnd);
       const pctAtiv = mrrCriadoPrev > 0 ? (ativ.mrr / mrrCriadoPrev) * 100 : 0;
+      const semanaLabel = p.key === "semana" ? "na semana atual (seg → dom)" : "na semana anterior (seg → dom)";
       const formula = isSemana
-        ? `% Ativação semanal = MRR ativado na semana (${fmtBRLk(ativ.mrr)}) ÷ (MRR criado no mês anterior ${fmtBRLk(mrrCriadoMesAnt)} ÷ 4 = ${fmtBRLk(mrrCriadoPrev)}) × 100. Aproximação semanal para validação da meta.`
+        ? `% Ativação semanal = MRR ativado ${semanaLabel} (${fmtBRLk(ativ.mrr)}) ÷ (MRR criado no mês anterior ${fmtBRLk(mrrCriadoMesAnt)} ÷ 4 = ${fmtBRLk(mrrCriadoPrev)}) × 100. Aproximação semanal para validação da meta.`
         : isHoje
         ? `% Ativação diária = MRR ativado hoje (${fmtBRLk(ativ.mrr)}) ÷ (MRR criado no mês anterior ${fmtBRLk(mrrCriadoMesAnt)} ÷ 30 = ${fmtBRLk(mrrCriadoPrev)}) × 100. Aproximação diária para validação da meta.`
         : `% Ativação = MRR ativado em ${p.label.toLowerCase()} (${fmtBRLk(ativ.mrr)}) ÷ MRR criado no(a) ${p.prevLabel} (${fmtBRLk(mrrCriadoPrev)}) × 100. Mesma regra do gráfico "MRR Ativado · Comparativo mensal".`;
@@ -212,12 +185,6 @@ export const MacroMovimento = ({ rows }: Props) => {
     });
   }
 
-  const customActive = filter === "custom" && !!customRange?.from;
-  const customLabel = customActive
-    ? customRange?.to
-      ? `${format(customRange.from!, "dd/MM", { locale: ptBR })} → ${format(customRange.to, "dd/MM", { locale: ptBR })}`
-      : format(customRange!.from!, "dd/MM/yyyy", { locale: ptBR })
-    : "Personalizado";
 
   return (
     <section className="grid grid-cols-1 gap-4 lg:grid-cols-5">
