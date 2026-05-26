@@ -143,7 +143,7 @@ const AdminOperators = () => {
     setList((ops as OperatorRow[]) ?? []);
     const fromDb = ((ags as { agente: string }[]) ?? []).map((a) => a.agente);
     // Agentes HubSpot adicionais (não dependem de ter deal cadastrado ainda em dash_operacoes)
-    const extras = ["Kauan Nunes", "Ramona Sarmento"];
+    const extras = ["Kauan Nunes", "Rhamona Sarmento"];
     const merged = Array.from(new Set([...fromDb, ...extras])).sort((a, b) =>
       a.localeCompare(b, "pt-BR"),
     );
