@@ -23,14 +23,12 @@ interface Props {
   rows: DashRow[];
 }
 
-type PeriodKey = "todos" | "hoje" | "semana" | "mes" | "mesAnt" | "custom";
+type PeriodKey = "todos" | "hoje" | "semana" | "semanaAnt" | "mes" | "mesAnt";
 
 export const MacroMovimento = ({ rows }: Props) => {
   const novosHoje = countNovosHoje(rows);
   const r = getPeriodRanges();
   const [filter, setFilter] = useState<PeriodKey>("todos");
-  const [customRange, setCustomRange] = useState<DateRange | undefined>();
-  const [pickerOpen, setPickerOpen] = useState(false);
   const [entradasOpen, setEntradasOpen] = useState(false);
   const [drillCard, setDrillCard] = useState<{ start: Date; end: Date; titulo: string; descricao: string } | null>(null);
 
