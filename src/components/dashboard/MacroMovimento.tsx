@@ -81,6 +81,16 @@ export const MacroMovimento = ({ rows }: Props) => {
       accent: "text-foreground",
     },
     {
+      key: "semanaAnt",
+      label: "Semana anterior",
+      start: new Date(r.weekStart.getFullYear(), r.weekStart.getMonth(), r.weekStart.getDate() - 7),
+      end: r.weekStart,
+      prevStart: new Date(r.weekStart.getFullYear(), r.weekStart.getMonth(), r.weekStart.getDate() - 14),
+      prevEnd: new Date(r.weekStart.getFullYear(), r.weekStart.getMonth(), r.weekStart.getDate() - 7),
+      prevLabel: "semana retrasada",
+      accent: "text-muted-foreground",
+    },
+    {
       key: "mes",
       label: "Este mês",
       start: r.monthStart,
@@ -106,6 +116,7 @@ export const MacroMovimento = ({ rows }: Props) => {
     { key: "todos", label: "Todos" },
     { key: "hoje", label: "Hoje" },
     { key: "semana", label: "Semana" },
+    { key: "semanaAnt", label: "Semana anterior" },
     { key: "mes", label: "Mês" },
     { key: "mesAnt", label: "Mês anterior" },
   ];
