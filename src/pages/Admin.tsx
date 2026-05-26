@@ -141,7 +141,13 @@ const AdminOperators = () => {
     if (oErr) return toast.error("Erro ao carregar operadores", { description: oErr.message });
     if (aErr) toast.error("Erro ao carregar agentes", { description: aErr.message });
     setList((ops as OperatorRow[]) ?? []);
-    setAgentes(((ags as { agente: string }[]) ?? []).map((a) => a.agente));
+    const fromDb = ((ags as { agente: string }[]) ?? []).map((a) => a.agente);
+    // Agentes HubSpot adicionais (não dependem de ter deal cadastrado ainda em dash_operacoes)
+    const extras = ["Kauan Nunes", "Ramona Sarmento"];
+    const merged = Array.from(new Set([...fromDb, ...extras])).sort((a, b) =>
+      a.localeCompare(b, "pt-BR"),
+    );
+    setAgentes(merged);
   };
 
   const myRole = list.find((o) => o.user_id === user?.id)?.role ?? null;
