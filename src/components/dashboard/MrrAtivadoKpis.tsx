@@ -103,7 +103,7 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
       border: "border-primary/30",
       bg: "bg-primary/[0.04]",
       sub: `${fmtBRLk(hoje.mrr)} · ${hoje.count} ativ.`,
-      formula: "Soma do MRR dos deals ativados hoje (data_ativacao = hoje) ÷ MRR total do estoque filtrado × 100.",
+      formula: `% Ativação diária = MRR ativado hoje (${fmtBRLk(hoje.mrr)}) ÷ (MRR criado no mês anterior ${fmtBRLk(mrrCriadoMesAnt)} ÷ 30 = ${fmtBRLk(baseDiaria)}) × 100. Aproximação diária para validação da meta.`,
     },
     {
       key: "semana",
