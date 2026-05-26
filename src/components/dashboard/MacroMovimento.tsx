@@ -265,57 +265,6 @@ export const MacroMovimento = ({ rows }: Props) => {
               })}
             </div>
 
-            <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "h-8 gap-1.5 rounded-lg font-subtitle text-xs font-semibold",
-                    customActive
-                      ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
-                      : "text-muted-foreground",
-                  )}
-                >
-                  <CalendarIcon className="h-3.5 w-3.5" />
-                  {customLabel}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  mode="range"
-                  numberOfMonths={2}
-                  selected={customRange}
-                  onSelect={(range) => {
-                    setCustomRange(range);
-                    if (range?.from) setFilter("custom");
-                    if (range?.from && range?.to) setPickerOpen(false);
-                  }}
-                  locale={ptBR}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-                {customActive && (
-                  <div className="flex items-center justify-end gap-2 border-t border-border p-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 gap-1 text-xs"
-                      onClick={() => {
-                        setCustomRange(undefined);
-                        setFilter("todos");
-                        setPickerOpen(false);
-                      }}
-                    >
-                      <X className="h-3 w-3" />
-                      Limpar
-                    </Button>
-                  </div>
-                )}
-              </PopoverContent>
-            </Popover>
 
             <CalendarDays className="h-5 w-5 text-primary/70" />
           </div>
