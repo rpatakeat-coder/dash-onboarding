@@ -39,7 +39,7 @@ type SortDir = "asc" | "desc";
 
 const EPS_DIV = 0.5;
 const fmtBRL0 = (n: number) =>
-  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const BandPill = ({ dias }: { dias: number }) => {
   const b = slaBand(dias);
