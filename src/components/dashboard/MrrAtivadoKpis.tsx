@@ -35,6 +35,15 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
   const mesAnt = mrrAtivadoNoPeriodo(rows, r.lastMonthStart, r.monthStart);
   const tudo = mrrAtivadoNoPeriodo(rows, new Date(0), new Date(8640000000000000));
 
+  // MRR criado no mês anterior — base para as aproximações diária (÷30) e semanal (÷4)
+  const mrrCriadoMesAnt = rows.reduce((s, x) => {
+    const d = x.data_criacao ? new Date(x.data_criacao) : null;
+    if (d && d >= r.lastMonthStart && d < r.monthStart) return s + num(x.mrr);
+    return s;
+  }, 0);
+  const baseDiaria = mrrCriadoMesAnt / 30;
+  const baseSemanal = mrrCriadoMesAnt / 4;
+
   const bigMap: Record<BigPeriod, { data: { mrr: number; count: number }; label: string; sub: string }> = {
     hoje: { data: hoje, label: "Hoje", sub: "ativações de hoje" },
     semana: { data: semana, label: "Esta semana", sub: "seg → dom" },
@@ -44,8 +53,8 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
 
   const pct = (v: number) => (mrrTotalEstoque > 0 ? (v / mrrTotalEstoque) * 100 : 0);
 
-  const pctHoje = pct(hoje.mrr);
-  const pctSemana = pct(semana.mrr);
+  const pctHoje = baseDiaria > 0 ? (hoje.mrr / baseDiaria) * 100 : 0;
+  const pctSemana = baseSemanal > 0 ? (semana.mrr / baseSemanal) * 100 : 0;
   const pctMes = pct(mes.mrr);
   const pctMesAnt = pct(mesAnt.mrr);
 
@@ -94,7 +103,7 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
       border: "border-primary/30",
       bg: "bg-primary/[0.04]",
       sub: `${fmtBRLk(hoje.mrr)} · ${hoje.count} ativ.`,
-      formula: "Soma do MRR dos deals ativados hoje (data_ativacao = hoje) ÷ MRR total do estoque filtrado × 100.",
+      formula: `% Ativação diária = MRR ativado hoje (${fmtBRLk(hoje.mrr)}) ÷ (MRR criado no mês anterior ${fmtBRLk(mrrCriadoMesAnt)} ÷ 30 = ${fmtBRLk(baseDiaria)}) × 100. Aproximação diária para validação da meta.`,
     },
     {
       key: "semana",
@@ -107,7 +116,7 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
       border: "border-border",
       bg: "bg-card",
       sub: `${fmtBRLk(semana.mrr)} · ${semana.count} ativ.`,
-      formula: "Soma do MRR dos deals ativados nesta semana (segunda → domingo) ÷ MRR total do estoque filtrado × 100.",
+      formula: `% Ativação semanal = MRR ativado na semana (${fmtBRLk(semana.mrr)}) ÷ (MRR criado no mês anterior ${fmtBRLk(mrrCriadoMesAnt)} ÷ 4 = ${fmtBRLk(baseSemanal)}) × 100. Aproximação semanal para validação da meta.`,
     },
   ] as const;
 
