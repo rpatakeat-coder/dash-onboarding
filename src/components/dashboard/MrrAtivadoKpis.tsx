@@ -116,7 +116,7 @@ export const MrrAtivadoKpis = ({ rows }: Props) => {
       border: "border-border",
       bg: "bg-card",
       sub: `${fmtBRLk(semana.mrr)} · ${semana.count} ativ.`,
-      formula: "Soma do MRR dos deals ativados nesta semana (segunda → domingo) ÷ MRR total do estoque filtrado × 100.",
+      formula: `% Ativação semanal = MRR ativado na semana (${fmtBRLk(semana.mrr)}) ÷ (MRR criado no mês anterior ${fmtBRLk(mrrCriadoMesAnt)} ÷ 4 = ${fmtBRLk(baseSemanal)}) × 100. Aproximação semanal para validação da meta.`,
     },
   ] as const;
 
