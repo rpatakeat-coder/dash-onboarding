@@ -22,7 +22,7 @@ const toNum = (v: string | null | undefined) => {
 
 const fmtPct = (v: number) => `${v.toFixed(0)}%`;
 const fmtBRL = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // Tabela score → % do fixo (lower bound)
 const SCORE_TABLE: { score: number; pctFixo: number }[] = [
