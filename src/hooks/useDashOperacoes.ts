@@ -675,10 +675,7 @@ export function useDashOperacoes() {
 }
 
 export const fmtBRL = (n: number) =>
-  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
-export const fmtBRLk = (n: number) => {
-  if (n >= 1000) return `R$ ${(n / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k`;
-  return fmtBRL(n);
-};
+  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const fmtBRLk = (n: number) => fmtBRL(n);
 export const fmtDias = (n: number) => `${n.toFixed(1)}d`;
 export const fmtPct = (n: number, dec = 1) => `${n.toLocaleString("pt-BR", { minimumFractionDigits: dec, maximumFractionDigits: dec })}%`;
