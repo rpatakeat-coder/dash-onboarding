@@ -144,9 +144,11 @@ const AdminOperators = () => {
     const fromDb = ((ags as { agente: string }[]) ?? []).map((a) => a.agente);
     // Agentes HubSpot adicionais (não dependem de ter deal cadastrado ainda em dash_operacoes)
     const extras = ["Kauan Nunes", "Rhamona Sarmento"];
-    const merged = Array.from(new Set([...fromDb, ...extras])).sort((a, b) =>
-      a.localeCompare(b, "pt-BR"),
-    );
+    // Nomes a esconder/normalizar (ex.: grafia antiga "Ramona Sarmento" → usar "Rhamona Sarmento")
+    const blocked = new Set(["ramona sarmento"]);
+    const merged = Array.from(new Set([...fromDb, ...extras]))
+      .filter((a) => !blocked.has(a.trim().toLowerCase()))
+      .sort((a, b) => a.localeCompare(b, "pt-BR"));
     setAgentes(merged);
   };
 
