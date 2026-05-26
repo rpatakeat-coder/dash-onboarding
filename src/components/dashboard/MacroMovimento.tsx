@@ -173,14 +173,22 @@ export const MacroMovimento = ({ rows }: Props) => {
     cards = visiblePeriods.map((p) => {
       const ativ = mrrAtivadoNoPeriodo(rows, p.start, p.end);
       const entrados = countEntradosNoPeriodo(rows, p.start, p.end);
-      // Regra especial para "Esta semana": denominador = MRR criado no mês anterior ÷ 4
-      // (aproximação semanal para validação da meta).
+      // Regras especiais:
+      // - "Hoje": denominador = MRR criado no mês anterior ÷ 30 (aproximação diária)
+      // - "Esta semana": denominador = MRR criado no mês anterior ÷ 4 (aproximação semanal)
       const isSemana = p.key === "semana";
+      const isHoje = p.key === "hoje";
       const mrrCriadoMesAnt = mrrCriadoNoPeriodo(r.lastMonthStart, r.monthStart);
-      const mrrCriadoPrev = isSemana ? mrrCriadoMesAnt / 4 : mrrCriadoNoPeriodo(p.prevStart, p.prevEnd);
+      const mrrCriadoPrev = isSemana
+        ? mrrCriadoMesAnt / 4
+        : isHoje
+        ? mrrCriadoMesAnt / 30
+        : mrrCriadoNoPeriodo(p.prevStart, p.prevEnd);
       const pctAtiv = mrrCriadoPrev > 0 ? (ativ.mrr / mrrCriadoPrev) * 100 : 0;
       const formula = isSemana
         ? `% Ativação semanal = MRR ativado na semana (${fmtBRLk(ativ.mrr)}) ÷ (MRR criado no mês anterior ${fmtBRLk(mrrCriadoMesAnt)} ÷ 4 = ${fmtBRLk(mrrCriadoPrev)}) × 100. Aproximação semanal para validação da meta.`
+        : isHoje
+        ? `% Ativação diária = MRR ativado hoje (${fmtBRLk(ativ.mrr)}) ÷ (MRR criado no mês anterior ${fmtBRLk(mrrCriadoMesAnt)} ÷ 30 = ${fmtBRLk(mrrCriadoPrev)}) × 100. Aproximação diária para validação da meta.`
         : `% Ativação = MRR ativado em ${p.label.toLowerCase()} (${fmtBRLk(ativ.mrr)}) ÷ MRR criado no(a) ${p.prevLabel} (${fmtBRLk(mrrCriadoPrev)}) × 100. Mesma regra do gráfico "MRR Ativado · Comparativo mensal".`;
       return {
         label: p.label,
