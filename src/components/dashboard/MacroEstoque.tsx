@@ -107,6 +107,9 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
               <p className="mt-1 font-small text-xs text-muted-foreground">
                 {fmtPct(v?.pct ?? 0, 1)} do estoque
               </p>
+              <p className="mt-0.5 font-numeric text-[11px] text-muted-foreground tabular-nums">
+                MRR: <span className="font-semibold text-foreground/80">{fmtBRL(v?.mrr ?? 0)}</span>
+              </p>
             </div>
           );
         })}
