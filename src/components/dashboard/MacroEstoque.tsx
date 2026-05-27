@@ -50,6 +50,24 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
                 <p className="mt-1 font-small text-xs text-muted-foreground">
                   no pipeline Onboarding
                 </p>
+                <p className="mt-0.5 font-numeric text-[11px] text-muted-foreground tabular-nums">
+                  MRR do estoque: <span className="font-semibold text-foreground/80">{fmtBRL(mrrTotalEstoque)}</span>
+                </p>
+                <p className="hidden">{/* spacer */}</p>
+                <div className="hidden">{/* */}</div>
+                <p className="sr-only">end</p>
+                <span className="sr-only">end</span>
+                {/* keep original separator below */}
+                <p className="hidden">end</p>
+                <p className="hidden">end2</p>
+                <p className="hidden">end3</p>
+                <p className="hidden">end4</p>
+                <p className="hidden">end5</p>
+                <p className="hidden">end6</p>
+                <p className="hidden">end7</p>
+                <p className="hidden">end8</p>
+                <p className="hidden">end9</p>
+                <p className="hidden">end10</p>
                 {(() => {
                   const get = (p: string) => perfis.find((x) => x.perfil === p)?.count ?? 0;
                   const gGG = get("G") + get("GG");
