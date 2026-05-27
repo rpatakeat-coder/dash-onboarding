@@ -1,6 +1,7 @@
 import { Package, TrendingUp, AlertTriangle, ShieldCheck } from "lucide-react";
 import {
   computeSlaCriacaoKpis,
+  fmtBRL,
   fmtPct,
   type DashRow,
   type PerfilStat,
@@ -23,6 +24,7 @@ const PERFIL_COLOR: Record<string, string> = {
 
 export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
   const k = computeSlaCriacaoKpis(rows);
+  const mrrTotalEstoque = perfis.reduce((s, p) => s + (p.mrr ?? 0), 0);
 
   return (
     <section className="space-y-4">
@@ -47,6 +49,9 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
                 </p>
                 <p className="mt-1 font-small text-xs text-muted-foreground">
                   no pipeline Onboarding
+                </p>
+                <p className="mt-0.5 font-numeric text-[11px] text-muted-foreground tabular-nums">
+                  MRR do estoque: <span className="font-semibold text-foreground/80">{fmtBRL(mrrTotalEstoque)}</span>
                 </p>
                 {(() => {
                   const get = (p: string) => perfis.find((x) => x.perfil === p)?.count ?? 0;
@@ -101,6 +106,9 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
               </p>
               <p className="mt-1 font-small text-xs text-muted-foreground">
                 {fmtPct(v?.pct ?? 0, 1)} do estoque
+              </p>
+              <p className="mt-0.5 font-numeric text-[11px] text-muted-foreground tabular-nums">
+                MRR: <span className="font-semibold text-foreground/80">{fmtBRL(v?.mrr ?? 0)}</span>
               </p>
             </div>
           );

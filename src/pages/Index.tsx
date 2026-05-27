@@ -127,18 +127,25 @@ const Index = () => {
   // Recalcula distribuição de perfis em cima do estoque (Onboarding · mês atual)
   const perfisFiltrados: PerfilStat[] = useMemo(() => {
     const order = ["P", "M", "G", "GG"];
-    const map = new Map<string, number>();
+    const map = new Map<string, { count: number; mrr: number }>();
+    const num = (v: unknown) => {
+      const n = parseFloat(String(v ?? "").replace(",", "."));
+      return Number.isFinite(n) ? n : 0;
+    };
     for (const r of estoqueRows) {
       const k = r.perfil_cliente?.trim().split(/\s+/)[0]?.toUpperCase() || "—";
-      map.set(k, (map.get(k) ?? 0) + 1);
+      const cur = map.get(k) ?? { count: 0, mrr: 0 };
+      cur.count += 1;
+      cur.mrr += num(r.mrr);
+      map.set(k, cur);
     }
     const total = estoqueRows.length;
     const out: PerfilStat[] = order
       .filter((k) => map.has(k))
-      .map((k) => ({ perfil: k, count: map.get(k)!, pct: total ? (map.get(k)! / total) * 100 : 0 }));
+      .map((k) => ({ perfil: k, count: map.get(k)!.count, pct: total ? (map.get(k)!.count / total) * 100 : 0, mrr: map.get(k)!.mrr }));
     for (const [k, v] of map.entries()) {
       if (!order.includes(k)) {
-        out.push({ perfil: k, count: v, pct: total ? (v / total) * 100 : 0 });
+        out.push({ perfil: k, count: v.count, pct: total ? (v.count / total) * 100 : 0, mrr: v.mrr });
       }
     }
     return out;

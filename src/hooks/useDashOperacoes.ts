@@ -148,6 +148,7 @@ export interface PerfilStat {
   perfil: string;
   count: number;
   pct: number;
+  mrr: number;
 }
 
 export interface DashData {
@@ -540,23 +541,27 @@ function aggregate(rows: DashRow[]): DashData {
 
   // Perfis (extrai primeira "palavra" do campo)
   const perfilOrder = ["P", "M", "G", "GG"];
-  const perfilMap = new Map<string, number>();
+  const perfilMap = new Map<string, { count: number; mrr: number }>();
   for (const r of rows) {
     const raw = r.perfil_cliente?.trim() || "";
     const key = raw.split(/\s+/)[0]?.toUpperCase() || "—";
-    perfilMap.set(key, (perfilMap.get(key) ?? 0) + 1);
+    const cur = perfilMap.get(key) ?? { count: 0, mrr: 0 };
+    cur.count += 1;
+    cur.mrr += toNum(r.mrr);
+    perfilMap.set(key, cur);
   }
   const perfis: PerfilStat[] = perfilOrder
     .filter((k) => perfilMap.has(k))
     .map((k) => ({
       perfil: k,
-      count: perfilMap.get(k)!,
-      pct: total ? (perfilMap.get(k)! / total) * 100 : 0,
+      count: perfilMap.get(k)!.count,
+      pct: total ? (perfilMap.get(k)!.count / total) * 100 : 0,
+      mrr: perfilMap.get(k)!.mrr,
     }));
   // adiciona perfis fora da ordem padrão
   for (const [k, v] of perfilMap.entries()) {
     if (!perfilOrder.includes(k)) {
-      perfis.push({ perfil: k, count: v, pct: total ? (v / total) * 100 : 0 });
+      perfis.push({ perfil: k, count: v.count, pct: total ? (v.count / total) * 100 : 0, mrr: v.mrr });
     }
   }
 
