@@ -93,6 +93,8 @@ export const RastroMensal = ({ rows }: Props) => {
         pctChurn,
         pctPm,
         pctGg,
+        pctPmAtiv,
+        pctGgAtiv,
         isPast: i < currentMonth,
         isCurrent: i === currentMonth,
         isFuture: i > currentMonth,
