@@ -225,6 +225,40 @@ export const RastroMensal = ({ rows }: Props) => {
               ))}
             </tr>
             <tr className="border-b border-border/60">
+              <td className="sticky left-0 z-10 bg-card px-6 py-2 font-subtitle text-[11px] text-muted-foreground">
+                Peso % P + M
+              </td>
+              {data.map((m) => (
+                <td
+                  key={m.mes}
+                  className={cn(
+                    "px-3 py-2 text-center font-numeric text-[11px] tabular-nums",
+                    cellTone(m),
+                    m.isCurrent && "bg-primary/5",
+                  )}
+                >
+                  {m.isFuture ? "—" : fmtPct(m.pctPm)}
+                </td>
+              ))}
+            </tr>
+            <tr className="border-b border-border/60">
+              <td className="sticky left-0 z-10 bg-card px-6 py-2 font-subtitle text-[11px] text-muted-foreground">
+                Peso % G + GG
+              </td>
+              {data.map((m) => (
+                <td
+                  key={m.mes}
+                  className={cn(
+                    "px-3 py-2 text-center font-numeric text-[11px] tabular-nums",
+                    cellTone(m),
+                    m.isCurrent && "bg-primary/5",
+                  )}
+                >
+                  {m.isFuture ? "—" : fmtPct(m.pctGg)}
+                </td>
+              ))}
+            </tr>
+            <tr className="border-b border-border/60">
               <td className="sticky left-0 z-10 bg-card px-3 py-2.5 font-subtitle text-xs font-semibold">
                 Deals Ativados
               </td>
@@ -242,39 +276,40 @@ export const RastroMensal = ({ rows }: Props) => {
               ))}
             </tr>
             <tr className="border-b border-border/60">
-              <td className="sticky left-0 z-10 bg-card px-3 py-2.5 font-subtitle text-xs font-semibold">
-                % Mês P + M
+              <td className="sticky left-0 z-10 bg-card px-6 py-2 font-subtitle text-[11px] text-muted-foreground">
+                Peso % P + M
               </td>
               {data.map((m) => (
                 <td
                   key={m.mes}
                   className={cn(
-                    "px-3 py-2.5 text-center font-numeric text-xs tabular-nums",
+                    "px-3 py-2 text-center font-numeric text-[11px] tabular-nums",
                     cellTone(m),
                     m.isCurrent && "bg-primary/5",
                   )}
                 >
-                  {m.isFuture ? "—" : fmtPct(m.pctPm)}
+                  {m.isFuture ? "—" : fmtPct(m.pctPmAtiv)}
                 </td>
               ))}
             </tr>
             <tr className="border-b border-border/60">
-              <td className="sticky left-0 z-10 bg-card px-3 py-2.5 font-subtitle text-xs font-semibold">
-                % Mês G + GG
+              <td className="sticky left-0 z-10 bg-card px-6 py-2 font-subtitle text-[11px] text-muted-foreground">
+                Peso % G + GG
               </td>
               {data.map((m) => (
                 <td
                   key={m.mes}
                   className={cn(
-                    "px-3 py-2.5 text-center font-numeric text-xs tabular-nums",
+                    "px-3 py-2 text-center font-numeric text-[11px] tabular-nums",
                     cellTone(m),
                     m.isCurrent && "bg-primary/5",
                   )}
                 >
-                  {m.isFuture ? "—" : fmtPct(m.pctGg)}
+                  {m.isFuture ? "—" : fmtPct(m.pctGgAtiv)}
                 </td>
               ))}
             </tr>
+
 
 
 
