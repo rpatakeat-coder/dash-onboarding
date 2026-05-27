@@ -106,7 +106,7 @@ export const RastroMensal = ({ rows }: Props) => {
 
   const fmtPct = (v: number) =>
     v > 0
-      ? `${v.toLocaleString("pt-BR", { maximumFractionDigits: 1, minimumFractionDigits: 1 })}%`
+      ? `${v.toLocaleString("pt-BR", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}%`
       : "—";
 
   const cellTone = (m: (typeof data)[number]) =>

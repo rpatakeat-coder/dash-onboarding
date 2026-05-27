@@ -251,6 +251,54 @@ export type Database = {
         }
         Relationships: []
       }
+      dash_sucesso: {
+        Row: {
+          agente_sucesso: string | null
+          asaas_id: string | null
+          data_ativacao: string | null
+          data_entrada_fase: string | null
+          data_fechamento: string | null
+          etapa_de_cancelamento: string | null
+          etapa_negocio: string | null
+          id_deal: number
+          mrr: number | null
+          nome_negocio: string | null
+          perfil_cliente: string | null
+          pipeline_nome: string
+          updated_at: string
+        }
+        Insert: {
+          agente_sucesso?: string | null
+          asaas_id?: string | null
+          data_ativacao?: string | null
+          data_entrada_fase?: string | null
+          data_fechamento?: string | null
+          etapa_de_cancelamento?: string | null
+          etapa_negocio?: string | null
+          id_deal: number
+          mrr?: number | null
+          nome_negocio?: string | null
+          perfil_cliente?: string | null
+          pipeline_nome?: string
+          updated_at?: string
+        }
+        Update: {
+          agente_sucesso?: string | null
+          asaas_id?: string | null
+          data_ativacao?: string | null
+          data_entrada_fase?: string | null
+          data_fechamento?: string | null
+          etapa_de_cancelamento?: string | null
+          etapa_negocio?: string | null
+          id_deal?: number
+          mrr?: number | null
+          nome_negocio?: string | null
+          perfil_cliente?: string | null
+          pipeline_nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       faturamento: {
         Row: {
           id: number
@@ -550,7 +598,46 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vw_sucesso_overview: {
+        Row: {
+          mrr_ggg: number | null
+          mrr_pm: number | null
+          mrr_sem_perfil: number | null
+          mrr_total: number | null
+          qtd_ggg: number | null
+          qtd_pm: number | null
+          qtd_sem_perfil: number | null
+          total_clientes: number | null
+        }
+        Relationships: []
+      }
+      vw_sucesso_qa_sem_perfil: {
+        Row: {
+          agente_sucesso: string | null
+          etapa_negocio: string | null
+          id_deal: number | null
+          mrr: number | null
+          nome_negocio: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agente_sucesso?: string | null
+          etapa_negocio?: string | null
+          id_deal?: number | null
+          mrr?: number | null
+          nome_negocio?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agente_sucesso?: string | null
+          etapa_negocio?: string | null
+          id_deal?: number | null
+          mrr?: number | null
+          nome_negocio?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       claim_first_admin: { Args: never; Returns: boolean }
