@@ -40,6 +40,8 @@ export const RastroMensal = ({ rows }: Props) => {
       dealsAtivados: 0,
       pmCount: 0,
       ggCount: 0,
+      pmAtivCount: 0,
+      ggAtivCount: 0,
     }));
 
     // mês 0 (dezembro do ano anterior) para servir de denominador do janeiro
@@ -51,6 +53,8 @@ export const RastroMensal = ({ rows }: Props) => {
       if (da && da.getFullYear() === year) {
         months[da.getMonth()].mrrAtivado += toNum(row.mrr);
         months[da.getMonth()].dealsAtivados += 1;
+        if (perfil === "P" || perfil === "M") months[da.getMonth()].pmAtivCount += 1;
+        else if (perfil === "G" || perfil === "GG") months[da.getMonth()].ggAtivCount += 1;
       }
       const dc = parseDate(row.data_criacao);
       if (dc) {
@@ -80,6 +84,9 @@ export const RastroMensal = ({ rows }: Props) => {
       const totalPerfil = m.pmCount + m.ggCount;
       const pctPm = totalPerfil > 0 ? (m.pmCount / totalPerfil) * 100 : 0;
       const pctGg = totalPerfil > 0 ? (m.ggCount / totalPerfil) * 100 : 0;
+      const totalAtiv = m.pmAtivCount + m.ggAtivCount;
+      const pctPmAtiv = totalAtiv > 0 ? (m.pmAtivCount / totalAtiv) * 100 : 0;
+      const pctGgAtiv = totalAtiv > 0 ? (m.ggAtivCount / totalAtiv) * 100 : 0;
       return {
         ...m,
         pctAtivacao,
