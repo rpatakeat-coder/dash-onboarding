@@ -11,6 +11,7 @@ import { MrrAsaasKpis } from "@/components/dashboard/MrrAsaasKpis";
 
 import { MacroFilters } from "@/components/dashboard/MacroFilters";
 import { CarteiraPorAtivador } from "@/components/dashboard/CarteiraPorAtivador";
+import { MrrCarteiraPorAtivador } from "@/components/dashboard/MrrCarteiraPorAtivador";
 import { MrrAtivadoPorAtivador } from "@/components/dashboard/MrrAtivadoPorAtivador";
 import { RankingVariavelAtivadores } from "@/components/dashboard/RankingVariavelAtivadores";
 import { RankingMetasMedalhas } from "@/components/dashboard/RankingMetasMedalhas";
