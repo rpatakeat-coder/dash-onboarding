@@ -148,6 +148,7 @@ export interface PerfilStat {
   perfil: string;
   count: number;
   pct: number;
+  mrr: number;
 }
 
 export interface DashData {
