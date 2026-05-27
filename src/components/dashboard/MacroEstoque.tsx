@@ -1,6 +1,7 @@
 import { Package, TrendingUp, AlertTriangle, ShieldCheck } from "lucide-react";
 import {
   computeSlaCriacaoKpis,
+  fmtBRL,
   fmtPct,
   type DashRow,
   type PerfilStat,
