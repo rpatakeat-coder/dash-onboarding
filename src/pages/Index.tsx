@@ -240,6 +240,8 @@ const Index = () => {
 
             <CarteiraPorAtivador rows={estoqueRows} />
 
+            <MrrCarteiraPorAtivador rows={estoqueRows} />
+
             <MrrAtivadoPorAtivador rows={macroRows} />
 
             <RankingMetasMedalhas rows={allRows} />
