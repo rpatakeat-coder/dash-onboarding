@@ -24,6 +24,7 @@ const PERFIL_COLOR: Record<string, string> = {
 
 export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
   const k = computeSlaCriacaoKpis(rows);
+  const mrrTotalEstoque = perfis.reduce((s, p) => s + (p.mrr ?? 0), 0);
 
   return (
     <section className="space-y-4">
