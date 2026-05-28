@@ -24,6 +24,7 @@ import { GestaoAlerts } from "@/components/dashboard/GestaoAlerts";
 import { TrendByOperator } from "@/components/dashboard/TrendByOperator";
 import { ChurnKpis } from "@/components/dashboard/ChurnKpis";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
+import { useUserRole } from "@/hooks/useUserRole";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
 import { useDashOperacoes, parseDate, type PerfilStat } from "@/hooks/useDashOperacoes";
 import type { MacroPeriodKey, CustomRange } from "@/components/dashboard/MacroFilters";
@@ -31,6 +32,7 @@ import type { MacroPeriodKey, CustomRange } from "@/components/dashboard/MacroFi
 const Index = () => {
   const { data, isLoading, error } = useDashOperacoes();
   const { isAdmin, isAtivador, myAgente } = useAtivadorScope();
+  const { isViewer } = useUserRole();
   const [searchParams] = useSearchParams();
   const tab = searchParams.get("tab");
   const isGestao = tab === "gestao" && isAdmin;
@@ -152,11 +154,38 @@ const Index = () => {
     return out;
   }, [estoqueRows]);
 
+  if (isViewer) {
+    return (
+      <div className="min-h-screen overflow-x-hidden bg-background">
+        <DashboardHeader />
+        <main className="mx-auto max-w-[1400px] space-y-6 px-3 py-6 sm:px-6 md:px-10">
+          {error && (
+            <div className="rounded-2xl border border-destructive/30 bg-destructive/[0.06] p-4 font-subtitle text-sm text-destructive">
+              Erro ao carregar dados: {(error as Error).message}
+            </div>
+          )}
+          {isLoading && !data && (
+            <div className="rounded-2xl border border-border bg-card p-8 text-center font-subtitle text-sm text-muted-foreground">
+              Carregando…
+            </div>
+          )}
+          {data && (
+            <>
+              <RankingMetasMedalhas rows={allRows} />
+              <RankingVariavelAtivadores rows={allRows} />
+            </>
+          )}
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-background">
       <DashboardHeader />
 
       <main className="mx-auto max-w-[1400px] space-y-6 px-3 py-6 sm:px-6 md:px-10">
+
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div data-tour="filters" className="flex-1 min-w-0">
             <MacroFilters

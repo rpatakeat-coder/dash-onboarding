@@ -3,6 +3,7 @@ import { ChevronDown, Menu } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useUserRole } from "@/hooks/useUserRole";
 import { MainNav, getNavItemsForArea } from "@/components/MainNav";
 import { useArea } from "@/contexts/AreaContext";
 
@@ -18,13 +19,15 @@ import { useArea } from "@/contexts/AreaContext";
 export const MobileMainNav = ({ className }: { className?: string }) => {
   const [open, setOpen] = useState(false);
   const { isAdmin } = useIsAdmin();
+  const { isViewer } = useUserRole();
   const location = useLocation();
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelId = "mobile-mainnav-panel";
 
   const { area } = useArea();
-  const items = getNavItemsForArea(area).filter((i) => !i.adminOnly || isAdmin);
+  const allItems = getNavItemsForArea(area).filter((i) => !i.adminOnly || isAdmin);
+  const items = isViewer ? allItems.filter((i) => i.to === "/") : allItems;
   const currentTab = new URLSearchParams(location.search).get("tab");
   const current =
     items.find((i) => {
