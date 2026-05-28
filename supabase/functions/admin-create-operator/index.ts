@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 const Body = z
-const Body = z
   .object({
     email: z.string().email(),
     agente_ativacao: z.string().min(1).max(120).optional(),
