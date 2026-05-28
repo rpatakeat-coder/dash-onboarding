@@ -27,6 +27,9 @@ export const ProtectedRoute = ({ children, viewerAllowed = false }: Props) => {
   }
 
   if (isViewer && !viewerAllowed) {
+    if (location.pathname === "/") {
+      return children;
+    }
     return <Navigate to="/" replace />;
   }
 
