@@ -42,7 +42,7 @@ const Shell = () => {
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/acesso-dash" element={<SetPassword />} />
-          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+          <Route path="/" element={<ProtectedRoute viewerAllowed><Index /></ProtectedRoute>} />
           <Route path="/minha-carteira" element={<ProtectedRoute><MinhaCarteira /></ProtectedRoute>} />
           <Route path="/tv" element={<ProtectedRoute><Tv /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
