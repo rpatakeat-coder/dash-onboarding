@@ -8,22 +8,25 @@ const corsHeaders = {
 };
 
 const Body = z
+const Body = z
   .object({
     email: z.string().email(),
     agente_ativacao: z.string().min(1).max(120).optional(),
     // super_admin nunca pode ser criado via UI
-    role: z.enum(["admin", "user"]).default("user"),
+    role: z.enum(["admin", "user", "viewer"]).default("user"),
     full_name: z.string().max(120).optional(),
     channels: z
       .array(z.enum(["email", "whatsapp", "link_only"]))
       .min(1)
       .default(["email"]),
   })
-  .refine((v) => v.role === "admin" || (v.agente_ativacao && v.agente_ativacao.trim().length > 0), {
-    message: "agente_ativacao is required for non-admin users",
-    path: ["agente_ativacao"],
-  });
-
+  .refine(
+    (v) => v.role === "admin" || v.role === "viewer" || (v.agente_ativacao && v.agente_ativacao.trim().length > 0),
+    {
+      message: "agente_ativacao is required for non-admin/non-viewer users",
+      path: ["agente_ativacao"],
+    },
+  );
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
