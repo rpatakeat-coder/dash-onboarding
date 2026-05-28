@@ -18,7 +18,6 @@ import { useArea } from "@/contexts/AreaContext";
  */
 export const MobileMainNav = ({ className }: { className?: string }) => {
   const [open, setOpen] = useState(false);
-  const [open, setOpen] = useState(false);
   const { isAdmin } = useIsAdmin();
   const { isViewer } = useUserRole();
   const location = useLocation();
