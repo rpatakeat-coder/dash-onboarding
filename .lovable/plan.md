@@ -1,36 +1,50 @@
-## Objetivo
-Redefinir a regra de **Churn Real** em todo o app para considerar apenas deals que satisfaçam **simultaneamente**:
+# Novo papel: `viewer`
 
-- `etapa_negocio` = `Churn`
-- `pipeline_nome` = `Sucesso`
-- `etapa_de_cancelamento` = `Onboarding`
-- corte de período por **`data_fechamento`**
+Cria um papel adicional em `operations_role` para usuários que só visualizam os rankings de meta (RankingMetasMedalhas e RankingVariavelAtivadores). Sem acesso a admin, sem carteira, sem demais blocos da dashboard. Vê dados de todos os ativadores (somente leitura).
 
-A regra antiga (Pré-Churn + OR com cancelamento Onboarding por etapa) será removida.
+## 1. Banco
 
-## Mudanças
+Migração:
 
-### 1. `src/hooks/useDashOperacoes.ts`
-- Remover `CHURN_STAGE_IDS` (Pré-Churn/Churn por ID) e a constante `CHURN_CANCELAMENTO_PIPELINE` solta.
-- Adicionar um helper exportado `isChurnRow(row)` com a regra AND das 3 condições (case-insensitive, trim).
-- Em `computeChurnKpis`: usar `isChurnRow(r) && inRange(r.data_fechamento)`.
+- Adicionar valor `'viewer'` ao enum `operations_role`.
+- Atualizar a função `has_operations_role` para reconhecer `viewer` apenas como `viewer` (não herda admin).
+- Política RLS extra em `dash_operacoes` permitindo SELECT global para `viewer`:
+  ```sql
+  CREATE POLICY "Viewers read all dash_operacoes"
+  ON public.dash_operacoes FOR SELECT TO authenticated
+  USING (has_operations_role(auth.uid(), 'viewer'));
+  ```
+- `agente_ativacao` em `user_roles_operations` continua opcional (não é exigido para viewer).
+- Ajustar `admin-create-operator` para aceitar `role: 'viewer'` no schema Zod e dispensar `agente_ativacao` quando role for `admin` **ou** `viewer`.
 
-### 2. Demais consumidores — trocar o predicado para o novo `isChurnRow`
-- `src/components/dashboard/ChurnDetailModal.tsx`
-- `src/components/dashboard/RastroMensal.tsx`
-- `src/components/dashboard/RankingVariavelAtivadores.tsx`
-- `src/components/dashboard/RankingMetasMedalhas.tsx` (duas ocorrências)
+## 2. Front-end
 
-Em cada um: remover imports antigos, importar `isChurnRow`, substituir o bloco `CHURN_STAGE_IDS.has(etapa) || cancel === ...` por `isChurnRow(r)`. Manter o corte por `data_fechamento` onde já existe.
+### Novo hook `useUserRole`
+Retorna `{ role: 'super_admin' | 'admin' | 'viewer' | 'user', isAdmin, isViewer, loading }` consultando `user_roles_operations`. Substitui/estende `useIsAdmin` (mantém compat).
 
-### 3. Tooltips/labels
-- Em `ChurnKpis.tsx` e tooltips relacionadas: atualizar texto de "Pré-Churn + Churn (Sucesso) + Cancelamento (Onboarding)" para "Etapa **Churn** no pipeline **Sucesso** com origem **Onboarding**, por **data de fechamento**".
+### `src/pages/Index.tsx`
+Quando `isViewer === true`:
+- Renderiza apenas `DashboardHeader` mínimo + `<RankingMetasMedalhas rows={allRows} />` + `<RankingVariavelAtivadores rows={allRows} />`.
+- Esconde MacroEstoque, MacroMovimento, filtros, carteira, churn, gestão, AI, etc.
 
-## Não muda
-- `Churn Máximo` continua = 9% do MRR criado no período.
-- `% Churn Real` continua = Churn Real ÷ MRR início do mês (planilha Dados 2026).
-- Estrutura visual dos cards e modal permanece igual.
+### Rotas (`src/App.tsx`)
+Criar guard `ViewerLockRoute` (ou estender `ProtectedRoute`): quando o usuário é `viewer`, qualquer rota diferente de `/` redireciona para `/`. Bloqueia `/minha-carteira`, `/tv`, `/admin`, `/sucesso/*`.
 
-## Validação
-- Conferir contagem/valor no card e no modal de detalhe após o ajuste.
-- Verificar que Rastro Mensal e Rankings refletem a nova base.
+### Navegação
+- `MainNav` e `MobileMainNav`: ocultar todos os itens quando `isViewer` (mostrar só logo + logout).
+- `AreaSwitcher`, `CopilotDrawer`, `PreferencesDialog`: desabilitar/ocultar entradas restritas para viewer.
+
+### Admin UI
+- `src/pages/Admin.tsx` (form de criar/editar operador): adicionar opção "Viewer" no select de role, ao lado de `user` e `admin`. Esconder o campo `agente_ativacao` quando role = `admin` ou `viewer`.
+
+## 3. Validação
+
+- Login com usuário `viewer`: Home mostra somente os dois rankings, navbar limpa, tentativa de acessar `/admin` redireciona para `/`.
+- Consulta a `dash_operacoes` retorna todos os ativadores (RLS).
+- Admin cria novo viewer pelo painel sem precisar informar agente.
+
+## Detalhes técnicos
+
+- O enum existente é `"admin" | "user" | "super_admin"`; adicionar `viewer` exige `ALTER TYPE operations_role ADD VALUE 'viewer'` em migração própria (não pode estar dentro de transação com uso do valor — usar migração isolada).
+- `has_operations_role` hoje trata `super_admin` como admin; manter essa lógica e adicionar branch explícita para viewer (sem herança).
+- `useAtivadorScope.isAtivador` continua `false` para viewer (não é admin, mas também não tem agente) — usar `isViewer` para diferenciar nos componentes.
