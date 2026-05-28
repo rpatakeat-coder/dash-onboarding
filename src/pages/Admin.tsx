@@ -164,6 +164,14 @@ const AdminOperators = () => {
       return toast.error("Informe o agente HubSpot");
     }
     setBusy(true);
+    const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
+    if (refreshErr || !refreshed.session) {
+      setBusy(false);
+      await supabase.auth.signOut();
+      toast.error("Sessão expirada", { description: "Faça login novamente." });
+      window.location.href = "/auth";
+      return;
+    }
     const { data, error } = await supabase.functions.invoke("admin-create-operator", {
       body: {
         email: form.email.trim(),
@@ -176,8 +184,15 @@ const AdminOperators = () => {
     setBusy(false);
     if (error || (data as { error?: string })?.error) {
       const msg = (data as { error?: string })?.error || error?.message;
+      if (typeof msg === "string" && (msg.includes("invalid_token") || msg.includes("missing_auth"))) {
+        await supabase.auth.signOut();
+        toast.error("Sessão expirada", { description: "Faça login novamente." });
+        window.location.href = "/auth";
+        return;
+      }
       return toast.error("Erro ao convidar", { description: typeof msg === "string" ? msg : "falha desconhecida" });
     }
+
     const link =
       (data as { short_link?: string })?.short_link ||
       (data as { action_link?: string })?.action_link ||
