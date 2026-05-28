@@ -111,7 +111,7 @@ interface OperatorRow {
   email: string | null;
   full_name: string | null;
   avatar_url: string | null;
-  role: "admin" | "user" | "super_admin";
+  role: "admin" | "user" | "super_admin" | "viewer";
   agente_ativacao: string | null;
   created_at: string;
   last_sign_in_at: string | null;
@@ -129,7 +129,7 @@ const AdminOperators = () => {
   const [delId, setDelId] = useState<string | null>(null);
   const [resendId, setResendId] = useState<string | null>(null);
   const [inviteLink, setInviteLink] = useState<{ email: string; link: string } | null>(null);
-  const [form, setForm] = useState({ email: "", full_name: "", role: "user" as "admin" | "user", agente_ativacao: "" });
+  const [form, setForm] = useState({ email: "", full_name: "", role: "user" as "admin" | "user" | "viewer", agente_ativacao: "" });
 
   const load = async () => {
     setLoading(true);
@@ -159,7 +159,8 @@ const AdminOperators = () => {
 
   const invite = async (channels: ("email" | "whatsapp" | "link_only")[]) => {
     if (!form.email.trim()) return toast.error("Informe o email");
-    if (form.role !== "admin" && !form.agente_ativacao.trim()) {
+    const requiresAgente = form.role !== "admin" && form.role !== "viewer";
+    if (requiresAgente && !form.agente_ativacao.trim()) {
       return toast.error("Informe o agente HubSpot");
     }
     setBusy(true);
@@ -168,7 +169,7 @@ const AdminOperators = () => {
         email: form.email.trim(),
         full_name: form.full_name.trim() || undefined,
         role: form.role,
-        agente_ativacao: form.role === "admin" ? undefined : form.agente_ativacao,
+        agente_ativacao: requiresAgente ? form.agente_ativacao : undefined,
         channels,
       },
     });
@@ -289,15 +290,15 @@ const AdminOperators = () => {
           </div>
           <div>
             <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
-              Agente HubSpot{form.role === "admin" && <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">(não exigido)</span>}
+              Agente HubSpot{(form.role === "admin" || form.role === "viewer") && <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">(não exigido)</span>}
             </label>
             <select
               value={form.agente_ativacao}
               onChange={(e) => setForm((f) => ({ ...f, agente_ativacao: e.target.value }))}
-              disabled={form.role === "admin"}
+              disabled={form.role === "admin" || form.role === "viewer"}
               className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm disabled:opacity-50"
             >
-              <option value="">{form.role === "admin" ? "—" : "Selecione…"}</option>
+              <option value="">{(form.role === "admin" || form.role === "viewer") ? "—" : "Selecione…"}</option>
               {agentes.map((a) => <option key={a} value={a}>{a}</option>)}
             </select>
           </div>
@@ -305,13 +306,15 @@ const AdminOperators = () => {
             <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">Papel</label>
             <select
               value={form.role}
-              onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as "admin" | "user" }))}
+              onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as "admin" | "user" | "viewer" }))}
               className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
             >
               <option value="user">Usuário</option>
+              <option value="viewer">Viewer (somente rankings)</option>
               {isSuperAdmin && <option value="admin">Admin</option>}
             </select>
           </div>
+
         </div>
         <div className="mt-3 flex justify-end">
           <DropdownMenu>
