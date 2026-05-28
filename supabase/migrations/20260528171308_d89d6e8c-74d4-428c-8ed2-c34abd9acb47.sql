@@ -1,0 +1,1 @@
+ALTER TYPE public.operations_role ADD VALUE IF NOT EXISTS 'viewer';
