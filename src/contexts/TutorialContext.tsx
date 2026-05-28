@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { TutorialOverlay } from "@/components/tutorial/TutorialOverlay";
 import { TUTORIAL_STEPS } from "@/components/tutorial/steps";
@@ -22,6 +23,7 @@ export const TutorialProvider = ({ children }: { children: ReactNode }) => {
   const [active, setActive] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const { session, loading, user } = useAuth();
+  const { isViewer, loading: roleLoading } = useUserRole();
   const location = useLocation();
   const navigate = useNavigate();
   const uid = user?.id ?? null;
@@ -67,7 +69,8 @@ export const TutorialProvider = ({ children }: { children: ReactNode }) => {
 
   // Auto-start only on first access ever for this user (checked once per session per uid)
   useEffect(() => {
-    if (loading || !session || !uid) return;
+    if (loading || roleLoading || !session || !uid) return;
+    if (isViewer) return; // viewers don't see the dashboard tour
     if (checkedRef.current === uid) return;
     checkedRef.current = uid;
 
