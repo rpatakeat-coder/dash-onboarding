@@ -24,6 +24,7 @@ import { GestaoAlerts } from "@/components/dashboard/GestaoAlerts";
 import { TrendByOperator } from "@/components/dashboard/TrendByOperator";
 import { ChurnKpis } from "@/components/dashboard/ChurnKpis";
 import { useAtivadorScope } from "@/hooks/useAtivadorScope";
+import { useUserRole } from "@/hooks/useUserRole";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
 import { useDashOperacoes, parseDate, type PerfilStat } from "@/hooks/useDashOperacoes";
 import type { MacroPeriodKey, CustomRange } from "@/components/dashboard/MacroFilters";
@@ -31,6 +32,7 @@ import type { MacroPeriodKey, CustomRange } from "@/components/dashboard/MacroFi
 const Index = () => {
   const { data, isLoading, error } = useDashOperacoes();
   const { isAdmin, isAtivador, myAgente } = useAtivadorScope();
+  const { isViewer } = useUserRole();
   const [searchParams] = useSearchParams();
   const tab = searchParams.get("tab");
   const isGestao = tab === "gestao" && isAdmin;
