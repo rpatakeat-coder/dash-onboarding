@@ -23,8 +23,8 @@ export const TutorialProvider = ({ children }: { children: ReactNode }) => {
   const [active, setActive] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const { session, loading, user } = useAuth();
-  const { session, loading, user } = useAuth();
   const { isViewer, loading: roleLoading } = useUserRole();
+  const location = useLocation();
   const navigate = useNavigate();
   const uid = user?.id ?? null;
   const checkedRef = useRef<string | null>(null);
