@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Shield, ShieldCheck, ShieldOff, Users, Settings as SettingsIcon, Trash2, Loader2, History, RefreshCw, UserPlus, Mail, Send, Copy, MessageCircle, Link2, Sparkles } from "lucide-react";
+import { Shield, ShieldCheck, ShieldOff, Users, Settings as SettingsIcon, Trash2, Loader2, History, RefreshCw, UserPlus, Mail, Send, Copy, MessageCircle, Link2, Sparkles, Plus, Contact2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
