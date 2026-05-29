@@ -1472,7 +1472,7 @@ const AdminHubspotAgents = () => {
     toast.success("Agente criado");
     await logAudit({
       action: "hubspot_agent.create",
-      entityType: "hubspot_agent",
+      entity_type: "hubspot_agent",
       summary: `Criou agente HubSpot ${name} (ID ${hubspot_id})`,
       metadata: { name, hubspot_id },
     });
@@ -1488,8 +1488,8 @@ const AdminHubspotAgents = () => {
     toast.success("Agente removido");
     await logAudit({
       action: "hubspot_agent.delete",
-      entityType: "hubspot_agent",
-      entityId: row.id,
+      entity_type: "hubspot_agent",
+      entity_id: row.id,
       summary: `Removeu agente HubSpot ${row.name}`,
       metadata: { name: row.name, hubspot_id: row.hubspot_id },
     });
