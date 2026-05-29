@@ -135,20 +135,21 @@ const AdminOperators = () => {
 
   const load = async () => {
     setLoading(true);
-    const [{ data: ops, error: oErr }, { data: ags, error: aErr }] = await Promise.all([
+    const [{ data: ops, error: oErr }, { data: ags, error: aErr }, { data: hsAgents, error: hsErr }] = await Promise.all([
       supabase.rpc("list_operators"),
       supabase.rpc("distinct_agentes_ativacao"),
+      supabase.from("hubspot_agents").select("name"),
     ]);
     setLoading(false);
     if (oErr) return toast.error("Erro ao carregar operadores", { description: oErr.message });
     if (aErr) toast.error("Erro ao carregar agentes", { description: aErr.message });
+    if (hsErr) toast.error("Erro ao carregar agentes HubSpot", { description: hsErr.message });
     setList((ops as OperatorRow[]) ?? []);
     const fromDb = ((ags as { agente: string }[]) ?? []).map((a) => a.agente);
-    // Agentes HubSpot adicionais (não dependem de ter deal cadastrado ainda em dash_operacoes)
-    const extras = ["Kauan Nunes", "Rhamona Sarmento"];
+    const fromTable = ((hsAgents as { name: string }[]) ?? []).map((a) => a.name);
     // Nomes a esconder/normalizar (ex.: grafia antiga "Ramona Sarmento" → usar "Rhamona Sarmento")
     const blocked = new Set(["ramona sarmento"]);
-    const merged = Array.from(new Set([...fromDb, ...extras]))
+    const merged = Array.from(new Set([...fromDb, ...fromTable]))
       .filter((a) => !blocked.has(a.trim().toLowerCase()))
       .sort((a, b) => a.localeCompare(b, "pt-BR"));
     setAgentes(merged);
