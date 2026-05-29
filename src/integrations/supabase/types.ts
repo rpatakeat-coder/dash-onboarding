@@ -383,6 +383,33 @@ export type Database = {
         }
         Relationships: []
       }
+      hubspot_agents: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          hubspot_id: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          hubspot_id: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          hubspot_id?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       "Leads Criados Hubspot": {
         Row: {
           data_criacao: string | null
