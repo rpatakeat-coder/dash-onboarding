@@ -1428,4 +1428,162 @@ const AdminAuditoria = () => {
   );
 };
 
+
+// ============ HUBSPOT AGENTS ============
+interface HubspotAgentRow {
+  id: string;
+  name: string;
+  hubspot_id: string;
+  created_at: string;
+}
+
+const AdminHubspotAgents = () => {
+  const { user } = useAuth();
+  const [rows, setRows] = useState<HubspotAgentRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [delId, setDelId] = useState<string | null>(null);
+  const [form, setForm] = useState({ name: "", hubspot_id: "" });
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("hubspot_agents")
+      .select("id, name, hubspot_id, created_at")
+      .order("name", { ascending: true });
+    setLoading(false);
+    if (error) return toast.error("Erro ao carregar agentes", { description: error.message });
+    setRows((data as HubspotAgentRow[]) ?? []);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const create = async () => {
+    const name = form.name.trim();
+    const hubspot_id = form.hubspot_id.trim();
+    if (!name) return toast.error("Informe o nome do agente");
+    if (!hubspot_id) return toast.error("Informe o ID do HubSpot");
+    setBusy(true);
+    const { error } = await supabase
+      .from("hubspot_agents")
+      .insert({ name, hubspot_id, created_by: user?.id ?? null });
+    setBusy(false);
+    if (error) return toast.error("Erro ao criar agente", { description: error.message });
+    toast.success("Agente criado");
+    await logAudit({
+      action: "hubspot_agent.create",
+      entityType: "hubspot_agent",
+      summary: `Criou agente HubSpot ${name} (ID ${hubspot_id})`,
+      metadata: { name, hubspot_id },
+    });
+    setForm({ name: "", hubspot_id: "" });
+    load();
+  };
+
+  const remove = async (row: HubspotAgentRow) => {
+    setDelId(row.id);
+    const { error } = await supabase.from("hubspot_agents").delete().eq("id", row.id);
+    setDelId(null);
+    if (error) return toast.error("Erro ao remover", { description: error.message });
+    toast.success("Agente removido");
+    await logAudit({
+      action: "hubspot_agent.delete",
+      entityType: "hubspot_agent",
+      entityId: row.id,
+      summary: `Removeu agente HubSpot ${row.name}`,
+      metadata: { name: row.name, hubspot_id: row.hubspot_id },
+    });
+    load();
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <h2 className="font-display text-lg font-semibold text-secondary">Novo agente HubSpot</h2>
+        <p className="mt-1 font-small text-sm text-muted-foreground">
+          Cadastre o nome do agente e o respectivo ID do HubSpot. O nome ficará disponível para vincular a operadores.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+          <div>
+            <label className="mb-1 block font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Nome</label>
+            <Input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder="Ex.: Kauan Nunes"
+              disabled={busy}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block font-subtitle text-xs uppercase tracking-wider text-muted-foreground">ID HubSpot</label>
+            <Input
+              value={form.hubspot_id}
+              onChange={(e) => setForm((f) => ({ ...f, hubspot_id: e.target.value }))}
+              placeholder="Ex.: 12345678"
+              disabled={busy}
+            />
+          </div>
+          <div className="flex items-end">
+            <Button onClick={create} disabled={busy} className="gap-2">
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              Adicionar
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card shadow-sm">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <h2 className="font-display text-lg font-semibold text-secondary">Agentes cadastrados</h2>
+          <Button variant="ghost" size="sm" onClick={load} disabled={loading} className="gap-1.5">
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Atualizar
+          </Button>
+        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : rows.length === 0 ? (
+          <p className="px-5 py-8 text-center font-small text-sm text-muted-foreground">Nenhum agente cadastrado ainda.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-muted/40 text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider">Nome</th>
+                  <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider">ID HubSpot</th>
+                  <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider">Criado em</th>
+                  <th className="px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.id} className="border-t border-border">
+                    <td className="px-4 py-3 text-foreground">{r.name}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-foreground">{r.hubspot_id}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {new Date(r.created_at).toLocaleString("pt-BR")}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => remove(r)}
+                        disabled={delId === r.id}
+                        className="gap-1.5 text-destructive hover:text-destructive"
+                      >
+                        {delId === r.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                        Remover
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default Admin;
