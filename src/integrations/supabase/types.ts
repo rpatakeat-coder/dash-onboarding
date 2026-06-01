@@ -110,6 +110,7 @@ export type Database = {
           etapa_negocio: string | null
           id_deal: number
           mes_ano_ativacao: string | null
+          mes_ano_criacao: string | null
           mrr: string | null
           mrr_asaas: string | null
           nome_negocio: string | null
@@ -131,6 +132,7 @@ export type Database = {
           etapa_negocio?: string | null
           id_deal: number
           mes_ano_ativacao?: string | null
+          mes_ano_criacao?: string | null
           mrr?: string | null
           mrr_asaas?: string | null
           nome_negocio?: string | null
@@ -152,6 +154,7 @@ export type Database = {
           etapa_negocio?: string | null
           id_deal?: number
           mes_ano_ativacao?: string | null
+          mes_ano_criacao?: string | null
           mrr?: string | null
           mrr_asaas?: string | null
           nome_negocio?: string | null
@@ -164,42 +167,210 @@ export type Database = {
         }
         Relationships: []
       }
-      dash_operacoes_backup: {
+      dash_operacoes_bkp_20260530: {
         Row: {
           agente_ativacao: string | null
+          asaas_id: string | null
+          data_ativacao: string | null
           data_criacao: string | null
           data_entrada_fase: string | null
+          data_fechamento: string | null
+          etapa_de_cancelamento: string | null
           etapa_negocio: string | null
           id_deal: number | null
+          mes_ano_ativacao: string | null
+          mes_ano_criacao: string | null
           mrr: string | null
+          mrr_asaas: string | null
           nome_negocio: string | null
           perfil_cliente: string | null
+          pipeline_nome: string | null
           sla_dias_criacao: string | null
           sla_dias_etapa: string | null
+          sla_dias_real: string | null
+          tempo_pausado_dias: string | null
         }
         Insert: {
           agente_ativacao?: string | null
+          asaas_id?: string | null
+          data_ativacao?: string | null
           data_criacao?: string | null
           data_entrada_fase?: string | null
+          data_fechamento?: string | null
+          etapa_de_cancelamento?: string | null
           etapa_negocio?: string | null
           id_deal?: number | null
+          mes_ano_ativacao?: string | null
+          mes_ano_criacao?: string | null
           mrr?: string | null
+          mrr_asaas?: string | null
           nome_negocio?: string | null
           perfil_cliente?: string | null
+          pipeline_nome?: string | null
           sla_dias_criacao?: string | null
           sla_dias_etapa?: string | null
+          sla_dias_real?: string | null
+          tempo_pausado_dias?: string | null
         }
         Update: {
           agente_ativacao?: string | null
+          asaas_id?: string | null
+          data_ativacao?: string | null
           data_criacao?: string | null
           data_entrada_fase?: string | null
+          data_fechamento?: string | null
+          etapa_de_cancelamento?: string | null
           etapa_negocio?: string | null
           id_deal?: number | null
+          mes_ano_ativacao?: string | null
+          mes_ano_criacao?: string | null
           mrr?: string | null
+          mrr_asaas?: string | null
           nome_negocio?: string | null
           perfil_cliente?: string | null
+          pipeline_nome?: string | null
           sla_dias_criacao?: string | null
           sla_dias_etapa?: string | null
+          sla_dias_real?: string | null
+          tempo_pausado_dias?: string | null
+        }
+        Relationships: []
+      }
+      dash_operacoes_bkp_20260531: {
+        Row: {
+          agente_ativacao: string | null
+          asaas_id: string | null
+          data_ativacao: string | null
+          data_criacao: string | null
+          data_entrada_fase: string | null
+          data_fechamento: string | null
+          etapa_de_cancelamento: string | null
+          etapa_negocio: string | null
+          id_deal: number | null
+          mes_ano_ativacao: string | null
+          mes_ano_criacao: string | null
+          mrr: string | null
+          mrr_asaas: string | null
+          nome_negocio: string | null
+          perfil_cliente: string | null
+          pipeline_nome: string | null
+          sla_dias_criacao: string | null
+          sla_dias_etapa: string | null
+          sla_dias_real: string | null
+          tempo_pausado_dias: string | null
+        }
+        Insert: {
+          agente_ativacao?: string | null
+          asaas_id?: string | null
+          data_ativacao?: string | null
+          data_criacao?: string | null
+          data_entrada_fase?: string | null
+          data_fechamento?: string | null
+          etapa_de_cancelamento?: string | null
+          etapa_negocio?: string | null
+          id_deal?: number | null
+          mes_ano_ativacao?: string | null
+          mes_ano_criacao?: string | null
+          mrr?: string | null
+          mrr_asaas?: string | null
+          nome_negocio?: string | null
+          perfil_cliente?: string | null
+          pipeline_nome?: string | null
+          sla_dias_criacao?: string | null
+          sla_dias_etapa?: string | null
+          sla_dias_real?: string | null
+          tempo_pausado_dias?: string | null
+        }
+        Update: {
+          agente_ativacao?: string | null
+          asaas_id?: string | null
+          data_ativacao?: string | null
+          data_criacao?: string | null
+          data_entrada_fase?: string | null
+          data_fechamento?: string | null
+          etapa_de_cancelamento?: string | null
+          etapa_negocio?: string | null
+          id_deal?: number | null
+          mes_ano_ativacao?: string | null
+          mes_ano_criacao?: string | null
+          mrr?: string | null
+          mrr_asaas?: string | null
+          nome_negocio?: string | null
+          perfil_cliente?: string | null
+          pipeline_nome?: string | null
+          sla_dias_criacao?: string | null
+          sla_dias_etapa?: string | null
+          sla_dias_real?: string | null
+          tempo_pausado_dias?: string | null
+        }
+        Relationships: []
+      }
+      dash_operacoes_bkp_20260601: {
+        Row: {
+          agente_ativacao: string | null
+          asaas_id: string | null
+          data_ativacao: string | null
+          data_criacao: string | null
+          data_entrada_fase: string | null
+          data_fechamento: string | null
+          etapa_de_cancelamento: string | null
+          etapa_negocio: string | null
+          id_deal: number | null
+          mes_ano_ativacao: string | null
+          mes_ano_criacao: string | null
+          mrr: string | null
+          mrr_asaas: string | null
+          nome_negocio: string | null
+          perfil_cliente: string | null
+          pipeline_nome: string | null
+          sla_dias_criacao: string | null
+          sla_dias_etapa: string | null
+          sla_dias_real: string | null
+          tempo_pausado_dias: string | null
+        }
+        Insert: {
+          agente_ativacao?: string | null
+          asaas_id?: string | null
+          data_ativacao?: string | null
+          data_criacao?: string | null
+          data_entrada_fase?: string | null
+          data_fechamento?: string | null
+          etapa_de_cancelamento?: string | null
+          etapa_negocio?: string | null
+          id_deal?: number | null
+          mes_ano_ativacao?: string | null
+          mes_ano_criacao?: string | null
+          mrr?: string | null
+          mrr_asaas?: string | null
+          nome_negocio?: string | null
+          perfil_cliente?: string | null
+          pipeline_nome?: string | null
+          sla_dias_criacao?: string | null
+          sla_dias_etapa?: string | null
+          sla_dias_real?: string | null
+          tempo_pausado_dias?: string | null
+        }
+        Update: {
+          agente_ativacao?: string | null
+          asaas_id?: string | null
+          data_ativacao?: string | null
+          data_criacao?: string | null
+          data_entrada_fase?: string | null
+          data_fechamento?: string | null
+          etapa_de_cancelamento?: string | null
+          etapa_negocio?: string | null
+          id_deal?: number | null
+          mes_ano_ativacao?: string | null
+          mes_ano_criacao?: string | null
+          mrr?: string | null
+          mrr_asaas?: string | null
+          nome_negocio?: string | null
+          perfil_cliente?: string | null
+          pipeline_nome?: string | null
+          sla_dias_criacao?: string | null
+          sla_dias_etapa?: string | null
+          sla_dias_real?: string | null
+          tempo_pausado_dias?: string | null
         }
         Relationships: []
       }
@@ -733,6 +904,7 @@ export type Database = {
       }
     }
     Functions: {
+      backup_dash_operacoes: { Args: never; Returns: undefined }
       claim_first_admin: { Args: never; Returns: boolean }
       current_user_agente: { Args: never; Returns: string }
       distinct_agentes_ativacao: {
