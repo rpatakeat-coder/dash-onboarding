@@ -339,9 +339,12 @@ export const RastroMensal = ({ rows }: Props) => {
                 % Churn Onboarding
               </td>
               {data.map((m) => {
+                const noData = m.pctChurn == null;
                 const tone = m.isFuture
                   ? "text-muted-foreground/50"
-                  : m.pctChurn > 9
+                  : noData
+                  ? "text-muted-foreground"
+                  : (m.pctChurn as number) > 9
                   ? "text-destructive font-semibold"
                   : m.isCurrent
                   ? "text-primary font-semibold"
@@ -355,7 +358,7 @@ export const RastroMensal = ({ rows }: Props) => {
                       m.isCurrent && "bg-primary/5",
                     )}
                   >
-                    {m.isFuture ? "—" : fmtPct(m.pctChurn)}
+                    {m.isFuture || noData ? "—" : fmtPct(m.pctChurn as number)}
                   </td>
                 );
               })}
