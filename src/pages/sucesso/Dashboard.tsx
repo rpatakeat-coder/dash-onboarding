@@ -1,12 +1,15 @@
 import { LayoutDashboard, Users, DollarSign, UserCheck, Building2 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
-import { useSucessoOverviewView, fmtBRL, fmtPct } from "@/hooks/useDashSucesso";
+import { CarteiraPorAgente } from "@/components/sucesso/CarteiraPorAgente";
+import { useDashSucesso, useSucessoOverviewView, fmtBRL, fmtPct } from "@/hooks/useDashSucesso";
 
 export default function SucessoDashboard() {
   const { data, isLoading, error } = useSucessoOverviewView();
+  const { carteira } = useDashSucesso();
 
   const pct = (a: number, b: number) => (b > 0 ? (a / b) * 100 : 0);
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -156,6 +159,15 @@ export default function SucessoDashboard() {
             </p>
           )}
         </section>
+
+        <section className="space-y-3">
+          <CarteiraPorAgente
+            agentes={carteira}
+            totalClientes={data?.total_clientes ?? 0}
+            totalMrr={data?.mrr_total ?? 0}
+          />
+        </section>
+
       </main>
     </div>
   );

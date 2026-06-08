@@ -90,6 +90,9 @@ export interface CarteiraAgente {
   qtdPM: number;
   qtdGGG: number;
   qtdSemPerfil: number;
+  mrrPM: number;
+  mrrGGG: number;
+  mrrSemPerfil: number;
   pctCarteira: number;
   pctMrr: number;
 }
@@ -102,16 +105,21 @@ export const selectCarteira = (rows: DashSucessoRow[]): CarteiraAgente[] => {
   for (const r of ativos) {
     const a = r.agente_sucesso?.trim() || "Sem responsável";
     const cur = map.get(a) ?? {
-      agente: a, clientes: 0, mrr: 0, qtdPM: 0, qtdGGG: 0, qtdSemPerfil: 0, pctCarteira: 0, pctMrr: 0,
+      agente: a, clientes: 0, mrr: 0,
+      qtdPM: 0, qtdGGG: 0, qtdSemPerfil: 0,
+      mrrPM: 0, mrrGGG: 0, mrrSemPerfil: 0,
+      pctCarteira: 0, pctMrr: 0,
     };
+    const m = num(r.mrr);
     cur.clientes++;
-    cur.mrr += num(r.mrr);
+    cur.mrr += m;
     const g = grupoPerfil(r.perfil_cliente);
-    if (g === "P+M") cur.qtdPM++;
-    else if (g === "G+GG") cur.qtdGGG++;
-    else cur.qtdSemPerfil++;
+    if (g === "P+M") { cur.qtdPM++; cur.mrrPM += m; }
+    else if (g === "G+GG") { cur.qtdGGG++; cur.mrrGGG += m; }
+    else { cur.qtdSemPerfil++; cur.mrrSemPerfil += m; }
     map.set(a, cur);
   }
+
   const totalClientes = ativos.length;
   const totalMrr = ativos.reduce((s, r) => s + num(r.mrr), 0);
   return Array.from(map.values())
