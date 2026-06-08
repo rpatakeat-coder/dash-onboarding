@@ -199,15 +199,53 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
         </div>
       </div>
 
+      {/* Chip de filtro ativo local */}
+      {hasLocalFilter && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+            Filtros desta seção:
+          </span>
+          {perfilSel && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+              Perfil: {perfilSel}
+              <button onClick={() => setPerfilSel(null)} className="text-primary/70 hover:text-primary" aria-label="remover">✕</button>
+            </span>
+          )}
+          {agenteSel && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+              Agente: {agenteSel}
+              <button onClick={() => setAgenteSel(null)} className="text-primary/70 hover:text-primary" aria-label="remover">✕</button>
+            </span>
+          )}
+          <button
+            onClick={clearLocalFilters}
+            className="rounded-full border border-border bg-card px-2.5 py-0.5 text-xs text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          >
+            limpar tudo
+          </button>
+        </div>
+      )}
+
       {/* KPIs principais */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <KpiCard
-          label="Churn de MRR (bruto)"
-          value={fmtBRL(stats.mrr)}
-          icon={DollarSign}
-          tone="warning"
-          hint={`${fmtN(stats.qtd)} deal${stats.qtd === 1 ? "" : "s"} fechado${stats.qtd === 1 ? "" : "s"} no mês`}
-        />
+        <button
+          type="button"
+          onClick={clearLocalFilters}
+          aria-pressed={!hasLocalFilter}
+          className={cn(
+            "text-left rounded-2xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+            !hasLocalFilter ? "ring-1 ring-primary/20" : "hover:-translate-y-0.5",
+          )}
+          title={hasLocalFilter ? "Limpar filtros da seção" : "Sem filtro local ativo"}
+        >
+          <KpiCard
+            label="Churn de MRR (bruto)"
+            value={fmtBRL(stats.mrr)}
+            icon={DollarSign}
+            tone="warning"
+            hint={`${fmtN(stats.qtd)} deal${stats.qtd === 1 ? "" : "s"} fechado${stats.qtd === 1 ? "" : "s"} no mês`}
+          />
+        </button>
         <KpiCard
           label="% de Churn"
           value={pctChurn !== null ? `${pctChurn.toFixed(2).replace(".", ",")}%` : sheetLoading ? "…" : "—"}
