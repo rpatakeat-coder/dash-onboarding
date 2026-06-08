@@ -269,14 +269,95 @@ export const useSucessoOverviewView = () =>
     staleTime: 1000 * 60 * 5,
   });
 
-export const useDashSucesso = () => {
+// ---------- Filtros compartilhados (espelha Onboarding) ----------
+
+export type SucessoPeriodKey =
+  | "tudo" | "hoje" | "semana" | "mes" | "trimestre" | "custom";
+
+export interface SucessoFilter {
+  /** Whitelist de agentes; vazio = todos */
+  agentes?: Set<string>;
+  /** Etapas a OCULTAR (mesmo comportamento do "Ocultar fase" do Onboarding) */
+  ocultarEtapas?: Set<string>;
+  periodo?: SucessoPeriodKey;
+  customRange?: { start: Date; end: Date } | null;
+}
+
+const parseDateLoose = (s: string | null | undefined): Date | null => {
+  if (!s) return null;
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
+/** Janela de data para o período selecionado. Retorna null quando "tudo". */
+export const getSucessoPeriodRange = (
+  periodo: SucessoPeriodKey = "tudo",
+  customRange?: { start: Date; end: Date } | null,
+): { start: Date; end: Date } | null => {
+  if (periodo === "tudo") return null;
+  if (periodo === "custom") return customRange ?? null;
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const end = new Date(start);
+  if (periodo === "hoje") {
+    end.setDate(end.getDate() + 1);
+  } else if (periodo === "semana") {
+    const dow = start.getDay();
+    start.setDate(start.getDate() - dow);
+    end.setTime(start.getTime());
+    end.setDate(end.getDate() + 7);
+  } else if (periodo === "mes") {
+    start.setDate(1);
+    end.setTime(start.getTime());
+    end.setMonth(end.getMonth() + 1);
+  } else if (periodo === "trimestre") {
+    const q = Math.floor(start.getMonth() / 3) * 3;
+    start.setMonth(q, 1);
+    end.setTime(start.getTime());
+    end.setMonth(end.getMonth() + 3);
+  }
+  return { start, end };
+};
+
+/**
+ * Aplica o filtro compartilhado ao conjunto de rows.
+ * Período usa data_entrada_fase como referência (fallback data_fechamento).
+ */
+export const applySucessoFilter = (
+  rows: DashSucessoRow[],
+  filter: SucessoFilter = {},
+): DashSucessoRow[] => {
+  const range = getSucessoPeriodRange(filter.periodo, filter.customRange);
+  const ag = filter.agentes && filter.agentes.size > 0 ? filter.agentes : null;
+  const oc = filter.ocultarEtapas && filter.ocultarEtapas.size > 0 ? filter.ocultarEtapas : null;
+  if (!ag && !oc && !range) return rows;
+  return rows.filter((r) => {
+    if (ag) {
+      const a = r.agente_sucesso?.trim() || "Sem responsável";
+      if (!ag.has(a)) return false;
+    }
+    if (oc) {
+      const e = r.etapa_negocio?.trim() || "Sem etapa";
+      if (oc.has(e)) return false;
+    }
+    if (range) {
+      const d = parseDateLoose(r.data_entrada_fase) ?? parseDateLoose(r.data_fechamento);
+      if (!d) return false;
+      if (d < range.start || d >= range.end) return false;
+    }
+    return true;
+  });
+};
+
+export const useDashSucesso = (filter?: SucessoFilter) => {
   const query = useQuery({
     queryKey: ["dash_sucesso"],
     queryFn: fetchDashSucesso,
     staleTime: 1000 * 60 * 5,
   });
 
-  const rows = useMemo(() => query.data ?? [], [query.data]);
+  const rowsRaw = useMemo(() => query.data ?? [], [query.data]);
+  const rows = useMemo(() => applySucessoFilter(rowsRaw, filter), [rowsRaw, filter]);
   const overview = useMemo(() => selectOverview(rows), [rows]);
   const carteira = useMemo(() => selectCarteira(rows), [rows]);
   const risco = useMemo(() => selectRisco(rows), [rows]);
@@ -284,10 +365,12 @@ export const useDashSucesso = () => {
 
   return {
     ...query,
-    rows,
+    rows,        // já filtrados — usar em todos os blocos
+    rowsRaw,     // base sem filtro — útil para opções de filtro (listas de agentes/etapas)
     overview,
     carteira,
     risco,
     churn,
   };
 };
+
