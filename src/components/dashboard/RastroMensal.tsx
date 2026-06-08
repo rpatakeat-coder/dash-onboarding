@@ -100,8 +100,21 @@ export const RastroMensal = ({ rows }: Props) => {
     return months.map((m, i) => {
       const denomAtivacao = i === 0 ? mrrCriadoDezAnt : months[i - 1].mrrCriado;
       const pctAtivacao = denomAtivacao > 0 ? (m.mrrAtivado / denomAtivacao) * 100 : 0;
+      // Jan–Mai/2026: valores fixos informados manualmente. Jun em diante: calculado.
+      const PCT_CHURN_FIXOS_2026: Record<number, number> = {
+        0: 1.24, // Janeiro
+        1: 1.29, // Fevereiro
+        2: 1.69, // Março
+        3: 1.39, // Abril
+        4: 2.02, // Maio
+      };
       const mrrBase = mrrBaseByMonth[i];
-      const pctChurn = mrrBase != null && mrrBase > 0 ? (m.churnMrr / mrrBase) * 100 : null;
+      const pctChurn =
+        year === 2026 && PCT_CHURN_FIXOS_2026[i] !== undefined
+          ? PCT_CHURN_FIXOS_2026[i]
+          : mrrBase != null && mrrBase > 0
+          ? (m.churnMrr / mrrBase) * 100
+          : null;
       const totalPerfil = m.pmCount + m.ggCount;
       const pctPm = totalPerfil > 0 ? (m.pmCount / totalPerfil) * 100 : 0;
       const pctGg = totalPerfil > 0 ? (m.ggCount / totalPerfil) * 100 : 0;
