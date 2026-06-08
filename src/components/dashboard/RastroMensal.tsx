@@ -100,7 +100,8 @@ export const RastroMensal = ({ rows }: Props) => {
     return months.map((m, i) => {
       const denomAtivacao = i === 0 ? mrrCriadoDezAnt : months[i - 1].mrrCriado;
       const pctAtivacao = denomAtivacao > 0 ? (m.mrrAtivado / denomAtivacao) * 100 : 0;
-      const pctChurn = m.mrrCriado > 0 ? (m.churnMrr / m.mrrCriado) * 100 : 0;
+      const mrrBase = mrrBaseByMonth[i];
+      const pctChurn = mrrBase != null && mrrBase > 0 ? (m.churnMrr / mrrBase) * 100 : null;
       const totalPerfil = m.pmCount + m.ggCount;
       const pctPm = totalPerfil > 0 ? (m.pmCount / totalPerfil) * 100 : 0;
       const pctGg = totalPerfil > 0 ? (m.ggCount / totalPerfil) * 100 : 0;
