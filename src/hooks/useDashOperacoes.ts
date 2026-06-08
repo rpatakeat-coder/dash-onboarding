@@ -47,7 +47,7 @@ export function isChurnRow(r: {
 export interface ChurnKpis {
   /** 9% do MRR dos deals criados no mês vigente (referência de meta). */
   churnMaximo: number;
-  /** MRR dos deals em Pré-Churn/Churn/Cancelamento com data_fechamento no mês vigente. */
+  /** MRR dos deals em etapa "Churn" (pipeline Sucesso, origem Onboarding) com data_fechamento no mês vigente. */
   churnReal: number;
   /** Quantidade de deals em Churn Real. */
   churnRealCount: number;
