@@ -53,6 +53,7 @@ const Shell = () => {
           <Route path="/sucesso/kanban" element={<ProtectedRoute><AdminOnlyRoute><SucessoKanban /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="/sucesso/gestor" element={<ProtectedRoute><AdminOnlyRoute><SucessoGestor /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="/sucesso/config" element={<ProtectedRoute><AdminOnlyRoute><SucessoConfig /></AdminOnlyRoute></ProtectedRoute>} />
+          <Route path="/sucesso/mgm" element={<ProtectedRoute><AdminOnlyRoute><SucessoMgm /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </PageTransition>
