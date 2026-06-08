@@ -313,7 +313,7 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
         </div>
       </div>
 
-      {/* Segmentação por perfil */}
+      {/* Segmentação por perfil — clicáveis (toggle) */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <PerfilChurnCard
           label="Churn P+M"
@@ -323,6 +323,8 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
           qtdDen={qtdPMTotal}
           mrrDen={mrrPMTotal}
           tone="secondary"
+          active={perfilSel === "P+M"}
+          onClick={() => togglePerfil("P+M")}
         />
         <PerfilChurnCard
           label="Churn G+GG"
@@ -332,6 +334,8 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
           qtdDen={qtdGGGTotal}
           mrrDen={mrrGGGTotal}
           tone="primary"
+          active={perfilSel === "G+GG"}
+          onClick={() => togglePerfil("G+GG")}
         />
       </div>
 
@@ -346,7 +350,8 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
               Ranking de churn por agente
             </h3>
             <p className="font-small text-xs text-muted-foreground">
-              Ordenado por MRR perdido (desc) — top motivos por agente
+              Clique numa linha para filtrar a lista detalhada abaixo.
+              {perfilSel && <> Recorte atual: <strong>{perfilSel}</strong>.</>}
             </p>
           </div>
         </div>
@@ -363,20 +368,99 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {ranking.map((r, i) => (
-                <tr key={r.agente} className="hover:bg-muted/30">
-                  <td className="px-3 py-2.5 font-numeric text-muted-foreground">{i + 1}</td>
-                  <td className="px-3 py-2.5 font-medium text-foreground">{r.agente}</td>
-                  <td className="px-3 py-2.5 text-right font-numeric">{fmtN(r.qtd)}</td>
-                  <td className="px-3 py-2.5 text-right font-numeric font-semibold">{fmtBRL(r.mrr)}</td>
-                  <td className="px-3 py-2.5 text-right font-numeric">{fmtPct(r.pctRep, 1)}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{r.motivos}</td>
-                </tr>
-              ))}
+              {ranking.map((r, i) => {
+                const isActive = agenteSel === r.agente;
+                return (
+                  <tr
+                    key={r.agente}
+                    onClick={() => toggleAgente(r.agente)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleAgente(r.agente);
+                      }
+                    }}
+                    aria-pressed={isActive}
+                    className={cn(
+                      "cursor-pointer transition",
+                      isActive ? "bg-primary/10 hover:bg-primary/15" : "hover:bg-muted/30",
+                    )}
+                  >
+                    <td className="px-3 py-2.5 font-numeric text-muted-foreground">{i + 1}</td>
+                    <td className="px-3 py-2.5 font-medium text-foreground">
+                      {isActive && <span className="mr-1.5 text-primary">●</span>}
+                      {r.agente}
+                    </td>
+                    <td className="px-3 py-2.5 text-right font-numeric">{fmtN(r.qtd)}</td>
+                    <td className="px-3 py-2.5 text-right font-numeric font-semibold">{fmtBRL(r.mrr)}</td>
+                    <td className="px-3 py-2.5 text-right font-numeric">{fmtPct(r.pctRep, 1)}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground">{r.motivos}</td>
+                  </tr>
+                );
+              })}
               {!ranking.length && (
                 <tr>
                   <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground">
                     Nenhum churn no período selecionado.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Lista detalhada — filtrada pelos filtros locais (perfil + agente) */}
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm-soft sm:p-6">
+        <div className="mb-4 flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-display text-base font-semibold text-secondary">
+              Lista detalhada
+            </h3>
+            <p className="font-small text-xs text-muted-foreground">
+              {fmtN(filteredRows.length)} deal{filteredRows.length === 1 ? "" : "s"} ·{" "}
+              {fmtBRL(filteredRows.reduce((s, r) => s + num(r.mrr), 0))} em MRR perdido
+              {hasLocalFilter && " (filtrado)"}
+            </p>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead className="bg-muted/50">
+              <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
+                <th className="px-3 py-2 text-left">Cliente</th>
+                <th className="px-3 py-2 text-left">Perfil</th>
+                <th className="px-3 py-2 text-left">Agente</th>
+                <th className="px-3 py-2 text-left">Motivo</th>
+                <th className="px-3 py-2 text-right">MRR</th>
+                <th className="px-3 py-2 text-right">Fechado em</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filteredRows
+                .slice()
+                .sort((a, b) => num(b.mrr) - num(a.mrr))
+                .map((r) => (
+                  <tr key={r.id_deal ?? r.asaas_id ?? r.nome_negocio} className="hover:bg-muted/30">
+                    <td className="px-3 py-2.5 font-medium text-foreground">{r.nome_negocio ?? "—"}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground">{r.perfil_cliente ?? "—"}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground">{r.agente_sucesso?.trim() || "Sem responsável"}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground">{r.etapa_de_cancelamento?.trim() || "—"}</td>
+                    <td className="px-3 py-2.5 text-right font-numeric font-semibold">{fmtBRL(num(r.mrr))}</td>
+                    <td className="px-3 py-2.5 text-right font-numeric text-muted-foreground">
+                      {r.data_fechamento ? new Date(r.data_fechamento).toLocaleDateString("pt-BR") : "—"}
+                    </td>
+                  </tr>
+                ))}
+              {!filteredRows.length && (
+                <tr>
+                  <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground">
+                    Nenhum deal corresponde aos filtros desta seção.
                   </td>
                 </tr>
               )}
