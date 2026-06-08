@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CalendarRange } from "lucide-react";
 import {
   fmtBRL,
@@ -10,6 +10,7 @@ import {
 } from "@/hooks/useDashOperacoes";
 import { InfoTooltip } from "./InfoTooltip";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   rows: DashRow[];
@@ -29,6 +30,25 @@ export const RastroMensal = ({ rows }: Props) => {
   const now = new Date();
   const year = now.getFullYear();
   const currentMonth = now.getMonth();
+
+  const [mrrBaseByMonth, setMrrBaseByMonth] = useState<(number | null)[]>(() => Array(12).fill(null));
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("churn-real-sheet");
+        if (error) return;
+        if (data?.error) return;
+        if (Array.isArray(data?.mrrBaseByMonth)) {
+          setMrrBaseByMonth(
+            data.mrrBaseByMonth.map((v: unknown) => (typeof v === "number" ? v : null)),
+          );
+        }
+      } catch {
+        // silencioso — célula mostrará "—"
+      }
+    })();
+  }, []);
 
   const data = useMemo(() => {
     const months = Array.from({ length: 12 }, (_, m) => ({
@@ -80,7 +100,8 @@ export const RastroMensal = ({ rows }: Props) => {
     return months.map((m, i) => {
       const denomAtivacao = i === 0 ? mrrCriadoDezAnt : months[i - 1].mrrCriado;
       const pctAtivacao = denomAtivacao > 0 ? (m.mrrAtivado / denomAtivacao) * 100 : 0;
-      const pctChurn = m.mrrCriado > 0 ? (m.churnMrr / m.mrrCriado) * 100 : 0;
+      const mrrBase = mrrBaseByMonth[i];
+      const pctChurn = mrrBase != null && mrrBase > 0 ? (m.churnMrr / mrrBase) * 100 : null;
       const totalPerfil = m.pmCount + m.ggCount;
       const pctPm = totalPerfil > 0 ? (m.pmCount / totalPerfil) * 100 : 0;
       const pctGg = totalPerfil > 0 ? (m.ggCount / totalPerfil) * 100 : 0;
@@ -100,7 +121,7 @@ export const RastroMensal = ({ rows }: Props) => {
         isFuture: i > currentMonth,
       };
     });
-  }, [rows, year, currentMonth]);
+  }, [rows, year, currentMonth, mrrBaseByMonth]);
 
 
 
@@ -123,7 +144,7 @@ export const RastroMensal = ({ rows }: Props) => {
             <h2 className="font-display text-base font-semibold text-secondary">
               Como cada mês fechou · jan → dez/{year}
             </h2>
-            <InfoTooltip text='Linha por métrica · coluna por mês. % MRR Ativado = MRR Ativado do mês ÷ MRR Criado do mês anterior × 100. % Churn Onboarding = MRR de deals em etapa "Churn" (pipeline Sucesso, origem Onboarding) fechados no mês ÷ MRR criado no mês × 100.' />
+            <InfoTooltip text='Linha por métrica · coluna por mês. % MRR Ativado = MRR Ativado do mês ÷ MRR Criado do mês anterior × 100. % Churn Onboarding = MRR de deals em etapa "Churn" (pipeline Sucesso, origem Onboarding) fechados no mês ÷ MRR de início do mês (planilha Dados 2026) × 100.' />
           </div>
         </div>
         <CalendarRange className="h-5 w-5 text-primary/70" />
@@ -318,9 +339,12 @@ export const RastroMensal = ({ rows }: Props) => {
                 % Churn Onboarding
               </td>
               {data.map((m) => {
+                const noData = m.pctChurn == null;
                 const tone = m.isFuture
                   ? "text-muted-foreground/50"
-                  : m.pctChurn > 9
+                  : noData
+                  ? "text-muted-foreground"
+                  : (m.pctChurn as number) > 9
                   ? "text-destructive font-semibold"
                   : m.isCurrent
                   ? "text-primary font-semibold"
@@ -334,7 +358,7 @@ export const RastroMensal = ({ rows }: Props) => {
                       m.isCurrent && "bg-primary/5",
                     )}
                   >
-                    {m.isFuture ? "—" : fmtPct(m.pctChurn)}
+                    {m.isFuture || noData ? "—" : fmtPct(m.pctChurn as number)}
                   </td>
                 );
               })}
@@ -345,7 +369,8 @@ export const RastroMensal = ({ rows }: Props) => {
 
       <p className="mt-3 font-small text-[11px] text-muted-foreground">
         Mês destacado = mês corrente · meses futuros aparecem em cinza. % Ativação usa MRR Criado do mês
-        anterior como denominador. % Churn supera meta quando &gt; 9%.
+        anterior como denominador. % Churn usa MRR de início do mês (planilha Dados 2026) como denominador
+        e supera meta quando &gt; 9%.
       </p>
     </section>
   );
