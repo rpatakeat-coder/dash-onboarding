@@ -369,7 +369,8 @@ export const RastroMensal = ({ rows }: Props) => {
 
       <p className="mt-3 font-small text-[11px] text-muted-foreground">
         Mês destacado = mês corrente · meses futuros aparecem em cinza. % Ativação usa MRR Criado do mês
-        anterior como denominador. % Churn supera meta quando &gt; 9%.
+        anterior como denominador. % Churn usa MRR de início do mês (planilha Dados 2026) como denominador
+        e supera meta quando &gt; 9%.
       </p>
     </section>
   );
