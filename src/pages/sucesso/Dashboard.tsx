@@ -168,6 +168,17 @@ export default function SucessoDashboard() {
           />
         </section>
 
+        <RiscoEstoque
+          rows={rows}
+          totalClientes={data?.total_clientes ?? 0}
+          mrrTotal={data?.mrr_total ?? 0}
+          qtdPMTotal={data?.qtd_pm ?? 0}
+          qtdGGGTotal={data?.qtd_ggg ?? 0}
+          mrrPMTotal={data?.mrr_pm ?? 0}
+          mrrGGGTotal={data?.mrr_ggg ?? 0}
+        />
+
+
       </main>
     </div>
   );
