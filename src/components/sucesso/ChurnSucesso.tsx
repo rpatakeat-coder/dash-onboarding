@@ -500,6 +500,8 @@ interface PerfilCardProps {
   qtdDen: number;
   mrrDen: number;
   tone: "primary" | "secondary" | "warning" | "success";
+  active?: boolean;
+  onClick?: () => void;
 }
 const toneMap: Record<PerfilCardProps["tone"], string> = {
   primary: "text-primary bg-primary/10",
@@ -507,10 +509,18 @@ const toneMap: Record<PerfilCardProps["tone"], string> = {
   success: "text-success bg-success/10",
   warning: "text-warning bg-warning/10",
 };
-const PerfilChurnCard = ({ label, icon: Icon, qtd, mrr, qtdDen, mrrDen, tone }: PerfilCardProps) => {
+const PerfilChurnCard = ({ label, icon: Icon, qtd, mrr, qtdDen, mrrDen, tone, active, onClick }: PerfilCardProps) => {
   const pct = (a: number, b: number) => (b > 0 ? (a / b) * 100 : 0);
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm-soft">
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={!!active}
+      className={cn(
+        "w-full text-left rounded-2xl border bg-card p-6 shadow-sm-soft transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+        active ? "border-primary ring-2 ring-primary/40" : "border-border hover:-translate-y-0.5 hover:shadow-md-soft",
+      )}
+    >
       <div className="flex items-start justify-between">
         <div className="min-w-0 flex-1">
           <p className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
