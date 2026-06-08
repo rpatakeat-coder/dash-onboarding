@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CalendarRange } from "lucide-react";
 import {
   fmtBRL,
@@ -10,6 +10,7 @@ import {
 } from "@/hooks/useDashOperacoes";
 import { InfoTooltip } from "./InfoTooltip";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   rows: DashRow[];
