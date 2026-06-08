@@ -33,7 +33,7 @@ export default function SucessoDashboard() {
     [filtroAgentes, filtroEtapas, filtroPeriodo, filtroCustomRange],
   );
 
-  const { data, error } = useSucessoOverviewView();
+  const { data, isLoading, error } = useSucessoOverviewView();
   // rowsRaw = base sem filtro (alimenta opções do MacroFilters)
   // rows / carteira = já recortados pelo filtro
   const { rows, rowsRaw, carteira } = useDashSucesso(filter);
