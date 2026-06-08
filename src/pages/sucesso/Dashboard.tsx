@@ -1,35 +1,88 @@
+import { useMemo, useState } from "react";
 import { LayoutDashboard, Users, DollarSign, UserCheck, Building2 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
+import { MacroFilters, type MacroPeriodKey, type CustomRange } from "@/components/dashboard/MacroFilters";
 import { CarteiraPorAgente } from "@/components/sucesso/CarteiraPorAgente";
 import { RiscoEstoque } from "@/components/sucesso/RiscoEstoque";
 import { ChurnSucesso } from "@/components/sucesso/ChurnSucesso";
-import { useDashSucesso, useSucessoOverviewView, fmtBRL, fmtPct } from "@/hooks/useDashSucesso";
+import { usePersistedSet } from "@/hooks/usePersistedSet";
+import {
+  useDashSucesso,
+  useSucessoOverviewView,
+  fmtBRL,
+  fmtPct,
+  type SucessoFilter,
+} from "@/hooks/useDashSucesso";
+import type { DashRow } from "@/hooks/useDashOperacoes";
 
 export default function SucessoDashboard() {
+  // Estado de filtros compartilhado (espelha Onboarding: useState + usePersistedSet)
+  const [filtroAgentes, setFiltroAgentes] = usePersistedSet("sucesso:agentes");
+  const [filtroEtapas, setFiltroEtapas] = usePersistedSet("sucesso:etapas");
+  const [filtroPeriodo, setFiltroPeriodo] = useState<MacroPeriodKey>("tudo");
+  const [filtroCustomRange, setFiltroCustomRange] = useState<CustomRange | null>(null);
+
+  const filter: SucessoFilter = useMemo(
+    () => ({
+      agentes: filtroAgentes,
+      ocultarEtapas: filtroEtapas,
+      periodo: filtroPeriodo,
+      customRange: filtroCustomRange,
+    }),
+    [filtroAgentes, filtroEtapas, filtroPeriodo, filtroCustomRange],
+  );
+
   const { data, isLoading, error } = useSucessoOverviewView();
-  const { rows, carteira } = useDashSucesso();
+  // rowsRaw = base sem filtro (alimenta opções do MacroFilters)
+  // rows / carteira = já recortados pelo filtro
+  const { rows, rowsRaw, carteira } = useDashSucesso(filter);
+
+  // Adapter: MacroFilters tipa em DashRow (Onboarding). Mapeamos só o necessário.
+  const macroRows = useMemo(
+    () =>
+      rowsRaw.map((r) => ({
+        agente_ativacao: r.agente_sucesso ?? null,
+        etapa_negocio: r.etapa_negocio ?? null,
+      })) as unknown as DashRow[],
+    [rowsRaw],
+  );
 
   const pct = (a: number, b: number) => (b > 0 ? (a / b) * 100 : 0);
-
 
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader />
       <main className="mx-auto max-w-[1400px] space-y-6 px-4 py-6 sm:px-6 md:px-10">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <LayoutDashboard className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="font-subtitle text-[10px] uppercase tracking-widest text-muted-foreground">
-              Sucesso
-            </p>
-            <h1 className="font-display text-xl font-semibold text-secondary">
-              Dashboard de Sucesso
-            </h1>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <LayoutDashboard className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-subtitle text-[10px] uppercase tracking-widest text-muted-foreground">
+                Sucesso
+              </p>
+              <h1 className="font-display text-xl font-semibold text-secondary">
+                Dashboard de Sucesso
+              </h1>
+            </div>
           </div>
         </div>
+
+        {/* Filtros compartilhados — alimentam TODOS os blocos via SucessoFilter */}
+        <MacroFilters
+          rows={macroRows}
+          ativadores={filtroAgentes}
+          etapas={filtroEtapas}
+          onAtivadoresChange={setFiltroAgentes}
+          onEtapasChange={setFiltroEtapas}
+          periodo={filtroPeriodo}
+          onPeriodoChange={setFiltroPeriodo}
+          customRange={filtroCustomRange}
+          onCustomRangeChange={setFiltroCustomRange}
+        />
+
 
         <section className="space-y-3">
           <h2 className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">
