@@ -2,11 +2,12 @@ import { LayoutDashboard, Users, DollarSign, UserCheck, Building2 } from "lucide
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { CarteiraPorAgente } from "@/components/sucesso/CarteiraPorAgente";
+import { RiscoEstoque } from "@/components/sucesso/RiscoEstoque";
 import { useDashSucesso, useSucessoOverviewView, fmtBRL, fmtPct } from "@/hooks/useDashSucesso";
 
 export default function SucessoDashboard() {
   const { data, isLoading, error } = useSucessoOverviewView();
-  const { carteira } = useDashSucesso();
+  const { rows, carteira } = useDashSucesso();
 
   const pct = (a: number, b: number) => (b > 0 ? (a / b) * 100 : 0);
 
@@ -167,6 +168,17 @@ export default function SucessoDashboard() {
             totalMrr={data?.mrr_total ?? 0}
           />
         </section>
+
+        <RiscoEstoque
+          rows={rows}
+          totalClientes={data?.total_clientes ?? 0}
+          mrrTotal={data?.mrr_total ?? 0}
+          qtdPMTotal={data?.qtd_pm ?? 0}
+          qtdGGGTotal={data?.qtd_ggg ?? 0}
+          mrrPMTotal={data?.mrr_pm ?? 0}
+          mrrGGGTotal={data?.mrr_ggg ?? 0}
+        />
+
 
       </main>
     </div>
