@@ -22,6 +22,7 @@ export default function SucessoDashboard() {
   const [filtroEtapas, setFiltroEtapas] = usePersistedSet("sucesso:etapas");
   const [filtroPeriodo, setFiltroPeriodo] = useState<MacroPeriodKey>("tudo");
   const [filtroCustomRange, setFiltroCustomRange] = useState<CustomRange | null>(null);
+  const [filtroPerfil, setFiltroPerfil] = useState<"P+M" | "G+GG" | null>(null);
 
   const filter: SucessoFilter = useMemo(
     () => ({
@@ -29,8 +30,9 @@ export default function SucessoDashboard() {
       ocultarEtapas: filtroEtapas,
       periodo: filtroPeriodo,
       customRange: filtroCustomRange,
+      perfilGrupo: filtroPerfil,
     }),
-    [filtroAgentes, filtroEtapas, filtroPeriodo, filtroCustomRange],
+    [filtroAgentes, filtroEtapas, filtroPeriodo, filtroCustomRange, filtroPerfil],
   );
 
   const { data, isLoading, error } = useSucessoOverviewView();
@@ -49,6 +51,10 @@ export default function SucessoDashboard() {
   );
 
   const pct = (a: number, b: number) => (b > 0 ? (a / b) * 100 : 0);
+
+  const togglePerfil = (g: "P+M" | "G+GG") =>
+    setFiltroPerfil((cur) => (cur === g ? null : g));
+  const clearPerfil = () => setFiltroPerfil(null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,9 +91,19 @@ export default function SucessoDashboard() {
 
 
         <section className="space-y-3">
-          <h2 className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">
-            Visão Geral do Pipeline
-          </h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">
+              Visão Geral do Pipeline
+            </h2>
+            {filtroPerfil && (
+              <button
+                onClick={clearPerfil}
+                className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              >
+                Filtro ativo: <span className="text-foreground">{filtroPerfil}</span> · limpar ✕
+              </button>
+            )}
+          </div>
 
           {error && (
             <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
@@ -96,20 +112,38 @@ export default function SucessoDashboard() {
           )}
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <KpiCard
-              label="Total de Clientes no Pipeline"
-              value={isLoading || !data ? "—" : data.total_clientes.toLocaleString("pt-BR")}
-              icon={Users}
-              tone="primary"
-              hint="Clientes ativos no pipeline de Sucesso/Retenção"
-            />
-            <KpiCard
-              label="MRR Acumulado Total"
-              value={isLoading || !data ? "—" : fmtBRL(data.mrr_total)}
-              icon={DollarSign}
-              tone="success"
-              hint="Receita recorrente mensal consolidada"
-            />
+            <button
+              type="button"
+              onClick={clearPerfil}
+              aria-pressed={filtroPerfil === null}
+              className={`text-left rounded-2xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                filtroPerfil === null ? "ring-2 ring-primary/40" : "hover:-translate-y-0.5"
+              }`}
+            >
+              <KpiCard
+                label="Total de Clientes no Pipeline"
+                value={isLoading || !data ? "—" : data.total_clientes.toLocaleString("pt-BR")}
+                icon={Users}
+                tone="primary"
+                hint={filtroPerfil ? "Clique para limpar o filtro de perfil" : "Clientes ativos no pipeline de Sucesso/Retenção"}
+              />
+            </button>
+            <button
+              type="button"
+              onClick={clearPerfil}
+              aria-pressed={filtroPerfil === null}
+              className={`text-left rounded-2xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                filtroPerfil === null ? "ring-2 ring-primary/40" : "hover:-translate-y-0.5"
+              }`}
+            >
+              <KpiCard
+                label="MRR Acumulado Total"
+                value={isLoading || !data ? "—" : fmtBRL(data.mrr_total)}
+                icon={DollarSign}
+                tone="success"
+                hint={filtroPerfil ? "Clique para limpar o filtro de perfil" : "Receita recorrente mensal consolidada"}
+              />
+            </button>
           </div>
         </section>
 
@@ -119,11 +153,18 @@ export default function SucessoDashboard() {
           </h2>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm-soft transition-all hover:shadow-md-soft hover:-translate-y-0.5">
+            <button
+              type="button"
+              onClick={() => togglePerfil("P+M")}
+              aria-pressed={filtroPerfil === "P+M"}
+              className={`group relative overflow-hidden rounded-2xl border bg-card p-6 text-left shadow-sm-soft transition-all hover:shadow-md-soft hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                filtroPerfil === "P+M" ? "border-primary ring-2 ring-primary/40" : "border-border"
+              }`}
+            >
               <div className="flex items-start justify-between">
                 <div className="min-w-0 flex-1">
                   <p className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">
-                    Perfil P+M
+                    Perfil P+M {filtroPerfil === "P+M" && <span className="ml-1 text-primary">●</span>}
                   </p>
                   <div className="mt-3 space-y-3">
                     <div>
@@ -160,13 +201,20 @@ export default function SucessoDashboard() {
                   <UserCheck className="h-5 w-5" strokeWidth={2.25} />
                 </div>
               </div>
-            </div>
+            </button>
 
-            <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm-soft transition-all hover:shadow-md-soft hover:-translate-y-0.5">
+            <button
+              type="button"
+              onClick={() => togglePerfil("G+GG")}
+              aria-pressed={filtroPerfil === "G+GG"}
+              className={`group relative overflow-hidden rounded-2xl border bg-card p-6 text-left shadow-sm-soft transition-all hover:shadow-md-soft hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                filtroPerfil === "G+GG" ? "border-primary ring-2 ring-primary/40" : "border-border"
+              }`}
+            >
               <div className="flex items-start justify-between">
                 <div className="min-w-0 flex-1">
                   <p className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">
-                    Perfil G+GG
+                    Perfil G+GG {filtroPerfil === "G+GG" && <span className="ml-1 text-primary">●</span>}
                   </p>
                   <div className="mt-3 space-y-3">
                     <div>
@@ -203,7 +251,7 @@ export default function SucessoDashboard() {
                   <Building2 className="h-5 w-5" strokeWidth={2.25} />
                 </div>
               </div>
-            </div>
+            </button>
           </div>
 
           {data && data.qtd_sem_perfil > 0 && (
