@@ -224,6 +224,43 @@ const fetchDashSucesso = async (): Promise<DashSucessoRow[]> => {
   return all;
 };
 
+export interface OverviewView {
+  total_clientes: number;
+  qtd_pm: number;
+  qtd_ggg: number;
+  qtd_sem_perfil: number;
+  mrr_total: number;
+  mrr_pm: number;
+  mrr_ggg: number;
+  mrr_sem_perfil: number;
+}
+
+const fetchOverviewView = async (): Promise<OverviewView | null> => {
+  const { data, error } = await (supabase as any)
+    .from("vw_sucesso_overview")
+    .select("*")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return {
+    total_clientes: num(data.total_clientes),
+    qtd_pm: num(data.qtd_pm),
+    qtd_ggg: num(data.qtd_ggg),
+    qtd_sem_perfil: num(data.qtd_sem_perfil),
+    mrr_total: num(data.mrr_total),
+    mrr_pm: num(data.mrr_pm),
+    mrr_ggg: num(data.mrr_ggg),
+    mrr_sem_perfil: num(data.mrr_sem_perfil),
+  };
+};
+
+export const useSucessoOverviewView = () =>
+  useQuery({
+    queryKey: ["vw_sucesso_overview"],
+    queryFn: fetchOverviewView,
+    staleTime: 1000 * 60 * 5,
+  });
+
 export const useDashSucesso = () => {
   const query = useQuery({
     queryKey: ["dash_sucesso"],
