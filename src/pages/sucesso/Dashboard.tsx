@@ -268,6 +268,14 @@ export default function SucessoDashboard() {
             agentes={carteira}
             totalClientes={data?.total_clientes ?? 0}
             totalMrr={data?.mrr_total ?? 0}
+            selectedAgentes={filtroAgentes}
+            onToggleAgente={(a) => {
+              const next = new Set(filtroAgentes);
+              if (next.has(a)) next.delete(a);
+              else next.add(a);
+              setFiltroAgentes(next);
+            }}
+            onClearAgentes={() => setFiltroAgentes(new Set())}
           />
         </section>
 
