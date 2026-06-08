@@ -39,6 +39,10 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth()); // 0-11
 
+  // Filtros locais da seção (additivos ao filtro global e ao seletor de mês).
+  const [perfilSel, setPerfilSel] = useState<"P+M" | "G+GG" | null>(null);
+  const [agenteSel, setAgenteSel] = useState<string | null>(null);
+
   // Inputs manuais (planilha) — TODO: substituir inputs manuais por fonte de dados quando o processo for definido.
   const [upsell, setUpsell] = useState(0);
   const [downsell, setDownsell] = useState(0);
