@@ -3,6 +3,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { CarteiraPorAgente } from "@/components/sucesso/CarteiraPorAgente";
 import { RiscoEstoque } from "@/components/sucesso/RiscoEstoque";
+import { ChurnSucesso } from "@/components/sucesso/ChurnSucesso";
 import { useDashSucesso, useSucessoOverviewView, fmtBRL, fmtPct } from "@/hooks/useDashSucesso";
 
 export default function SucessoDashboard() {
