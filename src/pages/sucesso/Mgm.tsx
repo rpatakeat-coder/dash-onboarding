@@ -37,11 +37,6 @@ const parseDate = (s: string | null): Date | null => {
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
-const num = (v: unknown): number => {
-  if (v == null) return 0;
-  const n = typeof v === "number" ? v : parseFloat(String(v).replace(",", "."));
-  return Number.isFinite(n) ? n : 0;
-};
 
 const fetchAll = async <T,>(table: string): Promise<T[]> => {
   const pageSize = 1000;
