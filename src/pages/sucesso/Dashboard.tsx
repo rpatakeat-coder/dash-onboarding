@@ -179,6 +179,16 @@ export default function SucessoDashboard() {
           mrrGGGTotal={data?.mrr_ggg ?? 0}
         />
 
+        <ChurnSucesso
+          rows={rows}
+          qtdPMTotal={data?.qtd_pm ?? 0}
+          qtdGGGTotal={data?.qtd_ggg ?? 0}
+          mrrPMTotal={data?.mrr_pm ?? 0}
+          mrrGGGTotal={data?.mrr_ggg ?? 0}
+        />
+
+
+
 
       </main>
     </div>
