@@ -104,10 +104,26 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
   const churnLiquido = stats.mrr - upsell + downsell - reativacoes;
   const pctChurnLiq = mrrBase && mrrBase > 0 ? (churnLiquido / mrrBase) * 100 : null;
 
-  // Ranking por agente
+  // Aplica filtros locais (perfilGrupo + agente) sobre os churns do mês.
+  const filteredRows = useMemo(() => {
+    return churnRows.filter((r) => {
+      if (perfilSel && grupoPerfil(r.perfil_cliente) !== perfilSel) return false;
+      if (agenteSel) {
+        const a = r.agente_sucesso?.trim() || "Sem responsável";
+        if (a !== agenteSel) return false;
+      }
+      return true;
+    });
+  }, [churnRows, perfilSel, agenteSel]);
+
+  // Ranking por agente — base é o recorte por perfil (sem o filtro de agente, para o usuário continuar vendo todos).
+  const rankingBaseRows = useMemo(
+    () => churnRows.filter((r) => !perfilSel || grupoPerfil(r.perfil_cliente) === perfilSel),
+    [churnRows, perfilSel],
+  );
   const ranking = useMemo(() => {
     const map = new Map<string, { agente: string; qtd: number; mrr: number; motivos: Map<string, number> }>();
-    for (const r of churnRows) {
+    for (const r of rankingBaseRows) {
       const a = r.agente_sucesso?.trim() || "Sem responsável";
       const cur = map.get(a) ?? { agente: a, qtd: 0, mrr: 0, motivos: new Map() };
       cur.qtd++;
@@ -116,7 +132,7 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
       if (mot) cur.motivos.set(mot, (cur.motivos.get(mot) ?? 0) + 1);
       map.set(a, cur);
     }
-    const totalMrr = stats.mrr;
+    const totalMrr = rankingBaseRows.reduce((s, r) => s + num(r.mrr), 0);
     return Array.from(map.values())
       .map((c) => {
         const top = Array.from(c.motivos.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3);
@@ -129,7 +145,15 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
         };
       })
       .sort((a, b) => b.mrr - a.mrr);
-  }, [churnRows, stats.mrr]);
+  }, [rankingBaseRows]);
+
+  const togglePerfil = (g: "P+M" | "G+GG") => {
+    setPerfilSel((cur) => (cur === g ? null : g));
+    setAgenteSel(null);
+  };
+  const toggleAgente = (a: string) => setAgenteSel((cur) => (cur === a ? null : a));
+  const clearLocalFilters = () => { setPerfilSel(null); setAgenteSel(null); };
+  const hasLocalFilter = perfilSel !== null || agenteSel !== null;
 
   const years = Array.from(new Set([now.getFullYear(), now.getFullYear() - 1, year])).sort((a, b) => b - a);
 
