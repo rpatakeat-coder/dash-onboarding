@@ -159,6 +159,15 @@ export default function SucessoDashboard() {
             </p>
           )}
         </section>
+
+        <section className="space-y-3">
+          <CarteiraPorAgente
+            agentes={carteira}
+            totalClientes={data?.total_clientes ?? 0}
+            totalMrr={data?.mrr_total ?? 0}
+          />
+        </section>
+
       </main>
     </div>
   );
