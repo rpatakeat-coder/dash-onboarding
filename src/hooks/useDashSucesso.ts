@@ -332,7 +332,8 @@ export const applySucessoFilter = (
   const range = getSucessoPeriodRange(filter.periodo, filter.customRange);
   const ag = filter.agentes && filter.agentes.size > 0 ? filter.agentes : null;
   const oc = filter.ocultarEtapas && filter.ocultarEtapas.size > 0 ? filter.ocultarEtapas : null;
-  if (!ag && !oc && !range) return rows;
+  const pg = filter.perfilGrupo ?? null;
+  if (!ag && !oc && !range && !pg) return rows;
   return rows.filter((r) => {
     if (ag) {
       const a = r.agente_sucesso?.trim() || "Sem responsável";
@@ -346,6 +347,9 @@ export const applySucessoFilter = (
       const d = parseDateLoose(r.data_entrada_fase) ?? parseDateLoose(r.data_fechamento);
       if (!d) return false;
       if (d < range.start || d >= range.end) return false;
+    }
+    if (pg) {
+      if (grupoPerfil(r.perfil_cliente) !== pg) return false;
     }
     return true;
   });
