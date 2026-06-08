@@ -31,6 +31,25 @@ export const RastroMensal = ({ rows }: Props) => {
   const year = now.getFullYear();
   const currentMonth = now.getMonth();
 
+  const [mrrBaseByMonth, setMrrBaseByMonth] = useState<(number | null)[]>(() => Array(12).fill(null));
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("churn-real-sheet");
+        if (error) return;
+        if (data?.error) return;
+        if (Array.isArray(data?.mrrBaseByMonth)) {
+          setMrrBaseByMonth(
+            data.mrrBaseByMonth.map((v: unknown) => (typeof v === "number" ? v : null)),
+          );
+        }
+      } catch {
+        // silencioso — célula mostrará "—"
+      }
+    })();
+  }, []);
+
   const data = useMemo(() => {
     const months = Array.from({ length: 12 }, (_, m) => ({
       mes: m,
