@@ -30,6 +30,7 @@ import SucessoLista from "./pages/sucesso/Lista";
 import SucessoKanban from "./pages/sucesso/Kanban";
 import SucessoGestor from "./pages/sucesso/AreaGestor";
 import SucessoConfig from "./pages/sucesso/Config";
+import SucessoMgm from "./pages/sucesso/Mgm";
 
 const queryClient = new QueryClient();
 
