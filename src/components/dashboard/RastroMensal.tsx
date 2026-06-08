@@ -144,7 +144,7 @@ export const RastroMensal = ({ rows }: Props) => {
             <h2 className="font-display text-base font-semibold text-secondary">
               Como cada mês fechou · jan → dez/{year}
             </h2>
-            <InfoTooltip text='Linha por métrica · coluna por mês. % MRR Ativado = MRR Ativado do mês ÷ MRR Criado do mês anterior × 100. % Churn Onboarding = MRR de deals em etapa "Churn" (pipeline Sucesso, origem Onboarding) fechados no mês ÷ MRR criado no mês × 100.' />
+            <InfoTooltip text='Linha por métrica · coluna por mês. % MRR Ativado = MRR Ativado do mês ÷ MRR Criado do mês anterior × 100. % Churn Onboarding = MRR de deals em etapa "Churn" (pipeline Sucesso, origem Onboarding) fechados no mês ÷ MRR de início do mês (planilha Dados 2026) × 100.' />
           </div>
         </div>
         <CalendarRange className="h-5 w-5 text-primary/70" />
