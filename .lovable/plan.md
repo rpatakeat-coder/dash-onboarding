@@ -1,50 +1,21 @@
-# Novo papel: `viewer`
+## Contexto
 
-Cria um papel adicional em `operations_role` para usuários que só visualizam os rankings de meta (RankingMetasMedalhas e RankingVariavelAtivadores). Sem acesso a admin, sem carteira, sem demais blocos da dashboard. Vê dados de todos os ativadores (somente leitura).
+A função `isChurnRow` em `src/hooks/useDashOperacoes.ts` **já** considera apenas `etapa_negocio = "Churn"` (mais `pipeline_nome = "Sucesso"` e `etapa_de_cancelamento = "Onboarding"`). Portanto o cálculo já está correto — minha explicação anterior mencionando "Pré-Churn/Pré-Cancelamento/Cancelamento" estava errada e não reflete o código.
 
-## 1. Banco
+O problema é que **comentários e tooltips na UI** ainda dizem "Pré-Churn/Churn/Cancelamento", o que confunde a leitura.
 
-Migração:
+## O que mudar (apenas texto, sem mexer em lógica)
 
-- Adicionar valor `'viewer'` ao enum `operations_role`.
-- Atualizar a função `has_operations_role` para reconhecer `viewer` apenas como `viewer` (não herda admin).
-- Política RLS extra em `dash_operacoes` permitindo SELECT global para `viewer`:
-  ```sql
-  CREATE POLICY "Viewers read all dash_operacoes"
-  ON public.dash_operacoes FOR SELECT TO authenticated
-  USING (has_operations_role(auth.uid(), 'viewer'));
-  ```
-- `agente_ativacao` em `user_roles_operations` continua opcional (não é exigido para viewer).
-- Ajustar `admin-create-operator` para aceitar `role: 'viewer'` no schema Zod e dispensar `agente_ativacao` quando role for `admin` **ou** `viewer`.
+1. `src/hooks/useDashOperacoes.ts` linha 50 — JSDoc do campo `churnReal`:
+   - de: `MRR dos deals em Pré-Churn/Churn/Cancelamento com data_fechamento no mês vigente.`
+   - para: `MRR dos deals em etapa "Churn" (pipeline Sucesso, origem Onboarding) com data_fechamento no mês vigente.`
 
-## 2. Front-end
+2. `src/components/dashboard/RastroMensal.tsx` linha 126 — texto do `InfoTooltip`:
+   - de: `... % Churn Onboarding = MRR de deals em Pré-Churn/Churn/Cancelamento fechados no mês ÷ MRR criado no mês × 100.`
+   - para: `... % Churn Onboarding = MRR de deals em etapa "Churn" (pipeline Sucesso, origem Onboarding) fechados no mês ÷ MRR criado no mês × 100.`
 
-### Novo hook `useUserRole`
-Retorna `{ role: 'super_admin' | 'admin' | 'viewer' | 'user', isAdmin, isViewer, loading }` consultando `user_roles_operations`. Substitui/estende `useIsAdmin` (mantém compat).
+## O que NÃO muda
 
-### `src/pages/Index.tsx`
-Quando `isViewer === true`:
-- Renderiza apenas `DashboardHeader` mínimo + `<RankingMetasMedalhas rows={allRows} />` + `<RankingVariavelAtivadores rows={allRows} />`.
-- Esconde MacroEstoque, MacroMovimento, filtros, carteira, churn, gestão, AI, etc.
-
-### Rotas (`src/App.tsx`)
-Criar guard `ViewerLockRoute` (ou estender `ProtectedRoute`): quando o usuário é `viewer`, qualquer rota diferente de `/` redireciona para `/`. Bloqueia `/minha-carteira`, `/tv`, `/admin`, `/sucesso/*`.
-
-### Navegação
-- `MainNav` e `MobileMainNav`: ocultar todos os itens quando `isViewer` (mostrar só logo + logout).
-- `AreaSwitcher`, `CopilotDrawer`, `PreferencesDialog`: desabilitar/ocultar entradas restritas para viewer.
-
-### Admin UI
-- `src/pages/Admin.tsx` (form de criar/editar operador): adicionar opção "Viewer" no select de role, ao lado de `user` e `admin`. Esconder o campo `agente_ativacao` quando role = `admin` ou `viewer`.
-
-## 3. Validação
-
-- Login com usuário `viewer`: Home mostra somente os dois rankings, navbar limpa, tentativa de acessar `/admin` redireciona para `/`.
-- Consulta a `dash_operacoes` retorna todos os ativadores (RLS).
-- Admin cria novo viewer pelo painel sem precisar informar agente.
-
-## Detalhes técnicos
-
-- O enum existente é `"admin" | "user" | "super_admin"`; adicionar `viewer` exige `ALTER TYPE operations_role ADD VALUE 'viewer'` em migração própria (não pode estar dentro de transação com uso do valor — usar migração isolada).
-- `has_operations_role` hoje trata `super_admin` como admin; manter essa lógica e adicionar branch explícita para viewer (sem herança).
-- `useAtivadorScope.isAtivador` continua `false` para viewer (não é admin, mas também não tem agente) — usar `isViewer` para diferenciar nos componentes.
+- `isChurnRow` continua igual (etapa exata `Churn`).
+- `computeChurnKpis`, `ChurnKpis.tsx`, `RastroMensal.tsx` (lógica de cálculo) — nada a alterar.
+- Referências a `Pré-Cancelamento` em `DealDrawer.tsx`, `AttentionPoints.tsx` e `useDashOperacoes.ts:599` são de outras features (etapas exibidas em listas/ícones) e não fazem parte do cálculo de churn — ficam como estão.

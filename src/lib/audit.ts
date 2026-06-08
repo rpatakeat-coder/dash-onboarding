@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type AuditEntity = "operador" | "meta" | "config" | "user_role" | "outro";
+export type AuditEntity = "operador" | "meta" | "config" | "user_role" | "hubspot_agent" | "outro";
 
 export interface AuditPayload {
   action: string;
