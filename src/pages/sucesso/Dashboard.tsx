@@ -22,6 +22,7 @@ export default function SucessoDashboard() {
   const [filtroEtapas, setFiltroEtapas] = usePersistedSet("sucesso:etapas");
   const [filtroPeriodo, setFiltroPeriodo] = useState<MacroPeriodKey>("tudo");
   const [filtroCustomRange, setFiltroCustomRange] = useState<CustomRange | null>(null);
+  const [filtroPerfil, setFiltroPerfil] = useState<"P+M" | "G+GG" | null>(null);
 
   const filter: SucessoFilter = useMemo(
     () => ({
@@ -29,8 +30,9 @@ export default function SucessoDashboard() {
       ocultarEtapas: filtroEtapas,
       periodo: filtroPeriodo,
       customRange: filtroCustomRange,
+      perfilGrupo: filtroPerfil,
     }),
-    [filtroAgentes, filtroEtapas, filtroPeriodo, filtroCustomRange],
+    [filtroAgentes, filtroEtapas, filtroPeriodo, filtroCustomRange, filtroPerfil],
   );
 
   const { data, isLoading, error } = useSucessoOverviewView();
@@ -49,6 +51,10 @@ export default function SucessoDashboard() {
   );
 
   const pct = (a: number, b: number) => (b > 0 ? (a / b) * 100 : 0);
+
+  const togglePerfil = (g: "P+M" | "G+GG") =>
+    setFiltroPerfil((cur) => (cur === g ? null : g));
+  const clearPerfil = () => setFiltroPerfil(null);
 
   return (
     <div className="min-h-screen bg-background">
