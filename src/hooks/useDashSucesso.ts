@@ -281,6 +281,8 @@ export interface SucessoFilter {
   ocultarEtapas?: Set<string>;
   periodo?: SucessoPeriodKey;
   customRange?: { start: Date; end: Date } | null;
+  /** Grupo de perfil ativo (P+M | G+GG). null = todos. */
+  perfilGrupo?: "P+M" | "G+GG" | null;
 }
 
 const parseDateLoose = (s: string | null | undefined): Date | null => {
