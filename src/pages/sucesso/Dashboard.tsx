@@ -3,6 +3,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { CarteiraPorAgente } from "@/components/sucesso/CarteiraPorAgente";
 import { RiscoEstoque } from "@/components/sucesso/RiscoEstoque";
+import { ChurnSucesso } from "@/components/sucesso/ChurnSucesso";
 import { useDashSucesso, useSucessoOverviewView, fmtBRL, fmtPct } from "@/hooks/useDashSucesso";
 
 export default function SucessoDashboard() {
@@ -178,6 +179,16 @@ export default function SucessoDashboard() {
           mrrPMTotal={data?.mrr_pm ?? 0}
           mrrGGGTotal={data?.mrr_ggg ?? 0}
         />
+
+        <ChurnSucesso
+          rows={rows}
+          qtdPMTotal={data?.qtd_pm ?? 0}
+          qtdGGGTotal={data?.qtd_ggg ?? 0}
+          mrrPMTotal={data?.mrr_pm ?? 0}
+          mrrGGGTotal={data?.mrr_ggg ?? 0}
+        />
+
+
 
 
       </main>
