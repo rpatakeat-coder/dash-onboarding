@@ -121,7 +121,7 @@ export const RastroMensal = ({ rows }: Props) => {
         isFuture: i > currentMonth,
       };
     });
-  }, [rows, year, currentMonth]);
+  }, [rows, year, currentMonth, mrrBaseByMonth]);
 
 
 
