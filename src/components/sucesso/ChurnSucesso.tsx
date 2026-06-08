@@ -39,6 +39,10 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth()); // 0-11
 
+  // Filtros locais da seção (additivos ao filtro global e ao seletor de mês).
+  const [perfilSel, setPerfilSel] = useState<"P+M" | "G+GG" | null>(null);
+  const [agenteSel, setAgenteSel] = useState<string | null>(null);
+
   // Inputs manuais (planilha) — TODO: substituir inputs manuais por fonte de dados quando o processo for definido.
   const [upsell, setUpsell] = useState(0);
   const [downsell, setDownsell] = useState(0);
@@ -100,10 +104,26 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
   const churnLiquido = stats.mrr - upsell + downsell - reativacoes;
   const pctChurnLiq = mrrBase && mrrBase > 0 ? (churnLiquido / mrrBase) * 100 : null;
 
-  // Ranking por agente
+  // Aplica filtros locais (perfilGrupo + agente) sobre os churns do mês.
+  const filteredRows = useMemo(() => {
+    return churnRows.filter((r) => {
+      if (perfilSel && grupoPerfil(r.perfil_cliente) !== perfilSel) return false;
+      if (agenteSel) {
+        const a = r.agente_sucesso?.trim() || "Sem responsável";
+        if (a !== agenteSel) return false;
+      }
+      return true;
+    });
+  }, [churnRows, perfilSel, agenteSel]);
+
+  // Ranking por agente — base é o recorte por perfil (sem o filtro de agente, para o usuário continuar vendo todos).
+  const rankingBaseRows = useMemo(
+    () => churnRows.filter((r) => !perfilSel || grupoPerfil(r.perfil_cliente) === perfilSel),
+    [churnRows, perfilSel],
+  );
   const ranking = useMemo(() => {
     const map = new Map<string, { agente: string; qtd: number; mrr: number; motivos: Map<string, number> }>();
-    for (const r of churnRows) {
+    for (const r of rankingBaseRows) {
       const a = r.agente_sucesso?.trim() || "Sem responsável";
       const cur = map.get(a) ?? { agente: a, qtd: 0, mrr: 0, motivos: new Map() };
       cur.qtd++;
@@ -112,7 +132,7 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
       if (mot) cur.motivos.set(mot, (cur.motivos.get(mot) ?? 0) + 1);
       map.set(a, cur);
     }
-    const totalMrr = stats.mrr;
+    const totalMrr = rankingBaseRows.reduce((s, r) => s + num(r.mrr), 0);
     return Array.from(map.values())
       .map((c) => {
         const top = Array.from(c.motivos.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3);
@@ -125,7 +145,15 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
         };
       })
       .sort((a, b) => b.mrr - a.mrr);
-  }, [churnRows, stats.mrr]);
+  }, [rankingBaseRows]);
+
+  const togglePerfil = (g: "P+M" | "G+GG") => {
+    setPerfilSel((cur) => (cur === g ? null : g));
+    setAgenteSel(null);
+  };
+  const toggleAgente = (a: string) => setAgenteSel((cur) => (cur === a ? null : a));
+  const clearLocalFilters = () => { setPerfilSel(null); setAgenteSel(null); };
+  const hasLocalFilter = perfilSel !== null || agenteSel !== null;
 
   const years = Array.from(new Set([now.getFullYear(), now.getFullYear() - 1, year])).sort((a, b) => b - a);
 
@@ -171,15 +199,53 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
         </div>
       </div>
 
+      {/* Chip de filtro ativo local */}
+      {hasLocalFilter && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+            Filtros desta seção:
+          </span>
+          {perfilSel && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+              Perfil: {perfilSel}
+              <button onClick={() => setPerfilSel(null)} className="text-primary/70 hover:text-primary" aria-label="remover">✕</button>
+            </span>
+          )}
+          {agenteSel && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+              Agente: {agenteSel}
+              <button onClick={() => setAgenteSel(null)} className="text-primary/70 hover:text-primary" aria-label="remover">✕</button>
+            </span>
+          )}
+          <button
+            onClick={clearLocalFilters}
+            className="rounded-full border border-border bg-card px-2.5 py-0.5 text-xs text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          >
+            limpar tudo
+          </button>
+        </div>
+      )}
+
       {/* KPIs principais */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <KpiCard
-          label="Churn de MRR (bruto)"
-          value={fmtBRL(stats.mrr)}
-          icon={DollarSign}
-          tone="warning"
-          hint={`${fmtN(stats.qtd)} deal${stats.qtd === 1 ? "" : "s"} fechado${stats.qtd === 1 ? "" : "s"} no mês`}
-        />
+        <button
+          type="button"
+          onClick={clearLocalFilters}
+          aria-pressed={!hasLocalFilter}
+          className={cn(
+            "text-left rounded-2xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+            !hasLocalFilter ? "ring-1 ring-primary/20" : "hover:-translate-y-0.5",
+          )}
+          title={hasLocalFilter ? "Limpar filtros da seção" : "Sem filtro local ativo"}
+        >
+          <KpiCard
+            label="Churn de MRR (bruto)"
+            value={fmtBRL(stats.mrr)}
+            icon={DollarSign}
+            tone="warning"
+            hint={`${fmtN(stats.qtd)} deal${stats.qtd === 1 ? "" : "s"} fechado${stats.qtd === 1 ? "" : "s"} no mês`}
+          />
+        </button>
         <KpiCard
           label="% de Churn"
           value={pctChurn !== null ? `${pctChurn.toFixed(2).replace(".", ",")}%` : sheetLoading ? "…" : "—"}
@@ -247,7 +313,7 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
         </div>
       </div>
 
-      {/* Segmentação por perfil */}
+      {/* Segmentação por perfil — clicáveis (toggle) */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <PerfilChurnCard
           label="Churn P+M"
@@ -257,6 +323,8 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
           qtdDen={qtdPMTotal}
           mrrDen={mrrPMTotal}
           tone="secondary"
+          active={perfilSel === "P+M"}
+          onClick={() => togglePerfil("P+M")}
         />
         <PerfilChurnCard
           label="Churn G+GG"
@@ -266,6 +334,8 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
           qtdDen={qtdGGGTotal}
           mrrDen={mrrGGGTotal}
           tone="primary"
+          active={perfilSel === "G+GG"}
+          onClick={() => togglePerfil("G+GG")}
         />
       </div>
 
@@ -280,7 +350,8 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
               Ranking de churn por agente
             </h3>
             <p className="font-small text-xs text-muted-foreground">
-              Ordenado por MRR perdido (desc) — top motivos por agente
+              Clique numa linha para filtrar a lista detalhada abaixo.
+              {perfilSel && <> Recorte atual: <strong>{perfilSel}</strong>.</>}
             </p>
           </div>
         </div>
@@ -297,20 +368,99 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {ranking.map((r, i) => (
-                <tr key={r.agente} className="hover:bg-muted/30">
-                  <td className="px-3 py-2.5 font-numeric text-muted-foreground">{i + 1}</td>
-                  <td className="px-3 py-2.5 font-medium text-foreground">{r.agente}</td>
-                  <td className="px-3 py-2.5 text-right font-numeric">{fmtN(r.qtd)}</td>
-                  <td className="px-3 py-2.5 text-right font-numeric font-semibold">{fmtBRL(r.mrr)}</td>
-                  <td className="px-3 py-2.5 text-right font-numeric">{fmtPct(r.pctRep, 1)}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{r.motivos}</td>
-                </tr>
-              ))}
+              {ranking.map((r, i) => {
+                const isActive = agenteSel === r.agente;
+                return (
+                  <tr
+                    key={r.agente}
+                    onClick={() => toggleAgente(r.agente)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleAgente(r.agente);
+                      }
+                    }}
+                    aria-pressed={isActive}
+                    className={cn(
+                      "cursor-pointer transition",
+                      isActive ? "bg-primary/10 hover:bg-primary/15" : "hover:bg-muted/30",
+                    )}
+                  >
+                    <td className="px-3 py-2.5 font-numeric text-muted-foreground">{i + 1}</td>
+                    <td className="px-3 py-2.5 font-medium text-foreground">
+                      {isActive && <span className="mr-1.5 text-primary">●</span>}
+                      {r.agente}
+                    </td>
+                    <td className="px-3 py-2.5 text-right font-numeric">{fmtN(r.qtd)}</td>
+                    <td className="px-3 py-2.5 text-right font-numeric font-semibold">{fmtBRL(r.mrr)}</td>
+                    <td className="px-3 py-2.5 text-right font-numeric">{fmtPct(r.pctRep, 1)}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground">{r.motivos}</td>
+                  </tr>
+                );
+              })}
               {!ranking.length && (
                 <tr>
                   <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground">
                     Nenhum churn no período selecionado.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Lista detalhada — filtrada pelos filtros locais (perfil + agente) */}
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm-soft sm:p-6">
+        <div className="mb-4 flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-display text-base font-semibold text-secondary">
+              Lista detalhada
+            </h3>
+            <p className="font-small text-xs text-muted-foreground">
+              {fmtN(filteredRows.length)} deal{filteredRows.length === 1 ? "" : "s"} ·{" "}
+              {fmtBRL(filteredRows.reduce((s, r) => s + num(r.mrr), 0))} em MRR perdido
+              {hasLocalFilter && " (filtrado)"}
+            </p>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead className="bg-muted/50">
+              <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
+                <th className="px-3 py-2 text-left">Cliente</th>
+                <th className="px-3 py-2 text-left">Perfil</th>
+                <th className="px-3 py-2 text-left">Agente</th>
+                <th className="px-3 py-2 text-left">Motivo</th>
+                <th className="px-3 py-2 text-right">MRR</th>
+                <th className="px-3 py-2 text-right">Fechado em</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filteredRows
+                .slice()
+                .sort((a, b) => num(b.mrr) - num(a.mrr))
+                .map((r) => (
+                  <tr key={r.id_deal ?? r.asaas_id ?? r.nome_negocio} className="hover:bg-muted/30">
+                    <td className="px-3 py-2.5 font-medium text-foreground">{r.nome_negocio ?? "—"}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground">{r.perfil_cliente ?? "—"}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground">{r.agente_sucesso?.trim() || "Sem responsável"}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground">{r.etapa_de_cancelamento?.trim() || "—"}</td>
+                    <td className="px-3 py-2.5 text-right font-numeric font-semibold">{fmtBRL(num(r.mrr))}</td>
+                    <td className="px-3 py-2.5 text-right font-numeric text-muted-foreground">
+                      {r.data_fechamento ? new Date(r.data_fechamento).toLocaleDateString("pt-BR") : "—"}
+                    </td>
+                  </tr>
+                ))}
+              {!filteredRows.length && (
+                <tr>
+                  <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground">
+                    Nenhum deal corresponde aos filtros desta seção.
                   </td>
                 </tr>
               )}
@@ -350,6 +500,8 @@ interface PerfilCardProps {
   qtdDen: number;
   mrrDen: number;
   tone: "primary" | "secondary" | "warning" | "success";
+  active?: boolean;
+  onClick?: () => void;
 }
 const toneMap: Record<PerfilCardProps["tone"], string> = {
   primary: "text-primary bg-primary/10",
@@ -357,10 +509,18 @@ const toneMap: Record<PerfilCardProps["tone"], string> = {
   success: "text-success bg-success/10",
   warning: "text-warning bg-warning/10",
 };
-const PerfilChurnCard = ({ label, icon: Icon, qtd, mrr, qtdDen, mrrDen, tone }: PerfilCardProps) => {
+const PerfilChurnCard = ({ label, icon: Icon, qtd, mrr, qtdDen, mrrDen, tone, active, onClick }: PerfilCardProps) => {
   const pct = (a: number, b: number) => (b > 0 ? (a / b) * 100 : 0);
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm-soft">
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={!!active}
+      className={cn(
+        "w-full text-left rounded-2xl border bg-card p-6 shadow-sm-soft transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+        active ? "border-primary ring-2 ring-primary/40" : "border-border hover:-translate-y-0.5 hover:shadow-md-soft",
+      )}
+    >
       <div className="flex items-start justify-between">
         <div className="min-w-0 flex-1">
           <p className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
@@ -389,6 +549,6 @@ const PerfilChurnCard = ({ label, icon: Icon, qtd, mrr, qtdDen, mrrDen, tone }: 
           <Icon className="h-5 w-5" strokeWidth={2.25} />
         </div>
       </div>
-    </div>
+    </button>
   );
 };
