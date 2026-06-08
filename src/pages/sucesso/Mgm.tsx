@@ -13,7 +13,6 @@ import {
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { supabase } from "@/integrations/supabase/client";
-import { fmtBRL, fmtPct } from "@/hooks/useDashSucesso";
 
 // ============================================================================
 // TODO: confirmar com o time como identificar registros "MGM" nestas tabelas.
