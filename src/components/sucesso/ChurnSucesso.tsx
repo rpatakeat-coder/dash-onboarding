@@ -549,6 +549,6 @@ const PerfilChurnCard = ({ label, icon: Icon, qtd, mrr, qtdDen, mrrDen, tone, ac
           <Icon className="h-5 w-5" strokeWidth={2.25} />
         </div>
       </div>
-    </div>
+    </button>
   );
 };
