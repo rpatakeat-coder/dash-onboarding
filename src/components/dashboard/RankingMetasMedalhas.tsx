@@ -17,16 +17,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 
-type PeriodKey = "semana" | "mes" | "trimestre" | "custom";
+export type PeriodKey = "semana" | "mes" | "trimestre" | "custom";
 
-interface CustomRange { start: Date; end: Date }
+export interface CustomRange { start: Date; end: Date }
 
 interface Props {
   rows: DashRow[];
   variant?: "default" | "tv";
 }
 
-interface ScoreRow {
+export interface ScoreRow {
   ativador: string;
   pctMrr: number;
   pctClientes: number;
