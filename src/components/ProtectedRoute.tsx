@@ -11,10 +11,12 @@ interface Props {
 
 export const ProtectedRoute = ({ children, viewerAllowed = false }: Props) => {
   const { session, loading } = useAuth();
-  const { isViewer, loading: roleLoading } = useUserRole();
+  const { isViewer, role, loading: roleLoading } = useUserRole();
   const location = useLocation();
 
-  if (loading || roleLoading) {
+  // Only show the full-screen loader on the INITIAL load (no session/role known yet).
+  // Once resolved, navigating between routes must not re-trigger this state.
+  if (loading || (roleLoading && role === null && !!session)) {
     return (
       <div className="min-h-screen grid place-items-center">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
