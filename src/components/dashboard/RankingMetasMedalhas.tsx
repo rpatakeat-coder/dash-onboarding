@@ -242,7 +242,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
               Ranking de metas
             </h2>
             <p className="font-small text-xs text-muted-foreground">
-              Top 3 do período · Score = (60×%MRR + 30×%Cli + penalidade de churn) / 100
+              Top 3 do período · Score = (60×%MRR + 30×%Clientes + penalidade de churn) / 100
             </p>
           </div>
         </div>
@@ -625,7 +625,7 @@ const PodiumTv = ({ top3, getAvatar, onSelect }: PodiumTvProps) => {
                   <p className="font-numeric text-xs font-semibold tabular-nums text-foreground">
                     {r.pctClientes.toFixed(0)}%
                   </p>
-                  <p className="font-small text-[9px] text-muted-foreground">Cli</p>
+                  <p className="font-small text-[9px] text-muted-foreground">Clientes</p>
                 </div>
                 <div>
                   <p className="font-numeric text-xs font-semibold tabular-nums text-foreground">
