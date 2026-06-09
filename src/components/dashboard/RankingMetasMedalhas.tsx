@@ -508,3 +508,137 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
     </div>
   );
 };
+
+// ---------- Pódium TV ----------
+interface PodiumTvProps {
+  top3: ScoreRow[];
+  getAvatar: (name: string) => { avatarUrl: string | null; fullName: string | null };
+  onSelect: (ativador: string) => void;
+}
+
+const AvatarOrPlaceholder = ({
+  url,
+  ringClass,
+  sizeClass,
+}: {
+  url: string | null;
+  ringClass: string;
+  sizeClass: string;
+}) => {
+  const [errored, setErrored] = useState(false);
+  const showImg = url && !errored;
+  return (
+    <div
+      className={cn(
+        "relative flex items-center justify-center overflow-hidden rounded-full bg-muted ring-4 ring-offset-2 ring-offset-card",
+        ringClass,
+        sizeClass,
+      )}
+    >
+      {showImg ? (
+        <img
+          src={url}
+          alt=""
+          className="h-full w-full object-cover"
+          onError={() => setErrored(true)}
+        />
+      ) : (
+        <User className="h-1/2 w-1/2 text-muted-foreground" strokeWidth={1.5} />
+      )}
+    </div>
+  );
+};
+
+const PodiumTv = ({ top3, getAvatar, onSelect }: PodiumTvProps) => {
+  // Order: 2nd left, 1st center, 3rd right
+  const order: { rank: 0 | 1 | 2 }[] = [{ rank: 1 }, { rank: 0 }, { rank: 2 }];
+
+  const pedestalHeight = (rank: number) =>
+    rank === 0 ? "h-44" : rank === 1 ? "h-32" : "h-24";
+  const avatarSize = (rank: number) =>
+    rank === 0 ? "h-40 w-40" : "h-32 w-32";
+
+  return (
+    <div className="grid grid-cols-3 items-end gap-4 pt-8">
+      {order.map(({ rank }) => {
+        const r = top3[rank];
+        if (!r) return <div key={rank} />;
+        const m = MEDAL_STYLES[rank];
+        const { avatarUrl } = getAvatar(r.ativador);
+        return (
+          <button
+            key={r.ativador}
+            type="button"
+            onClick={() => onSelect(r.ativador)}
+            className="group flex flex-col items-center focus:outline-none"
+          >
+            {/* Avatar + badge */}
+            <div className="relative mb-3 transition group-hover:-translate-y-1">
+              <AvatarOrPlaceholder
+                url={avatarUrl}
+                ringClass={m.ring}
+                sizeClass={avatarSize(rank)}
+              />
+              <div
+                className={cn(
+                  "absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-border bg-card px-3 py-0.5 font-numeric text-sm font-bold tabular-nums shadow-sm",
+                  m.text,
+                )}
+              >
+                {rank + 1}º
+              </div>
+            </div>
+            <p className="mb-2 max-w-full truncate px-2 font-display text-lg font-semibold text-foreground">
+              {r.ativador}
+            </p>
+            {/* Pedestal */}
+            <div
+              className={cn(
+                "flex w-full flex-col items-center justify-start gap-2 rounded-t-xl bg-gradient-to-br p-3 ring-1 transition group-hover:ring-2",
+                m.bg,
+                m.ring,
+                pedestalHeight(rank),
+              )}
+            >
+              <div className="text-center">
+                <p
+                  className={cn(
+                    "font-numeric font-bold tabular-nums leading-none",
+                    rank === 0 ? "text-5xl" : "text-4xl",
+                    m.text,
+                  )}
+                >
+                  {Math.round(r.scoreFinal)}
+                </p>
+                <p className="mt-1 font-small text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Score
+                </p>
+              </div>
+              <div className="mt-auto grid w-full grid-cols-3 gap-1 text-center">
+                <div>
+                  <p className="font-numeric text-xs font-semibold tabular-nums text-foreground">
+                    {r.pctMrr.toFixed(0)}%
+                  </p>
+                  <p className="font-small text-[9px] text-muted-foreground">MRR</p>
+                </div>
+                <div>
+                  <p className="font-numeric text-xs font-semibold tabular-nums text-foreground">
+                    {r.pctClientes.toFixed(0)}%
+                  </p>
+                  <p className="font-small text-[9px] text-muted-foreground">Cli</p>
+                </div>
+                <div>
+                  <p className="font-numeric text-xs font-semibold tabular-nums text-foreground">
+                    {r.pctChurn.toFixed(0)}%
+                  </p>
+                  <p className="font-small text-[9px] text-muted-foreground">Churn</p>
+                </div>
+              </div>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
