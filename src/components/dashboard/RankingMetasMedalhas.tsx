@@ -600,8 +600,8 @@ const PodiumTv = ({ top3, getAvatar, getMedalCounts, onSelect }: PodiumTvProps) 
   // Order: 2nd left, 1st center, 3rd right
   const order: { rank: 0 | 1 | 2 }[] = [{ rank: 1 }, { rank: 0 }, { rank: 2 }];
 
-  const pedestalHeight = (rank: number) =>
-    rank === 0 ? "h-44" : rank === 1 ? "h-32" : "h-24";
+  const pedestalMinHeight = (rank: number) =>
+    rank === 0 ? "min-h-[11rem]" : rank === 1 ? "min-h-[9rem]" : "min-h-[7.5rem]";
   const avatarSize = (rank: number) =>
     rank === 0 ? "h-40 w-40" : "h-32 w-32";
 
@@ -647,10 +647,10 @@ const PodiumTv = ({ top3, getAvatar, getMedalCounts, onSelect }: PodiumTvProps) 
             {/* Pedestal */}
             <div
               className={cn(
-                "flex w-full flex-col items-center justify-start gap-2 rounded-t-xl bg-gradient-to-br p-3 ring-1 transition group-hover:ring-2",
+                "flex w-full flex-col items-center justify-start gap-2 rounded-t-xl bg-gradient-to-br px-3 pt-3 pb-4 ring-1 transition group-hover:ring-2",
                 m.bg,
                 m.ring,
-                pedestalHeight(rank),
+                pedestalMinHeight(rank),
               )}
             >
               <div className="text-center">
