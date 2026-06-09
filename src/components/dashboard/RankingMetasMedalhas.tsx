@@ -559,6 +559,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
 interface PodiumTvProps {
   top3: ScoreRow[];
   getAvatar: (name: string) => { avatarUrl: string | null; fullName: string | null };
+  getMedalCounts: GetMedalCounts;
   onSelect: (ativador: string) => void;
 }
 
@@ -595,7 +596,7 @@ const AvatarOrPlaceholder = ({
   );
 };
 
-const PodiumTv = ({ top3, getAvatar, onSelect }: PodiumTvProps) => {
+const PodiumTv = ({ top3, getAvatar, getMedalCounts, onSelect }: PodiumTvProps) => {
   // Order: 2nd left, 1st center, 3rd right
   const order: { rank: 0 | 1 | 2 }[] = [{ rank: 1 }, { rank: 0 }, { rank: 2 }];
 
@@ -634,9 +635,16 @@ const PodiumTv = ({ top3, getAvatar, onSelect }: PodiumTvProps) => {
                 {rank + 1}º
               </div>
             </div>
-            <p className="mb-2 max-w-full truncate px-2 font-display text-lg font-semibold text-foreground">
+            <p className="max-w-full truncate px-2 font-display text-lg font-semibold text-foreground">
               {r.ativador}
             </p>
+            <MedalBadges
+              ativador={r.ativador}
+              size="md"
+              getMedalCounts={getMedalCounts}
+              className="mt-1.5 justify-center"
+            />
+            <div className="mb-2" />
             {/* Pedestal */}
             <div
               className={cn(
