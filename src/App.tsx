@@ -32,7 +32,17 @@ import SucessoGestor from "./pages/sucesso/AreaGestor";
 import SucessoConfig from "./pages/sucesso/Config";
 import SucessoMgm from "./pages/sucesso/Mgm";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      retry: 1,
+    },
+  },
+});
 
 const Shell = () => {
   const [prefsOpen, setPrefsOpen] = useState(false);
