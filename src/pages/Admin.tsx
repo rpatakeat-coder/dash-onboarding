@@ -1663,7 +1663,7 @@ const AdminPodium = () => {
     setExisting({ first: payload.first, second: payload.second, third: payload.third });
     void logAudit({
       action: "podium.save",
-      entity_type: "podium_history",
+      entity_type: "outro",
       entity_id: monthKey,
       summary: `Fechou pódium de ${monthLabel}: 1º ${payload.first}, 2º ${payload.second ?? "—"}, 3º ${payload.third ?? "—"}`,
       metadata: payload,
