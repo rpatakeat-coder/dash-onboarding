@@ -267,6 +267,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
 
   const isTv = variant === "tv";
   const { getAvatar } = useAgentAvatars();
+  const { getMedalCounts } = usePodiumMedals();
 
   return (
     <div className={cn(
