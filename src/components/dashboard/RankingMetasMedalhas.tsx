@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Medal, Trophy, CalendarIcon, X, User } from "lucide-react";
 import { useAgentAvatars } from "@/hooks/useAgentAvatars";
+import { usePodiumMedals } from "@/hooks/usePodiumMedals";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
@@ -168,6 +169,46 @@ const MEDAL_STYLES = [
   { bg: "from-orange-600/30 to-orange-700/10", ring: "ring-orange-500/60", text: "text-orange-400", label: "Bronze" },
 ];
 
+type GetMedalCounts = (ativador: string) => { gold: number; silver: number; bronze: number };
+
+interface MedalBadgesProps {
+  ativador: string;
+  size?: "sm" | "md";
+  getMedalCounts: GetMedalCounts;
+  className?: string;
+}
+
+const MedalBadges = ({ ativador, size = "sm", getMedalCounts, className }: MedalBadgesProps) => {
+  const { gold, silver, bronze } = getMedalCounts(ativador);
+  if (gold === 0 && silver === 0 && bronze === 0) return null;
+
+  const iconCls = size === "md" ? "h-4 w-4" : "h-3.5 w-3.5";
+  const textCls = size === "md" ? "text-sm" : "text-xs";
+  const padCls = size === "md" ? "px-1.5 py-0.5" : "px-1 py-0.5";
+
+  const Pill = ({ count, color }: { count: number; color: string }) => (
+    <span
+      className={cn(
+        "inline-flex items-center gap-0.5 rounded-full border border-border bg-card/60",
+        padCls,
+      )}
+    >
+      <Medal className={cn(iconCls, color)} />
+      <span className={cn("font-numeric font-semibold tabular-nums text-foreground", textCls)}>
+        {count}
+      </span>
+    </span>
+  );
+
+  return (
+    <div className={cn("inline-flex items-center gap-1", className)}>
+      {gold > 0 && <Pill count={gold} color="text-amber-400" />}
+      {silver > 0 && <Pill count={silver} color="text-slate-300" />}
+      {bronze > 0 && <Pill count={bronze} color="text-orange-400" />}
+    </div>
+  );
+};
+
 const PERIOD_LABELS: Record<PeriodKey, string> = {
   semana: "Semana",
   mes: "Mês",
@@ -226,6 +267,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
 
   const isTv = variant === "tv";
   const { getAvatar } = useAgentAvatars();
+  const { getMedalCounts } = usePodiumMedals();
 
   return (
     <div className={cn(
@@ -326,7 +368,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
       ) : (
         <>
           {isTv ? (
-            <PodiumTv top3={top3} getAvatar={getAvatar} onSelect={setSelectedAtivador} />
+            <PodiumTv top3={top3} getAvatar={getAvatar} getMedalCounts={getMedalCounts} onSelect={setSelectedAtivador} />
           ) : (
           <div className={cn("grid gap-3", top3.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
             {top3.map((r, i) => {
@@ -359,9 +401,12 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
                       <p className="font-small text-[10px] uppercase tracking-wider text-muted-foreground">Score</p>
                     </div>
                   </div>
-                  <p className={cn("mt-3 font-display font-semibold text-foreground truncate", isTv ? "text-xl" : "text-base")}>
-                    {r.ativador}
-                  </p>
+                  <div className="mt-3 flex items-center gap-2 flex-wrap min-w-0">
+                    <p className={cn("font-display font-semibold text-foreground truncate min-w-0", isTv ? "text-xl" : "text-base")}>
+                      {r.ativador}
+                    </p>
+                    <MedalBadges ativador={r.ativador} size="sm" getMedalCounts={getMedalCounts} />
+                  </div>
                   <div className="mt-2 grid grid-cols-3 gap-2 text-center">
                     <div>
                       <p className="font-numeric text-sm font-semibold tabular-nums text-foreground">{r.pctMrr.toFixed(0)}%</p>
@@ -391,11 +436,12 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
                   onClick={() => setSelectedAtivador(r.ativador)}
                   className="flex w-full items-center justify-between px-4 py-2.5 text-left transition hover:bg-muted/40 focus:bg-muted/40 focus:outline-none"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="font-numeric text-sm font-bold tabular-nums text-muted-foreground w-6">
+                  <div className="flex items-center gap-3 min-w-0 flex-wrap">
+                    <span className="font-numeric text-sm font-bold tabular-nums text-muted-foreground w-6 shrink-0">
                       {i + 4}º
                     </span>
                     <span className="font-subtitle text-sm font-semibold text-foreground truncate">{r.ativador}</span>
+                    <MedalBadges ativador={r.ativador} size="sm" getMedalCounts={getMedalCounts} />
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="font-numeric text-xs tabular-nums text-muted-foreground hidden sm:inline">
@@ -513,6 +559,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
 interface PodiumTvProps {
   top3: ScoreRow[];
   getAvatar: (name: string) => { avatarUrl: string | null; fullName: string | null };
+  getMedalCounts: GetMedalCounts;
   onSelect: (ativador: string) => void;
 }
 
@@ -549,7 +596,7 @@ const AvatarOrPlaceholder = ({
   );
 };
 
-const PodiumTv = ({ top3, getAvatar, onSelect }: PodiumTvProps) => {
+const PodiumTv = ({ top3, getAvatar, getMedalCounts, onSelect }: PodiumTvProps) => {
   // Order: 2nd left, 1st center, 3rd right
   const order: { rank: 0 | 1 | 2 }[] = [{ rank: 1 }, { rank: 0 }, { rank: 2 }];
 
@@ -591,6 +638,12 @@ const PodiumTv = ({ top3, getAvatar, onSelect }: PodiumTvProps) => {
             <p className="mb-2 max-w-full truncate px-2 font-display text-lg font-semibold text-foreground">
               {r.ativador}
             </p>
+            <MedalBadges
+              ativador={r.ativador}
+              size="md"
+              getMedalCounts={getMedalCounts}
+              className="-mt-1 mb-2 justify-center"
+            />
             {/* Pedestal */}
             <div
               className={cn(
