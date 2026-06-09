@@ -4,8 +4,6 @@ import { ChevronLeft, ChevronRight, Maximize, Pause, Play } from "lucide-react";
 import { useDashOperacoes, computeSlaKpis, computeFiltered } from "@/hooks/useDashOperacoes";
 import { SlaKpiRow } from "@/components/dashboard/SlaKpiRow";
 import { RiskRanking } from "@/components/dashboard/RiskRanking";
-import { BottleneckHeatmap } from "@/components/dashboard/BottleneckHeatmap";
-import { TrendChart } from "@/components/dashboard/TrendChart";
 import { Highlights } from "@/components/dashboard/Highlights";
 import { ChurnKpis } from "@/components/dashboard/ChurnKpis";
 import { RankingMetasMedalhas } from "@/components/dashboard/RankingMetasMedalhas";
@@ -63,15 +61,6 @@ const Tv = () => {
       {
         title: "Churn do mês",
         node: <ChurnKpis rows={allRows} />,
-      },
-      {
-        title: "Gargalos & tendência",
-        node: (
-          <div className="grid h-full grid-cols-1 gap-6 lg:grid-cols-2">
-            <BottleneckHeatmap rows={rows} />
-            <TrendChart />
-          </div>
-        ),
       },
     ];
   }, [data, mesLabel]);
