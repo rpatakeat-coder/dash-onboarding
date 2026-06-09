@@ -325,6 +325,9 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
         </div>
       ) : (
         <>
+          {isTv ? (
+            <PodiumTv top3={top3} getAvatar={getAvatar} onSelect={setSelectedAtivador} />
+          ) : (
           <div className={cn("grid gap-3", top3.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
             {top3.map((r, i) => {
               const m = MEDAL_STYLES[i];
@@ -377,6 +380,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
               );
             })}
           </div>
+          )}
 
           {rest.length > 0 && (
             <div className="mt-4 divide-y divide-border rounded-xl border border-border">
