@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Medal, Trophy, CalendarIcon, X } from "lucide-react";
+import { Medal, Trophy, CalendarIcon, X, User } from "lucide-react";
+import { useAgentAvatars } from "@/hooks/useAgentAvatars";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
