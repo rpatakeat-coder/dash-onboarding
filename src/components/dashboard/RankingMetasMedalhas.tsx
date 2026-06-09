@@ -635,16 +635,15 @@ const PodiumTv = ({ top3, getAvatar, getMedalCounts, onSelect }: PodiumTvProps) 
                 {rank + 1}º
               </div>
             </div>
-            <p className="max-w-full truncate px-2 font-display text-lg font-semibold text-foreground">
+            <p className="mb-2 max-w-full truncate px-2 font-display text-lg font-semibold text-foreground">
               {r.ativador}
             </p>
             <MedalBadges
               ativador={r.ativador}
               size="md"
               getMedalCounts={getMedalCounts}
-              className="mt-1.5 justify-center"
+              className="-mt-1 mb-2 justify-center"
             />
-            <div className="mb-2" />
             {/* Pedestal */}
             <div
               className={cn(
