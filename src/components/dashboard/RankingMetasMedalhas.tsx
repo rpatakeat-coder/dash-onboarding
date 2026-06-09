@@ -368,7 +368,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
       ) : (
         <>
           {isTv ? (
-            <PodiumTv top3={top3} getAvatar={getAvatar} onSelect={setSelectedAtivador} />
+            <PodiumTv top3={top3} getAvatar={getAvatar} getMedalCounts={getMedalCounts} onSelect={setSelectedAtivador} />
           ) : (
           <div className={cn("grid gap-3", top3.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
             {top3.map((r, i) => {
@@ -401,9 +401,12 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
                       <p className="font-small text-[10px] uppercase tracking-wider text-muted-foreground">Score</p>
                     </div>
                   </div>
-                  <p className={cn("mt-3 font-display font-semibold text-foreground truncate", isTv ? "text-xl" : "text-base")}>
-                    {r.ativador}
-                  </p>
+                  <div className="mt-3 flex items-center gap-2 flex-wrap min-w-0">
+                    <p className={cn("font-display font-semibold text-foreground truncate min-w-0", isTv ? "text-xl" : "text-base")}>
+                      {r.ativador}
+                    </p>
+                    <MedalBadges ativador={r.ativador} size="sm" getMedalCounts={getMedalCounts} />
+                  </div>
                   <div className="mt-2 grid grid-cols-3 gap-2 text-center">
                     <div>
                       <p className="font-numeric text-sm font-semibold tabular-nums text-foreground">{r.pctMrr.toFixed(0)}%</p>
@@ -433,11 +436,12 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
                   onClick={() => setSelectedAtivador(r.ativador)}
                   className="flex w-full items-center justify-between px-4 py-2.5 text-left transition hover:bg-muted/40 focus:bg-muted/40 focus:outline-none"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="font-numeric text-sm font-bold tabular-nums text-muted-foreground w-6">
+                  <div className="flex items-center gap-3 min-w-0 flex-wrap">
+                    <span className="font-numeric text-sm font-bold tabular-nums text-muted-foreground w-6 shrink-0">
                       {i + 4}º
                     </span>
                     <span className="font-subtitle text-sm font-semibold text-foreground truncate">{r.ativador}</span>
+                    <MedalBadges ativador={r.ativador} size="sm" getMedalCounts={getMedalCounts} />
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="font-numeric text-xs tabular-nums text-muted-foreground hidden sm:inline">
