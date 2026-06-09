@@ -225,6 +225,7 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
   const rest = ranked.slice(3);
 
   const isTv = variant === "tv";
+  const { getAvatar } = useAgentAvatars();
 
   return (
     <div className={cn(
