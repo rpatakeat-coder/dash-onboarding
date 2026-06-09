@@ -169,6 +169,46 @@ const MEDAL_STYLES = [
   { bg: "from-orange-600/30 to-orange-700/10", ring: "ring-orange-500/60", text: "text-orange-400", label: "Bronze" },
 ];
 
+type GetMedalCounts = (ativador: string) => { gold: number; silver: number; bronze: number };
+
+interface MedalBadgesProps {
+  ativador: string;
+  size?: "sm" | "md";
+  getMedalCounts: GetMedalCounts;
+  className?: string;
+}
+
+const MedalBadges = ({ ativador, size = "sm", getMedalCounts, className }: MedalBadgesProps) => {
+  const { gold, silver, bronze } = getMedalCounts(ativador);
+  if (gold === 0 && silver === 0 && bronze === 0) return null;
+
+  const iconCls = size === "md" ? "h-4 w-4" : "h-3.5 w-3.5";
+  const textCls = size === "md" ? "text-sm" : "text-xs";
+  const padCls = size === "md" ? "px-1.5 py-0.5" : "px-1 py-0.5";
+
+  const Pill = ({ count, color }: { count: number; color: string }) => (
+    <span
+      className={cn(
+        "inline-flex items-center gap-0.5 rounded-full border border-border bg-card/60",
+        padCls,
+      )}
+    >
+      <Medal className={cn(iconCls, color)} />
+      <span className={cn("font-numeric font-semibold tabular-nums text-foreground", textCls)}>
+        {count}
+      </span>
+    </span>
+  );
+
+  return (
+    <div className={cn("inline-flex items-center gap-1", className)}>
+      {gold > 0 && <Pill count={gold} color="text-amber-400" />}
+      {silver > 0 && <Pill count={silver} color="text-slate-300" />}
+      {bronze > 0 && <Pill count={bronze} color="text-orange-400" />}
+    </div>
+  );
+};
+
 const PERIOD_LABELS: Record<PeriodKey, string> = {
   semana: "Semana",
   mes: "Mês",
