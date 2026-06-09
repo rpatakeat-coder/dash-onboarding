@@ -1,28 +1,30 @@
-## Objetivo
+## Tornar bucket `avatars` publicamente legível
 
-Alinhar o cálculo de **% Churn Onboarding** do **Rastro mensal** com a mesma lógica do card "% Churn Real": usar como denominador o **MRR de início de cada mês** lido da planilha Google Sheets (aba `Dados 2026`, coluna A = mês, coluna B = Receita Inicial), em vez de `MRR Criado no mês`.
+Para que as fotos dos ativadores apareçam no modo TV (sem usuário autenticado), vou tornar o bucket `avatars` público apenas para leitura. Escrita continua restrita ao dono.
 
-A edge function `churn-real-sheet` já retorna `mrrBaseByMonth` — um array de 12 posições com a Receita Inicial de cada mês do ano corrente. Vamos reaproveitar.
+### Mudanças
 
-## Mudanças
+**1. Atualizar bucket via tool nativa** (`supabase--storage_update_bucket`)
+- `name: "avatars"`, `public: true`
+- Observação: a flag `public` do bucket NÃO pode ser alterada via SQL (`UPDATE storage.buckets` é bloqueado pelo workspace). Por isso uso a tool dedicada em vez da migration que você esboçou no item 1.
 
-### 1. `src/components/dashboard/RastroMensal.tsx`
-- Buscar `mrrBaseByMonth` via `supabase.functions.invoke('churn-real-sheet')` ao montar (mesmo padrão usado em `ChurnKpis.tsx`).
-- Guardar em estado (`useState<(number|null)[]>`) com fallback `Array(12).fill(null)` enquanto carrega/erro.
-- No `useMemo` que monta `data`, substituir o cálculo de `pctChurn`:
-  - **De:** `pctChurn = m.mrrCriado > 0 ? (m.churnMrr / m.mrrCriado) * 100 : 0`
-  - **Para:** usar `mrrBaseByMonth[i]` como denominador. Se `null` ou `0` → `pctChurn = null` (mostra `—`).
-- Atualizar `fmtPct` / renderização da linha para exibir `—` quando o denominador da planilha não estiver disponível para aquele mês (não mostrar `0%` enganoso).
-- Atualizar o `InfoTooltip` do cabeçalho:
-  - **De:** `... ÷ MRR criado no mês × 100.`
-  - **Para:** `... ÷ MRR de início do mês (planilha Dados 2026) × 100.`
-- Atualizar a nota de rodapé (linha ~349) para refletir o novo denominador.
+**2. Migration SQL** — apenas para policies em `storage.objects`:
+```sql
+-- Remove policies de SELECT restritas (se existirem)
+DROP POLICY IF EXISTS "Authenticated can view avatars" ON storage.objects;
+DROP POLICY IF EXISTS "Anyone can view avatars" ON storage.objects;
 
-### 2. Sem mudanças em
-- `churn-real-sheet/index.ts` — já retorna `mrrBaseByMonth` no formato necessário.
-- `isChurnRow` / numerador — permanece igual (etapa `Churn`, pipeline `Sucesso`, origem `Onboarding`, `data_fechamento` no mês).
-- Limite visual de 9% (vermelho) — permanece.
+-- Policy pública de leitura
+CREATE POLICY "Public can view avatars"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'avatars');
+```
 
-## Observações
-- Meses sem valor na planilha exibirão `—` em vez de `0%`, evitando interpretação errada.
-- O fetch é feito uma vez por montagem do componente (mesmo padrão do KPI card); sem cache compartilhado.
+**3. Não tocar** em policies de INSERT/UPDATE/DELETE — escrita segue restrita ao `auth.uid()` no primeiro nível da pasta.
+
+### Verificação pós-migration
+- Rodar o linter Supabase.
+- Confirmar via `storage.objects` que apenas a policy `Public can view avatars` cobre SELECT no bucket; se houver outra policy de SELECT herdada (ex.: "Avatar images are publicly accessible"), te aviso antes de mexer.
+
+### Aviso
+Tornar o bucket público significa que qualquer pessoa com a URL do arquivo poderá visualizá-lo (sem listar o bucket). É o comportamento esperado para avatares exibidos em telão público.
