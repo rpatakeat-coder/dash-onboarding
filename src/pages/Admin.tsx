@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Shield, ShieldCheck, ShieldOff, Users, Settings as SettingsIcon, Trash2, Loader2, History, RefreshCw, UserPlus, Mail, Send, Copy, MessageCircle, Link2, Sparkles, Plus, Contact2 } from "lucide-react";
+import { Shield, ShieldCheck, ShieldOff, Users, Settings as SettingsIcon, Trash2, Loader2, History, RefreshCw, UserPlus, Mail, Send, Copy, MessageCircle, Link2, Sparkles, Plus, Contact2, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
@@ -59,12 +59,14 @@ const Admin = () => {
             <TabsTrigger value="operators" className="gap-1.5"><UserPlus className="h-3.5 w-3.5" />Operadores</TabsTrigger>
             <TabsTrigger value="hubspot" className="gap-1.5"><Contact2 className="h-3.5 w-3.5" />Agentes HubSpot</TabsTrigger>
             <TabsTrigger value="users" className="gap-1.5"><Users className="h-3.5 w-3.5" />Usuários</TabsTrigger>
+            <TabsTrigger value="podium" className="gap-1.5"><Trophy className="h-3.5 w-3.5" />Pódium</TabsTrigger>
             <TabsTrigger value="config" className="gap-1.5"><SettingsIcon className="h-3.5 w-3.5" />Configurações</TabsTrigger>
             <TabsTrigger value="auditoria" className="gap-1.5"><History className="h-3.5 w-3.5" />Auditoria</TabsTrigger>
           </TabsList>
           <TabsContent value="operators" className="mt-4"><AdminOperators /></TabsContent>
           <TabsContent value="hubspot" className="mt-4"><AdminHubspotAgents /></TabsContent>
           <TabsContent value="users" className="mt-4"><AdminUsers /></TabsContent>
+          <TabsContent value="podium" className="mt-4"><AdminPodium /></TabsContent>
           <TabsContent value="config" className="mt-4"><AdminConfig /></TabsContent>
           <TabsContent value="auditoria" className="mt-4"><AdminAuditoria /></TabsContent>
         </Tabs>
@@ -1580,6 +1582,161 @@ const AdminHubspotAgents = () => {
               </tbody>
             </table>
           </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ============ PODIUM (fechar pódium do mês anterior) ============
+import { useMemo as _useMemo } from "react";
+import { useDashOperacoes } from "@/hooks/useDashOperacoes";
+import { computeRanking } from "@/components/dashboard/RankingMetasMedalhas";
+import { Medal } from "lucide-react";
+
+const MONTH_LABELS = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
+
+const PODIUM_MEDALS = [
+  { text: "text-amber-400", bg: "bg-amber-400/10 ring-amber-400/40", label: "Ouro" },
+  { text: "text-slate-300", bg: "bg-slate-300/10 ring-slate-300/40", label: "Prata" },
+  { text: "text-orange-400", bg: "bg-orange-500/10 ring-orange-500/40", label: "Bronze" },
+];
+
+const AdminPodium = () => {
+  const { data, isLoading } = useDashOperacoes();
+  const [saving, setSaving] = useState(false);
+  const [existing, setExisting] = useState<{ first: string; second: string | null; third: string | null } | null>(null);
+  const [checking, setChecking] = useState(true);
+
+  const now = new Date();
+  const prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevEnd = new Date(now.getFullYear(), now.getMonth(), 0); // último dia do mês anterior
+  const monthKey = `${prevStart.getFullYear()}-${String(prevStart.getMonth() + 1).padStart(2, "0")}`;
+  const monthLabel = `${MONTH_LABELS[prevStart.getMonth()]}/${prevStart.getFullYear()}`;
+
+  const top3 = _useMemo(() => {
+    if (!data?.rows) return [];
+    const { ranked } = computeRanking(data.rows, "custom", { start: prevStart, end: prevEnd });
+    return ranked.slice(0, 3);
+  }, [data, prevStart, prevEnd]);
+
+  useEffect(() => {
+    let cancel = false;
+    setChecking(true);
+    supabase
+      .from("podium_history")
+      .select("first, second, third")
+      .eq("month", monthKey)
+      .maybeSingle()
+      .then(({ data: row }) => {
+        if (cancel) return;
+        setExisting(row ?? null);
+        setChecking(false);
+      });
+    return () => { cancel = true; };
+  }, [monthKey]);
+
+  const save = async () => {
+    if (top3.length === 0) {
+      toast.error("Sem dados suficientes para fechar o pódium deste mês");
+      return;
+    }
+    setSaving(true);
+    const payload = {
+      month: monthKey,
+      first: top3[0].ativador,
+      second: top3[1]?.ativador ?? null,
+      third: top3[2]?.ativador ?? null,
+    };
+    const { error } = await supabase
+      .from("podium_history")
+      .upsert(payload, { onConflict: "month" });
+    setSaving(false);
+    if (error) {
+      toast.error("Erro ao salvar pódium", { description: error.message });
+      return;
+    }
+    toast.success(`Pódium de ${monthLabel} salvo`);
+    setExisting({ first: payload.first, second: payload.second, third: payload.third });
+    void logAudit({
+      action: "podium.save",
+      entity_type: "outro",
+      entity_id: monthKey,
+      summary: `Fechou pódium de ${monthLabel}: 1º ${payload.first}, 2º ${payload.second ?? "—"}, 3º ${payload.third ?? "—"}`,
+      metadata: payload,
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-border bg-card p-5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+            <Trophy className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-display text-base font-semibold text-secondary">Fechar pódium do mês</h3>
+            <p className="font-small text-xs text-muted-foreground">
+              Mês alvo: <span className="font-semibold text-foreground">{monthLabel}</span> ({monthKey})
+            </p>
+          </div>
+        </div>
+
+        {isLoading || checking ? (
+          <div className="mt-6 flex items-center justify-center py-10 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+          </div>
+        ) : (
+          <>
+            {existing && (
+              <div className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/5 p-3 text-sm text-amber-200">
+                Já existe pódium salvo para este mês ({existing.first} · {existing.second ?? "—"} · {existing.third ?? "—"}). Salvar novamente irá sobrescrever.
+              </div>
+            )}
+
+            {top3.length === 0 ? (
+              <div className="mt-6 rounded-xl border border-dashed border-border py-10 text-center font-subtitle text-sm text-muted-foreground">
+                Sem dados suficientes para o mês anterior.
+              </div>
+            ) : (
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                {top3.map((r, i) => {
+                  const m = PODIUM_MEDALS[i];
+                  return (
+                    <div
+                      key={r.ativador}
+                      className={`rounded-xl p-4 ring-1 ${m.bg}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Medal className={`h-6 w-6 ${m.text}`} />
+                          <div>
+                            <p className={`font-subtitle text-[10px] uppercase tracking-wider ${m.text}`}>{m.label}</p>
+                            <p className="font-numeric text-xs text-muted-foreground tabular-nums">{i + 1}º lugar</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={`font-numeric text-2xl font-bold tabular-nums ${m.text}`}>{Math.round(r.scoreFinal)}</p>
+                          <p className="font-small text-[10px] uppercase tracking-wider text-muted-foreground">Score</p>
+                        </div>
+                      </div>
+                      <p className="mt-3 font-display text-base font-semibold text-foreground truncate">{r.ativador}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="mt-5 flex justify-end">
+              <Button onClick={save} disabled={saving || top3.length === 0} className="gap-1.5">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />}
+                Salvar pódium de {monthLabel}
+              </Button>
+            </div>
+          </>
         )}
       </div>
     </div>

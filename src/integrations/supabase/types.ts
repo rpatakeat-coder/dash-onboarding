@@ -980,6 +980,33 @@ export type Database = {
         }
         Relationships: []
       }
+      podium_history: {
+        Row: {
+          created_at: string
+          first: string
+          id: string
+          month: string
+          second: string | null
+          third: string | null
+        }
+        Insert: {
+          created_at?: string
+          first: string
+          id?: string
+          month: string
+          second?: string | null
+          third?: string | null
+        }
+        Update: {
+          created_at?: string
+          first?: string
+          id?: string
+          month?: string
+          second?: string | null
+          third?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           agente_ativacao: string | null
