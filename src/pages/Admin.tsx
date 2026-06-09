@@ -59,12 +59,14 @@ const Admin = () => {
             <TabsTrigger value="operators" className="gap-1.5"><UserPlus className="h-3.5 w-3.5" />Operadores</TabsTrigger>
             <TabsTrigger value="hubspot" className="gap-1.5"><Contact2 className="h-3.5 w-3.5" />Agentes HubSpot</TabsTrigger>
             <TabsTrigger value="users" className="gap-1.5"><Users className="h-3.5 w-3.5" />Usuários</TabsTrigger>
+            <TabsTrigger value="podium" className="gap-1.5"><Trophy className="h-3.5 w-3.5" />Pódium</TabsTrigger>
             <TabsTrigger value="config" className="gap-1.5"><SettingsIcon className="h-3.5 w-3.5" />Configurações</TabsTrigger>
             <TabsTrigger value="auditoria" className="gap-1.5"><History className="h-3.5 w-3.5" />Auditoria</TabsTrigger>
           </TabsList>
           <TabsContent value="operators" className="mt-4"><AdminOperators /></TabsContent>
           <TabsContent value="hubspot" className="mt-4"><AdminHubspotAgents /></TabsContent>
           <TabsContent value="users" className="mt-4"><AdminUsers /></TabsContent>
+          <TabsContent value="podium" className="mt-4"><AdminPodium /></TabsContent>
           <TabsContent value="config" className="mt-4"><AdminConfig /></TabsContent>
           <TabsContent value="auditoria" className="mt-4"><AdminAuditoria /></TabsContent>
         </Tabs>
