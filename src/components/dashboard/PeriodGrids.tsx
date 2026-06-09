@@ -103,7 +103,7 @@ export const PeriodGrids = ({ hoje, semana, mes, mesAnterior, perfis }: Props) =
           </div>
         </Panel>
 
-        <Panel title="Distribuição por perfil" caption="estoque atual">
+        <Panel title="Distribuição por perfil" caption="clientes">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {perfis.map((p) => (
               <div key={p.perfil} className="rounded-xl border border-border bg-card/60 p-4">

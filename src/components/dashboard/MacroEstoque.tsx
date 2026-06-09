@@ -32,7 +32,7 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
         <div className="relative">
           <div className="absolute right-2 top-2 z-10">
-            <InfoTooltip text="Estoque atual = todos os deals atualmente no pipeline 'Onboarding' (filtros aplicados), independente da data de criação." />
+            <InfoTooltip text="Clientes = todos os deals atualmente no pipeline 'Onboarding' (filtros aplicados), independente da data de criação." />
           </div>
           <button
             type="button"
@@ -42,7 +42,7 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
             <div className="flex items-start justify-between">
               <div className="min-w-0 flex-1">
                 <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
-                  Estoque atual
+                  Clientes
                 </p>
                 <p className="mt-2 font-numeric text-4xl font-bold text-primary">
                   {k.total.toLocaleString("pt-BR")}
@@ -51,7 +51,7 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
                   no pipeline Onboarding
                 </p>
                 <p className="mt-0.5 font-numeric text-[11px] text-muted-foreground tabular-nums">
-                  MRR do estoque: <span className="font-semibold text-foreground/80">{fmtBRL(mrrTotalEstoque)}</span>
+                  MRR total: <span className="font-semibold text-foreground/80">{fmtBRL(mrrTotalEstoque)}</span>
                 </p>
                 {(() => {
                   const get = (p: string) => perfis.find((x) => x.perfil === p)?.count ?? 0;
@@ -105,7 +105,7 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
                 {v?.count ?? 0}
               </p>
               <p className="mt-1 font-small text-xs text-muted-foreground">
-                {fmtPct(v?.pct ?? 0, 1)} do estoque
+                {fmtPct(v?.pct ?? 0, 1)} do total
               </p>
               <p className="mt-0.5 font-numeric text-[11px] text-muted-foreground tabular-nums">
                 MRR: <span className="font-semibold text-foreground/80">{fmtBRL(v?.mrr ?? 0)}</span>
@@ -120,7 +120,7 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
         <div className="mb-4 flex items-end justify-between gap-2">
           <div>
             <h2 className="font-display text-base font-semibold text-secondary">
-              SLA do estoque (data de criação)
+              SLA (data de criação)
             </h2>
             <p className="font-small text-xs text-muted-foreground">
               Dias desde a criação do deal · cálculo bruto
@@ -131,7 +131,7 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="relative rounded-xl border border-border bg-card/60 p-4">
-            <div className="absolute right-2 top-2"><InfoTooltip text="P75 SLA = percentil 75 de sla_dias_real do estoque filtrado. sla_dias_real = dias desde a criação do deal DESCONTANDO o tempo em que o card permaneceu na etapa 'Processo Pausado'. 75% dos deals possuem SLA menor ou igual a esse valor." /></div>
+            <div className="absolute right-2 top-2"><InfoTooltip text="P75 SLA = percentil 75 de sla_dias_real dos clientes filtrados. sla_dias_real = dias desde a criação do deal DESCONTANDO o tempo em que o card permaneceu na etapa 'Processo Pausado'. 75% dos deals possuem SLA menor ou igual a esse valor." /></div>
             <p className="font-subtitle text-xs text-muted-foreground">P75 SLA</p>
             <p className="mt-2 font-numeric text-3xl font-bold text-foreground">
               {k.p75.toFixed(0)}<span className="ml-1 text-base font-medium text-muted-foreground">d</span>
@@ -142,13 +142,13 @@ export const MacroEstoque = ({ rows, perfis, onTotalClick }: Props) => {
           </div>
 
           <div className="relative rounded-xl border border-border bg-card/60 p-4">
-            <div className="absolute right-2 top-2"><InfoTooltip text="SLA médio = média aritmética de sla_dias_real em todos os deals do estoque filtrado. sla_dias_real desconta o tempo em que o card ficou na etapa 'Processo Pausado'." /></div>
+            <div className="absolute right-2 top-2"><InfoTooltip text="SLA médio = média aritmética de sla_dias_real em todos os clientes filtrados. sla_dias_real desconta o tempo em que o card ficou na etapa 'Processo Pausado'." /></div>
             <p className="font-subtitle text-xs text-muted-foreground">SLA médio</p>
             <p className="mt-2 font-numeric text-3xl font-bold text-foreground">
               {k.media.toFixed(1)}<span className="ml-1 text-base font-medium text-muted-foreground">d</span>
             </p>
             <p className="mt-1 font-small text-xs text-muted-foreground">
-              média do estoque
+              média total
             </p>
           </div>
 
