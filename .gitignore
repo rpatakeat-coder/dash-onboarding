@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# Variáveis de ambiente (contêm chaves do Supabase)
+.env
+.env.*
+!.env.example
+
+# Configurações locais do Claude Code (específicas da máquina)
+.claude/settings.local.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -1,13 +1,16 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, ArrowUpDown, Download, DollarSign, UserCheck, Building2 } from "lucide-react";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import {
   fmtBRL,
   fmtPct,
   grupoPerfil,
   type DashSucessoRow,
 } from "@/hooks/useDashSucesso";
+
+const PAGE_SIZE_OPTS = [25, 50, 100] as const;
 
 interface Props {
   rows: DashSucessoRow[];
@@ -73,6 +76,16 @@ export const RiscoEstoque = ({
     arr.sort((a, b) => (sortDir === "desc" ? num(b.mrr) - num(a.mrr) : num(a.mrr) - num(b.mrr)));
     return arr;
   }, [risco, sortDir]);
+
+  // Paginação (25 por padrão; estende até 100).
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTS[0]);
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const pageSafe = Math.min(page, totalPages - 1);
+  const pageRows = sorted.slice(pageSafe * pageSize, (pageSafe + 1) * pageSize);
+
+  // Volta à primeira página quando o conjunto ou a ordenação muda.
+  useEffect(() => { setPage(0); }, [risco, sortDir]);
 
   const pct = (a: number, b: number) => (b > 0 ? (a / b) * 100 : 0);
 
@@ -194,8 +207,8 @@ export const RiscoEstoque = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {sorted.map((r, i) => (
-                <tr key={`${r.nome_negocio}-${i}`} className="hover:bg-muted/30">
+              {pageRows.map((r, i) => (
+                <tr key={`${r.nome_negocio}-${pageSafe * pageSize + i}`} className="hover:bg-muted/30">
                   <td className="px-3 py-2.5 font-medium text-foreground">{r.nome_negocio ?? "—"}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{r.perfil_cliente ?? "—"}</td>
                   <td className="px-3 py-2.5 text-right font-numeric font-semibold">{fmtBRL(num(r.mrr))}</td>
@@ -212,6 +225,86 @@ export const RiscoEstoque = ({
             </tbody>
           </table>
         </div>
+
+        {sorted.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 font-subtitle text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span>
+                {`${pageSafe * pageSize + 1}–${Math.min(sorted.length, (pageSafe + 1) * pageSize)} de ${fmtN(sorted.length)}`}
+              </span>
+              <span className="mx-1 text-border">·</span>
+              <label className="flex items-center gap-1.5">
+                Por página
+                <select
+                  value={pageSize}
+                  onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0); }}
+                  className="rounded-md border border-border bg-background px-2 py-1 text-foreground"
+                >
+                  {PAGE_SIZE_OPTS.map((n) => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="flex flex-wrap items-center gap-1">
+              <button
+                onClick={() => setPage(0)}
+                disabled={pageSafe === 0}
+                className="rounded-lg border border-border px-2.5 py-1.5 hover:border-primary/40 disabled:opacity-40"
+                aria-label="Primeira página"
+              >
+                «
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={pageSafe === 0}
+                className="rounded-lg border border-border px-2.5 py-1.5 hover:border-primary/40 disabled:opacity-40"
+                aria-label="Página anterior"
+              >
+                <span className="hidden sm:inline">Anterior</span>
+                <span className="sm:hidden">‹</span>
+              </button>
+              {(() => {
+                const pages: number[] = [];
+                const visible = 3;
+                const start = Math.max(0, Math.min(pageSafe - Math.floor(visible / 2), totalPages - visible));
+                const end = Math.min(totalPages, start + visible);
+                for (let i = start; i < end; i++) pages.push(i);
+                return pages.map((i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPage(i)}
+                    className={cn(
+                      "min-w-[34px] rounded-lg border px-2.5 py-1.5 tabular-nums",
+                      i === pageSafe
+                        ? "border-primary/60 bg-primary/10 text-primary"
+                        : "border-border hover:border-primary/40",
+                    )}
+                  >
+                    {i + 1}
+                  </button>
+                ));
+              })()}
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={pageSafe >= totalPages - 1}
+                className="rounded-lg border border-border px-2.5 py-1.5 hover:border-primary/40 disabled:opacity-40"
+                aria-label="Próxima página"
+              >
+                <span className="hidden sm:inline">Próxima</span>
+                <span className="sm:hidden">›</span>
+              </button>
+              <button
+                onClick={() => setPage(totalPages - 1)}
+                disabled={pageSafe >= totalPages - 1}
+                className="rounded-lg border border-border px-2.5 py-1.5 hover:border-primary/40 disabled:opacity-40"
+                aria-label="Última página"
+              >
+                »
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

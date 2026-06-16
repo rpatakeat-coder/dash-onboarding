@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LayoutDashboard, Users, DollarSign, UserCheck, Building2 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
@@ -9,12 +9,24 @@ import { ChurnSucesso } from "@/components/sucesso/ChurnSucesso";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
 import {
   useDashSucesso,
-  useSucessoOverviewView,
+  applySucessoFilter,
+  selectOverview,
   fmtBRL,
   fmtPct,
   type SucessoFilter,
 } from "@/hooks/useDashSucesso";
 import type { DashRow } from "@/hooks/useDashOperacoes";
+
+// Etapas que iniciam OCULTAS por padrão (visão de base ativa).
+// Normaliza acentos de traço (–/—) e espaços para casar com a grafia do banco.
+const normEtapa = (s: string) =>
+  s.trim().toLowerCase().replace(/[–—]/g, "-").replace(/\s+/g, " ");
+const ETAPAS_OCULTAS_PADRAO = new Set([
+  "churn",
+  "estorno - comercial",
+  "estorno comercial", // variante sem traço
+]);
+const ETAPAS_TOUCHED_KEY = "sucesso:etapas:touched";
 
 export default function SucessoDashboard() {
   // Estado de filtros compartilhado (espelha Onboarding: useState + usePersistedSet)
@@ -23,6 +35,19 @@ export default function SucessoDashboard() {
   const [filtroPeriodo, setFiltroPeriodo] = useState<MacroPeriodKey>("tudo");
   const [filtroCustomRange, setFiltroCustomRange] = useState<CustomRange | null>(null);
   const [filtroPerfil, setFiltroPerfil] = useState<"P+M" | "G+GG" | null>(null);
+
+  // O usuário já mexeu no "Ocultar fase" alguma vez? Se sim, respeitamos a escolha
+  // dele (inclusive "mostrar tudo"). Se não, semeamos o default de base ativa.
+  const [etapasTouched, setEtapasTouched] = useState<boolean>(() => {
+    try {
+      return (
+        window.localStorage.getItem(ETAPAS_TOUCHED_KEY) === "1" ||
+        window.localStorage.getItem("sucesso:etapas") != null
+      );
+    } catch {
+      return false;
+    }
+  });
 
   const filter: SucessoFilter = useMemo(
     () => ({
@@ -35,10 +60,68 @@ export default function SucessoDashboard() {
     [filtroAgentes, filtroEtapas, filtroPeriodo, filtroCustomRange, filtroPerfil],
   );
 
-  const { data, isLoading, error } = useSucessoOverviewView();
   // rowsRaw = base sem filtro (alimenta opções do MacroFilters)
   // rows / carteira = já recortados pelo filtro
-  const { rows, rowsRaw, carteira } = useDashSucesso(filter);
+  const { rows, rowsRaw, carteira, isLoading, error } = useDashSucesso(filter);
+
+  // Rótulos reais (grafia do banco) das etapas que devem iniciar ocultas.
+  const defaultOcultarLabels = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          rowsRaw
+            .map((r) => r.etapa_negocio?.trim())
+            .filter((e): e is string => !!e)
+            .filter((e) => ETAPAS_OCULTAS_PADRAO.has(normEtapa(e))),
+        ),
+      ),
+    [rowsRaw],
+  );
+
+  // Semeia o default uma única vez (quando ainda não há escolha do usuário).
+  useEffect(() => {
+    if (etapasTouched || filtroEtapas.size > 0 || defaultOcultarLabels.length === 0) return;
+    setFiltroEtapas(new Set(defaultOcultarLabels));
+  }, [etapasTouched, filtroEtapas, defaultOcultarLabels, setFiltroEtapas]);
+
+  // Qualquer interação manual com o "Ocultar fase" marca como tocado e persiste.
+  const handleEtapasChange = (next: Set<string>) => {
+    if (!etapasTouched) {
+      setEtapasTouched(true);
+      try {
+        window.localStorage.setItem(ETAPAS_TOUCHED_KEY, "1");
+      } catch {
+        /* storage indisponível — ignora */
+      }
+    }
+    setFiltroEtapas(next);
+  };
+
+  // Visão Geral + Segmentação respeitam agentes/período/ocultar-fase, mas NÃO o
+  // perfil (os cards P+M e G+GG precisam sempre mostrar os dois lados).
+  const ov = useMemo(() => {
+    const ovRows = applySucessoFilter(rowsRaw, {
+      agentes: filtroAgentes,
+      ocultarEtapas: filtroEtapas,
+      periodo: filtroPeriodo,
+      customRange: filtroCustomRange,
+    });
+    // excludeChurn:false → quem decide se churn entra é o filtro "Ocultar fase".
+    return selectOverview(ovRows, { excludeChurn: false });
+  }, [rowsRaw, filtroAgentes, filtroEtapas, filtroPeriodo, filtroCustomRange]);
+
+  // Bloco de Churn é a única exceção: ele ANALISA churn, então recebe os dados
+  // sem o recorte de "Ocultar fase" (senão ficaria sempre vazio).
+  const churnRows = useMemo(
+    () =>
+      applySucessoFilter(rowsRaw, {
+        agentes: filtroAgentes,
+        periodo: filtroPeriodo,
+        customRange: filtroCustomRange,
+        perfilGrupo: filtroPerfil,
+      }),
+    [rowsRaw, filtroAgentes, filtroPeriodo, filtroCustomRange, filtroPerfil],
+  );
 
   // Adapter: MacroFilters tipa em DashRow (Onboarding). Mapeamos só o necessário.
   const macroRows = useMemo(
@@ -82,7 +165,7 @@ export default function SucessoDashboard() {
           ativadores={filtroAgentes}
           etapas={filtroEtapas}
           onAtivadoresChange={setFiltroAgentes}
-          onEtapasChange={setFiltroEtapas}
+          onEtapasChange={handleEtapasChange}
           periodo={filtroPeriodo}
           onPeriodoChange={setFiltroPeriodo}
           customRange={filtroCustomRange}
@@ -122,10 +205,10 @@ export default function SucessoDashboard() {
             >
               <KpiCard
                 label="Total de Clientes no Pipeline"
-                value={isLoading || !data ? "—" : data.total_clientes.toLocaleString("pt-BR")}
+                value={isLoading ? "—" : ov.totalClientes.toLocaleString("pt-BR")}
                 icon={Users}
                 tone="primary"
-                hint={filtroPerfil ? "Clique para limpar o filtro de perfil" : "Clientes ativos no pipeline de Sucesso/Retenção"}
+                hint={filtroPerfil ? "Clique para limpar o filtro de perfil" : "Base ativa (sem Estorno-Comercial e Churn por padrão)"}
               />
             </button>
             <button
@@ -138,7 +221,7 @@ export default function SucessoDashboard() {
             >
               <KpiCard
                 label="MRR Acumulado Total"
-                value={isLoading || !data ? "—" : fmtBRL(data.mrr_total)}
+                value={isLoading ? "—" : fmtBRL(ov.mrrTotal)}
                 icon={DollarSign}
                 tone="success"
                 hint={filtroPerfil ? "Clique para limpar o filtro de perfil" : "Receita recorrente mensal consolidada"}
@@ -172,12 +255,12 @@ export default function SucessoDashboard() {
                         Clientes
                       </p>
                       <p className="font-numeric text-3xl font-bold text-foreground">
-                        {isLoading || !data
+                        {isLoading
                           ? "—"
-                          : `${data.qtd_pm.toLocaleString("pt-BR")} `}
-                        {data && (
+                          : `${ov.qtdPM.toLocaleString("pt-BR")} `}
+                        {!isLoading && (
                           <span className="font-numeric text-base font-semibold text-muted-foreground">
-                            ({fmtPct(pct(data.qtd_pm, data.total_clientes), 1)})
+                            ({fmtPct(pct(ov.qtdPM, ov.totalClientes), 1)})
                           </span>
                         )}
                       </p>
@@ -187,10 +270,10 @@ export default function SucessoDashboard() {
                         MRR
                       </p>
                       <p className="font-numeric text-2xl font-bold text-foreground">
-                        {isLoading || !data ? "—" : fmtBRL(data.mrr_pm)}{" "}
-                        {data && (
+                        {isLoading ? "—" : fmtBRL(ov.mrrPM)}{" "}
+                        {!isLoading && (
                           <span className="font-numeric text-sm font-semibold text-muted-foreground">
-                            ({fmtPct(pct(data.mrr_pm, data.mrr_total), 1)})
+                            ({fmtPct(pct(ov.mrrPM, ov.mrrTotal), 1)})
                           </span>
                         )}
                       </p>
@@ -222,12 +305,12 @@ export default function SucessoDashboard() {
                         Clientes
                       </p>
                       <p className="font-numeric text-3xl font-bold text-foreground">
-                        {isLoading || !data
+                        {isLoading
                           ? "—"
-                          : `${data.qtd_ggg.toLocaleString("pt-BR")} `}
-                        {data && (
+                          : `${ov.qtdGGG.toLocaleString("pt-BR")} `}
+                        {!isLoading && (
                           <span className="font-numeric text-base font-semibold text-muted-foreground">
-                            ({fmtPct(pct(data.qtd_ggg, data.total_clientes), 1)})
+                            ({fmtPct(pct(ov.qtdGGG, ov.totalClientes), 1)})
                           </span>
                         )}
                       </p>
@@ -237,10 +320,10 @@ export default function SucessoDashboard() {
                         MRR
                       </p>
                       <p className="font-numeric text-2xl font-bold text-foreground">
-                        {isLoading || !data ? "—" : fmtBRL(data.mrr_ggg)}{" "}
-                        {data && (
+                        {isLoading ? "—" : fmtBRL(ov.mrrGGG)}{" "}
+                        {!isLoading && (
                           <span className="font-numeric text-sm font-semibold text-muted-foreground">
-                            ({fmtPct(pct(data.mrr_ggg, data.mrr_total), 1)})
+                            ({fmtPct(pct(ov.mrrGGG, ov.mrrTotal), 1)})
                           </span>
                         )}
                       </p>
@@ -254,11 +337,11 @@ export default function SucessoDashboard() {
             </button>
           </div>
 
-          {data && data.qtd_sem_perfil > 0 && (
+          {!isLoading && ov.qtdSemPerfil > 0 && (
             <p className="font-small text-xs text-muted-foreground">
-              Obs.: {data.qtd_sem_perfil.toLocaleString("pt-BR")} clientes sem perfil
-              definido ({fmtPct(pct(data.qtd_sem_perfil, data.total_clientes), 1)}) —{" "}
-              {fmtBRL(data.mrr_sem_perfil)} em MRR.
+              Obs.: {ov.qtdSemPerfil.toLocaleString("pt-BR")} clientes sem perfil
+              definido ({fmtPct(pct(ov.qtdSemPerfil, ov.totalClientes), 1)}) —{" "}
+              {fmtBRL(ov.mrrSemPerfil)} em MRR.
             </p>
           )}
         </section>
@@ -266,8 +349,8 @@ export default function SucessoDashboard() {
         <section className="space-y-3">
           <CarteiraPorAgente
             agentes={carteira}
-            totalClientes={data?.total_clientes ?? 0}
-            totalMrr={data?.mrr_total ?? 0}
+            totalClientes={ov.totalClientes}
+            totalMrr={ov.mrrTotal}
             selectedAgentes={filtroAgentes}
             onToggleAgente={(a) => {
               const next = new Set(filtroAgentes);
@@ -281,20 +364,20 @@ export default function SucessoDashboard() {
 
         <RiscoEstoque
           rows={rows}
-          totalClientes={data?.total_clientes ?? 0}
-          mrrTotal={data?.mrr_total ?? 0}
-          qtdPMTotal={data?.qtd_pm ?? 0}
-          qtdGGGTotal={data?.qtd_ggg ?? 0}
-          mrrPMTotal={data?.mrr_pm ?? 0}
-          mrrGGGTotal={data?.mrr_ggg ?? 0}
+          totalClientes={ov.totalClientes}
+          mrrTotal={ov.mrrTotal}
+          qtdPMTotal={ov.qtdPM}
+          qtdGGGTotal={ov.qtdGGG}
+          mrrPMTotal={ov.mrrPM}
+          mrrGGGTotal={ov.mrrGGG}
         />
 
         <ChurnSucesso
-          rows={rows}
-          qtdPMTotal={data?.qtd_pm ?? 0}
-          qtdGGGTotal={data?.qtd_ggg ?? 0}
-          mrrPMTotal={data?.mrr_pm ?? 0}
-          mrrGGGTotal={data?.mrr_ggg ?? 0}
+          rows={churnRows}
+          qtdPMTotal={ov.qtdPM}
+          qtdGGGTotal={ov.qtdGGG}
+          mrrPMTotal={ov.mrrPM}
+          mrrGGGTotal={ov.mrrGGG}
         />
 
 

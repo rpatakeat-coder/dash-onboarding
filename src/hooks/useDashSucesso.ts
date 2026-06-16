@@ -53,10 +53,16 @@ export interface OverviewStats {
   pctMrrSemPerfil: number;
 }
 
-export const selectOverview = (rows: DashSucessoRow[]): OverviewStats => {
+export const selectOverview = (
+  rows: DashSucessoRow[],
+  opts: { excludeChurn?: boolean } = {},
+): OverviewStats => {
+  // excludeChurn=true mantém o comportamento legado (sempre tira churn).
+  // O Dashboard passa false e deixa o filtro "Ocultar fase" controlar o que entra.
+  const { excludeChurn = true } = opts;
   // Carteira ativa = pipeline Sucesso e não está em Churn.
   const ativos = rows.filter(
-    (r) => norm(r.pipeline_nome) === "sucesso" && norm(r.etapa_negocio) !== "churn",
+    (r) => norm(r.pipeline_nome) === "sucesso" && (!excludeChurn || norm(r.etapa_negocio) !== "churn"),
   );
   let qtdPM = 0, qtdGGG = 0, qtdSem = 0;
   let mrrPM = 0, mrrGGG = 0, mrrSem = 0;

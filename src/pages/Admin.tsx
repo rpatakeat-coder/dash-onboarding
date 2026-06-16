@@ -891,6 +891,11 @@ const AdminUsers = () => {
 
 // ============ CONFIG ============
 const metasSchema = z.object({
+  slaPrazoDias: z
+    .number({ invalid_type_error: "Informe um número" })
+    .int("Use um número inteiro")
+    .min(1, "Mínimo 1 dia")
+    .max(365, "Máximo 365 dias"),
   slaNoPrazo: z
     .number({ invalid_type_error: "Informe um número" })
     .int("Use um número inteiro")
@@ -906,6 +911,14 @@ const metasSchema = z.object({
     .int("Use um número inteiro")
     .min(1, "Mínimo 1 dia")
     .max(365, "Máximo 365 dias"),
+  churnMax: z
+    .number({ invalid_type_error: "Informe um número" })
+    .min(0, "Mínimo 0%")
+    .max(100, "Máximo 100%"),
+  ativacaoMrr: z
+    .number({ invalid_type_error: "Informe um número" })
+    .min(0, "Mínimo 0%")
+    .max(100, "Máximo 100%"),
 });
 
 type MetasValues = z.infer<typeof metasSchema>;
@@ -915,7 +928,14 @@ type AppSettingsInsert = Database["public"]["Tables"]["app_settings"]["Insert"];
 
 const APP_SETTINGS_TABLE = "app_settings" as const;
 
-const DEFAULT_METAS: MetasValues = { slaNoPrazo: 80, maxCritico: 10, tempoMedioMax: 18 };
+const DEFAULT_METAS: MetasValues = {
+  slaPrazoDias: 30,
+  slaNoPrazo: 80,
+  maxCritico: 10,
+  tempoMedioMax: 18,
+  churnMax: 9,
+  ativacaoMrr: 91,
+};
 
 const validateMetas = (v: MetasValues): MetasErrors => {
   const res = metasSchema.safeParse(v);
@@ -963,10 +983,9 @@ const AdminConfig = () => {
 
   useEffect(() => { load(); }, []);
 
-  const dirty =
-    form.slaNoPrazo !== original.slaNoPrazo ||
-    form.maxCritico !== original.maxCritico ||
-    form.tempoMedioMax !== original.tempoMedioMax;
+  const dirty = (Object.keys(form) as (keyof MetasValues)[]).some(
+    (k) => form[k] !== original[k],
+  );
 
   const hasErrors = Object.keys(errors).length > 0;
 
@@ -1056,6 +1075,16 @@ const AdminConfig = () => {
 
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <MetaField
+            label="SLA (prazo)"
+            hint="Prazo do onboarding, em dias"
+            value={form.slaPrazoDias}
+            onChange={(raw) => updateField("slaPrazoDias", raw)}
+            suffix="d"
+            min={1}
+            max={365}
+            error={errors.slaPrazoDias}
+          />
+          <MetaField
             label="% SLA no prazo (meta)"
             hint="Inteiro entre 0 e 100"
             value={form.slaNoPrazo}
@@ -1085,6 +1114,28 @@ const AdminConfig = () => {
             max={365}
             error={errors.tempoMedioMax}
           />
+          <MetaField
+            label="Churn máximo"
+            hint="% máximo aceitável de churn"
+            value={form.churnMax}
+            onChange={(raw) => updateField("churnMax", raw)}
+            suffix="%"
+            min={0}
+            max={100}
+            step={0.1}
+            error={errors.churnMax}
+          />
+          <MetaField
+            label="Ativação MRR (meta)"
+            hint="MRR ativado / MRR criado (mês anterior)"
+            value={form.ativacaoMrr}
+            onChange={(raw) => updateField("ativacaoMrr", raw)}
+            suffix="%"
+            min={0}
+            max={100}
+            step={0.1}
+            error={errors.ativacaoMrr}
+          />
         </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
@@ -1113,7 +1164,7 @@ const AdminConfig = () => {
 };
 
 const MetaField = ({
-  label, hint, value, onChange, suffix, min, max, error,
+  label, hint, value, onChange, suffix, min, max, step = 1, error,
 }: {
   label: string;
   hint: string;
@@ -1122,6 +1173,7 @@ const MetaField = ({
   suffix?: string;
   min?: number;
   max?: number;
+  step?: number;
   error?: string;
 }) => (
   <label className="flex flex-col gap-1">
@@ -1130,7 +1182,7 @@ const MetaField = ({
       <Input
         type="number"
         inputMode="numeric"
-        step={1}
+        step={step}
         min={min}
         max={max}
         value={Number.isFinite(value) ? value : ""}
