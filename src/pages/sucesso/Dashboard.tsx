@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { LayoutDashboard, Users, DollarSign, UserCheck, Building2 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
@@ -11,9 +11,9 @@ import {
   useDashSucesso,
   applySucessoFilter,
   selectOverview,
+  selectCarteira,
   fmtBRL,
   fmtPct,
-  type SucessoFilter,
 } from "@/hooks/useDashSucesso";
 import type { DashRow } from "@/hooks/useDashOperacoes";
 
@@ -26,10 +26,9 @@ const isEtapaOcultaPadrao = (etapa: string) => {
   const e = normEtapa(etapa);
   return e.includes("churn") || e.includes("estorno");
 };
-// Versão do default. Ao incrementar, o default é reaplicado UMA vez para todos —
-// inclusive quem já tinha um filtro salvo de uma versão anterior.
-const ETAPAS_DEFAULT_VERSION_KEY = "sucesso:etapas:defaultVersion";
-const ETAPAS_DEFAULT_VERSION = "2";
+// Enquanto o usuário não personalizar o "Ocultar fase", o conjunto oculto é
+// sempre o default (Estorno + Churn). Esta chave marca que ele já personalizou.
+const ETAPAS_CUSTOM_KEY = "sucesso:etapas:custom";
 
 export default function SucessoDashboard() {
   // Estado de filtros compartilhado (espelha Onboarding: useState + usePersistedSet)
@@ -38,21 +37,19 @@ export default function SucessoDashboard() {
   const [filtroPeriodo, setFiltroPeriodo] = useState<MacroPeriodKey>("tudo");
   const [filtroCustomRange, setFiltroCustomRange] = useState<CustomRange | null>(null);
   const [filtroPerfil, setFiltroPerfil] = useState<"P+M" | "G+GG" | null>(null);
+  // O usuário já personalizou o "Ocultar fase"? Enquanto não, vale o default.
+  const [etapasCustom, setEtapasCustom] = useState<boolean>(() => {
+    try {
+      return window.localStorage.getItem(ETAPAS_CUSTOM_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
 
-  const filter: SucessoFilter = useMemo(
-    () => ({
-      agentes: filtroAgentes,
-      ocultarEtapas: filtroEtapas,
-      periodo: filtroPeriodo,
-      customRange: filtroCustomRange,
-      perfilGrupo: filtroPerfil,
-    }),
-    [filtroAgentes, filtroEtapas, filtroPeriodo, filtroCustomRange, filtroPerfil],
-  );
-
-  // rowsRaw = base sem filtro (alimenta opções do MacroFilters)
-  // rows / carteira = já recortados pelo filtro
-  const { rows, rowsRaw, carteira, isLoading, error } = useDashSucesso(filter);
+  // rowsRaw = base sem filtro (alimenta opções do MacroFilters e os recortes
+  // abaixo). Filtramos no componente porque o conjunto efetivo de etapas ocultas
+  // depende de rowsRaw (default derivado dos dados).
+  const { rowsRaw, isLoading, error } = useDashSucesso(useMemo(() => ({}), []));
 
   // Rótulos reais (grafia do banco) das etapas que devem iniciar ocultas.
   const defaultOcultarLabels = useMemo(
@@ -68,40 +65,36 @@ export default function SucessoDashboard() {
     [rowsRaw],
   );
 
-  // Aplica o default (Estorno + Churn ocultos) UMA vez por versão, fazendo união
-  // com a seleção atual — corrige instalações antigas que ocultavam só parte.
-  useEffect(() => {
-    if (defaultOcultarLabels.length === 0) return; // espera os dados carregarem
-    let applied = false;
-    try {
-      applied = window.localStorage.getItem(ETAPAS_DEFAULT_VERSION_KEY) === ETAPAS_DEFAULT_VERSION;
-    } catch {
-      /* storage indisponível — ignora */
-    }
-    if (applied) return;
-    const next = new Set(filtroEtapas);
-    let changed = false;
-    for (const label of defaultOcultarLabels) {
-      if (!next.has(label)) {
-        next.add(label);
-        changed = true;
-      }
-    }
-    if (changed) setFiltroEtapas(next);
-    try {
-      window.localStorage.setItem(ETAPAS_DEFAULT_VERSION_KEY, ETAPAS_DEFAULT_VERSION);
-    } catch {
-      /* storage indisponível — ignora */
-    }
-  }, [defaultOcultarLabels, filtroEtapas, setFiltroEtapas]);
+  // Conjunto EFETIVO de etapas ocultas: default (Estorno + Churn) até o usuário
+  // personalizar; depois disso, exatamente o que ele escolheu (inclusive vazio).
+  const ocultarEtapas = useMemo(
+    () => (etapasCustom ? filtroEtapas : new Set(defaultOcultarLabels)),
+    [etapasCustom, filtroEtapas, defaultOcultarLabels],
+  );
 
-  // Interação manual com o "Ocultar fase" fixa a versão (não re-semeia depois) e
-  // respeita a escolha do usuário — inclusive reexibir Estorno/Churn.
+  // Recorte principal (alimenta Estoque em Risco e Carteira por Agente).
+  const rows = useMemo(
+    () =>
+      applySucessoFilter(rowsRaw, {
+        agentes: filtroAgentes,
+        ocultarEtapas,
+        periodo: filtroPeriodo,
+        customRange: filtroCustomRange,
+        perfilGrupo: filtroPerfil,
+      }),
+    [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange, filtroPerfil],
+  );
+  const carteira = useMemo(() => selectCarteira(rows), [rows]);
+
+  // Qualquer interação com o "Ocultar fase" marca como personalizado e persiste.
   const handleEtapasChange = (next: Set<string>) => {
-    try {
-      window.localStorage.setItem(ETAPAS_DEFAULT_VERSION_KEY, ETAPAS_DEFAULT_VERSION);
-    } catch {
-      /* storage indisponível — ignora */
+    if (!etapasCustom) {
+      setEtapasCustom(true);
+      try {
+        window.localStorage.setItem(ETAPAS_CUSTOM_KEY, "1");
+      } catch {
+        /* storage indisponível — ignora */
+      }
     }
     setFiltroEtapas(next);
   };
@@ -111,13 +104,13 @@ export default function SucessoDashboard() {
   const ov = useMemo(() => {
     const ovRows = applySucessoFilter(rowsRaw, {
       agentes: filtroAgentes,
-      ocultarEtapas: filtroEtapas,
+      ocultarEtapas,
       periodo: filtroPeriodo,
       customRange: filtroCustomRange,
     });
-    // excludeChurn:false → quem decide se churn entra é o filtro "Ocultar fase".
+    // excludeChurn:false → quem decide se churn entra é o "Ocultar fase".
     return selectOverview(ovRows, { excludeChurn: false });
-  }, [rowsRaw, filtroAgentes, filtroEtapas, filtroPeriodo, filtroCustomRange]);
+  }, [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange]);
 
   // Bloco de Churn é a única exceção: ele ANALISA churn, então recebe os dados
   // sem o recorte de "Ocultar fase" (senão ficaria sempre vazio).
@@ -172,7 +165,7 @@ export default function SucessoDashboard() {
         <MacroFilters
           rows={macroRows}
           ativadores={filtroAgentes}
-          etapas={filtroEtapas}
+          etapas={ocultarEtapas}
           onAtivadoresChange={setFiltroAgentes}
           onEtapasChange={handleEtapasChange}
           periodo={filtroPeriodo}
