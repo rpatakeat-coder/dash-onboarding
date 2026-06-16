@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { TrendingDown, RefreshCw, Users, AlertTriangle, DollarSign, UserCheck, Building2 } from "lucide-react";
+import { TrendingDown, RefreshCw, Users, AlertTriangle, DollarSign, UserCheck, Building2, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fmtBRL, fmtPct, grupoPerfil, type DashSucessoRow } from "@/hooks/useDashSucesso";
 import { cn } from "@/lib/utils";
+import { hubspotDealUrl } from "@/lib/hubspot";
 
 interface Props {
   rows: DashSucessoRow[];
@@ -444,7 +445,18 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
                 .sort((a, b) => num(b.mrr) - num(a.mrr))
                 .map((r) => (
                   <tr key={r.id_deal ?? r.asaas_id ?? r.nome_negocio} className="hover:bg-muted/30">
-                    <td className="px-3 py-2.5 font-medium text-foreground">{r.nome_negocio ?? "—"}</td>
+                    <td className="px-3 py-2.5 font-medium">
+                      <a
+                        href={hubspotDealUrl(r.id_deal)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group/hs inline-flex items-center gap-1 text-foreground transition hover:text-primary hover:underline"
+                        title="Abrir no HubSpot"
+                      >
+                        {r.nome_negocio ?? "—"}
+                        <ExternalLink className="h-3 w-3 text-muted-foreground transition group-hover/hs:text-primary" />
+                      </a>
+                    </td>
                     <td className="px-3 py-2.5 text-muted-foreground">{r.perfil_cliente ?? "—"}</td>
                     <td className="px-3 py-2.5 text-muted-foreground">{r.agente_sucesso?.trim() || "Sem responsável"}</td>
                     <td className="px-3 py-2.5 text-right font-numeric font-semibold">{fmtBRL(num(r.mrr))}</td>

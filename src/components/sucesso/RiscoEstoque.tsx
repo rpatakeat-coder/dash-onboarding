@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ArrowUpDown, Download, DollarSign, UserCheck, Building2 } from "lucide-react";
+import { AlertTriangle, ArrowUpDown, Download, DollarSign, UserCheck, Building2, ExternalLink } from "lucide-react";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { hubspotDealUrl } from "@/lib/hubspot";
 import {
   fmtBRL,
   fmtPct,
@@ -209,7 +210,18 @@ export const RiscoEstoque = ({
             <tbody className="divide-y divide-border">
               {pageRows.map((r, i) => (
                 <tr key={`${r.nome_negocio}-${pageSafe * pageSize + i}`} className="hover:bg-muted/30">
-                  <td className="px-3 py-2.5 font-medium text-foreground">{r.nome_negocio ?? "—"}</td>
+                  <td className="px-3 py-2.5 font-medium">
+                    <a
+                      href={hubspotDealUrl(r.id_deal)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group/hs inline-flex items-center gap-1 text-foreground transition hover:text-primary hover:underline"
+                      title="Abrir no HubSpot"
+                    >
+                      {r.nome_negocio ?? "—"}
+                      <ExternalLink className="h-3 w-3 text-muted-foreground transition group-hover/hs:text-primary" />
+                    </a>
+                  </td>
                   <td className="px-3 py-2.5 text-muted-foreground">{r.perfil_cliente ?? "—"}</td>
                   <td className="px-3 py-2.5 text-right font-numeric font-semibold">{fmtBRL(num(r.mrr))}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{r.agente_sucesso ?? "Sem responsável"}</td>
