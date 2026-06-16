@@ -24,10 +24,25 @@ const num = (v: unknown): number => {
 const fmtN = (n: number) => n.toLocaleString("pt-BR");
 const norm = (s: string | null | undefined) => (s ?? "").trim().toLowerCase();
 
-const parseDate = (s: string | null | undefined): Date | null => {
-  if (!s) return null;
-  const d = new Date(s);
-  return Number.isNaN(d.getTime()) ? null : d;
+// data_fechamento vem como string BR "DD/MM/YYYY HH:MM:SS" (não ISO).
+// Casa pelo mês/ano selecionado, equivalente ao SQL LIKE '%/MM/YYYY %'.
+const matchPeriodoFechamento = (s: string | null | undefined, month0: number, year: number): boolean => {
+  if (!s) return false;
+  const str = s.trim();
+  const mm = String(month0 + 1).padStart(2, "0");
+  if (str.includes("/")) return str.includes(`/${mm}/${year}`);
+  // Fallback p/ eventual formato ISO
+  const d = new Date(str);
+  return !Number.isNaN(d.getTime()) && d.getMonth() === month0 && d.getFullYear() === year;
+};
+
+// Exibe a data de fechamento (mantém DD/MM/YYYY se já for BR).
+const fmtFechado = (s: string | null | undefined): string => {
+  if (!s) return "—";
+  const str = s.trim();
+  if (str.includes("/")) return str.split(" ")[0];
+  const d = new Date(str);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR");
 };
 
 const MONTHS_PT = [
@@ -75,23 +90,20 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
 
   useEffect(() => { fetchSheet(); }, []);
 
-  // Churn do Sucesso = deals na etapa "Churn" cujo cancelamento é atribuído ao
-  // "Sucesso" (etapa_de_cancelamento === "Sucesso"), fechados no mês selecionado.
-  // Cada id_deal conta uma única vez.
-  const churnRows = useMemo(() => {
-    const seen = new Set<number>();
-    const out: DashSucessoRow[] = [];
-    for (const r of rows) {
-      if (norm(r.etapa_negocio) !== "churn") continue;
-      if (norm(r.etapa_de_cancelamento) !== "sucesso") continue;
-      const d = parseDate(r.data_fechamento);
-      if (!d || d.getFullYear() !== year || d.getMonth() !== month) continue;
-      if (seen.has(r.id_deal)) continue;
-      seen.add(r.id_deal);
-      out.push(r);
-    }
-    return out;
-  }, [rows, year, month]);
+  // Churn do Sucesso (regra do negócio, equivalente ao SQL):
+  //   etapa_negocio = 'Churn' AND etapa_de_cancelamento = 'Sucesso'
+  //   AND data_fechamento no mês/ano selecionado (string BR DD/MM/YYYY).
+  // COUNT(*) — sem deduplicar (conta todas as linhas que batem).
+  const churnRows = useMemo(
+    () =>
+      rows.filter(
+        (r) =>
+          norm(r.etapa_negocio) === "churn" &&
+          norm(r.etapa_de_cancelamento) === "sucesso" &&
+          matchPeriodoFechamento(r.data_fechamento, month, year),
+      ),
+    [rows, year, month],
+  );
 
   const stats = useMemo(() => {
     let mrr = 0, qtdPM = 0, qtdGGG = 0, mrrPM = 0, mrrGGG = 0;
@@ -461,7 +473,7 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
                     <td className="px-3 py-2.5 text-muted-foreground">{r.agente_sucesso?.trim() || "Sem responsável"}</td>
                     <td className="px-3 py-2.5 text-right font-numeric font-semibold">{fmtBRL(num(r.mrr))}</td>
                     <td className="px-3 py-2.5 text-right font-numeric text-muted-foreground">
-                      {r.data_fechamento ? new Date(r.data_fechamento).toLocaleDateString("pt-BR") : "—"}
+                      {fmtFechado(r.data_fechamento)}
                     </td>
                   </tr>
                 ))}
