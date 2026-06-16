@@ -12,7 +12,7 @@ import {
   type DashSucessoRow,
 } from "@/hooks/useDashSucesso";
 
-const PAGE_SIZE_OPTS = [25, 50, 100] as const;
+const PAGE_SIZE_OPTS = [25, 50, 75, 100] as const;
 
 interface Props {
   rows: DashSucessoRow[];
