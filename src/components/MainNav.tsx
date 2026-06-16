@@ -8,6 +8,7 @@ import {
   Users,
   List,
   Columns3,
+  TrendingDown,
   Settings as SettingsIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -34,6 +35,7 @@ export const NAV_ITEMS_ONBOARDING: NavItem[] = [
 
 export const NAV_ITEMS_SUCESSO: NavItem[] = [
   { to: "/sucesso", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/sucesso/churn", label: "Churn", icon: TrendingDown },
   { to: "/sucesso/clientes", label: "Clientes", icon: Users },
   { to: "/sucesso/lista", label: "Lista", icon: List },
   { to: "/sucesso/kanban", label: "Kanban", icon: Columns3 },
