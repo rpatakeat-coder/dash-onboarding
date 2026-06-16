@@ -4,8 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { markUserRefresh } from "@/lib/lastUpdated";
-
-const WEBHOOK_URL = "https://webhook.takeat.cloud/webhook/dash-onboarding";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RefreshDataButtonProps {
   /** Valor do campo `event` enviado ao webhook. Default: fluxo do Onboarding. */
@@ -26,11 +25,13 @@ export const RefreshDataButton = ({
   const handle = async () => {
     setLoading(true);
     try {
-      await fetch(WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ event }),
+      // Dispara via edge function autenticada (o segredo do webhook fica no servidor).
+      const { data, error } = await supabase.functions.invoke("trigger-refresh", {
+        body: { event },
       });
+      if (error || (data as { error?: string })?.error) {
+        throw new Error((data as { error?: string })?.error || error?.message || "falha ao acionar atualização");
+      }
       markUserRefresh();
       toast({
         title: "Atualizando dados",
