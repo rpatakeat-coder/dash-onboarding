@@ -6,6 +6,7 @@ import { MacroFilters, type MacroPeriodKey, type CustomRange } from "@/component
 import { CarteiraPorAgente } from "@/components/sucesso/CarteiraPorAgente";
 import { RiscoEstoque } from "@/components/sucesso/RiscoEstoque";
 import { ChurnSucesso } from "@/components/sucesso/ChurnSucesso";
+import { RefreshDataButton } from "@/components/dashboard/RefreshDataButton";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
 import {
   useDashSucesso,
@@ -159,6 +160,7 @@ export default function SucessoDashboard() {
               </h1>
             </div>
           </div>
+          <RefreshDataButton event="atualizar_dados_sucesso" invalidateKey="dash_sucesso" />
         </div>
 
         {/* Filtros compartilhados — alimentam TODOS os blocos via SucessoFilter */}
