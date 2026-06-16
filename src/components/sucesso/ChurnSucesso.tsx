@@ -74,16 +74,22 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
 
   useEffect(() => { fetchSheet(); }, []);
 
-  // Filtra deals do pipeline Sucesso que sejam churn/cancelamento E fecharam no mês selecionado
+  // Churn do Sucesso = deals na etapa "Churn" cujo cancelamento é atribuído ao
+  // "Sucesso" (etapa_de_cancelamento === "Sucesso"), fechados no mês selecionado.
+  // Cada id_deal conta uma única vez.
   const churnRows = useMemo(() => {
-    return rows.filter((r) => {
-      if (norm(r.pipeline_nome) !== "sucesso") return false;
-      const isChurn = norm(r.etapa_negocio) === "churn" || !!(r.etapa_de_cancelamento?.trim());
-      if (!isChurn) return false;
+    const seen = new Set<number>();
+    const out: DashSucessoRow[] = [];
+    for (const r of rows) {
+      if (norm(r.etapa_negocio) !== "churn") continue;
+      if (norm(r.etapa_de_cancelamento) !== "sucesso") continue;
       const d = parseDate(r.data_fechamento);
-      if (!d) return false;
-      return d.getFullYear() === year && d.getMonth() === month;
-    });
+      if (!d || d.getFullYear() !== year || d.getMonth() !== month) continue;
+      if (seen.has(r.id_deal)) continue;
+      seen.add(r.id_deal);
+      out.push(r);
+    }
+    return out;
   }, [rows, year, month]);
 
   const stats = useMemo(() => {
@@ -122,28 +128,22 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
     [churnRows, perfilSel],
   );
   const ranking = useMemo(() => {
-    const map = new Map<string, { agente: string; qtd: number; mrr: number; motivos: Map<string, number> }>();
+    const map = new Map<string, { agente: string; qtd: number; mrr: number }>();
     for (const r of rankingBaseRows) {
       const a = r.agente_sucesso?.trim() || "Sem responsável";
-      const cur = map.get(a) ?? { agente: a, qtd: 0, mrr: 0, motivos: new Map() };
+      const cur = map.get(a) ?? { agente: a, qtd: 0, mrr: 0 };
       cur.qtd++;
       cur.mrr += num(r.mrr);
-      const mot = r.etapa_de_cancelamento?.trim();
-      if (mot) cur.motivos.set(mot, (cur.motivos.get(mot) ?? 0) + 1);
       map.set(a, cur);
     }
     const totalMrr = rankingBaseRows.reduce((s, r) => s + num(r.mrr), 0);
     return Array.from(map.values())
-      .map((c) => {
-        const top = Array.from(c.motivos.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3);
-        return {
-          agente: c.agente,
-          qtd: c.qtd,
-          mrr: c.mrr,
-          pctRep: totalMrr > 0 ? (c.mrr / totalMrr) * 100 : 0,
-          motivos: top.length ? top.map(([m, n]) => `${m} (${n})`).join(", ") : "—",
-        };
-      })
+      .map((c) => ({
+        agente: c.agente,
+        qtd: c.qtd,
+        mrr: c.mrr,
+        pctRep: totalMrr > 0 ? (c.mrr / totalMrr) * 100 : 0,
+      }))
       .sort((a, b) => b.mrr - a.mrr);
   }, [rankingBaseRows]);
 
@@ -169,7 +169,7 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
               Churn do Sucesso · {MONTHS_PT[month]} / {year}
             </h2>
             <p className="font-small text-xs text-muted-foreground">
-              Deals em Churn ou com motivo de cancelamento — por <strong>data de fechamento</strong>
+              Deals na etapa <strong>Churn</strong> com cancelamento do <strong>Sucesso</strong> — por <strong>data de fechamento</strong>
             </p>
           </div>
         </div>
@@ -364,7 +364,6 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
                 <th className="px-3 py-2 text-right">Qtd churns</th>
                 <th className="px-3 py-2 text-right">MRR perdido</th>
                 <th className="px-3 py-2 text-right">% do churn</th>
-                <th className="px-3 py-2 text-left">Principais motivos</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -396,13 +395,12 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
                     <td className="px-3 py-2.5 text-right font-numeric">{fmtN(r.qtd)}</td>
                     <td className="px-3 py-2.5 text-right font-numeric font-semibold">{fmtBRL(r.mrr)}</td>
                     <td className="px-3 py-2.5 text-right font-numeric">{fmtPct(r.pctRep, 1)}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{r.motivos}</td>
                   </tr>
                 );
               })}
               {!ranking.length && (
                 <tr>
-                  <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={5} className="px-3 py-8 text-center text-sm text-muted-foreground">
                     Nenhum churn no período selecionado.
                   </td>
                 </tr>
@@ -436,7 +434,6 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
                 <th className="px-3 py-2 text-left">Cliente</th>
                 <th className="px-3 py-2 text-left">Perfil</th>
                 <th className="px-3 py-2 text-left">Agente</th>
-                <th className="px-3 py-2 text-left">Motivo</th>
                 <th className="px-3 py-2 text-right">MRR</th>
                 <th className="px-3 py-2 text-right">Fechado em</th>
               </tr>
@@ -450,7 +447,6 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
                     <td className="px-3 py-2.5 font-medium text-foreground">{r.nome_negocio ?? "—"}</td>
                     <td className="px-3 py-2.5 text-muted-foreground">{r.perfil_cliente ?? "—"}</td>
                     <td className="px-3 py-2.5 text-muted-foreground">{r.agente_sucesso?.trim() || "Sem responsável"}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{r.etapa_de_cancelamento?.trim() || "—"}</td>
                     <td className="px-3 py-2.5 text-right font-numeric font-semibold">{fmtBRL(num(r.mrr))}</td>
                     <td className="px-3 py-2.5 text-right font-numeric text-muted-foreground">
                       {r.data_fechamento ? new Date(r.data_fechamento).toLocaleDateString("pt-BR") : "—"}
@@ -459,7 +455,7 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
                 ))}
               {!filteredRows.length && (
                 <tr>
-                  <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={5} className="px-3 py-8 text-center text-sm text-muted-foreground">
                     Nenhum deal corresponde aos filtros desta seção.
                   </td>
                 </tr>
