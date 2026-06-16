@@ -29,6 +29,7 @@ Não há `tsc` standalone configurado como script — o type-check acontece no `
 - Remoto: `github.com/rpatakeat-coder/dash-onboarding` (branch `main`). Identidade local: `rpatakeat-coder <rpa.takeat@gmail.com>`.
 - Push é via **HTTPS com PAT** (não há `gh` CLI). Use o token só no comando do push, sem gravar no `.git/config`; redija o token nos logs.
 - Mensagens de commit em **pt-BR**.
+- **NÃO** adicione o trailer `Co-Authored-By:` — a Vercel (Hobby + repo privado) bloqueia o deploy de commits com co-autor que não é membro do projeto. A conta conectada à Vercel é a `rpatakeat-coder` (autor ok); o co-autor externo é que quebra.
 
 ## Arquitetura
 
