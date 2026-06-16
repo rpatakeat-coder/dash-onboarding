@@ -17,16 +17,19 @@ import {
 } from "@/hooks/useDashSucesso";
 import type { DashRow } from "@/hooks/useDashOperacoes";
 
-// Etapas que iniciam OCULTAS por padrão (visão de base ativa).
-// Normaliza acentos de traço (–/—) e espaços para casar com a grafia do banco.
+// Etapas que iniciam OCULTAS por padrão (visão de base ativa): Estorno e Churn.
+// Casamento por "contém" (normalizado) para não depender da grafia exata do banco
+// (ex.: "Estorno", "Estorno - Comercial", "Churn", "Churn - Cancelado"...).
 const normEtapa = (s: string) =>
   s.trim().toLowerCase().replace(/[–—]/g, "-").replace(/\s+/g, " ");
-const ETAPAS_OCULTAS_PADRAO = new Set([
-  "churn",
-  "estorno - comercial",
-  "estorno comercial", // variante sem traço
-]);
-const ETAPAS_TOUCHED_KEY = "sucesso:etapas:touched";
+const isEtapaOcultaPadrao = (etapa: string) => {
+  const e = normEtapa(etapa);
+  return e.includes("churn") || e.includes("estorno");
+};
+// Versão do default. Ao incrementar, o default é reaplicado UMA vez para todos —
+// inclusive quem já tinha um filtro salvo de uma versão anterior.
+const ETAPAS_DEFAULT_VERSION_KEY = "sucesso:etapas:defaultVersion";
+const ETAPAS_DEFAULT_VERSION = "2";
 
 export default function SucessoDashboard() {
   // Estado de filtros compartilhado (espelha Onboarding: useState + usePersistedSet)
@@ -35,19 +38,6 @@ export default function SucessoDashboard() {
   const [filtroPeriodo, setFiltroPeriodo] = useState<MacroPeriodKey>("tudo");
   const [filtroCustomRange, setFiltroCustomRange] = useState<CustomRange | null>(null);
   const [filtroPerfil, setFiltroPerfil] = useState<"P+M" | "G+GG" | null>(null);
-
-  // O usuário já mexeu no "Ocultar fase" alguma vez? Se sim, respeitamos a escolha
-  // dele (inclusive "mostrar tudo"). Se não, semeamos o default de base ativa.
-  const [etapasTouched, setEtapasTouched] = useState<boolean>(() => {
-    try {
-      return (
-        window.localStorage.getItem(ETAPAS_TOUCHED_KEY) === "1" ||
-        window.localStorage.getItem("sucesso:etapas") != null
-      );
-    } catch {
-      return false;
-    }
-  });
 
   const filter: SucessoFilter = useMemo(
     () => ({
@@ -72,27 +62,46 @@ export default function SucessoDashboard() {
           rowsRaw
             .map((r) => r.etapa_negocio?.trim())
             .filter((e): e is string => !!e)
-            .filter((e) => ETAPAS_OCULTAS_PADRAO.has(normEtapa(e))),
+            .filter((e) => isEtapaOcultaPadrao(e)),
         ),
       ),
     [rowsRaw],
   );
 
-  // Semeia o default uma única vez (quando ainda não há escolha do usuário).
+  // Aplica o default (Estorno + Churn ocultos) UMA vez por versão, fazendo união
+  // com a seleção atual — corrige instalações antigas que ocultavam só parte.
   useEffect(() => {
-    if (etapasTouched || filtroEtapas.size > 0 || defaultOcultarLabels.length === 0) return;
-    setFiltroEtapas(new Set(defaultOcultarLabels));
-  }, [etapasTouched, filtroEtapas, defaultOcultarLabels, setFiltroEtapas]);
-
-  // Qualquer interação manual com o "Ocultar fase" marca como tocado e persiste.
-  const handleEtapasChange = (next: Set<string>) => {
-    if (!etapasTouched) {
-      setEtapasTouched(true);
-      try {
-        window.localStorage.setItem(ETAPAS_TOUCHED_KEY, "1");
-      } catch {
-        /* storage indisponível — ignora */
+    if (defaultOcultarLabels.length === 0) return; // espera os dados carregarem
+    let applied = false;
+    try {
+      applied = window.localStorage.getItem(ETAPAS_DEFAULT_VERSION_KEY) === ETAPAS_DEFAULT_VERSION;
+    } catch {
+      /* storage indisponível — ignora */
+    }
+    if (applied) return;
+    const next = new Set(filtroEtapas);
+    let changed = false;
+    for (const label of defaultOcultarLabels) {
+      if (!next.has(label)) {
+        next.add(label);
+        changed = true;
       }
+    }
+    if (changed) setFiltroEtapas(next);
+    try {
+      window.localStorage.setItem(ETAPAS_DEFAULT_VERSION_KEY, ETAPAS_DEFAULT_VERSION);
+    } catch {
+      /* storage indisponível — ignora */
+    }
+  }, [defaultOcultarLabels, filtroEtapas, setFiltroEtapas]);
+
+  // Interação manual com o "Ocultar fase" fixa a versão (não re-semeia depois) e
+  // respeita a escolha do usuário — inclusive reexibir Estorno/Churn.
+  const handleEtapasChange = (next: Set<string>) => {
+    try {
+      window.localStorage.setItem(ETAPAS_DEFAULT_VERSION_KEY, ETAPAS_DEFAULT_VERSION);
+    } catch {
+      /* storage indisponível — ignora */
     }
     setFiltroEtapas(next);
   };
