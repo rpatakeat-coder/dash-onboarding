@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { fmtBRL, fmtPct, grupoPerfil, type DashSucessoRow } from "@/hooks/useDashSucesso";
 import { cn } from "@/lib/utils";
 import { hubspotDealUrl } from "@/lib/hubspot";
+import { SucessoClientesModal } from "@/components/sucesso/SucessoClientesModal";
 
 interface Props {
   rows: DashSucessoRow[];
@@ -58,6 +59,8 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
   // Filtros locais da seção (additivos ao filtro global e ao seletor de mês).
   const [perfilSel, setPerfilSel] = useState<"P+M" | "G+GG" | null>(null);
   const [agenteSel, setAgenteSel] = useState<string | null>(null);
+  // Modal de lista (padrão Onboarding) acionado pelos KPIs de churn.
+  const [listOpen, setListOpen] = useState(false);
 
   // Inputs manuais (planilha) — TODO: substituir inputs manuais por fonte de dados quando o processo for definido.
   const [upsell, setUpsell] = useState(0);
@@ -243,35 +246,38 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <button
           type="button"
-          onClick={clearLocalFilters}
-          aria-pressed={!hasLocalFilter}
-          className={cn(
-            "text-left rounded-2xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-            !hasLocalFilter ? "ring-1 ring-primary/20" : "hover:-translate-y-0.5",
-          )}
-          title={hasLocalFilter ? "Limpar filtros da seção" : "Sem filtro local ativo"}
+          onClick={() => setListOpen(true)}
+          className="text-left rounded-2xl transition hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          title="Ver lista de churn do mês"
         >
           <KpiCard
             label="Churn de MRR (bruto)"
             value={fmtBRL(stats.mrr)}
             icon={DollarSign}
             tone="warning"
-            hint={`${fmtN(stats.qtd)} deal${stats.qtd === 1 ? "" : "s"} fechado${stats.qtd === 1 ? "" : "s"} no mês`}
+            hint={`${fmtN(stats.qtd)} deal${stats.qtd === 1 ? "" : "s"} fechado${stats.qtd === 1 ? "" : "s"} no mês · clique para ver a lista`}
           />
         </button>
-        <KpiCard
-          label="% de Churn"
-          value={pctChurn !== null ? `${pctChurn.toFixed(2).replace(".", ",")}%` : sheetLoading ? "…" : "—"}
-          icon={TrendingDown}
-          tone="warning"
-          hint={
-            sheetError
-              ? `Erro: ${sheetError}`
-              : mrrBase !== null
-              ? `${fmtBRL(stats.mrr)} ÷ ${fmtBRL(mrrBase)} (MRR início do mês)`
-              : "Lendo MRR início do mês (Dados 2026)…"
-          }
-        />
+        <button
+          type="button"
+          onClick={() => setListOpen(true)}
+          className="text-left rounded-2xl transition hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          title="Ver lista de churn do mês"
+        >
+          <KpiCard
+            label="% de Churn"
+            value={pctChurn !== null ? `${pctChurn.toFixed(2).replace(".", ",")}%` : sheetLoading ? "…" : "—"}
+            icon={TrendingDown}
+            tone="warning"
+            hint={
+              sheetError
+                ? `Erro: ${sheetError}`
+                : mrrBase !== null
+                ? `${fmtBRL(stats.mrr)} ÷ ${fmtBRL(mrrBase)} (MRR início do mês)`
+                : "Lendo MRR início do mês (Dados 2026)…"
+            }
+          />
+        </button>
       </div>
 
       {/* Ajustes manuais + Churn líquido */}
@@ -488,6 +494,14 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
           </table>
         </div>
       </div>
+
+      <SucessoClientesModal
+        open={listOpen}
+        onOpenChange={setListOpen}
+        title={`Churn · ${MONTHS_PT[month]}/${year}`}
+        rows={churnRows}
+        showFechado
+      />
     </section>
   );
 };

@@ -4,6 +4,7 @@ import { KpiCard } from "@/components/dashboard/KpiCard";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { hubspotDealUrl } from "@/lib/hubspot";
+import { SucessoClientesModal } from "@/components/sucesso/SucessoClientesModal";
 import {
   fmtBRL,
   fmtPct,
@@ -78,6 +79,11 @@ export const RiscoEstoque = ({
     return arr;
   }, [risco, sortDir]);
 
+  // Modal de lista (padrão Onboarding) acionado pelos KPIs.
+  const [modal, setModal] = useState<{ title: string; rows: DashSucessoRow[] } | null>(null);
+  const riscoPM = useMemo(() => risco.filter((r) => grupoPerfil(r.perfil_cliente) === "P+M"), [risco]);
+  const riscoGGG = useMemo(() => risco.filter((r) => grupoPerfil(r.perfil_cliente) === "G+GG"), [risco]);
+
   // Paginação (25 por padrão; estende até 100).
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTS[0]);
@@ -132,20 +138,24 @@ export const RiscoEstoque = ({
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <KpiCard
-          label="Volume em Risco"
-          value={`${fmtN(stats.qtd)} (${fmtPct(pct(stats.qtd, totalClientes), 1)})`}
-          icon={AlertTriangle}
-          tone="warning"
-          hint="% sobre o estoque total do pipeline"
-        />
-        <KpiCard
-          label="MRR em Risco"
-          value={`${fmtBRL(stats.mrr)} (${fmtPct(pct(stats.mrr, mrrTotal), 1)})`}
-          icon={DollarSign}
-          tone="warning"
-          hint="% sobre o MRR total do pipeline"
-        />
+        <button type="button" onClick={() => setModal({ title: "Clientes em risco", rows: sorted })} className="text-left">
+          <KpiCard
+            label="Volume em Risco"
+            value={`${fmtN(stats.qtd)} (${fmtPct(pct(stats.qtd, totalClientes), 1)})`}
+            icon={AlertTriangle}
+            tone="warning"
+            hint="Clique para ver a lista de clientes"
+          />
+        </button>
+        <button type="button" onClick={() => setModal({ title: "Clientes em risco", rows: sorted })} className="text-left">
+          <KpiCard
+            label="MRR em Risco"
+            value={`${fmtBRL(stats.mrr)} (${fmtPct(pct(stats.mrr, mrrTotal), 1)})`}
+            icon={DollarSign}
+            tone="warning"
+            hint="Clique para ver a lista de clientes"
+          />
+        </button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -157,6 +167,7 @@ export const RiscoEstoque = ({
           qtdDen={qtdPMTotal}
           mrrDen={mrrPMTotal}
           tone="secondary"
+          onClick={() => setModal({ title: "Clientes em risco · P+M", rows: riscoPM })}
         />
         <PerfilRiscoCard
           label="G+GG em Risco"
@@ -166,6 +177,7 @@ export const RiscoEstoque = ({
           qtdDen={qtdGGGTotal}
           mrrDen={mrrGGGTotal}
           tone="primary"
+          onClick={() => setModal({ title: "Clientes em risco · G+GG", rows: riscoGGG })}
         />
       </div>
 
@@ -318,6 +330,13 @@ export const RiscoEstoque = ({
           </div>
         )}
       </div>
+
+      <SucessoClientesModal
+        open={!!modal}
+        onOpenChange={(o) => { if (!o) setModal(null); }}
+        title={modal?.title ?? ""}
+        rows={modal?.rows ?? []}
+      />
     </section>
   );
 };
@@ -331,6 +350,7 @@ interface PerfilRiscoCardProps {
   qtdDen: number;
   mrrDen: number;
   tone: "primary" | "secondary" | "warning" | "success";
+  onClick?: () => void;
 }
 
 const toneMap: Record<PerfilRiscoCardProps["tone"], string> = {
@@ -340,10 +360,14 @@ const toneMap: Record<PerfilRiscoCardProps["tone"], string> = {
   warning: "text-warning bg-warning/10",
 };
 
-const PerfilRiscoCard = ({ label, icon: Icon, qtd, mrr, qtdDen, mrrDen, tone }: PerfilRiscoCardProps) => {
+const PerfilRiscoCard = ({ label, icon: Icon, qtd, mrr, qtdDen, mrrDen, tone, onClick }: PerfilRiscoCardProps) => {
   const pct = (a: number, b: number) => (b > 0 ? (a / b) * 100 : 0);
-  return (
-    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm-soft transition-all hover:shadow-md-soft hover:-translate-y-0.5">
+  const className = cn(
+    "group relative w-full overflow-hidden rounded-2xl border border-border bg-card p-6 text-left shadow-sm-soft transition-all hover:shadow-md-soft hover:-translate-y-0.5",
+    onClick && "cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+  );
+  const body = (
+    <>
       <div className="flex items-start justify-between">
         <div className="min-w-0 flex-1">
           <p className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
@@ -372,6 +396,13 @@ const PerfilRiscoCard = ({ label, icon: Icon, qtd, mrr, qtdDen, mrrDen, tone }: 
           <Icon className="h-5 w-5" strokeWidth={2.25} />
         </div>
       </div>
-    </div>
+    </>
+  );
+  return onClick ? (
+    <button type="button" onClick={onClick} className={className}>
+      {body}
+    </button>
+  ) : (
+    <div className={className}>{body}</div>
   );
 };

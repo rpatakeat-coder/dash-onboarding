@@ -7,14 +7,17 @@ import { CarteiraPorAgente } from "@/components/sucesso/CarteiraPorAgente";
 import { RiscoEstoque } from "@/components/sucesso/RiscoEstoque";
 import { ChurnSucesso } from "@/components/sucesso/ChurnSucesso";
 import { RefreshDataButton } from "@/components/dashboard/RefreshDataButton";
+import { SucessoClientesModal } from "@/components/sucesso/SucessoClientesModal";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
 import {
   useDashSucesso,
   applySucessoFilter,
   selectOverview,
   selectCarteira,
+  grupoPerfil,
   fmtBRL,
   fmtPct,
+  type DashSucessoRow,
 } from "@/hooks/useDashSucesso";
 import type { DashRow } from "@/hooks/useDashOperacoes";
 
@@ -37,7 +40,8 @@ export default function SucessoDashboard() {
   const [filtroEtapas, setFiltroEtapas] = usePersistedSet("sucesso:etapas");
   const [filtroPeriodo, setFiltroPeriodo] = useState<MacroPeriodKey>("tudo");
   const [filtroCustomRange, setFiltroCustomRange] = useState<CustomRange | null>(null);
-  const [filtroPerfil, setFiltroPerfil] = useState<"P+M" | "G+GG" | null>(null);
+  // Modal de lista de clientes (padrão Onboarding) acionado pelos KPIs.
+  const [modal, setModal] = useState<{ title: string; rows: DashSucessoRow[] } | null>(null);
   // O usuário já personalizou o "Ocultar fase"? Enquanto não, vale o default.
   const [etapasCustom, setEtapasCustom] = useState<boolean>(() => {
     try {
@@ -81,11 +85,18 @@ export default function SucessoDashboard() {
         ocultarEtapas,
         periodo: filtroPeriodo,
         customRange: filtroCustomRange,
-        perfilGrupo: filtroPerfil,
       }),
-    [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange, filtroPerfil],
+    [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange],
   );
   const carteira = useMemo(() => selectCarteira(rows), [rows]);
+
+  // Linhas da base ativa (pipeline Sucesso) por trás dos KPIs da Visão Geral.
+  const baseRows = useMemo(
+    () => rows.filter((r) => (r.pipeline_nome ?? "").trim().toLowerCase() === "sucesso"),
+    [rows],
+  );
+  const basePM = useMemo(() => baseRows.filter((r) => grupoPerfil(r.perfil_cliente) === "P+M"), [baseRows]);
+  const baseGGG = useMemo(() => baseRows.filter((r) => grupoPerfil(r.perfil_cliente) === "G+GG"), [baseRows]);
 
   // Qualquer interação com o "Ocultar fase" marca como personalizado e persiste.
   const handleEtapasChange = (next: Set<string>) => {
@@ -102,16 +113,8 @@ export default function SucessoDashboard() {
 
   // Visão Geral + Segmentação respeitam agentes/período/ocultar-fase, mas NÃO o
   // perfil (os cards P+M e G+GG precisam sempre mostrar os dois lados).
-  const ov = useMemo(() => {
-    const ovRows = applySucessoFilter(rowsRaw, {
-      agentes: filtroAgentes,
-      ocultarEtapas,
-      periodo: filtroPeriodo,
-      customRange: filtroCustomRange,
-    });
-    // excludeChurn:false → quem decide se churn entra é o "Ocultar fase".
-    return selectOverview(ovRows, { excludeChurn: false });
-  }, [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange]);
+  // excludeChurn:false → quem decide se churn entra é o "Ocultar fase".
+  const ov = useMemo(() => selectOverview(baseRows, { excludeChurn: false }), [baseRows]);
 
   // Bloco de Churn é a única exceção: ele ANALISA churn, então recebe os dados
   // sem o recorte de "Ocultar fase" (senão ficaria sempre vazio).
@@ -121,9 +124,8 @@ export default function SucessoDashboard() {
         agentes: filtroAgentes,
         periodo: filtroPeriodo,
         customRange: filtroCustomRange,
-        perfilGrupo: filtroPerfil,
       }),
-    [rowsRaw, filtroAgentes, filtroPeriodo, filtroCustomRange, filtroPerfil],
+    [rowsRaw, filtroAgentes, filtroPeriodo, filtroCustomRange],
   );
 
   // Adapter: MacroFilters tipa em DashRow (Onboarding). Mapeamos só o necessário.
@@ -137,10 +139,6 @@ export default function SucessoDashboard() {
   );
 
   const pct = (a: number, b: number) => (b > 0 ? (a / b) * 100 : 0);
-
-  const togglePerfil = (g: "P+M" | "G+GG") =>
-    setFiltroPerfil((cur) => (cur === g ? null : g));
-  const clearPerfil = () => setFiltroPerfil(null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -182,14 +180,6 @@ export default function SucessoDashboard() {
             <h2 className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">
               Visão Geral do Pipeline
             </h2>
-            {filtroPerfil && (
-              <button
-                onClick={clearPerfil}
-                className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
-              >
-                Filtro ativo: <span className="text-foreground">{filtroPerfil}</span> · limpar ✕
-              </button>
-            )}
           </div>
 
           {error && (
@@ -201,34 +191,28 @@ export default function SucessoDashboard() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <button
               type="button"
-              onClick={clearPerfil}
-              aria-pressed={filtroPerfil === null}
-              className={`text-left rounded-2xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                filtroPerfil === null ? "ring-2 ring-primary/40" : "hover:-translate-y-0.5"
-              }`}
+              onClick={() => setModal({ title: "Clientes no pipeline", rows: baseRows })}
+              className="text-left rounded-2xl transition hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <KpiCard
                 label="Total de Clientes no Pipeline"
                 value={isLoading ? "—" : ov.totalClientes.toLocaleString("pt-BR")}
                 icon={Users}
                 tone="primary"
-                hint={filtroPerfil ? "Clique para limpar o filtro de perfil" : "Base ativa (sem Estorno-Comercial e Churn por padrão)"}
+                hint="Base ativa · clique para ver a lista de clientes"
               />
             </button>
             <button
               type="button"
-              onClick={clearPerfil}
-              aria-pressed={filtroPerfil === null}
-              className={`text-left rounded-2xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                filtroPerfil === null ? "ring-2 ring-primary/40" : "hover:-translate-y-0.5"
-              }`}
+              onClick={() => setModal({ title: "Clientes no pipeline (por MRR)", rows: baseRows })}
+              className="text-left rounded-2xl transition hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <KpiCard
                 label="MRR Acumulado Total"
                 value={isLoading ? "—" : fmtBRL(ov.mrrTotal)}
                 icon={DollarSign}
                 tone="success"
-                hint={filtroPerfil ? "Clique para limpar o filtro de perfil" : "Receita recorrente mensal consolidada"}
+                hint="Clique para ver a lista de clientes"
               />
             </button>
           </div>
@@ -242,16 +226,13 @@ export default function SucessoDashboard() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <button
               type="button"
-              onClick={() => togglePerfil("P+M")}
-              aria-pressed={filtroPerfil === "P+M"}
-              className={`group relative overflow-hidden rounded-2xl border bg-card p-6 text-left shadow-sm-soft transition-all hover:shadow-md-soft hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                filtroPerfil === "P+M" ? "border-primary ring-2 ring-primary/40" : "border-border"
-              }`}
+              onClick={() => setModal({ title: "Clientes · Perfil P+M", rows: basePM })}
+              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 text-left shadow-sm-soft transition-all hover:shadow-md-soft hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <div className="flex items-start justify-between">
                 <div className="min-w-0 flex-1">
                   <p className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">
-                    Perfil P+M {filtroPerfil === "P+M" && <span className="ml-1 text-primary">●</span>}
+                    Perfil P+M
                   </p>
                   <div className="mt-3 space-y-3">
                     <div>
@@ -292,16 +273,13 @@ export default function SucessoDashboard() {
 
             <button
               type="button"
-              onClick={() => togglePerfil("G+GG")}
-              aria-pressed={filtroPerfil === "G+GG"}
-              className={`group relative overflow-hidden rounded-2xl border bg-card p-6 text-left shadow-sm-soft transition-all hover:shadow-md-soft hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                filtroPerfil === "G+GG" ? "border-primary ring-2 ring-primary/40" : "border-border"
-              }`}
+              onClick={() => setModal({ title: "Clientes · Perfil G+GG", rows: baseGGG })}
+              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 text-left shadow-sm-soft transition-all hover:shadow-md-soft hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <div className="flex items-start justify-between">
                 <div className="min-w-0 flex-1">
                   <p className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">
-                    Perfil G+GG {filtroPerfil === "G+GG" && <span className="ml-1 text-primary">●</span>}
+                    Perfil G+GG
                   </p>
                   <div className="mt-3 space-y-3">
                     <div>
@@ -384,9 +362,12 @@ export default function SucessoDashboard() {
           mrrGGGTotal={ov.mrrGGG}
         />
 
-
-
-
+        <SucessoClientesModal
+          open={!!modal}
+          onOpenChange={(o) => { if (!o) setModal(null); }}
+          title={modal?.title ?? ""}
+          rows={modal?.rows ?? []}
+        />
       </main>
     </div>
   );
