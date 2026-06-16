@@ -76,23 +76,23 @@ const Shell = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <PreferencesProvider>
-      <AreaProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AuthProvider>
-            <NotificationsProvider>
-              <DealDrawerProvider>
-                <TutorialProvider>
-                  <Shell />
-                </TutorialProvider>
-              </DealDrawerProvider>
-            </NotificationsProvider>
-          </AuthProvider>
+          <AreaProvider>
+            <AuthProvider>
+              <NotificationsProvider>
+                <DealDrawerProvider>
+                  <TutorialProvider>
+                    <Shell />
+                  </TutorialProvider>
+                </DealDrawerProvider>
+              </NotificationsProvider>
+            </AuthProvider>
+          </AreaProvider>
         </BrowserRouter>
       </TooltipProvider>
-      </AreaProvider>
     </PreferencesProvider>
   </QueryClientProvider>
 );
