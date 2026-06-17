@@ -898,6 +898,7 @@ export type Database = {
           forma_pagamento: string | null
           mrr: number | null
           periodo: string | null
+          valor_avulso: number | null
           vendedor: string | null
         }
         Insert: {
@@ -907,6 +908,7 @@ export type Database = {
           forma_pagamento?: string | null
           mrr?: number | null
           periodo?: string | null
+          valor_avulso?: number | null
           vendedor?: string | null
         }
         Update: {
@@ -916,6 +918,7 @@ export type Database = {
           forma_pagamento?: string | null
           mrr?: number | null
           periodo?: string | null
+          valor_avulso?: number | null
           vendedor?: string | null
         }
         Relationships: []

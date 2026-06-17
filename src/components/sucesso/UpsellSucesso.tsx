@@ -27,6 +27,12 @@ const num = (v: unknown): number => {
 };
 const txt = (v: unknown): string => (v == null ? "" : String(v).trim());
 
+// MRR efetivo: se a coluna mrr estiver vazia, usa valor_avulso.
+const mrrOf = (r: UpsellRow): number => {
+  const vazio = r.mrr == null || String(r.mrr).trim() === "";
+  return num(vazio ? r.valor_avulso : r.mrr);
+};
+
 // `data` pode vir como BR "DD/MM/YYYY [hh:mm]" ou ISO.
 const fmtData = (s: string | null | undefined): string => {
   const str = txt(s);
@@ -112,11 +118,11 @@ export const UpsellSucesso = () => {
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
     return [...filtered].sort((a, b) =>
-      sortKey === "mrr" ? (num(a.mrr) - num(b.mrr)) * dir : (dataToTs(a.data) - dataToTs(b.data)) * dir,
+      sortKey === "mrr" ? (mrrOf(a) - mrrOf(b)) * dir : (dataToTs(a.data) - dataToTs(b.data)) * dir,
     );
   }, [filtered, sortKey, sortDir]);
 
-  const totalMrr = useMemo(() => filtered.reduce((s, r) => s + num(r.mrr), 0), [filtered]);
+  const totalMrr = useMemo(() => filtered.reduce((s, r) => s + mrrOf(r), 0), [filtered]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const pageSafe = Math.min(page, totalPages - 1);
@@ -190,7 +196,7 @@ export const UpsellSucesso = () => {
               <tr key={`${txt(r.cliente)}-${pageSafe * pageSize + i}`} className="hover:bg-muted/30">
                 <td className="px-3 py-2.5 font-medium text-foreground">{txt(r.cliente) || "—"}</td>
                 <td className="px-3 py-2.5 text-muted-foreground">{txt(r.vendedor) || "—"}</td>
-                <td className="px-3 py-2.5 text-right font-numeric font-semibold tabular-nums">{fmtBRL(num(r.mrr))}</td>
+                <td className="px-3 py-2.5 text-right font-numeric font-semibold tabular-nums">{fmtBRL(mrrOf(r))}</td>
                 <td className="px-3 py-2.5 text-muted-foreground">{txt(r.forma_pagamento) || "—"}</td>
                 <td className="px-3 py-2.5 text-muted-foreground">{txt(r.periodo) || "—"}</td>
                 <td className="px-3 py-2.5 text-muted-foreground">{txt(r.adicionais) || "—"}</td>
