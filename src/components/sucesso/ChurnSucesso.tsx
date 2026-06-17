@@ -8,6 +8,16 @@ import { fmtBRL, fmtPct, grupoPerfil, type DashSucessoRow } from "@/hooks/useDas
 import { cn } from "@/lib/utils";
 import { hubspotDealUrl } from "@/lib/hubspot";
 import { SucessoClientesModal } from "@/components/sucesso/SucessoClientesModal";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import {
+  loadChurnAjustes,
+  saveChurnAjustes,
+  periodoKey,
+  ZERO_AJUSTE,
+  type ChurnAjuste,
+  type ChurnAjustesMap,
+} from "@/lib/churnAjustes";
 
 interface Props {
   rows: DashSucessoRow[];
@@ -53,21 +63,6 @@ const MONTHS_PT = [
 
 const PAGE_SIZE_OPTS = [25, 50, 75, 100] as const;
 
-// Ajustes manuais (Upsell/Downsell/Reativações) por mês/ano — persistidos no localStorage.
-type Ajustes = { upsell: number; downsell: number; reativacoes: number };
-const ZERO_AJ: Ajustes = { upsell: 0, downsell: 0, reativacoes: 0 };
-const ajustesKey = (y: number, m0: number) => `sucesso:churn:ajustes:${y}-${String(m0 + 1).padStart(2, "0")}`;
-const loadAjustes = (y: number, m0: number): Ajustes => {
-  try {
-    const raw = localStorage.getItem(ajustesKey(y, m0));
-    if (!raw) return ZERO_AJ;
-    const p = JSON.parse(raw);
-    return { upsell: num(p?.upsell), downsell: num(p?.downsell), reativacoes: num(p?.reativacoes) };
-  } catch {
-    return ZERO_AJ;
-  }
-};
-
 export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGGTotal }: Props) => {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -82,17 +77,56 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTS[0]);
 
-  // Inputs manuais (planilha) por mês/ano — TODO: substituir por fonte de dados quando o processo for definido.
-  const [ajustes, setAjustes] = useState<Ajustes>(ZERO_AJ);
-  // Recarrega os ajustes ao trocar mês/ano (cada período guarda seus próprios valores).
-  useEffect(() => { setAjustes(loadAjustes(year, month)); }, [year, month]);
-  const setAjuste = (k: keyof Ajustes) => (v: number) => {
-    setAjustes((cur) => {
-      const next = { ...cur, [k]: v };
-      try { localStorage.setItem(ajustesKey(year, month), JSON.stringify(next)); } catch { /* ignore */ }
-      return next;
-    });
+  // Inputs manuais (Upsell/Downsell/Reativações) por mês/ano — persistidos no Supabase (app_settings).
+  const { user } = useAuth();
+  const [ajustesMap, setAjustesMap] = useState<ChurnAjustesMap>({});
+  const [ajustes, setAjustes] = useState<ChurnAjuste>(ZERO_AJUSTE); // valores em edição do período atual
+  const [ajustesSaving, setAjustesSaving] = useState(false);
+
+  // Carrega o mapa completo de ajustes uma vez.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const map = await loadChurnAjustes();
+        if (alive) setAjustesMap(map);
+      } catch (e) {
+        if (alive) toast.error("Erro ao carregar ajustes de churn", { description: (e as Error).message });
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  // Espelha o período selecionado nos inputs (cada mês/ano guarda seus próprios valores).
+  useEffect(() => {
+    setAjustes(ajustesMap[periodoKey(year, month)] ?? ZERO_AJUSTE);
+  }, [ajustesMap, year, month]);
+
+  // Edição ao vivo (recalcula o churn líquido na hora).
+  const setAjusteField = (k: keyof ChurnAjuste) => (v: number) =>
+    setAjustes((cur) => ({ ...cur, [k]: v }));
+
+  // Persiste no Supabase ao sair do campo (onBlur), só se algo mudou no período.
+  const persistAjustes = async () => {
+    const key = periodoKey(year, month);
+    const atual = ajustesMap[key] ?? ZERO_AJUSTE;
+    if (
+      atual.upsell === ajustes.upsell &&
+      atual.downsell === ajustes.downsell &&
+      atual.reativacoes === ajustes.reativacoes
+    ) return;
+    const nextMap = { ...ajustesMap, [key]: ajustes };
+    setAjustesSaving(true);
+    try {
+      await saveChurnAjustes(nextMap, user?.id ?? null);
+      setAjustesMap(nextMap);
+    } catch (e) {
+      toast.error("Erro ao salvar ajustes de churn", { description: (e as Error).message });
+    } finally {
+      setAjustesSaving(false);
+    }
   };
+
   const { upsell, downsell, reativacoes } = ajustes;
 
   // MRR base do mês via edge function (mesmo padrão do ChurnKpis)
@@ -327,16 +361,20 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
               Churn líquido (ajuste manual)
             </h3>
             <p className="font-small text-xs text-muted-foreground">
-              Líquido = Churn bruto − Upsell + Downsell − Reativações. Preencha os valores do mês a partir da planilha.
+              Líquido = Churn bruto − Upsell + Downsell − Reativações. Os valores são por mês/ano e ficam salvos para todos (Supabase).
             </p>
           </div>
+          {ajustesSaving && (
+            <span className="inline-flex items-center gap-1.5 font-subtitle text-[11px] text-muted-foreground">
+              <RefreshCw className="h-3.5 w-3.5 animate-spin" /> salvando…
+            </span>
+          )}
         </div>
 
-        {/* TODO: substituir inputs manuais por fonte de dados quando o processo for definido. */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <ManualField label="Upsell (R$)" value={upsell} onChange={setAjuste("upsell")} />
-          <ManualField label="Downsell (R$)" value={downsell} onChange={setAjuste("downsell")} />
-          <ManualField label="Reativações (R$)" value={reativacoes} onChange={setAjuste("reativacoes")} />
+          <ManualField label="Upsell (R$)" value={upsell} onChange={setAjusteField("upsell")} onBlur={persistAjustes} />
+          <ManualField label="Downsell (R$)" value={downsell} onChange={setAjusteField("downsell")} onBlur={persistAjustes} />
+          <ManualField label="Reativações (R$)" value={reativacoes} onChange={setAjusteField("reativacoes")} onBlur={persistAjustes} />
         </div>
 
         <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -626,8 +664,8 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
 // ---------- Helpers ----------
 
 const ManualField = ({
-  label, value, onChange,
-}: { label: string; value: number; onChange: (n: number) => void }) => (
+  label, value, onChange, onBlur,
+}: { label: string; value: number; onChange: (n: number) => void; onBlur?: () => void }) => (
   <label className="block">
     <span className="mb-1 block font-subtitle text-[11px] uppercase tracking-wide text-muted-foreground">
       {label}
@@ -638,6 +676,7 @@ const ManualField = ({
       step="0.01"
       value={Number.isFinite(value) ? value : 0}
       onChange={(e) => onChange(num(e.target.value))}
+      onBlur={onBlur}
       className="h-9 font-numeric"
     />
   </label>
