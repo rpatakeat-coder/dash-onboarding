@@ -74,6 +74,15 @@ const motivosOf = (r: DashSucessoRow): string[] =>
     .map((m) => m?.trim())
     .filter((m): m is string => !!m);
 
+// Motivos por nível (N1/N2/N3) ou todos.
+type Nivel = "n1" | "n2" | "n3" | "todos";
+const NIVEL_LABEL: Record<Nivel, string> = { n1: "N1", n2: "N2", n3: "N3", todos: "N1/N2/N3" };
+const motivosForNivel = (r: DashSucessoRow, nivel: Nivel): string[] => {
+  if (nivel === "todos") return motivosOf(r);
+  const v = (nivel === "n1" ? r.motivo_n1 : nivel === "n2" ? r.motivo_n2 : r.motivo_n3)?.trim();
+  return v ? [v] : [];
+};
+
 const ALL = "__all__";
 const PAGE_SIZE_OPTS = [25, 50, 75, 100] as const;
 
@@ -228,10 +237,14 @@ const Campo = ({ label, children }: { label: string; children: ReactNode }) => (
 // ---- Aba Motivos: dados de dash_sucesso (etapa Churn) com filtros + modal ----
 const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
   const [q, setQ] = useState("");
+  const [nivel, setNivel] = useState<Nivel>("n1"); // por padrão mostra só N1
   const [perfil, setPerfil] = useState(ALL);
   const [agente, setAgente] = useState(ALL);
   const [motivo, setMotivo] = useState(ALL);
   const [detalhe, setDetalhe] = useState<DashSucessoRow | null>(null);
+
+  // Ao trocar o nível, o motivo selecionado pode não existir nele → reseta.
+  useEffect(() => { setMotivo(ALL); }, [nivel]);
 
   const perfisOpts = useMemo(
     () => Array.from(new Set(rows.map((r) => r.perfil_cliente?.trim()).filter((x): x is string => !!x))).sort((a, b) => a.localeCompare(b, "pt-BR")),
@@ -242,8 +255,8 @@ const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
     [rows],
   );
   const motivosOpts = useMemo(
-    () => Array.from(new Set(rows.flatMap(motivosOf))).sort((a, b) => a.localeCompare(b, "pt-BR")),
-    [rows],
+    () => Array.from(new Set(rows.flatMap((r) => motivosForNivel(r, nivel)))).sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [rows, nivel],
   );
 
   const filtered = useMemo(() => {
@@ -251,7 +264,7 @@ const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
     return rows.filter((r) => {
       if (perfil !== ALL && (r.perfil_cliente?.trim() ?? "") !== perfil) return false;
       if (agente !== ALL && (r.agente_sucesso?.trim() ?? "") !== agente) return false;
-      if (motivo !== ALL && !motivosOf(r).includes(motivo)) return false;
+      if (motivo !== ALL && !motivosForNivel(r, nivel).includes(motivo)) return false;
       if (term) {
         const hay = [r.nome_negocio, r.agente_sucesso, r.perfil_cliente, r.etapa_de_cancelamento, ...motivosOf(r)]
           .join(" ").toLowerCase();
@@ -259,15 +272,15 @@ const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
       }
       return true;
     });
-  }, [rows, q, perfil, agente, motivo]);
+  }, [rows, q, nivel, perfil, agente, motivo]);
 
-  const hasFilter = q.trim() !== "" || perfil !== ALL || agente !== ALL || motivo !== ALL;
-  const clear = () => { setQ(""); setPerfil(ALL); setAgente(ALL); setMotivo(ALL); };
+  const hasFilter = q.trim() !== "" || nivel !== "n1" || perfil !== ALL || agente !== ALL || motivo !== ALL;
+  const clear = () => { setQ(""); setNivel("n1"); setPerfil(ALL); setAgente(ALL); setMotivo(ALL); };
 
   return (
     <div className="space-y-3">
       <p className="font-small text-xs text-muted-foreground">
-        Clientes em <strong>Churn</strong> no período (motivos em motivo_n1/2/3). Clique numa linha para ver todos os detalhes.
+        Clientes em <strong>Churn</strong> no período. Por padrão mostra o motivo <strong>N1</strong> — troque o nível no filtro. Clique numa linha para ver os 3 níveis e o resto.
       </p>
 
       {/* Filtros */}
@@ -276,6 +289,15 @@ const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar cliente, motivo, agente…" className="pl-9" />
         </div>
+        <Select value={nivel} onValueChange={(v) => setNivel(v as Nivel)}>
+          <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="n1">Nível: N1</SelectItem>
+            <SelectItem value="n2">Nível: N2</SelectItem>
+            <SelectItem value="n3">Nível: N3</SelectItem>
+            <SelectItem value="todos">Nível: todos</SelectItem>
+          </SelectContent>
+        </Select>
         <FiltroSelect label="Motivo" value={motivo} onChange={setMotivo} options={motivosOpts} />
         <FiltroSelect label="Perfil" value={perfil} onChange={setPerfil} options={perfisOpts} />
         <FiltroSelect label="Agente" value={agente} onChange={setAgente} options={agentesOpts} />
@@ -295,7 +317,7 @@ const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
           <thead className="bg-muted/50">
             <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
               <th className="px-3 py-2 text-left">Cliente</th>
-              <th className="px-3 py-2 text-left">Motivos</th>
+              <th className="px-3 py-2 text-left">Motivo ({NIVEL_LABEL[nivel]})</th>
               <th className="px-3 py-2 text-left">Perfil</th>
               <th className="px-3 py-2 text-left">Agente de Sucesso</th>
               <th className="px-3 py-2 text-left">Etapa cancelamento</th>
@@ -304,7 +326,7 @@ const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
           </thead>
           <tbody className="divide-y divide-border">
             {filtered.map((r, i) => {
-              const ms = motivosOf(r);
+              const ms = motivosForNivel(r, nivel);
               return (
                 <tr key={`${r.id_deal}-${i}`} onClick={() => setDetalhe(r)} className="cursor-pointer hover:bg-muted/30">
                   <td className="px-3 py-2.5 font-medium text-foreground">{r.nome_negocio ?? "—"}</td>
