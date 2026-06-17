@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   TrendingDown,
   Users,
@@ -8,6 +8,7 @@ import {
   ListChecks,
   User as UserIcon,
   ExternalLink,
+  Search,
 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
@@ -19,6 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useDashSucesso,
@@ -58,6 +66,14 @@ const fmtFechado = (s: string | null | undefined): string => {
   const d = new Date(str);
   return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR");
 };
+
+// Motivos de churn ficam em 3 colunas (n1/n2/n3); junta os preenchidos.
+const motivosOf = (r: DashSucessoRow): string[] =>
+  [r.motivo_n1, r.motivo_n2, r.motivo_n3]
+    .map((m) => m?.trim())
+    .filter((m): m is string => !!m);
+
+const ALL = "__all__";
 
 interface ChurnStats {
   qtd: number;
@@ -133,6 +149,170 @@ const StatCards = ({ stats }: { stats: ChurnStats }) => (
   </div>
 );
 
+// Selor de filtro reutilizável (com opção "todos").
+const FiltroSelect = ({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: string[] }) => (
+  <Select value={value} onValueChange={onChange}>
+    <SelectTrigger className="h-9 w-[170px]"><SelectValue placeholder={label} /></SelectTrigger>
+    <SelectContent>
+      <SelectItem value={ALL}>{label}: todos</SelectItem>
+      {options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+    </SelectContent>
+  </Select>
+);
+
+// Linha rótulo/valor do modal de detalhe.
+const Campo = ({ label, children }: { label: string; children: ReactNode }) => (
+  <div className="flex flex-col gap-0.5 border-b border-border/60 pb-2 last:border-0">
+    <span className="font-subtitle text-[10px] uppercase tracking-widest text-muted-foreground">{label}</span>
+    <span className="text-foreground">{children}</span>
+  </div>
+);
+
+// ---- Aba Motivos: dados de dash_sucesso (etapa Churn) com filtros + modal ----
+const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
+  const [q, setQ] = useState("");
+  const [perfil, setPerfil] = useState(ALL);
+  const [agente, setAgente] = useState(ALL);
+  const [motivo, setMotivo] = useState(ALL);
+  const [detalhe, setDetalhe] = useState<DashSucessoRow | null>(null);
+
+  const perfisOpts = useMemo(
+    () => Array.from(new Set(rows.map((r) => r.perfil_cliente?.trim()).filter((x): x is string => !!x))).sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [rows],
+  );
+  const agentesOpts = useMemo(
+    () => Array.from(new Set(rows.map((r) => r.agente_sucesso?.trim()).filter((x): x is string => !!x))).sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [rows],
+  );
+  const motivosOpts = useMemo(
+    () => Array.from(new Set(rows.flatMap(motivosOf))).sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [rows],
+  );
+
+  const filtered = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    return rows.filter((r) => {
+      if (perfil !== ALL && (r.perfil_cliente?.trim() ?? "") !== perfil) return false;
+      if (agente !== ALL && (r.agente_sucesso?.trim() ?? "") !== agente) return false;
+      if (motivo !== ALL && !motivosOf(r).includes(motivo)) return false;
+      if (term) {
+        const hay = [r.nome_negocio, r.agente_sucesso, r.perfil_cliente, r.etapa_de_cancelamento, ...motivosOf(r)]
+          .join(" ").toLowerCase();
+        if (!hay.includes(term)) return false;
+      }
+      return true;
+    });
+  }, [rows, q, perfil, agente, motivo]);
+
+  const hasFilter = q.trim() !== "" || perfil !== ALL || agente !== ALL || motivo !== ALL;
+  const clear = () => { setQ(""); setPerfil(ALL); setAgente(ALL); setMotivo(ALL); };
+
+  return (
+    <div className="space-y-3">
+      <p className="font-small text-xs text-muted-foreground">
+        Clientes em <strong>Churn</strong> no período (motivos em motivo_n1/2/3). Clique numa linha para ver todos os detalhes.
+      </p>
+
+      {/* Filtros */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[200px] flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar cliente, motivo, agente…" className="pl-9" />
+        </div>
+        <FiltroSelect label="Motivo" value={motivo} onChange={setMotivo} options={motivosOpts} />
+        <FiltroSelect label="Perfil" value={perfil} onChange={setPerfil} options={perfisOpts} />
+        <FiltroSelect label="Agente" value={agente} onChange={setAgente} options={agentesOpts} />
+        {hasFilter && (
+          <button onClick={clear} className="font-subtitle text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">
+            Limpar
+          </button>
+        )}
+      </div>
+
+      <p className="font-small text-xs text-muted-foreground">
+        {filtered.length.toLocaleString("pt-BR")} de {rows.length.toLocaleString("pt-BR")} churns
+      </p>
+
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+        <table className="w-full min-w-[820px] text-sm">
+          <thead className="bg-muted/50">
+            <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
+              <th className="px-3 py-2 text-left">Cliente</th>
+              <th className="px-3 py-2 text-left">Motivos</th>
+              <th className="px-3 py-2 text-left">Perfil</th>
+              <th className="px-3 py-2 text-left">Agente de Sucesso</th>
+              <th className="px-3 py-2 text-left">Etapa cancelamento</th>
+              <th className="px-3 py-2 text-right">Ativação</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {filtered.map((r, i) => {
+              const ms = motivosOf(r);
+              return (
+                <tr key={`${r.id_deal}-${i}`} onClick={() => setDetalhe(r)} className="cursor-pointer hover:bg-muted/30">
+                  <td className="px-3 py-2.5 font-medium text-foreground">{r.nome_negocio ?? "—"}</td>
+                  <td className="px-3 py-2.5">
+                    {ms.length ? (
+                      <div className="flex flex-wrap gap-1">
+                        {ms.map((m, j) => (
+                          <span key={j} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] text-foreground">{m}</span>
+                        ))}
+                      </div>
+                    ) : <span className="text-muted-foreground">—</span>}
+                  </td>
+                  <td className="px-3 py-2.5 font-medium text-foreground">{r.perfil_cliente ?? "—"}</td>
+                  <td className="px-3 py-2.5 font-medium text-foreground">{r.agente_sucesso?.trim() || "Sem responsável"}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{r.etapa_de_cancelamento?.trim() || "—"}</td>
+                  <td className="px-3 py-2.5 text-right font-numeric tabular-nums text-muted-foreground">{fmtFechado(r.data_ativacao)}</td>
+                </tr>
+              );
+            })}
+            {filtered.length === 0 && (
+              <tr><td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">Nenhum churn corresponde aos filtros.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Modal de detalhe (todas as infos do deal) */}
+      <Dialog open={!!detalhe} onOpenChange={(o) => { if (!o) setDetalhe(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">{detalhe?.nome_negocio ?? "Detalhes do churn"}</DialogTitle>
+          </DialogHeader>
+          {detalhe && (
+            <div className="space-y-2.5 text-sm">
+              <Campo label="Motivos">
+                {motivosOf(detalhe).length ? (
+                  <div className="flex flex-wrap gap-1">
+                    {motivosOf(detalhe).map((m, j) => (
+                      <span key={j} className="rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-foreground">{m}</span>
+                    ))}
+                  </div>
+                ) : "—"}
+              </Campo>
+              <Campo label="Perfil do cliente">{detalhe.perfil_cliente ?? "—"}</Campo>
+              <Campo label="Agente de Sucesso">{detalhe.agente_sucesso?.trim() || "Sem responsável"}</Campo>
+              <Campo label="Etapa de cancelamento">{detalhe.etapa_de_cancelamento?.trim() || "—"}</Campo>
+              <Campo label="Data de ativação">{fmtFechado(detalhe.data_ativacao)}</Campo>
+              <Campo label="Fechado em">{fmtFechado(detalhe.data_fechamento)}</Campo>
+              <Campo label="MRR">{fmtBRL(num(detalhe.mrr))}</Campo>
+              <a
+                href={hubspotDealUrl(detalhe.id_deal)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-foreground transition hover:border-primary/40 hover:text-primary"
+              >
+                Abrir no HubSpot <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
 export default function SucessoChurn() {
   const { fullName, agenteAtivacao } = useAuth();
   const myAgente = (agenteAtivacao ?? fullName ?? "").trim();
@@ -161,21 +341,6 @@ export default function SucessoChurn() {
 
   const statsGeral = useMemo(() => computeStats(churnSucesso), [churnSucesso]);
   const statsMeu = useMemo(() => computeStats(meusChurns), [meusChurns]);
-
-  // Motivos: TODO churn do período agrupado por etapa_de_cancelamento.
-  const motivos = useMemo(() => {
-    const map = new Map<string, { motivo: string; qtd: number; mrr: number }>();
-    for (const r of churnPeriodo) {
-      const motivo = r.etapa_de_cancelamento?.trim() || "Sem motivo";
-      const cur = map.get(motivo) ?? { motivo, qtd: 0, mrr: 0 };
-      cur.qtd++;
-      cur.mrr += num(r.mrr);
-      map.set(motivo, cur);
-    }
-    return Array.from(map.values()).sort((a, b) => b.qtd - a.qtd);
-  }, [churnPeriodo]);
-  const motivosTotalQtd = motivos.reduce((s, m) => s + m.qtd, 0);
-  const motivosTotalMrr = motivos.reduce((s, m) => s + m.mrr, 0);
 
   const years = Array.from(new Set([now.getFullYear(), now.getFullYear() - 1, year])).sort((a, b) => b - a);
 
@@ -245,48 +410,8 @@ export default function SucessoChurn() {
           </TabsContent>
 
           {/* MOTIVOS */}
-          <TabsContent value="motivos" className="mt-4 space-y-3">
-            <p className="font-small text-xs text-muted-foreground">
-              Todo o churn do período agrupado por <strong>motivo de cancelamento</strong> (etapa_de_cancelamento).
-            </p>
-            <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-              <table className="w-full min-w-[560px] text-sm">
-                <thead className="bg-muted/50">
-                  <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
-                    <th className="px-3 py-2 text-left">Motivo</th>
-                    <th className="px-3 py-2 text-right">Qtd</th>
-                    <th className="px-3 py-2 text-right">% dos churns</th>
-                    <th className="px-3 py-2 text-right">MRR perdido</th>
-                    <th className="px-3 py-2 text-right">% do MRR</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {motivos.map((m) => (
-                    <tr key={m.motivo} className="hover:bg-muted/30">
-                      <td className="px-3 py-2.5 font-medium text-foreground">{m.motivo}</td>
-                      <td className="px-3 py-2.5 text-right font-numeric tabular-nums">{m.qtd.toLocaleString("pt-BR")}</td>
-                      <td className="px-3 py-2.5 text-right font-numeric tabular-nums text-muted-foreground">{fmtPct(pct(m.qtd, motivosTotalQtd), 1)}</td>
-                      <td className="px-3 py-2.5 text-right font-numeric font-semibold tabular-nums">{fmtBRL(m.mrr)}</td>
-                      <td className="px-3 py-2.5 text-right font-numeric tabular-nums text-muted-foreground">{fmtPct(pct(m.mrr, motivosTotalMrr), 1)}</td>
-                    </tr>
-                  ))}
-                  {motivos.length === 0 && (
-                    <tr><td colSpan={5} className="px-3 py-8 text-center text-muted-foreground">Nenhum churn no período.</td></tr>
-                  )}
-                </tbody>
-                {motivos.length > 0 && (
-                  <tfoot className="border-t border-border bg-muted/30 font-subtitle text-xs">
-                    <tr>
-                      <td className="px-3 py-2.5 font-semibold text-foreground">Total</td>
-                      <td className="px-3 py-2.5 text-right font-numeric tabular-nums font-semibold">{motivosTotalQtd.toLocaleString("pt-BR")}</td>
-                      <td className="px-3 py-2.5 text-right text-muted-foreground">100%</td>
-                      <td className="px-3 py-2.5 text-right font-numeric tabular-nums font-semibold">{fmtBRL(motivosTotalMrr)}</td>
-                      <td className="px-3 py-2.5 text-right text-muted-foreground">100%</td>
-                    </tr>
-                  </tfoot>
-                )}
-              </table>
-            </div>
+          <TabsContent value="motivos" className="mt-4">
+            <MotivosTab rows={churnPeriodo} />
           </TabsContent>
 
           {/* MRR */}

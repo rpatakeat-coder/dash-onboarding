@@ -843,6 +843,9 @@ export type Database = {
           etapa_de_cancelamento: string | null
           etapa_negocio: string | null
           id_deal: number
+          motivo_n1: string | null
+          motivo_n2: string | null
+          motivo_n3: string | null
           mrr: number | null
           nome_negocio: string | null
           perfil_cliente: string | null
@@ -858,6 +861,9 @@ export type Database = {
           etapa_de_cancelamento?: string | null
           etapa_negocio?: string | null
           id_deal: number
+          motivo_n1?: string | null
+          motivo_n2?: string | null
+          motivo_n3?: string | null
           mrr?: number | null
           nome_negocio?: string | null
           perfil_cliente?: string | null
@@ -873,6 +879,9 @@ export type Database = {
           etapa_de_cancelamento?: string | null
           etapa_negocio?: string | null
           id_deal?: number
+          motivo_n1?: string | null
+          motivo_n2?: string | null
+          motivo_n3?: string | null
           mrr?: number | null
           nome_negocio?: string | null
           perfil_cliente?: string | null
