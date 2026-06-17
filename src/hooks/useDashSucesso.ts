@@ -18,7 +18,7 @@ export const grupoPerfil = (p: string | null | undefined): PerfilGrupo => {
 };
 
 export const fmtBRL = (n: number) =>
-  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export const fmtPct = (n: number, digits = 0) =>
   `${n.toLocaleString("pt-BR", { minimumFractionDigits: digits, maximumFractionDigits: digits })}%`;

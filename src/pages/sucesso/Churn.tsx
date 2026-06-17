@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode, type Dispatch, type SetStateAction } from "react";
 import {
   TrendingDown,
   Users,
@@ -36,6 +36,7 @@ import {
   type DashSucessoRow,
 } from "@/hooks/useDashSucesso";
 import { hubspotDealUrl } from "@/lib/hubspot";
+import { cn } from "@/lib/utils";
 
 const MONTHS_PT = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -74,6 +75,7 @@ const motivosOf = (r: DashSucessoRow): string[] =>
     .filter((m): m is string => !!m);
 
 const ALL = "__all__";
+const PAGE_SIZE_OPTS = [25, 50, 75, 100] as const;
 
 interface ChurnStats {
   qtd: number;
@@ -96,46 +98,101 @@ const computeStats = (rows: DashSucessoRow[]): ChurnStats => {
 };
 
 // ---- Subcomponentes ----
+// Barra de paginação reutilizável (25/50/75/100).
+const PaginationBar = ({ total, page, pageSize, totalPages, setPage, setPageSize }: {
+  total: number; page: number; pageSize: number; totalPages: number;
+  setPage: Dispatch<SetStateAction<number>>; setPageSize: Dispatch<SetStateAction<number>>;
+}) => {
+  const pages: number[] = [];
+  const visible = 3;
+  const start = Math.max(0, Math.min(page - Math.floor(visible / 2), totalPages - visible));
+  const end = Math.min(totalPages, start + visible);
+  for (let i = start; i < end; i++) pages.push(i);
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 font-subtitle text-xs text-muted-foreground">
+      <div className="flex items-center gap-2">
+        <span>{`${page * pageSize + 1}–${Math.min(total, (page + 1) * pageSize)} de ${total.toLocaleString("pt-BR")}`}</span>
+        <span className="mx-1 text-border">·</span>
+        <label className="flex items-center gap-1.5">
+          Por página
+          <select
+            value={pageSize}
+            onChange={(e) => { setPageSize(Number(e.target.value)); setPage(() => 0); }}
+            className="rounded-md border border-border bg-background px-2 py-1 text-foreground"
+          >
+            {PAGE_SIZE_OPTS.map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </label>
+      </div>
+      <div className="flex flex-wrap items-center gap-1">
+        <button onClick={() => setPage(() => 0)} disabled={page === 0} className="rounded-lg border border-border px-2.5 py-1.5 hover:border-primary/40 disabled:opacity-40" aria-label="Primeira página">«</button>
+        <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="rounded-lg border border-border px-2.5 py-1.5 hover:border-primary/40 disabled:opacity-40" aria-label="Página anterior">
+          <span className="hidden sm:inline">Anterior</span><span className="sm:hidden">‹</span>
+        </button>
+        {pages.map((i) => (
+          <button key={i} onClick={() => setPage(() => i)} className={cn("min-w-[34px] rounded-lg border px-2.5 py-1.5 tabular-nums", i === page ? "border-primary/60 bg-primary/10 text-primary" : "border-border hover:border-primary/40")}>{i + 1}</button>
+        ))}
+        <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="rounded-lg border border-border px-2.5 py-1.5 hover:border-primary/40 disabled:opacity-40" aria-label="Próxima página">
+          <span className="hidden sm:inline">Próxima</span><span className="sm:hidden">›</span>
+        </button>
+        <button onClick={() => setPage(() => totalPages - 1)} disabled={page >= totalPages - 1} className="rounded-lg border border-border px-2.5 py-1.5 hover:border-primary/40 disabled:opacity-40" aria-label="Última página">»</button>
+      </div>
+    </div>
+  );
+};
+
 const ClientesTable = ({ rows }: { rows: DashSucessoRow[] }) => {
   const sorted = useMemo(() => [...rows].sort((a, b) => num(b.mrr) - num(a.mrr)), [rows]);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTS[0]);
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const pageSafe = Math.min(page, totalPages - 1);
+  const pageRows = sorted.slice(pageSafe * pageSize, (pageSafe + 1) * pageSize);
+  useEffect(() => { setPage(0); }, [sorted]);
+
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-      <table className="w-full min-w-[640px] text-sm">
-        <thead className="bg-muted/50">
-          <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
-            <th className="px-3 py-2 text-left">Cliente</th>
-            <th className="px-3 py-2 text-left">Perfil</th>
-            <th className="px-3 py-2 text-left">Agente</th>
-            <th className="px-3 py-2 text-right">MRR</th>
-            <th className="px-3 py-2 text-right">Fechado em</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {sorted.map((r, i) => (
-            <tr key={`${r.id_deal}-${i}`} className="hover:bg-muted/30">
-              <td className="px-3 py-2.5 font-medium">
-                <a
-                  href={hubspotDealUrl(r.id_deal)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group/hs inline-flex items-center gap-1 text-foreground transition hover:text-primary hover:underline"
-                  title="Abrir no HubSpot"
-                >
-                  {r.nome_negocio ?? "—"}
-                  <ExternalLink className="h-3 w-3 text-muted-foreground transition group-hover/hs:text-primary" />
-                </a>
-              </td>
-              <td className="px-3 py-2.5 text-muted-foreground">{r.perfil_cliente ?? "—"}</td>
-              <td className="px-3 py-2.5 text-muted-foreground">{r.agente_sucesso?.trim() || "Sem responsável"}</td>
-              <td className="px-3 py-2.5 text-right font-numeric font-semibold tabular-nums">{fmtBRL(num(r.mrr))}</td>
-              <td className="px-3 py-2.5 text-right font-numeric tabular-nums text-muted-foreground">{fmtFechado(r.data_fechamento)}</td>
+    <div className="space-y-3">
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+        <table className="w-full min-w-[640px] text-sm">
+          <thead className="bg-muted/50">
+            <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
+              <th className="px-3 py-2 text-left">Cliente</th>
+              <th className="px-3 py-2 text-left">Perfil</th>
+              <th className="px-3 py-2 text-left">Agente</th>
+              <th className="px-3 py-2 text-right">MRR</th>
+              <th className="px-3 py-2 text-right">Fechado em</th>
             </tr>
-          ))}
-          {sorted.length === 0 && (
-            <tr><td colSpan={5} className="px-3 py-8 text-center text-muted-foreground">Nenhum churn no período.</td></tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {pageRows.map((r, i) => (
+              <tr key={`${r.id_deal}-${i}`} className="hover:bg-muted/30">
+                <td className="px-3 py-2.5 font-medium">
+                  <a
+                    href={hubspotDealUrl(r.id_deal)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group/hs inline-flex items-center gap-1 text-foreground transition hover:text-primary hover:underline"
+                    title="Abrir no HubSpot"
+                  >
+                    {r.nome_negocio ?? "—"}
+                    <ExternalLink className="h-3 w-3 text-muted-foreground transition group-hover/hs:text-primary" />
+                  </a>
+                </td>
+                <td className="px-3 py-2.5 text-muted-foreground">{r.perfil_cliente ?? "—"}</td>
+                <td className="px-3 py-2.5 text-muted-foreground">{r.agente_sucesso?.trim() || "Sem responsável"}</td>
+                <td className="px-3 py-2.5 text-right font-numeric font-semibold tabular-nums">{fmtBRL(num(r.mrr))}</td>
+                <td className="px-3 py-2.5 text-right font-numeric tabular-nums text-muted-foreground">{fmtFechado(r.data_fechamento)}</td>
+              </tr>
+            ))}
+            {sorted.length === 0 && (
+              <tr><td colSpan={5} className="px-3 py-8 text-center text-muted-foreground">Nenhum churn no período.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {sorted.length > 0 && (
+        <PaginationBar total={sorted.length} page={pageSafe} pageSize={pageSize} totalPages={totalPages} setPage={setPage} setPageSize={setPageSize} />
+      )}
     </div>
   );
 };
