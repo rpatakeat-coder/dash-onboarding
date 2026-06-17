@@ -1,10 +1,11 @@
-import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useUserRole } from "@/hooks/useUserRole";
 import { AccessDenied } from "@/components/AccessDenied";
 
 export const AdminOnlyRoute = ({ children }: { children: JSX.Element }) => {
-  const { isAdmin, loading } = useIsAdmin();
+  // useUserRole é cacheado (react-query) → após o 1º load não refaz a query nem
+  // pisca o loader ao navegar entre as rotas do Sucesso.
+  const { isAdmin, loading } = useUserRole();
   if (loading) {
     return (
       <div className="min-h-screen grid place-items-center">

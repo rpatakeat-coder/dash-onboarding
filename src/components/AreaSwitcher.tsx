@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useArea, AREA_LABELS, type AppArea } from "@/contexts/AreaContext";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useUserRole } from "@/hooks/useUserRole";
 import { cn } from "@/lib/utils";
 
 const AREA_META: Record<AppArea, { icon: typeof LayoutDashboard; home: string; hint: string }> = {
@@ -18,10 +18,15 @@ const AREA_META: Record<AppArea, { icon: typeof LayoutDashboard; home: string; h
 };
 
 export const AreaSwitcher = ({ className }: { className?: string }) => {
-  const { isAdmin } = useIsAdmin();
+  const { isAdmin, loading } = useUserRole();
   const { area, setArea } = useArea();
   const navigate = useNavigate();
 
+  // Enquanto o papel carrega, mostra o rótulo da área atual — evita piscar
+  // "Onboarding" ao navegar dentro do Sucesso (o header remonta a cada rota).
+  if (loading) {
+    return <span className={className}>{AREA_LABELS[area]}</span>;
+  }
   // Non-admins always see Onboarding label, no switcher
   if (!isAdmin) {
     return <span className={className}>Onboarding</span>;
