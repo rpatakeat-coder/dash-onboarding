@@ -6,6 +6,7 @@ import { MacroFilters, type MacroPeriodKey, type CustomRange } from "@/component
 import { CarteiraPorAgente } from "@/components/sucesso/CarteiraPorAgente";
 import { RiscoEstoque } from "@/components/sucesso/RiscoEstoque";
 import { ChurnSucesso } from "@/components/sucesso/ChurnSucesso";
+import { UpsellSucesso } from "@/components/sucesso/UpsellSucesso";
 import { RefreshDataButton } from "@/components/dashboard/RefreshDataButton";
 import { SucessoClientesModal } from "@/components/sucesso/SucessoClientesModal";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
@@ -361,6 +362,8 @@ export default function SucessoDashboard() {
           mrrPMTotal={ov.mrrPM}
           mrrGGGTotal={ov.mrrGGG}
         />
+
+        <UpsellSucesso />
 
         <SucessoClientesModal
           open={!!modal}

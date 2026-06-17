@@ -890,6 +890,36 @@ export type Database = {
         }
         Relationships: []
       }
+      dash_upsell: {
+        Row: {
+          adicionais: string | null
+          cliente: string | null
+          data: string | null
+          forma_pagamento: string | null
+          mrr: number | null
+          periodo: string | null
+          vendedor: string | null
+        }
+        Insert: {
+          adicionais?: string | null
+          cliente?: string | null
+          data?: string | null
+          forma_pagamento?: string | null
+          mrr?: number | null
+          periodo?: string | null
+          vendedor?: string | null
+        }
+        Update: {
+          adicionais?: string | null
+          cliente?: string | null
+          data?: string | null
+          forma_pagamento?: string | null
+          mrr?: number | null
+          periodo?: string | null
+          vendedor?: string | null
+        }
+        Relationships: []
+      }
       faturamento: {
         Row: {
           id: number
