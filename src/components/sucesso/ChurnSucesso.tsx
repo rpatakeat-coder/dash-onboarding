@@ -53,6 +53,21 @@ const MONTHS_PT = [
 
 const PAGE_SIZE_OPTS = [25, 50, 75, 100] as const;
 
+// Ajustes manuais (Upsell/Downsell/Reativações) por mês/ano — persistidos no localStorage.
+type Ajustes = { upsell: number; downsell: number; reativacoes: number };
+const ZERO_AJ: Ajustes = { upsell: 0, downsell: 0, reativacoes: 0 };
+const ajustesKey = (y: number, m0: number) => `sucesso:churn:ajustes:${y}-${String(m0 + 1).padStart(2, "0")}`;
+const loadAjustes = (y: number, m0: number): Ajustes => {
+  try {
+    const raw = localStorage.getItem(ajustesKey(y, m0));
+    if (!raw) return ZERO_AJ;
+    const p = JSON.parse(raw);
+    return { upsell: num(p?.upsell), downsell: num(p?.downsell), reativacoes: num(p?.reativacoes) };
+  } catch {
+    return ZERO_AJ;
+  }
+};
+
 export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGGTotal }: Props) => {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -67,10 +82,18 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTS[0]);
 
-  // Inputs manuais (planilha) — TODO: substituir inputs manuais por fonte de dados quando o processo for definido.
-  const [upsell, setUpsell] = useState(0);
-  const [downsell, setDownsell] = useState(0);
-  const [reativacoes, setReativacoes] = useState(0);
+  // Inputs manuais (planilha) por mês/ano — TODO: substituir por fonte de dados quando o processo for definido.
+  const [ajustes, setAjustes] = useState<Ajustes>(ZERO_AJ);
+  // Recarrega os ajustes ao trocar mês/ano (cada período guarda seus próprios valores).
+  useEffect(() => { setAjustes(loadAjustes(year, month)); }, [year, month]);
+  const setAjuste = (k: keyof Ajustes) => (v: number) => {
+    setAjustes((cur) => {
+      const next = { ...cur, [k]: v };
+      try { localStorage.setItem(ajustesKey(year, month), JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
+  const { upsell, downsell, reativacoes } = ajustes;
 
   // MRR base do mês via edge function (mesmo padrão do ChurnKpis)
   const [mrrBaseByMonth, setMrrBaseByMonth] = useState<(number | null)[]>(() => Array(12).fill(null));
@@ -311,9 +334,9 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
 
         {/* TODO: substituir inputs manuais por fonte de dados quando o processo for definido. */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <ManualField label="Upsell (R$)" value={upsell} onChange={setUpsell} />
-          <ManualField label="Downsell (R$)" value={downsell} onChange={setDownsell} />
-          <ManualField label="Reativações (R$)" value={reativacoes} onChange={setReativacoes} />
+          <ManualField label="Upsell (R$)" value={upsell} onChange={setAjuste("upsell")} />
+          <ManualField label="Downsell (R$)" value={downsell} onChange={setAjuste("downsell")} />
+          <ManualField label="Reativações (R$)" value={reativacoes} onChange={setAjuste("reativacoes")} />
         </div>
 
         <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
