@@ -240,11 +240,9 @@ const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
   const [nivel, setNivel] = useState<Nivel>("n1"); // por padrão mostra só N1
   const [perfil, setPerfil] = useState(ALL);
   const [agente, setAgente] = useState(ALL);
-  const [motivo, setMotivo] = useState(ALL);
   const [detalhe, setDetalhe] = useState<DashSucessoRow | null>(null);
-
-  // Ao trocar o nível, o motivo selecionado pode não existir nele → reseta.
-  useEffect(() => { setMotivo(ALL); }, [nivel]);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTS[0]);
 
   const perfisOpts = useMemo(
     () => Array.from(new Set(rows.map((r) => r.perfil_cliente?.trim()).filter((x): x is string => !!x))).sort((a, b) => a.localeCompare(b, "pt-BR")),
@@ -254,17 +252,12 @@ const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
     () => Array.from(new Set(rows.map((r) => r.agente_sucesso?.trim()).filter((x): x is string => !!x))).sort((a, b) => a.localeCompare(b, "pt-BR")),
     [rows],
   );
-  const motivosOpts = useMemo(
-    () => Array.from(new Set(rows.flatMap((r) => motivosForNivel(r, nivel)))).sort((a, b) => a.localeCompare(b, "pt-BR")),
-    [rows, nivel],
-  );
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     return rows.filter((r) => {
       if (perfil !== ALL && (r.perfil_cliente?.trim() ?? "") !== perfil) return false;
       if (agente !== ALL && (r.agente_sucesso?.trim() ?? "") !== agente) return false;
-      if (motivo !== ALL && !motivosForNivel(r, nivel).includes(motivo)) return false;
       if (term) {
         const hay = [r.nome_negocio, r.agente_sucesso, r.perfil_cliente, r.etapa_de_cancelamento, ...motivosOf(r)]
           .join(" ").toLowerCase();
@@ -272,10 +265,15 @@ const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
       }
       return true;
     });
-  }, [rows, q, nivel, perfil, agente, motivo]);
+  }, [rows, q, perfil, agente]);
 
-  const hasFilter = q.trim() !== "" || nivel !== "n1" || perfil !== ALL || agente !== ALL || motivo !== ALL;
-  const clear = () => { setQ(""); setNivel("n1"); setPerfil(ALL); setAgente(ALL); setMotivo(ALL); };
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pageSafe = Math.min(page, totalPages - 1);
+  const pageRows = filtered.slice(pageSafe * pageSize, (pageSafe + 1) * pageSize);
+  useEffect(() => { setPage(0); }, [filtered]);
+
+  const hasFilter = q.trim() !== "" || nivel !== "n1" || perfil !== ALL || agente !== ALL;
+  const clear = () => { setQ(""); setNivel("n1"); setPerfil(ALL); setAgente(ALL); };
 
   return (
     <div className="space-y-3">
@@ -298,7 +296,6 @@ const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
             <SelectItem value="todos">Nível: todos</SelectItem>
           </SelectContent>
         </Select>
-        <FiltroSelect label="Motivo" value={motivo} onChange={setMotivo} options={motivosOpts} />
         <FiltroSelect label="Perfil" value={perfil} onChange={setPerfil} options={perfisOpts} />
         <FiltroSelect label="Agente" value={agente} onChange={setAgente} options={agentesOpts} />
         {hasFilter && (
@@ -325,7 +322,7 @@ const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {filtered.map((r, i) => {
+            {pageRows.map((r, i) => {
               const ms = motivosForNivel(r, nivel);
               return (
                 <tr key={`${r.id_deal}-${i}`} onClick={() => setDetalhe(r)} className="cursor-pointer hover:bg-muted/30">
@@ -352,6 +349,10 @@ const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
           </tbody>
         </table>
       </div>
+
+      {filtered.length > 0 && (
+        <PaginationBar total={filtered.length} page={pageSafe} pageSize={pageSize} totalPages={totalPages} setPage={setPage} setPageSize={setPageSize} />
+      )}
 
       {/* Modal de detalhe (todas as infos do deal) */}
       <Dialog open={!!detalhe} onOpenChange={(o) => { if (!o) setDetalhe(null); }}>
