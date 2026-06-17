@@ -31,7 +31,6 @@ import SucessoLista from "./pages/sucesso/Lista";
 import SucessoKanban from "./pages/sucesso/Kanban";
 import SucessoGestor from "./pages/sucesso/AreaGestor";
 import SucessoConfig from "./pages/sucesso/Config";
-import SucessoMgm from "./pages/sucesso/Mgm";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,7 +64,6 @@ const Shell = () => {
           <Route path="/sucesso/kanban" element={<ProtectedRoute><AdminOnlyRoute><SucessoKanban /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="/sucesso/gestor" element={<ProtectedRoute><AdminOnlyRoute><SucessoGestor /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="/sucesso/config" element={<ProtectedRoute><AdminOnlyRoute><SucessoConfig /></AdminOnlyRoute></ProtectedRoute>} />
-          <Route path="/sucesso/mgm" element={<ProtectedRoute><AdminOnlyRoute><SucessoMgm /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </PageTransition>

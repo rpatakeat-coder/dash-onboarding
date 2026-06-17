@@ -39,7 +39,6 @@ export const NAV_ITEMS_SUCESSO: NavItem[] = [
   { to: "/sucesso/clientes", label: "Clientes", icon: Users },
   { to: "/sucesso/lista", label: "Lista", icon: List },
   { to: "/sucesso/kanban", label: "Kanban", icon: Columns3 },
-  { to: "/sucesso/mgm", label: "MGM", icon: Users2, title: "Member Get Member" },
   { to: "/sucesso/gestor", label: "Área do Gestor", icon: Users2 },
   { to: "/sucesso/config", label: "Config", icon: SettingsIcon },
 ];
