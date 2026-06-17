@@ -86,6 +86,10 @@ const motivosForNivel = (r: DashSucessoRow, nivel: Nivel): string[] => {
 const ALL = "__all__";
 const PAGE_SIZE_OPTS = [25, 50, 75, 100] as const;
 
+// Ordem de perfil: P (menor) < M < G < GG (maior).
+const PERFIL_ORDER: Record<string, number> = { P: 1, M: 2, G: 3, GG: 4 };
+const perfilRank = (p: string | null | undefined) => PERFIL_ORDER[(p ?? "").trim().toUpperCase()] ?? 0;
+
 interface ChurnStats {
   qtd: number;
   mrr: number;
@@ -150,25 +154,83 @@ const PaginationBar = ({ total, page, pageSize, totalPages, setPage, setPageSize
   );
 };
 
-const ClientesTable = ({ rows }: { rows: DashSucessoRow[] }) => {
-  const sorted = useMemo(() => [...rows].sort((a, b) => num(b.mrr) - num(a.mrr)), [rows]);
+type SortKey = "mrr" | "perfil";
+const ClientesTable = ({ rows, hideAgente }: { rows: DashSucessoRow[]; hideAgente?: boolean }) => {
+  const [agente, setAgente] = useState(ALL);
+  const [perfil, setPerfil] = useState(ALL);
+  const [sortKey, setSortKey] = useState<SortKey>("mrr");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc"); // maior → menor por padrão
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTS[0]);
+
+  const agentesOpts = useMemo(
+    () => Array.from(new Set(rows.map((r) => r.agente_sucesso?.trim()).filter((x): x is string => !!x))).sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [rows],
+  );
+  const perfisOpts = useMemo(
+    () => Array.from(new Set(rows.map((r) => r.perfil_cliente?.trim()).filter((x): x is string => !!x))).sort((a, b) => perfilRank(a) - perfilRank(b) || a.localeCompare(b)),
+    [rows],
+  );
+
+  const filtered = useMemo(
+    () => rows.filter((r) => {
+      if (agente !== ALL && (r.agente_sucesso?.trim() ?? "") !== agente) return false;
+      if (perfil !== ALL && (r.perfil_cliente?.trim() ?? "") !== perfil) return false;
+      return true;
+    }),
+    [rows, agente, perfil],
+  );
+
+  const sorted = useMemo(() => {
+    const dir = sortDir === "asc" ? 1 : -1;
+    return [...filtered].sort((a, b) =>
+      sortKey === "mrr"
+        ? (num(a.mrr) - num(b.mrr)) * dir
+        : (perfilRank(a.perfil_cliente) - perfilRank(b.perfil_cliente)) * dir,
+    );
+  }, [filtered, sortKey, sortDir]);
+
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const pageSafe = Math.min(page, totalPages - 1);
   const pageRows = sorted.slice(pageSafe * pageSize, (pageSafe + 1) * pageSize);
-  useEffect(() => { setPage(0); }, [sorted]);
+  useEffect(() => { setPage(0); }, [filtered]);
+
+  const toggleSort = (k: SortKey) => {
+    if (sortKey === k) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(k); setSortDir("desc"); }
+  };
+  const arrow = (k: SortKey) => (sortKey === k ? (sortDir === "asc" ? " ▲" : " ▼") : "");
+
+  const hasFilter = agente !== ALL || perfil !== ALL;
 
   return (
     <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        {!hideAgente && <FiltroSelect label="Agente" value={agente} onChange={setAgente} options={agentesOpts} />}
+        <FiltroSelect label="Perfil" value={perfil} onChange={setPerfil} options={perfisOpts} />
+        {hasFilter && (
+          <button onClick={() => { setAgente(ALL); setPerfil(ALL); }} className="font-subtitle text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">
+            Limpar
+          </button>
+        )}
+      </div>
+
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-muted/50">
             <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
               <th className="px-3 py-2 text-left">Cliente</th>
-              <th className="px-3 py-2 text-left">Perfil</th>
+              <th className="px-3 py-2 text-left">
+                <button type="button" onClick={() => toggleSort("perfil")} className="inline-flex items-center transition hover:text-foreground" title="Ordenar por perfil (P→GG)">
+                  Perfil{arrow("perfil")}
+                </button>
+              </th>
               <th className="px-3 py-2 text-left">Agente</th>
-              <th className="px-3 py-2 text-right">MRR</th>
+              <th className="px-3 py-2 text-right">
+                <button type="button" onClick={() => toggleSort("mrr")} className="inline-flex items-center transition hover:text-foreground" title="Ordenar por MRR">
+                  MRR{arrow("mrr")}
+                </button>
+              </th>
               <th className="px-3 py-2 text-right">Fechado em</th>
             </tr>
           </thead>
@@ -484,7 +546,7 @@ export default function SucessoChurn() {
                   ({fmtPct(pct(statsMeu.qtd, statsGeral.qtd), 1)}) · {fmtBRL(statsMeu.mrr)} de MRR perdido.
                 </div>
                 <StatCards stats={statsMeu} />
-                <ClientesTable rows={meusChurns} />
+                <ClientesTable rows={meusChurns} hideAgente />
               </>
             )}
           </TabsContent>
