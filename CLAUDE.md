@@ -27,6 +27,7 @@ Não há `tsc` standalone configurado como script — o type-check acontece no `
 ## Git
 
 - Remoto: `github.com/rpatakeat-coder/dash-onboarding` (branch `main`). Identidade local: `rpatakeat-coder <rpa.takeat@gmail.com>`.
+- **Todo commit é sempre feito como `rpatakeat-coder <rpa.takeat@gmail.com>`** (autor e committer). É a conta conectada à Vercel; commitar com outro autor quebra o deploy. Não troque a identidade nem use `--author`.
 - Push é via **HTTPS com PAT** (não há `gh` CLI). Use o token só no comando do push, sem gravar no `.git/config`; redija o token nos logs.
 - Mensagens de commit em **pt-BR**.
 - **NÃO** adicione o trailer `Co-Authored-By:` — a Vercel (Hobby + repo privado) bloqueia o deploy de commits com co-autor que não é membro do projeto. A conta conectada à Vercel é a `rpatakeat-coder` (autor ok); o co-autor externo é que quebra.
