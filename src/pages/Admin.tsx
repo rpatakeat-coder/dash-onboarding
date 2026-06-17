@@ -539,6 +539,7 @@ const AdminUsers = () => {
   const [editProfileName, setEditProfileName] = useState("");
   const [editProfileAvatar, setEditProfileAvatar] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -583,6 +584,7 @@ const AdminUsers = () => {
   // O viewer atual é super-admin? (necessário para gerenciar outros super-admins.)
   const mySelf = users.find((u) => u.id === user?.id);
   const iAmSuperAdmin = mySelf?.rawRole === "super_admin";
+  const iAmAdmin = mySelf?.rawRole === "admin" || mySelf?.rawRole === "super_admin";
 
   useEffect(() => { load(); }, []);
 
@@ -631,6 +633,30 @@ const AdminUsers = () => {
     });
     setEditProfileId(null);
     await load();
+  };
+
+  // Upload de foto (admin/super-admin). Grava na pasta do próprio admin — exigência
+  // do RLS do storage — e a URL pública é salva no perfil do usuário-alvo.
+  const uploadAvatar = async (file: File) => {
+    if (!user || !editProfileId) return;
+    if (!file.type.startsWith("image/")) return toast.error("Selecione uma imagem");
+    if (file.size > 5 * 1024 * 1024) return toast.error("Imagem muito grande (máx 5MB)");
+    setUploadingAvatar(true);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+    const path = `${user.id}/users/${editProfileId}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
+      upsert: true,
+      cacheControl: "3600",
+      contentType: file.type || "image/png",
+    });
+    if (upErr) {
+      setUploadingAvatar(false);
+      return toast.error("Erro ao enviar imagem", { description: upErr.message });
+    }
+    const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+    setEditProfileAvatar(pub.publicUrl);
+    setUploadingAvatar(false);
+    toast.success("Imagem enviada — clique em Salvar para aplicar");
   };
 
   const toggleAdmin = async (u: AdminUser) => {
@@ -730,8 +756,40 @@ const AdminUsers = () => {
                           placeholder="URL da foto (https://…)"
                           className="h-8 max-w-[260px] text-xs"
                         />
+                        <div className="flex items-center gap-2">
+                          {editProfileAvatar ? (
+                            <img src={editProfileAvatar} alt="" className="h-9 w-9 rounded-full object-cover" />
+                          ) : (
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-[11px] font-medium text-muted-foreground">
+                              {(editProfileName || u.full_name || "?").slice(0, 1).toUpperCase()}
+                            </div>
+                          )}
+                          <label className="cursor-pointer rounded-md border border-dashed border-border px-2 py-1 text-[11px] text-muted-foreground hover:border-primary hover:text-primary">
+                            {uploadingAvatar ? "Enviando…" : "Enviar foto"}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              disabled={uploadingAvatar}
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) void uploadAvatar(f);
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+                          {editProfileAvatar && (
+                            <button
+                              type="button"
+                              onClick={() => setEditProfileAvatar("")}
+                              className="text-[11px] text-muted-foreground underline-offset-2 hover:text-destructive hover:underline"
+                            >
+                              Remover
+                            </button>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1.5">
-                          <Button size="sm" onClick={() => saveProfile(u)} disabled={savingProfile} className="h-7 px-2 text-xs">
+                          <Button size="sm" onClick={() => saveProfile(u)} disabled={savingProfile || uploadingAvatar} className="h-7 px-2 text-xs">
                             {savingProfile ? <Loader2 className="h-3 w-3 animate-spin" /> : "Salvar"}
                           </Button>
                           <Button size="sm" variant="ghost" onClick={() => setEditProfileId(null)} className="h-7 px-2 text-xs">
@@ -752,7 +810,7 @@ const AdminUsers = () => {
                           {u.full_name || <span className="text-muted-foreground">Sem nome</span>}
                           {isMe && <span className="ml-2 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary">você</span>}
                         </span>
-                        {iAmSuperAdmin && (
+                        {iAmAdmin && (
                           <button
                             type="button"
                             onClick={() => {
