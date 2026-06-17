@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
+import { RefreshDataButton } from "@/components/dashboard/RefreshDataButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -502,7 +503,7 @@ export default function SucessoChurn() {
               </h1>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
               <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -515,6 +516,7 @@ export default function SucessoChurn() {
                 {years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
               </SelectContent>
             </Select>
+            <RefreshDataButton event="atualizar_dados_sucesso" invalidateKey="dash_sucesso" />
           </div>
         </div>
 

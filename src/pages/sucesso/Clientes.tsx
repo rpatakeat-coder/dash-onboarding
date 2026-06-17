@@ -6,6 +6,7 @@ export default function SucessoClientes() {
       title="Clientes"
       description="Cadastro e ficha detalhada de cada cliente sob gestão do time de Sucesso."
       icon={Users}
+      showRefresh
     />
   );
 }

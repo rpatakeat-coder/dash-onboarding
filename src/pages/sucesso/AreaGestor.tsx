@@ -6,6 +6,7 @@ export default function SucessoGestor() {
       title="Área do Gestor"
       description="Visão gerencial do time de Sucesso — ranking, metas e performance individual."
       icon={Users2}
+      showRefresh
     />
   );
 }

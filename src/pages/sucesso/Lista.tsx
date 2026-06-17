@@ -6,6 +6,7 @@ export default function SucessoLista() {
       title="Lista"
       description="Tabela operacional dos clientes com filtros, ordenação e ações rápidas."
       icon={List}
+      showRefresh
     />
   );
 }
