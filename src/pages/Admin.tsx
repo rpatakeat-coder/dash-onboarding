@@ -15,6 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { logAudit } from "@/lib/audit";
 import { z } from "zod";
 import { DEFAULT_COPILOT_SYSTEM_PROMPT, COPILOT_PROMPT_SETTINGS_KEY } from "@/lib/copilotPrompt";
+import { TEAM_LABELS, defaultTeamForRole, type AppTeam } from "@/lib/areaAccess";
 
 interface AdminUser {
   id: string;
@@ -25,6 +26,8 @@ interface AdminUser {
   /** Papel bruto do banco: 'super_admin' | 'admin' | 'user' | null se ainda não tem linha em user_roles_operations. */
   rawRole: "super_admin" | "admin" | "user" | null;
   agente_ativacao?: string | null;
+  /** Time do usuário (controla quais áreas enxerga). null = usa o default por papel. */
+  equipe?: AppTeam | null;
 }
 
 
@@ -550,15 +553,15 @@ const AdminUsers = () => {
         .order("created_at", { ascending: false }),
       supabase
         .from("user_roles_operations")
-        .select("user_id, role, agente_ativacao"),
+        .select("user_id, role, agente_ativacao, equipe"),
     ]);
     setLoading(false);
     if (pErr || oErr) {
       toast.error("Erro ao carregar usuários", { description: (pErr ?? oErr)?.message });
       return;
     }
-    const opsMap = new Map<string, { role: "super_admin" | "admin" | "user"; agente_ativacao: string | null }>(
-      (opsData ?? []).map((o) => [o.user_id, { role: o.role as "super_admin" | "admin" | "user", agente_ativacao: o.agente_ativacao }]),
+    const opsMap = new Map<string, { role: "super_admin" | "admin" | "user"; agente_ativacao: string | null; equipe: AppTeam | null }>(
+      (opsData ?? []).map((o) => [o.user_id, { role: o.role as "super_admin" | "admin" | "user", agente_ativacao: o.agente_ativacao, equipe: (o.equipe as AppTeam | null) ?? null }]),
     );
     const merged: AdminUser[] = (profilesData ?? []).map((p) => {
       const op = opsMap.get(p.id);
@@ -576,6 +579,7 @@ const AdminUsers = () => {
         roles,
         rawRole,
         agente_ativacao: op?.agente_ativacao ?? null,
+        equipe: op?.equipe ?? null,
       };
     });
     setUsers(merged);
@@ -610,6 +614,29 @@ const AdminUsers = () => {
       metadata: { target_user_id: u.id, value },
     });
     setEditAgenteId(null);
+    await load();
+  };
+
+  // Define o Time (equipe) do usuário — controla quais áreas ele enxerga.
+  const saveEquipe = async (u: AdminUser, equipe: AppTeam) => {
+    setBusyId(u.id);
+    const keepRole = u.rawRole ?? "user";
+    const { error } = await supabase
+      .from("user_roles_operations")
+      .upsert(
+        { user_id: u.id, role: keepRole, agente_ativacao: u.agente_ativacao ?? null, equipe },
+        { onConflict: "user_id" },
+      );
+    setBusyId(null);
+    if (error) return toast.error("Erro ao definir Time", { description: error.message });
+    toast.success(`Time de ${u.full_name || "usuário"} definido como ${TEAM_LABELS[equipe]}`);
+    void logAudit({
+      action: "user.set_equipe",
+      entity_type: "user_role",
+      entity_id: u.id,
+      summary: `Definiu Time de ${u.full_name || u.id} como ${TEAM_LABELS[equipe]}`,
+      metadata: { target_user_id: u.id, target_name: u.full_name, equipe },
+    });
     await load();
   };
 
@@ -723,6 +750,9 @@ const AdminUsers = () => {
             <tr>
               <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Nome</th>
               <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Papéis</th>
+              <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground" title="Áreas que o usuário enxerga (só restringe viewer/usuário comum; admin vê tudo)">
+                Time
+              </th>
               <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground" title="Nome usado no campo agente_ativacao do HubSpot">
                 Agente (HubSpot)
               </th>
@@ -850,6 +880,19 @@ const AdminUsers = () => {
                     )}
                   </td>
                   <td className="px-4 py-3">
+                    <select
+                      value={u.equipe ?? defaultTeamForRole(u.rawRole)}
+                      onChange={(e) => saveEquipe(u, e.target.value as AppTeam)}
+                      disabled={busyId === u.id}
+                      className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground disabled:opacity-50"
+                      title={u.equipe ? "Time definido" : "Padrão pelo papel — selecione para fixar"}
+                    >
+                      {(["onboarding", "sucesso", "gestor"] as AppTeam[]).map((t) => (
+                        <option key={t} value={t}>{TEAM_LABELS[t]}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-4 py-3">
                     {editAgenteId === u.id ? (
                       <div className="flex items-center gap-1.5">
                         <Input
@@ -938,7 +981,7 @@ const AdminUsers = () => {
               );
             })}
             {users.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Nenhum usuário encontrado.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Nenhum usuário encontrado.</td></tr>
             )}
           </tbody>
         </table>

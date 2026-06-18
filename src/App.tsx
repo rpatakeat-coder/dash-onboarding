@@ -21,6 +21,7 @@ import { PreferencesDialog } from "./components/PreferencesDialog";
 import { PreferencesDialogContext } from "./contexts/PreferencesDialogContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminOnlyRoute } from "./components/AdminOnlyRoute";
+import { RequireArea } from "./components/RequireArea";
 import ScrollToTop from "./components/ScrollToTop";
 import { PageTransition } from "./components/PageTransition";
 import { TutorialProvider } from "./contexts/TutorialContext";
@@ -53,15 +54,15 @@ const Shell = () => {
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/acesso-dash" element={<SetPassword />} />
-          <Route path="/" element={<ProtectedRoute viewerAllowed><Index /></ProtectedRoute>} />
+          <Route path="/" element={<ProtectedRoute viewerAllowed><RequireArea area="onboarding"><Index /></RequireArea></ProtectedRoute>} />
           <Route path="/minha-carteira" element={<ProtectedRoute><MinhaCarteira /></ProtectedRoute>} />
           <Route path="/tv" element={<ProtectedRoute><Tv /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-          <Route path="/sucesso" element={<ProtectedRoute><AdminOnlyRoute><SucessoDashboard /></AdminOnlyRoute></ProtectedRoute>} />
-          <Route path="/sucesso/churn" element={<ProtectedRoute><AdminOnlyRoute><SucessoChurn /></AdminOnlyRoute></ProtectedRoute>} />
-          <Route path="/sucesso/clientes" element={<ProtectedRoute><AdminOnlyRoute><SucessoClientes /></AdminOnlyRoute></ProtectedRoute>} />
-          <Route path="/sucesso/lista" element={<ProtectedRoute><AdminOnlyRoute><SucessoLista /></AdminOnlyRoute></ProtectedRoute>} />
-          <Route path="/sucesso/kanban" element={<ProtectedRoute><AdminOnlyRoute><SucessoKanban /></AdminOnlyRoute></ProtectedRoute>} />
+          <Route path="/sucesso" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoDashboard /></RequireArea></ProtectedRoute>} />
+          <Route path="/sucesso/churn" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoChurn /></RequireArea></ProtectedRoute>} />
+          <Route path="/sucesso/clientes" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoClientes /></RequireArea></ProtectedRoute>} />
+          <Route path="/sucesso/lista" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoLista /></RequireArea></ProtectedRoute>} />
+          <Route path="/sucesso/kanban" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoKanban /></RequireArea></ProtectedRoute>} />
           <Route path="/sucesso/gestor" element={<ProtectedRoute><AdminOnlyRoute><SucessoGestor /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="/sucesso/config" element={<ProtectedRoute><AdminOnlyRoute><SucessoConfig /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />

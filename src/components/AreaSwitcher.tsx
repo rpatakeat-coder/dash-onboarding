@@ -18,7 +18,7 @@ const AREA_META: Record<AppArea, { icon: typeof LayoutDashboard; home: string; h
 };
 
 export const AreaSwitcher = ({ className }: { className?: string }) => {
-  const { isAdmin, loading } = useUserRole();
+  const { allowedAreas, loading } = useUserRole();
   const { area, setArea } = useArea();
   const navigate = useNavigate();
 
@@ -27,9 +27,11 @@ export const AreaSwitcher = ({ className }: { className?: string }) => {
   if (loading) {
     return <span className={className}>{AREA_LABELS[area]}</span>;
   }
-  // Non-admins always see Onboarding label, no switcher
-  if (!isAdmin) {
-    return <span className={className}>Onboarding</span>;
+  // Só uma área permitida (ou nenhuma): rótulo estático, sem dropdown.
+  const areas = (Object.keys(AREA_META) as AppArea[]).filter((a) => allowedAreas.has(a));
+  if (areas.length <= 1) {
+    const only = areas[0] ?? "onboarding";
+    return <span className={className}>{AREA_LABELS[only]}</span>;
   }
 
   const Current = AREA_META[area].icon;
@@ -58,7 +60,7 @@ export const AreaSwitcher = ({ className }: { className?: string }) => {
           Áreas
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {(Object.keys(AREA_META) as AppArea[]).map((key) => {
+        {areas.map((key) => {
           const Icon = AREA_META[key].icon;
           const isCurrent = key === area;
           return (

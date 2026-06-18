@@ -1161,6 +1161,7 @@ export type Database = {
         Row: {
           agente_ativacao: string | null
           created_at: string
+          equipe: Database["public"]["Enums"]["app_team"] | null
           id: string
           role: Database["public"]["Enums"]["operations_role"]
           updated_at: string
@@ -1169,6 +1170,7 @@ export type Database = {
         Insert: {
           agente_ativacao?: string | null
           created_at?: string
+          equipe?: Database["public"]["Enums"]["app_team"] | null
           id?: string
           role?: Database["public"]["Enums"]["operations_role"]
           updated_at?: string
@@ -1177,6 +1179,7 @@ export type Database = {
         Update: {
           agente_ativacao?: string | null
           created_at?: string
+          equipe?: Database["public"]["Enums"]["app_team"] | null
           id?: string
           role?: Database["public"]["Enums"]["operations_role"]
           updated_at?: string
@@ -1374,6 +1377,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_team: "onboarding" | "sucesso" | "gestor"
       operations_role: "admin" | "user" | "super_admin" | "viewer"
     }
     CompositeTypes: {
@@ -1502,6 +1506,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_team: ["onboarding", "sucesso", "gestor"],
       operations_role: ["admin", "user", "super_admin", "viewer"],
     },
   },

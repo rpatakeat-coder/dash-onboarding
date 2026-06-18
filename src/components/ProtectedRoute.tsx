@@ -11,7 +11,7 @@ interface Props {
 
 export const ProtectedRoute = ({ children, viewerAllowed = false }: Props) => {
   const { session, loading } = useAuth();
-  const { isViewer, role, loading: roleLoading } = useUserRole();
+  const { isViewer, role, homeRoute, loading: roleLoading } = useUserRole();
   const location = useLocation();
 
   // Only show the full-screen loader on the INITIAL load (no session/role known yet).
@@ -32,7 +32,8 @@ export const ProtectedRoute = ({ children, viewerAllowed = false }: Props) => {
     if (location.pathname === "/") {
       return children;
     }
-    return <Navigate to="/" replace />;
+    // Redireciona para a rota inicial do usuário (depende do Time): onboarding → "/", só-sucesso → "/sucesso".
+    return <Navigate to={homeRoute} replace />;
   }
 
   return children;

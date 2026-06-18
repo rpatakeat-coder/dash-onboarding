@@ -39,8 +39,8 @@ export const NAV_ITEMS_SUCESSO: NavItem[] = [
   { to: "/sucesso/clientes", label: "Clientes", icon: Users },
   { to: "/sucesso/lista", label: "Lista", icon: List },
   { to: "/sucesso/kanban", label: "Kanban", icon: Columns3 },
-  { to: "/sucesso/gestor", label: "Área do Gestor", icon: Users2 },
-  { to: "/sucesso/config", label: "Config", icon: SettingsIcon },
+  { to: "/sucesso/gestor", label: "Área do Gestor", icon: Users2, adminOnly: true },
+  { to: "/sucesso/config", label: "Config", icon: SettingsIcon, adminOnly: true },
 ];
 
 // Back-compat export (used by MobileMainNav fallback / steps)
@@ -62,8 +62,9 @@ export const MainNav = ({ className, orientation = "horizontal", onNavigate }: P
   const location = useLocation();
   const { area } = useArea();
   const allItems = getNavItemsForArea(area).filter((i) => !i.adminOnly || isAdmin);
-  // Viewer só enxerga a Home (rankings); ocultamos qualquer outro item.
-  const items = isViewer ? allItems.filter((i) => i.to === "/") : allItems;
+  // Viewer de Onboarding só enxerga a Home (rankings). Em Sucesso (Time Sucesso/Gestor),
+  // o viewer vê as telas da área (itens adminOnly como Config/Área do Gestor já saíram acima).
+  const items = area === "onboarding" && isViewer ? allItems.filter((i) => i.to === "/") : allItems;
   const currentTab = new URLSearchParams(location.search).get("tab");
   return (
     <nav

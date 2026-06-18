@@ -27,7 +27,8 @@ export const MobileMainNav = ({ className }: { className?: string }) => {
 
   const { area } = useArea();
   const allItems = getNavItemsForArea(area).filter((i) => !i.adminOnly || isAdmin);
-  const items = isViewer ? allItems.filter((i) => i.to === "/") : allItems;
+  // Viewer de Onboarding só vê a Home; em Sucesso (Time Sucesso/Gestor) vê as telas da área.
+  const items = area === "onboarding" && isViewer ? allItems.filter((i) => i.to === "/") : allItems;
   const currentTab = new URLSearchParams(location.search).get("tab");
   const current =
     items.find((i) => {
