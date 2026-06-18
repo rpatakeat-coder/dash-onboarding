@@ -15,7 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { logAudit } from "@/lib/audit";
 import { z } from "zod";
 import { DEFAULT_COPILOT_SYSTEM_PROMPT, COPILOT_PROMPT_SETTINGS_KEY } from "@/lib/copilotPrompt";
-import { ACESSO_LABELS, acessoToRoleEquipe, roleEquipeToAcesso, type AppTeam, type AcessoOption } from "@/lib/areaAccess";
+import { ACESSO_LABELS, TEAM_LABELS, acessoToRoleEquipe, roleEquipeToAcesso, type AppTeam, type AcessoOption } from "@/lib/areaAccess";
 
 interface AdminUser {
   id: string;
@@ -130,7 +130,7 @@ interface OperatorRow {
 const AdminOperators = () => {
   const { user } = useAuth();
   const [list, setList] = useState<OperatorRow[]>([]);
-  const [agentes, setAgentes] = useState<string[]>([]);
+  const [hubspotAgents, setHubspotAgents] = useState<{ name: string; equipe: AppTeam | null }[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [delId, setDelId] = useState<string | null>(null);
@@ -140,28 +140,31 @@ const AdminOperators = () => {
 
   const load = async () => {
     setLoading(true);
-    const [{ data: ops, error: oErr }, { data: ags, error: aErr }, { data: hsAgents, error: hsErr }] = await Promise.all([
+    const [{ data: ops, error: oErr }, { data: hsAgents, error: hsErr }] = await Promise.all([
       supabase.rpc("list_operators"),
-      supabase.rpc("distinct_agentes_ativacao"),
-      supabase.from("hubspot_agents").select("name"),
+      supabase.from("hubspot_agents").select("name, equipe").order("name", { ascending: true }),
     ]);
     setLoading(false);
     if (oErr) return toast.error("Erro ao carregar operadores", { description: oErr.message });
-    if (aErr) toast.error("Erro ao carregar agentes", { description: aErr.message });
     if (hsErr) toast.error("Erro ao carregar agentes HubSpot", { description: hsErr.message });
     setList((ops as OperatorRow[]) ?? []);
-    const fromDb = ((ags as { agente: string }[]) ?? []).map((a) => a.agente);
-    const fromTable = ((hsAgents as { name: string }[]) ?? []).map((a) => a.name);
-    // Nomes a esconder/normalizar (ex.: grafia antiga "Ramona Sarmento" → usar "Rhamona Sarmento")
+    // Nome a esconder (grafia antiga "Ramona Sarmento").
     const blocked = new Set(["ramona sarmento"]);
-    const merged = Array.from(new Set([...fromDb, ...fromTable]))
-      .filter((a) => !blocked.has(a.trim().toLowerCase()))
-      .sort((a, b) => a.localeCompare(b, "pt-BR"));
-    setAgentes(merged);
+    setHubspotAgents(
+      ((hsAgents as { name: string; equipe: AppTeam | null }[]) ?? [])
+        .filter((a) => a.name && !blocked.has(a.name.trim().toLowerCase()))
+        .map((a) => ({ name: a.name, equipe: a.equipe ?? null })),
+    );
   };
 
   const myRole = list.find((o) => o.user_id === user?.id)?.role ?? null;
   const isSuperAdmin = myRole === "super_admin";
+
+  // Agentes filtrados pelo Time do acesso escolhido (Onboarding/Sucesso); demais → todos.
+  const targetTeam: AppTeam | null =
+    form.acesso === "onboarding" ? "onboarding" : form.acesso === "sucesso" ? "sucesso" : null;
+  const agenteOptions = targetTeam ? hubspotAgents.filter((a) => a.equipe === targetTeam) : hubspotAgents;
+  const agenteRequired = form.acesso === "onboarding" || form.acesso === "sucesso";
 
   useEffect(() => { load(); }, []);
 
@@ -186,7 +189,7 @@ const AdminOperators = () => {
         email: form.email.trim(),
         full_name: form.full_name.trim() || undefined,
         role,
-        agente_ativacao: requiresAgente ? form.agente_ativacao : undefined,
+        agente_ativacao: form.agente_ativacao.trim() || undefined,
         channels,
       },
     });
@@ -338,25 +341,21 @@ const AdminOperators = () => {
           </div>
           <div>
             <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
-              {form.acesso === "sucesso" ? "Agente de Sucesso" : "Agente HubSpot"}
-              {!(form.acesso === "onboarding" || form.acesso === "sucesso") && <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">(não exigido)</span>}
+              Agente HubSpot{targetTeam && <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">({TEAM_LABELS[targetTeam]})</span>}
+              {!agenteRequired && <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">(opcional)</span>}
             </label>
-            {form.acesso === "sucesso" ? (
-              <Input
-                value={form.agente_ativacao}
-                onChange={(e) => setForm((f) => ({ ...f, agente_ativacao: e.target.value }))}
-                placeholder="Nome do agente de Sucesso"
-              />
-            ) : (
-              <select
-                value={form.agente_ativacao}
-                onChange={(e) => setForm((f) => ({ ...f, agente_ativacao: e.target.value }))}
-                disabled={form.acesso !== "onboarding"}
-                className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm disabled:opacity-50"
-              >
-                <option value="">{form.acesso === "onboarding" ? "Selecione…" : "—"}</option>
-                {agentes.map((a) => <option key={a} value={a}>{a}</option>)}
-              </select>
+            <select
+              value={form.agente_ativacao}
+              onChange={(e) => setForm((f) => ({ ...f, agente_ativacao: e.target.value }))}
+              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+            >
+              <option value="">{agenteOptions.length ? "Selecione…" : "Nenhum agente neste time"}</option>
+              {agenteOptions.map((a) => <option key={a.name} value={a.name}>{a.name}</option>)}
+            </select>
+            {targetTeam && agenteOptions.length === 0 && (
+              <p className="mt-1 font-small text-[11px] text-muted-foreground">
+                Cadastre agentes do time {TEAM_LABELS[targetTeam]} na aba “Agentes HubSpot”.
+              </p>
             )}
           </div>
 
@@ -1544,6 +1543,7 @@ interface HubspotAgentRow {
   id: string;
   name: string;
   hubspot_id: string;
+  equipe: AppTeam | null;
   created_at: string;
 }
 
@@ -1553,13 +1553,14 @@ const AdminHubspotAgents = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [delId, setDelId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", hubspot_id: "" });
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [form, setForm] = useState({ name: "", hubspot_id: "", equipe: "onboarding" as AppTeam });
 
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("hubspot_agents")
-      .select("id, name, hubspot_id, created_at")
+      .select("id, name, hubspot_id, equipe, created_at")
       .order("name", { ascending: true });
     setLoading(false);
     if (error) return toast.error("Erro ao carregar agentes", { description: error.message });
@@ -1576,17 +1577,33 @@ const AdminHubspotAgents = () => {
     setBusy(true);
     const { error } = await supabase
       .from("hubspot_agents")
-      .insert({ name, hubspot_id, created_by: user?.id ?? null });
+      .insert({ name, hubspot_id, equipe: form.equipe, created_by: user?.id ?? null });
     setBusy(false);
     if (error) return toast.error("Erro ao criar agente", { description: error.message });
     toast.success("Agente criado");
     await logAudit({
       action: "hubspot_agent.create",
       entity_type: "hubspot_agent",
-      summary: `Criou agente HubSpot ${name} (ID ${hubspot_id})`,
-      metadata: { name, hubspot_id },
+      summary: `Criou agente HubSpot ${name} (ID ${hubspot_id}) · Time ${TEAM_LABELS[form.equipe]}`,
+      metadata: { name, hubspot_id, equipe: form.equipe },
     });
-    setForm({ name: "", hubspot_id: "" });
+    setForm({ name: "", hubspot_id: "", equipe: "onboarding" });
+    load();
+  };
+
+  const updateEquipe = async (row: HubspotAgentRow, equipe: AppTeam) => {
+    setSavingId(row.id);
+    const { error } = await supabase.from("hubspot_agents").update({ equipe }).eq("id", row.id);
+    setSavingId(null);
+    if (error) return toast.error("Erro ao definir Time", { description: error.message });
+    toast.success(`${row.name} → Time ${TEAM_LABELS[equipe]}`);
+    await logAudit({
+      action: "hubspot_agent.set_equipe",
+      entity_type: "hubspot_agent",
+      entity_id: row.id,
+      summary: `Definiu Time do agente ${row.name} como ${TEAM_LABELS[equipe]}`,
+      metadata: { name: row.name, equipe },
+    });
     load();
   };
 
@@ -1613,7 +1630,7 @@ const AdminHubspotAgents = () => {
         <p className="mt-1 font-small text-sm text-muted-foreground">
           Cadastre o nome do agente e o respectivo ID do HubSpot. O nome ficará disponível para vincular a operadores.
         </p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+        <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto_auto]">
           <div>
             <label className="mb-1 block font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Nome</label>
             <Input
@@ -1631,6 +1648,19 @@ const AdminHubspotAgents = () => {
               placeholder="Ex.: 12345678"
               disabled={busy}
             />
+          </div>
+          <div>
+            <label className="mb-1 block font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Time</label>
+            <select
+              value={form.equipe}
+              onChange={(e) => setForm((f) => ({ ...f, equipe: e.target.value as AppTeam }))}
+              disabled={busy}
+              className="h-10 rounded-md border border-input bg-background px-2 text-sm disabled:opacity-50"
+            >
+              {(["onboarding", "sucesso", "gestor"] as AppTeam[]).map((t) => (
+                <option key={t} value={t}>{TEAM_LABELS[t]}</option>
+              ))}
+            </select>
           </div>
           <div className="flex items-end">
             <Button onClick={create} disabled={busy} className="gap-2">
@@ -1661,6 +1691,7 @@ const AdminHubspotAgents = () => {
                 <tr>
                   <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider">Nome</th>
                   <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider">ID HubSpot</th>
+                  <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider">Time</th>
                   <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider">Criado em</th>
                   <th className="px-4 py-3" />
                 </tr>
@@ -1670,6 +1701,19 @@ const AdminHubspotAgents = () => {
                   <tr key={r.id} className="border-t border-border">
                     <td className="px-4 py-3 text-foreground">{r.name}</td>
                     <td className="px-4 py-3 font-mono text-xs text-foreground">{r.hubspot_id}</td>
+                    <td className="px-4 py-3">
+                      <select
+                        value={r.equipe ?? ""}
+                        onChange={(e) => updateEquipe(r, e.target.value as AppTeam)}
+                        disabled={savingId === r.id}
+                        className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground disabled:opacity-50"
+                      >
+                        <option value="" disabled>Selecione…</option>
+                        {(["onboarding", "sucesso", "gestor"] as AppTeam[]).map((t) => (
+                          <option key={t} value={t}>{TEAM_LABELS[t]}</option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {new Date(r.created_at).toLocaleString("pt-BR")}
                     </td>
