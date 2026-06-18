@@ -36,9 +36,9 @@ export const NAV_ITEMS_ONBOARDING: NavItem[] = [
 export const NAV_ITEMS_SUCESSO: NavItem[] = [
   { to: "/sucesso", label: "Dashboard", icon: LayoutDashboard },
   { to: "/sucesso/churn", label: "Churn", icon: TrendingDown },
-  { to: "/sucesso/clientes", label: "Clientes", icon: Users },
-  { to: "/sucesso/lista", label: "Lista", icon: List },
-  { to: "/sucesso/kanban", label: "Kanban", icon: Columns3 },
+  { to: "/sucesso/clientes", label: "Clientes", icon: Users, adminOnly: true },
+  { to: "/sucesso/lista", label: "Lista", icon: List, adminOnly: true },
+  { to: "/sucesso/kanban", label: "Kanban", icon: Columns3, adminOnly: true },
   { to: "/sucesso/gestor", label: "Área do Gestor", icon: Users2, adminOnly: true },
   { to: "/sucesso/config", label: "Config", icon: SettingsIcon, adminOnly: true },
   { to: "/admin", label: "Admin", icon: Shield, title: "Painel de administração", adminOnly: true },

@@ -60,9 +60,9 @@ const Shell = () => {
           <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
           <Route path="/sucesso" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoDashboard /></RequireArea></ProtectedRoute>} />
           <Route path="/sucesso/churn" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoChurn /></RequireArea></ProtectedRoute>} />
-          <Route path="/sucesso/clientes" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoClientes /></RequireArea></ProtectedRoute>} />
-          <Route path="/sucesso/lista" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoLista /></RequireArea></ProtectedRoute>} />
-          <Route path="/sucesso/kanban" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoKanban /></RequireArea></ProtectedRoute>} />
+          <Route path="/sucesso/clientes" element={<ProtectedRoute><AdminOnlyRoute><SucessoClientes /></AdminOnlyRoute></ProtectedRoute>} />
+          <Route path="/sucesso/lista" element={<ProtectedRoute><AdminOnlyRoute><SucessoLista /></AdminOnlyRoute></ProtectedRoute>} />
+          <Route path="/sucesso/kanban" element={<ProtectedRoute><AdminOnlyRoute><SucessoKanban /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="/sucesso/gestor" element={<ProtectedRoute><AdminOnlyRoute><SucessoGestor /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="/sucesso/config" element={<ProtectedRoute><AdminOnlyRoute><SucessoConfig /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
