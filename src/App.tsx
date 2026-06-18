@@ -55,8 +55,8 @@ const Shell = () => {
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/acesso-dash" element={<SetPassword />} />
           <Route path="/" element={<ProtectedRoute viewerAllowed><RequireArea area="onboarding"><Index /></RequireArea></ProtectedRoute>} />
-          <Route path="/minha-carteira" element={<ProtectedRoute><MinhaCarteira /></ProtectedRoute>} />
-          <Route path="/tv" element={<ProtectedRoute><Tv /></ProtectedRoute>} />
+          <Route path="/minha-carteira" element={<ProtectedRoute><RequireArea area="onboarding"><MinhaCarteira /></RequireArea></ProtectedRoute>} />
+          <Route path="/tv" element={<ProtectedRoute><RequireArea area="onboarding"><Tv /></RequireArea></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
           <Route path="/sucesso" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoDashboard /></RequireArea></ProtectedRoute>} />
           <Route path="/sucesso/churn" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoChurn /></RequireArea></ProtectedRoute>} />

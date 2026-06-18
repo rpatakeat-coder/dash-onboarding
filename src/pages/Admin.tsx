@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Shield, ShieldCheck, ShieldOff, Users, Settings as SettingsIcon, Trash2, Loader2, History, RefreshCw, UserPlus, Mail, Send, Copy, MessageCircle, Link2, Sparkles, Plus, Contact2, Trophy } from "lucide-react";
+import { Shield, ShieldCheck, Users, Settings as SettingsIcon, Trash2, Loader2, History, RefreshCw, UserPlus, Mail, Send, Copy, MessageCircle, Link2, Sparkles, Plus, Contact2, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
@@ -15,7 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { logAudit } from "@/lib/audit";
 import { z } from "zod";
 import { DEFAULT_COPILOT_SYSTEM_PROMPT, COPILOT_PROMPT_SETTINGS_KEY } from "@/lib/copilotPrompt";
-import { TEAM_LABELS, defaultTeamForRole, type AppTeam } from "@/lib/areaAccess";
+import { ACESSO_LABELS, acessoToRoleEquipe, roleEquipeToAcesso, type AppTeam, type AcessoOption } from "@/lib/areaAccess";
 
 interface AdminUser {
   id: string;
@@ -136,7 +136,7 @@ const AdminOperators = () => {
   const [delId, setDelId] = useState<string | null>(null);
   const [resendId, setResendId] = useState<string | null>(null);
   const [inviteLink, setInviteLink] = useState<{ email: string; link: string } | null>(null);
-  const [form, setForm] = useState({ email: "", full_name: "", role: "user" as "admin" | "user" | "viewer", agente_ativacao: "", equipe: "onboarding" as AppTeam });
+  const [form, setForm] = useState({ email: "", full_name: "", acesso: "onboarding" as AcessoOption, agente_ativacao: "" });
 
   const load = async () => {
     setLoading(true);
@@ -167,9 +167,10 @@ const AdminOperators = () => {
 
   const invite = async (channels: ("email" | "whatsapp" | "link_only")[]) => {
     if (!form.email.trim()) return toast.error("Informe o email");
-    const requiresAgente = form.role !== "admin" && form.role !== "viewer";
+    const { role, equipe } = acessoToRoleEquipe(form.acesso);
+    const requiresAgente = role === "user"; // edge function exige agente p/ papel 'user'
     if (requiresAgente && !form.agente_ativacao.trim()) {
-      return toast.error("Informe o agente HubSpot");
+      return toast.error(form.acesso === "sucesso" ? "Informe o agente de Sucesso" : "Informe o agente HubSpot");
     }
     setBusy(true);
     const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
@@ -184,7 +185,7 @@ const AdminOperators = () => {
       body: {
         email: form.email.trim(),
         full_name: form.full_name.trim() || undefined,
-        role: form.role,
+        role,
         agente_ativacao: requiresAgente ? form.agente_ativacao : undefined,
         channels,
       },
@@ -207,7 +208,7 @@ const AdminOperators = () => {
     if (newUserId) {
       const { error: eqErr } = await supabase
         .from("user_roles_operations")
-        .update({ equipe: form.equipe })
+        .update({ equipe })
         .eq("user_id", newUserId);
       if (eqErr) toast.error("Convite criado, mas falhou ao definir o Time", { description: eqErr.message });
     }
@@ -234,10 +235,10 @@ const AdminOperators = () => {
       action: "operator.invite",
       entity_type: "user_role",
       entity_id: form.email,
-      summary: `Convidou ${form.email} (${form.role} · Time ${TEAM_LABELS[form.equipe]}) via ${channels.join(", ")} — agente ${form.agente_ativacao || "—"}`,
-      metadata: { email: form.email, role: form.role, equipe: form.equipe, agente_ativacao: form.agente_ativacao, channels },
+      summary: `Convidou ${form.email} (Acesso ${ACESSO_LABELS[form.acesso]}) via ${channels.join(", ")} — agente ${form.agente_ativacao || "—"}`,
+      metadata: { email: form.email, acesso: form.acesso, role, equipe, agente_ativacao: form.agente_ativacao, channels },
     });
-    setForm({ email: "", full_name: "", role: "user", agente_ativacao: "", equipe: "onboarding" });
+    setForm({ email: "", full_name: "", acesso: "onboarding", agente_ativacao: "" });
     await load();
   };
 
@@ -323,44 +324,40 @@ const AdminOperators = () => {
             />
           </div>
           <div>
-            <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
-              Agente HubSpot{(form.role === "admin" || form.role === "viewer") && <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">(não exigido)</span>}
-            </label>
+            <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">Acesso</label>
             <select
-              value={form.agente_ativacao}
-              onChange={(e) => setForm((f) => ({ ...f, agente_ativacao: e.target.value }))}
-              disabled={form.role === "admin" || form.role === "viewer"}
-              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm disabled:opacity-50"
-            >
-              <option value="">{(form.role === "admin" || form.role === "viewer") ? "—" : "Selecione…"}</option>
-              {agentes.map((a) => <option key={a} value={a}>{a}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">Papel</label>
-            <select
-              value={form.role}
-              onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as "admin" | "user" | "viewer" }))}
+              value={form.acesso}
+              onChange={(e) => setForm((f) => ({ ...f, acesso: e.target.value as AcessoOption }))}
               className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
             >
-              <option value="user">Usuário</option>
-              <option value="viewer">Viewer (somente rankings)</option>
-              {isSuperAdmin && <option value="admin">Admin</option>}
+              <option value="onboarding">{ACESSO_LABELS.onboarding}</option>
+              <option value="sucesso">{ACESSO_LABELS.sucesso}</option>
+              <option value="viewer">{ACESSO_LABELS.viewer}</option>
+              {isSuperAdmin && <option value="gestor">{ACESSO_LABELS.gestor}</option>}
             </select>
           </div>
           <div>
             <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
-              Time{(form.role === "admin") && <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">(admin vê tudo)</span>}
+              {form.acesso === "sucesso" ? "Agente de Sucesso" : "Agente HubSpot"}
+              {!(form.acesso === "onboarding" || form.acesso === "sucesso") && <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">(não exigido)</span>}
             </label>
-            <select
-              value={form.equipe}
-              onChange={(e) => setForm((f) => ({ ...f, equipe: e.target.value as AppTeam }))}
-              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-            >
-              {(["onboarding", "sucesso", "gestor"] as AppTeam[]).map((t) => (
-                <option key={t} value={t}>{TEAM_LABELS[t]}</option>
-              ))}
-            </select>
+            {form.acesso === "sucesso" ? (
+              <Input
+                value={form.agente_ativacao}
+                onChange={(e) => setForm((f) => ({ ...f, agente_ativacao: e.target.value }))}
+                placeholder="Nome do agente de Sucesso"
+              />
+            ) : (
+              <select
+                value={form.agente_ativacao}
+                onChange={(e) => setForm((f) => ({ ...f, agente_ativacao: e.target.value }))}
+                disabled={form.acesso !== "onboarding"}
+                className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm disabled:opacity-50"
+              >
+                <option value="">{form.acesso === "onboarding" ? "Selecione…" : "—"}</option>
+                {agentes.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select>
+            )}
           </div>
 
         </div>
@@ -642,25 +639,25 @@ const AdminUsers = () => {
     await load();
   };
 
-  // Define o Time (equipe) do usuário — controla quais áreas ele enxerga.
-  const saveEquipe = async (u: AdminUser, equipe: AppTeam) => {
+  // Define o Acesso do usuário (Time = papel): grava papel + equipe de uma vez.
+  const saveAcesso = async (u: AdminUser, acesso: AcessoOption) => {
+    const { role, equipe } = acessoToRoleEquipe(acesso);
     setBusyId(u.id);
-    const keepRole = u.rawRole ?? "user";
     const { error } = await supabase
       .from("user_roles_operations")
       .upsert(
-        { user_id: u.id, role: keepRole, agente_ativacao: u.agente_ativacao ?? null, equipe },
+        { user_id: u.id, role, equipe, agente_ativacao: u.agente_ativacao ?? null },
         { onConflict: "user_id" },
       );
     setBusyId(null);
-    if (error) return toast.error("Erro ao definir Time", { description: error.message });
-    toast.success(`Time de ${u.full_name || "usuário"} definido como ${TEAM_LABELS[equipe]}`);
+    if (error) return toast.error("Erro ao definir acesso", { description: error.message });
+    toast.success(`Acesso de ${u.full_name || "usuário"} definido como ${ACESSO_LABELS[acesso]}`);
     void logAudit({
-      action: "user.set_equipe",
+      action: "user.set_acesso",
       entity_type: "user_role",
       entity_id: u.id,
-      summary: `Definiu Time de ${u.full_name || u.id} como ${TEAM_LABELS[equipe]}`,
-      metadata: { target_user_id: u.id, target_name: u.full_name, equipe },
+      summary: `Definiu acesso de ${u.full_name || u.id} como ${ACESSO_LABELS[acesso]}`,
+      metadata: { target_user_id: u.id, target_name: u.full_name, acesso, role, equipe },
     });
     await load();
   };
@@ -711,37 +708,6 @@ const AdminUsers = () => {
     toast.success("Imagem enviada — clique em Salvar para aplicar");
   };
 
-  const toggleAdmin = async (u: AdminUser) => {
-    // Super-admins não podem ser rebaixados por este botão (proteção de segurança).
-    if (u.rawRole === "super_admin") {
-      return toast.error("Super-admins não podem ser alterados por aqui");
-    }
-    const isAdmin = u.rawRole === "admin";
-    setBusyId(u.id);
-    const newRole: "admin" | "user" = isAdmin ? "user" : "admin";
-    const { error } = await supabase
-      .from("user_roles_operations")
-      .upsert(
-        { user_id: u.id, role: newRole, agente_ativacao: u.agente_ativacao ?? null },
-        { onConflict: "user_id" },
-      );
-    setBusyId(null);
-    if (error) return toast.error(isAdmin ? "Erro ao remover admin" : "Erro ao promover", { description: error.message });
-    toast.success(isAdmin
-      ? `${u.full_name || "Usuário"} não é mais admin`
-      : `${u.full_name || "Usuário"} promovido a admin`);
-    void logAudit({
-      action: isAdmin ? "role.remove_admin" : "role.grant_admin",
-      entity_type: "user_role",
-      entity_id: u.id,
-      summary: isAdmin
-        ? `Removeu admin de ${u.full_name || u.id}`
-        : `Promoveu ${u.full_name || u.id} a admin`,
-      metadata: { target_user_id: u.id, target_name: u.full_name },
-    });
-    await load();
-  };
-
   const removeUser = async (u: AdminUser) => {
     if (u.id === user?.id) return toast.error("Você não pode excluir a si mesmo");
     if (!confirm(`Apagar definitivamente ${u.full_name || u.id}? Essa ação remove o login, perfil e papel.`)) return;
@@ -774,9 +740,8 @@ const AdminUsers = () => {
           <thead className="border-b border-border bg-muted/40 text-left">
             <tr>
               <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Nome</th>
-              <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground">Papéis</th>
-              <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground" title="Áreas que o usuário enxerga (só restringe viewer/usuário comum; admin vê tudo)">
-                Time
+              <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground" title="Define papel + áreas: Gestor=admin, Onboarding/Sucesso=usuário (cada um só vê sua área), Viewer=só leitura">
+                Acesso
               </th>
               <th className="px-4 py-3 font-subtitle text-xs uppercase tracking-wider text-muted-foreground" title="Nome usado no campo agente_ativacao do HubSpot">
                 Agente (HubSpot)
@@ -790,8 +755,7 @@ const AdminUsers = () => {
               const isMe = u.id === user?.id;
               const isAdmin = u.rawRole === "admin" || u.rawRole === "super_admin";
               const isTargetSuper = u.rawRole === "super_admin";
-              // Apenas super-admins podem mexer em outros super-admins. Ninguém pode rebaixar a si mesmo.
-              const canToggleAdmin = !isMe && (!isTargetSuper || iAmSuperAdmin) && !isTargetSuper;
+              // Apenas super-admins podem excluir outros super-admins. Ninguém se exclui.
               const canDelete = !isMe && (!isTargetSuper || iAmSuperAdmin);
               return (
                 <tr key={u.id} className="border-b border-border/50 last:border-0">
@@ -883,39 +847,22 @@ const AdminUsers = () => {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {u.roles.length === 0 ? (
-                      <span className="text-muted-foreground">—</span>
+                    {u.rawRole === "super_admin" ? (
+                      <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-500">Super-admin</span>
                     ) : (
-                      <div className="flex flex-wrap gap-1">
-                        {u.roles.map((r) => (
-                          <span
-                            key={r}
-                            className={`rounded-full border px-2 py-0.5 text-xs ${
-                              r === "super-admin"
-                                ? "border-amber-500/40 bg-amber-500/10 text-amber-500"
-                                : r === "admin"
-                                ? "border-primary/30 bg-primary/10 text-primary"
-                                : "border-border bg-muted text-foreground"
-                            }`}
-                          >
-                            {r}
-                          </span>
-                        ))}
-                      </div>
+                      <select
+                        value={roleEquipeToAcesso(u.rawRole, u.equipe ?? null)}
+                        onChange={(e) => saveAcesso(u, e.target.value as AcessoOption)}
+                        disabled={busyId === u.id || isMe || (isAdmin && !iAmSuperAdmin)}
+                        className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground disabled:opacity-50"
+                        title={isMe ? "Você não pode alterar seu próprio acesso" : isAdmin && !iAmSuperAdmin ? "Só super-admin altera um Gestor/Admin" : undefined}
+                      >
+                        <option value="onboarding">{ACESSO_LABELS.onboarding}</option>
+                        <option value="sucesso">{ACESSO_LABELS.sucesso}</option>
+                        <option value="viewer">{ACESSO_LABELS.viewer}</option>
+                        <option value="gestor" disabled={!iAmSuperAdmin}>{ACESSO_LABELS.gestor}</option>
+                      </select>
                     )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <select
-                      value={u.equipe ?? defaultTeamForRole(u.rawRole)}
-                      onChange={(e) => saveEquipe(u, e.target.value as AppTeam)}
-                      disabled={busyId === u.id}
-                      className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground disabled:opacity-50"
-                      title={u.equipe ? "Time definido" : "Padrão pelo papel — selecione para fixar"}
-                    >
-                      {(["onboarding", "sucesso", "gestor"] as AppTeam[]).map((t) => (
-                        <option key={t} value={t}>{TEAM_LABELS[t]}</option>
-                      ))}
-                    </select>
                   </td>
                   <td className="px-4 py-3">
                     {editAgenteId === u.id ? (
@@ -966,23 +913,6 @@ const AdminUsers = () => {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1.5">
-                      <Button
-                        size="sm"
-                        variant={isAdmin ? "outline" : "default"}
-                        disabled={busyId === u.id || !canToggleAdmin}
-                        onClick={() => toggleAdmin(u)}
-                        className="gap-1.5"
-                        title={
-                          isMe
-                            ? "Você não pode alterar seu próprio papel"
-                            : isTargetSuper
-                            ? "Super-admins não podem ser alterados por aqui"
-                            : undefined
-                        }
-                      >
-                        {busyId === u.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isAdmin ? <ShieldOff className="h-3.5 w-3.5" /> : <ShieldCheck className="h-3.5 w-3.5" />}
-                        {isAdmin ? "Remover admin" : "Promover a admin"}
-                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
