@@ -41,6 +41,7 @@ export const NAV_ITEMS_SUCESSO: NavItem[] = [
   { to: "/sucesso/kanban", label: "Kanban", icon: Columns3 },
   { to: "/sucesso/gestor", label: "Área do Gestor", icon: Users2, adminOnly: true },
   { to: "/sucesso/config", label: "Config", icon: SettingsIcon, adminOnly: true },
+  { to: "/admin", label: "Admin", icon: Shield, title: "Painel de administração", adminOnly: true },
 ];
 
 // Back-compat export (used by MobileMainNav fallback / steps)
