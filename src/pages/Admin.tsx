@@ -136,7 +136,7 @@ const AdminOperators = () => {
   const [delId, setDelId] = useState<string | null>(null);
   const [resendId, setResendId] = useState<string | null>(null);
   const [inviteLink, setInviteLink] = useState<{ email: string; link: string } | null>(null);
-  const [form, setForm] = useState({ email: "", full_name: "", role: "user" as "admin" | "user" | "viewer", agente_ativacao: "" });
+  const [form, setForm] = useState({ email: "", full_name: "", role: "user" as "admin" | "user" | "viewer", agente_ativacao: "", equipe: "onboarding" as AppTeam });
 
   const load = async () => {
     setLoading(true);
@@ -201,6 +201,17 @@ const AdminOperators = () => {
       return toast.error("Erro ao convidar", { description: typeof msg === "string" ? msg : "falha desconhecida" });
     }
 
+    // Define o Time do novo usuário (a edge function cria a linha em user_roles_operations;
+    // aqui só atualizamos a coluna equipe — admin tem permissão RLS para isso).
+    const newUserId = (data as { user_id?: string })?.user_id;
+    if (newUserId) {
+      const { error: eqErr } = await supabase
+        .from("user_roles_operations")
+        .update({ equipe: form.equipe })
+        .eq("user_id", newUserId);
+      if (eqErr) toast.error("Convite criado, mas falhou ao definir o Time", { description: eqErr.message });
+    }
+
     const link =
       (data as { short_link?: string })?.short_link ||
       (data as { action_link?: string })?.action_link ||
@@ -223,10 +234,10 @@ const AdminOperators = () => {
       action: "operator.invite",
       entity_type: "user_role",
       entity_id: form.email,
-      summary: `Convidou ${form.email} (${form.role}) via ${channels.join(", ")} — agente ${form.agente_ativacao || "—"}`,
-      metadata: { email: form.email, role: form.role, agente_ativacao: form.agente_ativacao, channels },
+      summary: `Convidou ${form.email} (${form.role} · Time ${TEAM_LABELS[form.equipe]}) via ${channels.join(", ")} — agente ${form.agente_ativacao || "—"}`,
+      metadata: { email: form.email, role: form.role, equipe: form.equipe, agente_ativacao: form.agente_ativacao, channels },
     });
-    setForm({ email: "", full_name: "", role: "user", agente_ativacao: "" });
+    setForm({ email: "", full_name: "", role: "user", agente_ativacao: "", equipe: "onboarding" });
     await load();
   };
 
@@ -335,6 +346,20 @@ const AdminOperators = () => {
               <option value="user">Usuário</option>
               <option value="viewer">Viewer (somente rankings)</option>
               {isSuperAdmin && <option value="admin">Admin</option>}
+            </select>
+          </div>
+          <div>
+            <label className="font-subtitle text-[10px] uppercase tracking-wider text-muted-foreground">
+              Time{(form.role === "admin") && <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">(admin vê tudo)</span>}
+            </label>
+            <select
+              value={form.equipe}
+              onChange={(e) => setForm((f) => ({ ...f, equipe: e.target.value as AppTeam }))}
+              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+            >
+              {(["onboarding", "sucesso", "gestor"] as AppTeam[]).map((t) => (
+                <option key={t} value={t}>{TEAM_LABELS[t]}</option>
+              ))}
             </select>
           </div>
 
