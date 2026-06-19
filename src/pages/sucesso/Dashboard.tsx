@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { LayoutDashboard, Users, DollarSign, UserCheck, Building2 } from "lucide-react";
+import { LayoutDashboard, Users, DollarSign, UserCheck, Building2, CreditCard } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { Switch } from "@/components/ui/switch";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { MacroFilters, type MacroPeriodKey, type CustomRange } from "@/components/dashboard/MacroFilters";
 import { CarteiraPorAgente } from "@/components/sucesso/CarteiraPorAgente";
@@ -34,6 +35,8 @@ const isEtapaOcultaPadrao = (etapa: string) => {
 // Enquanto o usuário não personalizar o "Ocultar fase", o conjunto oculto é
 // sempre o default (Estorno + Churn). Esta chave marca que ele já personalizou.
 const ETAPAS_CUSTOM_KEY = "sucesso:etapas:custom";
+// Toggle "Somente clientes sem Asaas ID" (cobrança Asaas não vinculada).
+const SEM_ASAAS_KEY = "sucesso:semAsaas";
 
 export default function SucessoDashboard() {
   // Estado de filtros compartilhado (espelha Onboarding: useState + usePersistedSet)
@@ -41,6 +44,22 @@ export default function SucessoDashboard() {
   const [filtroEtapas, setFiltroEtapas] = usePersistedSet("sucesso:etapas");
   const [filtroPeriodo, setFiltroPeriodo] = useState<MacroPeriodKey>("tudo");
   const [filtroCustomRange, setFiltroCustomRange] = useState<CustomRange | null>(null);
+  // Filtro "somente sem Asaas ID" (persiste, como os demais filtros de Sucesso).
+  const [semAsaas, setSemAsaas] = useState<boolean>(() => {
+    try {
+      return window.localStorage.getItem(SEM_ASAAS_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const toggleSemAsaas = (v: boolean) => {
+    setSemAsaas(v);
+    try {
+      window.localStorage.setItem(SEM_ASAAS_KEY, v ? "1" : "0");
+    } catch {
+      /* storage indisponível — ignora */
+    }
+  };
   // Modal de lista de clientes (padrão Onboarding) acionado pelos KPIs.
   const [modal, setModal] = useState<{ title: string; rows: DashSucessoRow[] } | null>(null);
   // O usuário já personalizou o "Ocultar fase"? Enquanto não, vale o default.
@@ -86,10 +105,23 @@ export default function SucessoDashboard() {
         ocultarEtapas,
         periodo: filtroPeriodo,
         customRange: filtroCustomRange,
+        semAsaasId: semAsaas,
       }),
-    [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange],
+    [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange, semAsaas],
   );
   const carteira = useMemo(() => selectCarteira(rows), [rows]);
+
+  // Quantos clientes da base atual (demais filtros aplicados) estão SEM asaas_id.
+  const semAsaasCount = useMemo(
+    () =>
+      applySucessoFilter(rowsRaw, {
+        agentes: filtroAgentes,
+        ocultarEtapas,
+        periodo: filtroPeriodo,
+        customRange: filtroCustomRange,
+      }).filter((r) => !(r.asaas_id ?? "").trim()).length,
+    [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange],
+  );
 
   // Linhas da base ativa (pipeline Sucesso) por trás dos KPIs da Visão Geral.
   const baseRows = useMemo(
@@ -175,6 +207,22 @@ export default function SucessoDashboard() {
           onCustomRangeChange={setFiltroCustomRange}
         />
 
+        {/* Filtro específico de Sucesso: clientes sem Asaas ID (cobrança não vinculada). */}
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+          <label htmlFor="filtro-sem-asaas" className="flex cursor-pointer items-center gap-2">
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">Somente clientes sem Asaas ID</span>
+            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+              {semAsaasCount}
+            </span>
+          </label>
+          <Switch
+            id="filtro-sem-asaas"
+            checked={semAsaas}
+            onCheckedChange={toggleSemAsaas}
+            aria-label="Filtrar somente clientes sem Asaas ID"
+          />
+        </div>
 
         <section className="space-y-3">
           <div className="flex items-center justify-between gap-3">

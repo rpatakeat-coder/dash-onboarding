@@ -289,6 +289,8 @@ export interface SucessoFilter {
   customRange?: { start: Date; end: Date } | null;
   /** Grupo de perfil ativo (P+M | G+GG). null = todos. */
   perfilGrupo?: "P+M" | "G+GG" | null;
+  /** Quando true, mantém só clientes SEM asaas_id (cobrança Asaas não vinculada). */
+  semAsaasId?: boolean;
 }
 
 const parseDateLoose = (s: string | null | undefined): Date | null => {
@@ -339,7 +341,8 @@ export const applySucessoFilter = (
   const ag = filter.agentes && filter.agentes.size > 0 ? filter.agentes : null;
   const oc = filter.ocultarEtapas && filter.ocultarEtapas.size > 0 ? filter.ocultarEtapas : null;
   const pg = filter.perfilGrupo ?? null;
-  if (!ag && !oc && !range && !pg) return rows;
+  const semAsaas = filter.semAsaasId ?? false;
+  if (!ag && !oc && !range && !pg && !semAsaas) return rows;
   return rows.filter((r) => {
     if (ag) {
       const a = r.agente_sucesso?.trim() || "Sem responsável";
@@ -356,6 +359,9 @@ export const applySucessoFilter = (
     }
     if (pg) {
       if (grupoPerfil(r.perfil_cliente) !== pg) return false;
+    }
+    if (semAsaas) {
+      if ((r.asaas_id ?? "").trim() !== "") return false;
     }
     return true;
   });
