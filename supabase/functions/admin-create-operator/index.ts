@@ -70,6 +70,21 @@ Deno.serve(async (req) => {
     const sendEmail = channels.includes("email");
     let action_link: string | null = null;
     let newUserId: string | null = null;
+    let emailSent = false;
+    let emailError: string | null = null;
+
+    // Cria o usuário + link de convite SEM enviar email (não sofre o rate limit
+    // de email do Auth). Usado no canal "link/whatsapp" e como fallback quando o
+    // envio de email falha.
+    const generateInviteLink = async () => {
+      const { data: gen, error: genErr } = await admin.auth.admin.generateLink({
+        type: "invite",
+        email,
+        options: { data: { full_name: full_name ?? "" }, redirectTo },
+      });
+      if (genErr || !gen.user) return { error: genErr?.message ?? "invite_failed" } as const;
+      return { userId: gen.user.id, link: gen.properties?.action_link ?? null } as const;
+    };
 
     if (sendEmail) {
       // inviteUserByEmail envia email automaticamente via Supabase Auth
@@ -77,22 +92,28 @@ Deno.serve(async (req) => {
         data: { full_name: full_name ?? "" },
         redirectTo,
       });
-      if (inviteErr || !invited.user) return json({ error: inviteErr?.message ?? "invite_failed" }, 400);
-      newUserId = invited.user.id;
-      action_link = (invited as { properties?: { action_link?: string } })?.properties?.action_link ?? null;
+      if (inviteErr || !invited.user) {
+        // Email falhou (ex.: "email rate limit exceeded" ou SMTP). Em vez de
+        // abortar o convite inteiro, cria o usuário e gera o link sem email — o
+        // convite ainda é entregue por link/WhatsApp e o webhook continua sendo
+        // disparado. Só retorna erro se nem o fallback funcionar (ex.: usuário
+        // já existe).
+        emailError = inviteErr?.message ?? "invite_failed";
+        const fb = await generateInviteLink();
+        if ("error" in fb) return json({ error: emailError }, 400);
+        newUserId = fb.userId;
+        action_link = fb.link;
+      } else {
+        newUserId = invited.user.id;
+        action_link = (invited as { properties?: { action_link?: string } })?.properties?.action_link ?? null;
+        emailSent = true;
+      }
     } else {
       // Apenas gera link, sem enviar email
-      const { data: invited, error: inviteErr } = await admin.auth.admin.generateLink({
-        type: "invite",
-        email,
-        options: {
-          data: { full_name: full_name ?? "" },
-          redirectTo,
-        },
-      });
-      if (inviteErr || !invited.user) return json({ error: inviteErr?.message ?? "invite_failed" }, 400);
-      newUserId = invited.user.id;
-      action_link = invited.properties?.action_link ?? null;
+      const fb = await generateInviteLink();
+      if ("error" in fb) return json({ error: fb.error }, 400);
+      newUserId = fb.userId;
+      action_link = fb.link;
     }
 
     if (!newUserId) return json({ error: "invite_failed" }, 400);
@@ -134,11 +155,21 @@ Deno.serve(async (req) => {
       }
     }
 
+    let whatsapp_dispatched: boolean | null = null;
     if (channels.includes("whatsapp")) {
+      whatsapp_dispatched = false;
+      // O nó Webhook do n8n está com Header Auth ligada (sem credencial ele
+      // responde 403 "Authorization data is wrong!"). Reutiliza o MESMO secret e
+      // header que a função trigger-refresh já usa nesse webhook — o secret
+      // N8N_REFRESH_SECRET já existe (o botão "Atualizar dados" depende dele), então
+      // não precisa criar secret novo: basta re-deployar esta função.
+      const webhookHeaders: Record<string, string> = { "Content-Type": "application/json" };
+      const n8nSecret = Deno.env.get("N8N_REFRESH_SECRET");
+      if (n8nSecret) webhookHeaders["X-Webhook-Secret"] = n8nSecret;
       try {
-        await fetch("https://webhook.takeat.cloud/webhook/dash-onboarding", {
+        const r = await fetch("https://webhook.takeat.cloud/webhook/dash-onboarding", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: webhookHeaders,
           body: JSON.stringify({
             event: "operator.invited",
             user_id: newUserId,
@@ -149,17 +180,29 @@ Deno.serve(async (req) => {
             action_link: short_link ?? action_link,
             action_link_full: action_link,
             channels,
+            email_sent: emailSent,
             invited_by: userData.user.id,
             invited_by_email: userData.user.email ?? null,
             timestamp: new Date().toISOString(),
           }),
         });
+        whatsapp_dispatched = r.ok;
+        if (!r.ok) console.error("webhook_non_2xx", r.status, (await r.text()).slice(0, 300));
       } catch (e) {
         console.error("webhook_failed", (e as Error).message);
       }
     }
 
-    return json({ ok: true, user_id: newUserId, action_link, short_link, channels });
+    return json({
+      ok: true,
+      user_id: newUserId,
+      action_link,
+      short_link,
+      channels,
+      email_sent: emailSent,
+      email_error: emailError,
+      whatsapp_dispatched,
+    });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }

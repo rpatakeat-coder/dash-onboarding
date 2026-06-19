@@ -146,11 +146,19 @@ Deno.serve(async (req) => {
     }
 
     // Webhook (whatsapp)
+    let whatsapp_dispatched: boolean | null = null;
     if (channels.includes("whatsapp")) {
+      whatsapp_dispatched = false;
+      // Mesmo header de auth do n8n (Header Auth "X-Webhook-Secret" = N8N_REFRESH_SECRET)
+      // usado por trigger-refresh e admin-create-operator. Sem ele o n8n responde
+      // 403 "Authorization data is wrong!".
+      const webhookHeaders: Record<string, string> = { "Content-Type": "application/json" };
+      const n8nSecret = Deno.env.get("N8N_REFRESH_SECRET");
+      if (n8nSecret) webhookHeaders["X-Webhook-Secret"] = n8nSecret;
       try {
-        await fetch("https://webhook.takeat.cloud/webhook/dash-onboarding", {
+        const r = await fetch("https://webhook.takeat.cloud/webhook/dash-onboarding", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: webhookHeaders,
           body: JSON.stringify({
             event: "operator.invite_resent",
             user_id,
@@ -167,6 +175,8 @@ Deno.serve(async (req) => {
             timestamp: new Date().toISOString(),
           }),
         });
+        whatsapp_dispatched = r.ok;
+        if (!r.ok) console.error("webhook_non_2xx", r.status, (await r.text()).slice(0, 300));
       } catch (e) {
         console.error("webhook_failed", (e as Error).message);
       }
@@ -179,6 +189,7 @@ Deno.serve(async (req) => {
       short_link,
       link_type: linkType,
       channels,
+      whatsapp_dispatched,
     });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);

@@ -17,6 +17,35 @@ import { z } from "zod";
 import { DEFAULT_COPILOT_SYSTEM_PROMPT, COPILOT_PROMPT_SETTINGS_KEY } from "@/lib/copilotPrompt";
 import { ACESSO_LABELS, TEAM_LABELS, acessoToRoleEquipe, roleEquipeToAcesso, type AppTeam, type AcessoOption } from "@/lib/areaAccess";
 
+/**
+ * Extrai a mensagem REAL de erro de uma chamada a Edge Function.
+ * Quando a função responde com status não-2xx, o supabase-js põe apenas a
+ * string genérica "Edge Function returned a non-2xx status code" em
+ * `error.message`; o corpo JSON real (`{ error: ... }`) fica em
+ * `error.context` (um Response). Lemos de lá para mostrar o motivo de verdade.
+ */
+async function edgeErrorMessage(error: unknown, data: unknown): Promise<string> {
+  // 1) Algumas funções retornam 200 com { error } no corpo.
+  const inBody = (data as { error?: unknown } | null)?.error;
+  if (inBody) return typeof inBody === "string" ? inBody : JSON.stringify(inBody);
+
+  // 2) Erro HTTP: o corpo real está em error.context (Response).
+  const ctx = (error as { context?: unknown } | null)?.context;
+  if (ctx instanceof Response) {
+    try {
+      const body = await ctx.clone().json();
+      const m = (body as { error?: unknown })?.error;
+      if (m) return typeof m === "string" ? m : JSON.stringify(m);
+    } catch {
+      try {
+        const txt = (await ctx.clone().text()).trim();
+        if (txt) return txt;
+      } catch { /* ignore */ }
+    }
+  }
+  return (error as { message?: string } | null)?.message ?? "falha desconhecida";
+}
+
 interface AdminUser {
   id: string;
   full_name: string | null;
@@ -195,14 +224,14 @@ const AdminOperators = () => {
     });
     setBusy(false);
     if (error || (data as { error?: string })?.error) {
-      const msg = (data as { error?: string })?.error || error?.message;
-      if (typeof msg === "string" && (msg.includes("invalid_token") || msg.includes("missing_auth"))) {
+      const msg = await edgeErrorMessage(error, data);
+      if (msg.includes("invalid_token") || msg.includes("missing_auth")) {
         await supabase.auth.signOut();
         toast.error("Sessão expirada", { description: "Faça login novamente." });
         window.location.href = "/auth";
         return;
       }
-      return toast.error("Erro ao convidar", { description: typeof msg === "string" ? msg : "falha desconhecida" });
+      return toast.error("Erro ao convidar", { description: msg });
     }
 
     // Define o Time do novo usuário (a edge function cria a linha em user_roles_operations;
@@ -226,6 +255,24 @@ const AdminOperators = () => {
       link_only: "Link copiado",
     };
     toast.success(`Convite criado para ${form.email} — ${channels.map((c) => labels[c]).join(" + ")}`);
+    // A edge function tem fallback: se o email falhar (rate limit/SMTP), o convite
+    // ainda é criado por link. Avisamos para o admin enviar o link manualmente.
+    const emailSent = (data as { email_sent?: boolean })?.email_sent;
+    const emailErr = (data as { email_error?: string | null })?.email_error;
+    if (channels.includes("email") && emailSent === false) {
+      toast.warning("Email não enviado", {
+        description:
+          emailErr && emailErr.includes("rate limit")
+            ? "Limite de email do Supabase atingido — use o link copiado para enviar manualmente."
+            : `Falha no email (${emailErr ?? "desconhecido"}) — use o link copiado.`,
+      });
+    }
+    const waDispatched = (data as { whatsapp_dispatched?: boolean | null })?.whatsapp_dispatched;
+    if (channels.includes("whatsapp") && waDispatched === false) {
+      toast.warning("WhatsApp não confirmado", {
+        description: "O webhook não respondeu 2xx — verifique o fluxo no n8n ou envie o link manualmente.",
+      });
+    }
     if (link) {
       try {
         await navigator.clipboard.writeText(link);
@@ -254,8 +301,8 @@ const AdminOperators = () => {
     });
     setDelId(null);
     if (error || (data as { error?: string })?.error) {
-      const msg = (data as { error?: string })?.error || error?.message;
-      return toast.error("Erro ao excluir", { description: typeof msg === "string" ? msg : "falha desconhecida" });
+      const msg = await edgeErrorMessage(error, data);
+      return toast.error("Erro ao excluir", { description: msg });
     }
     toast.success("Operador excluído");
     void logAudit({
@@ -275,8 +322,8 @@ const AdminOperators = () => {
     });
     setResendId(null);
     if (error || (data as { error?: string })?.error) {
-      const msg = (data as { error?: string })?.error || error?.message;
-      return toast.error("Erro ao reenviar", { description: typeof msg === "string" ? msg : "falha desconhecida" });
+      const msg = await edgeErrorMessage(error, data);
+      return toast.error("Erro ao reenviar", { description: msg });
     }
     const link =
       (data as { short_link?: string })?.short_link ||
@@ -292,6 +339,12 @@ const AdminOperators = () => {
       link_only: "Link copiado",
     };
     toast.success(channels.map((c) => labels[c]).join(" + "));
+    const waDispatched = (data as { whatsapp_dispatched?: boolean | null })?.whatsapp_dispatched;
+    if (channels.includes("whatsapp") && waDispatched === false) {
+      toast.warning("WhatsApp não confirmado", {
+        description: "O webhook não respondeu 2xx — verifique o fluxo no n8n ou envie o link manualmente.",
+      });
+    }
     void logAudit({
       action: "operator.invite_resend",
       entity_type: "user_role",
@@ -721,8 +774,8 @@ const AdminUsers = () => {
     });
     setDelId(null);
     if (error || (data as { error?: string })?.error) {
-      const msg = (data as { error?: string })?.error || error?.message;
-      return toast.error("Erro ao excluir", { description: typeof msg === "string" ? msg : "falha desconhecida" });
+      const msg = await edgeErrorMessage(error, data);
+      return toast.error("Erro ao excluir", { description: msg });
     }
     toast.success("Usuário excluído");
     void logAudit({

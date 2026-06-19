@@ -136,9 +136,14 @@ Deno.serve(async (req) => {
       top_risco: scored,
     };
 
+    // Mesmo header de auth do n8n (Header Auth "X-Webhook-Secret" = N8N_REFRESH_SECRET)
+    // usado pelos demais webhooks. Sem ele o n8n responde 403 "Authorization data is wrong!".
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    const n8nSecret = Deno.env.get("N8N_REFRESH_SECRET");
+    if (n8nSecret) headers["X-Webhook-Secret"] = n8nSecret;
     const res = await fetch(webhook, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(payload),
     });
     const text = await res.text();
