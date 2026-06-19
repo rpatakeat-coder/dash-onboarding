@@ -10,6 +10,7 @@ import { ChurnSucesso } from "@/components/sucesso/ChurnSucesso";
 import { UpsellSucesso } from "@/components/sucesso/UpsellSucesso";
 import { RefreshDataButton } from "@/components/dashboard/RefreshDataButton";
 import { SucessoClientesModal } from "@/components/sucesso/SucessoClientesModal";
+import { SemAsaasClientesModal } from "@/components/sucesso/SemAsaasClientesModal";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
 import {
   useDashSucesso,
@@ -62,6 +63,8 @@ export default function SucessoDashboard() {
   };
   // Modal de lista de clientes (padrão Onboarding) acionado pelos KPIs.
   const [modal, setModal] = useState<{ title: string; rows: DashSucessoRow[] } | null>(null);
+  // Modal dedicado "Clientes sem Asaas ID" (com filtros internos).
+  const [semAsaasModal, setSemAsaasModal] = useState(false);
   // O usuário já personalizou o "Ocultar fase"? Enquanto não, vale o default.
   const [etapasCustom, setEtapasCustom] = useState<boolean>(() => {
     try {
@@ -111,17 +114,20 @@ export default function SucessoDashboard() {
   );
   const carteira = useMemo(() => selectCarteira(rows), [rows]);
 
-  // Quantos clientes da base atual (demais filtros aplicados) estão SEM asaas_id.
-  const semAsaasCount = useMemo(
+  // Clientes sem asaas_id (respeitando os filtros compartilhados). Base do badge
+  // e do modal "Ver lista". Inclui TODOS os pipelines — por isso difere da
+  // "Distribuição por Carteira", que só conta o pipeline "sucesso".
+  const semAsaasRows = useMemo(
     () =>
       applySucessoFilter(rowsRaw, {
         agentes: filtroAgentes,
         ocultarEtapas,
         periodo: filtroPeriodo,
         customRange: filtroCustomRange,
-      }).filter((r) => !(r.asaas_id ?? "").trim()).length,
+      }).filter((r) => !(r.asaas_id ?? "").trim()),
     [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange],
   );
+  const semAsaasCount = semAsaasRows.length;
 
   // Linhas da base ativa (pipeline Sucesso) por trás dos KPIs da Visão Geral.
   const baseRows = useMemo(
@@ -208,7 +214,7 @@ export default function SucessoDashboard() {
         />
 
         {/* Filtro específico de Sucesso: clientes sem Asaas ID (cobrança não vinculada). */}
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
           <label htmlFor="filtro-sem-asaas" className="flex cursor-pointer items-center gap-2">
             <CreditCard className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium text-foreground">Somente clientes sem Asaas ID</span>
@@ -216,12 +222,22 @@ export default function SucessoDashboard() {
               {semAsaasCount}
             </span>
           </label>
-          <Switch
-            id="filtro-sem-asaas"
-            checked={semAsaas}
-            onCheckedChange={toggleSemAsaas}
-            aria-label="Filtrar somente clientes sem Asaas ID"
-          />
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setSemAsaasModal(true)}
+              disabled={semAsaasCount === 0}
+              className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Ver lista
+            </button>
+            <Switch
+              id="filtro-sem-asaas"
+              checked={semAsaas}
+              onCheckedChange={toggleSemAsaas}
+              aria-label="Filtrar somente clientes sem Asaas ID"
+            />
+          </div>
         </div>
 
         <section className="space-y-3">
@@ -418,6 +434,12 @@ export default function SucessoDashboard() {
           onOpenChange={(o) => { if (!o) setModal(null); }}
           title={modal?.title ?? ""}
           rows={modal?.rows ?? []}
+        />
+
+        <SemAsaasClientesModal
+          open={semAsaasModal}
+          onOpenChange={setSemAsaasModal}
+          rows={semAsaasRows}
         />
       </main>
     </div>
