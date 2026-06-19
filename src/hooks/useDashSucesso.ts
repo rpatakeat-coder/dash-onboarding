@@ -181,11 +181,25 @@ export interface ChurnStats {
   porMotivo: { motivo: string; qtd: number; mrr: number }[];
 }
 
-const parseDate = (s: string | null | undefined): Date | null => {
+/**
+ * Parser de data tolerante a formato. Em dash_sucesso as datas vêm como string
+ * BR "DD/MM/YYYY [HH:MM[:SS]]" (NÃO ISO) — `new Date()` retorna Invalid Date nelas.
+ * Trata o formato BR explicitamente e cai para `new Date()` no resto (ISO etc.).
+ */
+export const parseDataFlex = (s: string | null | undefined): Date | null => {
   if (!s) return null;
-  const d = new Date(s);
+  const str = String(s).trim();
+  if (!str) return null;
+  const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+  if (m) {
+    return new Date(+m[3], +m[2] - 1, +m[1], +(m[4] ?? 0), +(m[5] ?? 0), +(m[6] ?? 0));
+  }
+  const d = new Date(str);
   return Number.isNaN(d.getTime()) ? null : d;
 };
+
+// Datas de dash_sucesso são BR (DD/MM/YYYY) — usar o parser flexível, não new Date().
+const parseDate = parseDataFlex;
 
 export const selectChurn = (rows: DashSucessoRow[]): ChurnStats => {
   const churn = rows.filter(
@@ -293,11 +307,8 @@ export interface SucessoFilter {
   semAsaasId?: boolean;
 }
 
-const parseDateLoose = (s: string | null | undefined): Date | null => {
-  if (!s) return null;
-  const d = new Date(s);
-  return Number.isNaN(d.getTime()) ? null : d;
-};
+// Datas BR (DD/MM/YYYY) — reaproveita o parser flexível (ver parseDataFlex).
+const parseDateLoose = parseDataFlex;
 
 /** Janela de data para o período selecionado. Retorna null quando "tudo". */
 export const getSucessoPeriodRange = (
