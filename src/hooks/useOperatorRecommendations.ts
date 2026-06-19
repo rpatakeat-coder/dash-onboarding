@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { edgeErrorMessage } from "@/lib/edgeError";
 import type { OperatorStat } from "@/hooks/useDashOperacoes";
 
 export interface OperatorRecsContext {
@@ -40,7 +41,7 @@ export function useOperatorRecommendations() {
           },
         },
       });
-      if (error) throw error;
+      if (error || (data as { error?: string })?.error) throw new Error(await edgeErrorMessage(error, data));
       return (data as { content?: string })?.content ?? "";
     },
   });

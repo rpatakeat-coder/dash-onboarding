@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { edgeErrorMessage } from "@/lib/edgeError";
 import { useAuth } from "@/hooks/useAuth";
 
 export interface CopilotMessage {
@@ -52,7 +53,7 @@ export function useCopilot() {
       const { data, error } = await supabase.functions.invoke("copilot-chat", {
         body: { message: trimmed, history: prior },
       });
-      if (error) throw error;
+      if (error || (data as { error?: string })?.error) throw new Error(await edgeErrorMessage(error, data));
       const content: string = (data as { content?: string })?.content ?? "";
 
       // Persiste resposta

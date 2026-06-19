@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { TrendingDown, ShieldAlert, CalendarIcon, X, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { edgeErrorMessage } from "@/lib/edgeError";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
@@ -44,8 +45,7 @@ export const ChurnKpis = ({ rows, className }: Props) => {
     setSheetError(null);
     try {
       const { data, error } = await supabase.functions.invoke("churn-real-sheet");
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error || (data as { error?: string })?.error) throw new Error(await edgeErrorMessage(error, data));
 
       if (Array.isArray(data?.mrrBaseByMonth)) {
         setMrrBaseByMonth(

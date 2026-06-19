@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { edgeErrorMessage } from "@/lib/edgeError";
 
 const TTL_MS = 10 * 60 * 1000;
 const HISTORY_LIMIT = 5;
@@ -96,7 +97,7 @@ export function useAiInsights<TPayload>(mode: AiInsightMode, cacheKey: string) {
           AiInsightsResponse | { error: string; message?: string }
         >("ai-insights", { body: { mode, payload } });
 
-        if (invokeErr) throw new Error(invokeErr.message);
+        if (invokeErr) throw new Error(await edgeErrorMessage(invokeErr, res));
         if (!res || (res as { error?: string }).error) {
           const msg = (res as { message?: string })?.message ?? "Falha ao gerar insight.";
           throw new Error(msg);

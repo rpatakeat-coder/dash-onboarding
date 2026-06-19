@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { TrendingDown, RefreshCw, Users, AlertTriangle, DollarSign, UserCheck, Building2, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { edgeErrorMessage } from "@/lib/edgeError";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -139,8 +140,7 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
     setSheetError(null);
     try {
       const { data, error } = await supabase.functions.invoke("churn-real-sheet");
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error || (data as { error?: string })?.error) throw new Error(await edgeErrorMessage(error, data));
       if (Array.isArray(data?.mrrBaseByMonth)) {
         setMrrBaseByMonth(
           data.mrrBaseByMonth.map((v: unknown) => (typeof v === "number" ? v : null)),

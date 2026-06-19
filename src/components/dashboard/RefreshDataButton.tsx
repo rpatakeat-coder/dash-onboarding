@@ -5,6 +5,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { markUserRefresh } from "@/lib/lastUpdated";
 import { supabase } from "@/integrations/supabase/client";
+import { edgeErrorMessage } from "@/lib/edgeError";
 
 interface RefreshDataButtonProps {
   /** Valor do campo `event` enviado ao webhook. Default: fluxo do Onboarding. */
@@ -30,7 +31,7 @@ export const RefreshDataButton = ({
         body: { event },
       });
       if (error || (data as { error?: string })?.error) {
-        throw new Error((data as { error?: string })?.error || error?.message || "falha ao acionar atualização");
+        throw new Error(await edgeErrorMessage(error, data));
       }
       markUserRefresh();
       toast({
