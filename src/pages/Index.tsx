@@ -186,8 +186,8 @@ const Index = () => {
 
       <main className="mx-auto max-w-[1400px] space-y-6 px-3 py-6 sm:px-6 md:px-10">
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div data-tour="filters" className="flex-1 min-w-0">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div data-tour="filters" className="min-w-0 sm:flex-1">
             <MacroFilters
               rows={filtersBase}
               ativadores={filtroAtivadores}
@@ -201,7 +201,7 @@ const Index = () => {
               hideAtivador={isAtivador && !isAdmin}
             />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               data-tour="ai-insights"
