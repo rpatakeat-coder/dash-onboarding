@@ -533,16 +533,9 @@ export default function SucessoChurn() {
 
   const { rowsRaw, isLoading } = useDashSucesso(useMemo(() => ({}), []));
 
-  // Filtro "Ocultar risco" (coluna risco_churn) — mesmo padrão do "Ocultar fase":
-  // por padrão oculta "Sem risco"; ao interagir, vale a seleção do usuário.
+  // Filtro "Ocultar risco" (coluna risco_churn). Começa VAZIO (nada oculto);
+  // o usuário escolhe quais riscos esconder.
   const [filtroRisco, setFiltroRisco] = usePersistedSet("sucesso:churn:risco");
-  const [riscoCustom, setRiscoCustom] = useState<boolean>(() => {
-    try {
-      return window.localStorage.getItem("sucesso:churn:risco:custom") === "1";
-    } catch {
-      return false;
-    }
-  });
 
   // Churn do período (etapa Churn) já recortado por data_fechamento — base, sem o filtro de risco.
   const churnPeriodoBase = useMemo(
@@ -558,32 +551,13 @@ export default function SucessoChurn() {
     }
     return { options: Object.keys(counts), counts };
   }, [churnPeriodoBase]);
-  // Conjunto EFETIVO de riscos ocultos: default ("Sem risco", se existir) até personalizar.
-  const ocultarRisco = useMemo(
-    () =>
-      riscoCustom
-        ? filtroRisco
-        : new Set(riscoOpts.options.includes("Sem risco") ? ["Sem risco"] : []),
-    [riscoCustom, filtroRisco, riscoOpts.options],
-  );
-  const handleRiscoChange = (next: Set<string>) => {
-    if (!riscoCustom) {
-      setRiscoCustom(true);
-      try {
-        window.localStorage.setItem("sucesso:churn:risco:custom", "1");
-      } catch {
-        /* ignore */
-      }
-    }
-    setFiltroRisco(next);
-  };
   // Oculta os riscos selecionados — cascateia para todas as abas/recortes.
   const churnPeriodo = useMemo(
     () =>
-      ocultarRisco.size === 0
+      filtroRisco.size === 0
         ? churnPeriodoBase
-        : churnPeriodoBase.filter((r) => !ocultarRisco.has(r.risco_churn?.trim() || "Sem risco")),
-    [churnPeriodoBase, ocultarRisco],
+        : churnPeriodoBase.filter((r) => !filtroRisco.has(r.risco_churn?.trim() || "Sem risco")),
+    [churnPeriodoBase, filtroRisco],
   );
   // Regra "Só Sucesso" (Visão Geral / MRR / Meu Desempenho).
   const churnSucesso = useMemo(
@@ -633,8 +607,8 @@ export default function SucessoChurn() {
             <MultiSelectFilter
               label="Ocultar risco"
               options={riscoOpts.options}
-              selected={ocultarRisco}
-              onChange={handleRiscoChange}
+              selected={filtroRisco}
+              onChange={setFiltroRisco}
               counts={riscoOpts.counts}
             />
             <RefreshDataButton event="atualizar_dados_sucesso" invalidateKey="dash_sucesso" />
