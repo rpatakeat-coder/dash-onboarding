@@ -5,6 +5,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { hubspotDealUrl } from "@/lib/hubspot";
 import { SucessoClientesModal } from "@/components/sucesso/SucessoClientesModal";
+import { DataCard, DataCardHeader, DataCardRow } from "@/components/ui/DataCard";
 import {
   fmtBRL,
   fmtPct,
@@ -201,7 +202,7 @@ export const RiscoEstoque = ({
           </button>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[720px] text-sm">
             <thead className="bg-muted/50">
               <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -248,6 +249,31 @@ export const RiscoEstoque = ({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile: cards */}
+        <div className="space-y-2 md:hidden">
+          {pageRows.map((r, i) => (
+            <DataCard key={`${r.nome_negocio}-m-${pageSafe * pageSize + i}`}>
+              <DataCardHeader right={<span className="font-numeric text-sm font-semibold text-foreground">{fmtBRL(num(r.mrr))}</span>}>
+                <a
+                  href={hubspotDealUrl(r.id_deal)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group/hs inline-flex items-center gap-1 text-foreground transition hover:text-primary hover:underline"
+                  title="Abrir no HubSpot"
+                >
+                  {r.nome_negocio ?? "—"}
+                  <ExternalLink className="h-3 w-3 text-muted-foreground transition group-hover/hs:text-primary" />
+                </a>
+              </DataCardHeader>
+              <DataCardRow label="Perfil">{r.perfil_cliente ?? "—"}</DataCardRow>
+              <DataCardRow label="Agente">{r.agente_sucesso ?? "Sem responsável"}</DataCardRow>
+            </DataCard>
+          ))}
+          {!sorted.length && (
+            <p className="py-6 text-center text-sm text-muted-foreground">Nenhum cliente em risco no momento.</p>
+          )}
         </div>
 
         {sorted.length > 0 && (

@@ -1,6 +1,7 @@
 import { Users, DollarSign, UserCog } from "lucide-react";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { fmtBRL, type CarteiraAgente } from "@/hooks/useDashSucesso";
+import { DataCard, DataCardHeader, DataCardRow } from "@/components/ui/DataCard";
 
 interface Props {
   agentes: CarteiraAgente[];
@@ -77,7 +78,7 @@ export const CarteiraPorAgente = ({
         ))}
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[820px] text-sm">
           <thead className="bg-muted/50">
             <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -164,6 +165,32 @@ export const CarteiraPorAgente = ({
             </tr>
           </tfoot>
         </table>
+      </div>
+
+      {/* Mobile: cards */}
+      <div className="space-y-2 md:hidden">
+        {agentes.map((a, idx) => {
+          const isActive = !!selectedAgentes?.has(a.agente);
+          return (
+            <button key={a.agente} type="button" onClick={() => onToggleAgente?.(a.agente)} aria-pressed={isActive} className="block w-full text-left">
+              <DataCard className={isActive ? "border-primary ring-1 ring-primary/40" : undefined}>
+                <DataCardHeader right={<span className="font-numeric text-sm font-semibold text-foreground">{fmtBRL(a.mrr)}</span>}>
+                  {isActive && <span className="mr-1.5 text-primary">●</span>}
+                  <span className="font-numeric text-muted-foreground">{idx + 1}.</span> {a.agente}
+                </DataCardHeader>
+                <DataCardRow label="Clientes">{fmtN(a.clientes)}</DataCardRow>
+                <DataCardRow label="P+M (qtd · MRR)">{fmtN(a.qtdPM)} · {fmtBRL(a.mrrPM)}</DataCardRow>
+                <DataCardRow label="G+GG (qtd · MRR)">{fmtN(a.qtdGGG)} · {fmtBRL(a.mrrGGG)}</DataCardRow>
+              </DataCard>
+            </button>
+          );
+        })}
+        <DataCard className="border-primary/30 bg-primary/5">
+          <DataCardHeader right={<span className="font-numeric text-sm font-semibold text-foreground">{fmtBRL(sumMrr)}</span>}>Total</DataCardHeader>
+          <DataCardRow label="Clientes">{fmtN(sumClientes)}</DataCardRow>
+          <DataCardRow label="P+M (qtd · MRR)">{fmtN(agentes.reduce((s, a) => s + a.qtdPM, 0))} · {fmtBRL(agentes.reduce((s, a) => s + a.mrrPM, 0))}</DataCardRow>
+          <DataCardRow label="G+GG (qtd · MRR)">{fmtN(agentes.reduce((s, a) => s + a.qtdGGG, 0))} · {fmtBRL(agentes.reduce((s, a) => s + a.mrrGGG, 0))}</DataCardRow>
+        </DataCard>
       </div>
     </div>
   );

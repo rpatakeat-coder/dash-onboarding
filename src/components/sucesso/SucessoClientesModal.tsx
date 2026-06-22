@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { hubspotDealUrl } from "@/lib/hubspot";
 import { fmtBRL, type DashSucessoRow } from "@/hooks/useDashSucesso";
+import { DataCard, DataCardHeader, DataCardRow } from "@/components/ui/DataCard";
 
 interface Props {
   open: boolean;
@@ -99,7 +100,7 @@ export const SucessoClientesModal = ({ open, onOpenChange, title, description, r
           />
         </div>
 
-        <div className="max-h-[60vh] overflow-auto rounded-lg border">
+        <div className="hidden max-h-[60vh] overflow-auto rounded-lg border md:block">
           <Table>
             <TableHeader className="sticky top-0 bg-card">
               <TableRow>
@@ -159,6 +160,33 @@ export const SucessoClientesModal = ({ open, onOpenChange, title, description, r
               )}
             </TableBody>
           </Table>
+        </div>
+
+        {/* Mobile: cards */}
+        <div className="max-h-[60vh] space-y-2 overflow-auto md:hidden">
+          {list.map((r, i) => (
+            <DataCard key={`${r.id_deal}-m-${i}`}>
+              <DataCardHeader right={<span className="font-numeric text-sm font-semibold text-foreground">{fmtBRL(num(r.mrr))}</span>}>
+                <a
+                  href={hubspotDealUrl(r.id_deal)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group/hs inline-flex items-center gap-1 text-foreground transition hover:text-primary hover:underline"
+                  title="Abrir no HubSpot"
+                >
+                  {r.nome_negocio ?? "—"}
+                  <ExternalLink className="h-3 w-3 text-muted-foreground transition group-hover/hs:text-primary" />
+                </a>
+              </DataCardHeader>
+              <DataCardRow label="Perfil">{r.perfil_cliente ?? "—"}</DataCardRow>
+              <DataCardRow label="Agente">{r.agente_sucesso?.trim() || "Sem responsável"}</DataCardRow>
+              <DataCardRow label="Etapa">{r.etapa_negocio ?? "—"}</DataCardRow>
+              {showFechado && <DataCardRow label="Fechado em">{fmtFechado(r.data_fechamento)}</DataCardRow>}
+            </DataCard>
+          ))}
+          {list.length === 0 && (
+            <p className="py-8 text-center text-muted-foreground">Nenhum cliente encontrado.</p>
+          )}
         </div>
       </DialogContent>
     </Dialog>
