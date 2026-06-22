@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { TrendingDown, RefreshCw, Users, AlertTriangle, DollarSign, UserCheck, Building2, ExternalLink } from "lucide-react";
+import { TrendingDown, RefreshCw, Users, AlertTriangle, DollarSign, UserCheck, Building2, ExternalLink, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { edgeErrorMessage } from "@/lib/edgeError";
 import { KpiCard } from "@/components/dashboard/KpiCard";
@@ -64,6 +64,15 @@ const MONTHS_PT = [
 ];
 
 const PAGE_SIZE_OPTS = [25, 50, 75, 100] as const;
+
+// Metas do time por faixa de % Churn líquido — quanto menor o churn, maior o % do fixo destravado.
+// Ordenadas da mais difícil (melhor prêmio) para a mais folgada.
+const METAS_CHURN = [
+  { id: 1, label: "Meta 1", pctMax: 1.6, premio: 60 },
+  { id: 2, label: "Meta 2", pctMax: 1.8, premio: 30 },
+  { id: 3, label: "Meta 3", pctMax: 2.0, premio: 15 },
+] as const;
+const fmtMetaPct = (n: number) => `${n.toFixed(1).replace(".", ",")}%`;
 
 export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGGTotal }: Props) => {
   const now = new Date();
@@ -188,6 +197,10 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
 
   const churnLiquido = stats.mrr - upsell + downsell - reativacoes;
   const pctChurnLiq = mrrBase && mrrBase > 0 ? (churnLiquido / mrrBase) * 100 : null;
+
+  // Faixa de meta atingida = a meta mais difícil (menor % máx) que o churn líquido ainda respeita.
+  // Como METAS_CHURN está ordenada por pctMax crescente, o primeiro match já dá o melhor prêmio.
+  const metaAtingida = pctChurnLiq === null ? null : (METAS_CHURN.find((m) => pctChurnLiq <= m.pctMax) ?? null);
 
   // Aplica filtros locais (perfilGrupo + agente) sobre os churns do mês.
   const filteredRows = useMemo(() => {
@@ -407,6 +420,95 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
               {mrrBase !== null ? `Sobre MRR início do mês ${fmtBRL(mrrBase)}` : "Aguardando MRR base"}
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Metas do Time — faixas de % Churn líquido que destravam o variável */}
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm-soft sm:p-6">
+        <div className="mb-4 flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Target className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="font-display text-base font-semibold text-secondary">
+              Metas do Time
+            </h3>
+            <p className="font-small text-xs text-muted-foreground">
+              Faixas de <strong>% Churn líquido</strong> que destravam o variável (% do fixo). Quanto menor o churn, maior o prêmio.
+            </p>
+          </div>
+        </div>
+
+        {/* Resultado do mês vs metas */}
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-background/50 p-4">
+          <div>
+            <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+              % Churn líquido no mês
+            </p>
+            <p className={cn(
+              "mt-1 font-display text-2xl font-bold tabular-nums",
+              pctChurnLiq === null ? "text-muted-foreground" : metaAtingida ? "text-success" : "text-destructive",
+            )}>
+              {pctChurnLiq !== null ? `${pctChurnLiq.toFixed(2).replace(".", ",")}%` : "—"}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+              Variável atingido
+            </p>
+            <p className={cn(
+              "mt-1 font-display text-2xl font-bold tabular-nums",
+              pctChurnLiq === null ? "text-muted-foreground" : metaAtingida ? "text-success" : "text-destructive",
+            )}>
+              {pctChurnLiq === null ? "—" : metaAtingida ? `${metaAtingida.premio}% do fixo` : "0%"}
+            </p>
+            <p className="font-small text-xs text-muted-foreground">
+              {pctChurnLiq === null
+                ? "Aguardando MRR base"
+                : metaAtingida
+                ? `${metaAtingida.label} atingida (≤ ${fmtMetaPct(metaAtingida.pctMax)})`
+                : `Acima de ${fmtMetaPct(METAS_CHURN[METAS_CHURN.length - 1].pctMax)} — nenhuma meta batida`}
+            </p>
+          </div>
+        </div>
+
+        {/* Faixas das metas */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {METAS_CHURN.map((m) => {
+            const isHit = metaAtingida?.id === m.id;
+            const failed = pctChurnLiq !== null && pctChurnLiq > m.pctMax;
+            return (
+              <div
+                key={m.id}
+                className={cn(
+                  "rounded-xl border p-4 transition",
+                  isHit
+                    ? "border-success bg-success/5 ring-2 ring-success/30"
+                    : failed
+                    ? "border-border bg-background/50 opacity-60"
+                    : "border-border bg-background/50",
+                )}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+                    {m.label}
+                  </p>
+                  {isHit && (
+                    <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-success">
+                      Atingida
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2 font-display text-xl font-bold tabular-nums text-foreground">
+                  {m.premio}%{" "}
+                  <span className="font-numeric text-sm font-semibold text-muted-foreground">do fixo</span>
+                </p>
+                <p className="font-small text-xs text-muted-foreground">
+                  Churn líquido ≤ {fmtMetaPct(m.pctMax)}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
 
