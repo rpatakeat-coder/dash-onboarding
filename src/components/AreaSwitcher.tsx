@@ -55,7 +55,7 @@ export const AreaSwitcher = ({ className }: { className?: string }) => {
         <span>{AREA_LABELS[area]}</span>
         <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground transition group-hover:text-foreground" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-56">
+      <DropdownMenuContent align="start" className="w-[min(14rem,90vw)]">
         <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
           Áreas
         </DropdownMenuLabel>
