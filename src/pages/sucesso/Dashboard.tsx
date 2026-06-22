@@ -37,6 +37,8 @@ const isEtapaOcultaPadrao = (etapa: string) => {
 // Enquanto o usuário não personalizar o "Ocultar fase", o conjunto oculto é
 // sempre o default (Estorno + Churn). Esta chave marca que ele já personalizou.
 const ETAPAS_CUSTOM_KEY = "sucesso:etapas:custom";
+// Mesmo mecanismo para o "Ocultar risco": default (Sem risco oculto) até personalizar.
+const RISCO_CUSTOM_KEY = "sucesso:risco:custom";
 // Toggle "Somente clientes sem Asaas ID" (cobrança Asaas não vinculada).
 const SEM_ASAAS_KEY = "sucesso:semAsaas";
 
@@ -46,8 +48,16 @@ export default function SucessoDashboard() {
   const [filtroEtapas, setFiltroEtapas] = usePersistedSet("sucesso:etapas");
   const [filtroPeriodo, setFiltroPeriodo] = useState<MacroPeriodKey>("tudo");
   const [filtroCustomRange, setFiltroCustomRange] = useState<CustomRange | null>(null);
-  // Filtro por Risco de churn (coluna risco_churn de dash_sucesso).
+  // Filtro "Ocultar risco" (coluna risco_churn). Mesmo padrão do "Ocultar fase":
+  // por padrão oculta "Sem risco"; ao interagir, vale a seleção do usuário.
   const [filtroRisco, setFiltroRisco] = usePersistedSet("sucesso:risco");
+  const [riscoCustom, setRiscoCustom] = useState<boolean>(() => {
+    try {
+      return window.localStorage.getItem(RISCO_CUSTOM_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
   // Filtro "somente sem Asaas ID" (persiste, como os demais filtros de Sucesso).
   const [semAsaas, setSemAsaas] = useState<boolean>(() => {
     try {
@@ -96,7 +106,7 @@ export default function SucessoDashboard() {
     [rowsRaw],
   );
 
-  // Opções e contagem do filtro "Risco churn" (derivadas dos dados).
+  // Opções e contagem do filtro "Ocultar risco" (derivadas dos dados).
   const riscoOpts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const r of rowsRaw) {
@@ -105,6 +115,27 @@ export default function SucessoDashboard() {
     }
     return { options: Object.keys(counts), counts };
   }, [rowsRaw]);
+
+  // Conjunto EFETIVO de riscos ocultos: default ("Sem risco", se existir) até o
+  // usuário personalizar; depois, exatamente a seleção dele (inclusive vazia).
+  const ocultarRisco = useMemo(
+    () =>
+      riscoCustom
+        ? filtroRisco
+        : new Set(riscoOpts.options.includes("Sem risco") ? ["Sem risco"] : []),
+    [riscoCustom, filtroRisco, riscoOpts.options],
+  );
+  const handleRiscoChange = (next: Set<string>) => {
+    if (!riscoCustom) {
+      setRiscoCustom(true);
+      try {
+        window.localStorage.setItem(RISCO_CUSTOM_KEY, "1");
+      } catch {
+        /* storage indisponível — ignora */
+      }
+    }
+    setFiltroRisco(next);
+  };
 
   // Conjunto EFETIVO de etapas ocultas: default (Estorno + Churn) até o usuário
   // personalizar; depois disso, exatamente o que ele escolheu (inclusive vazio).
@@ -122,9 +153,9 @@ export default function SucessoDashboard() {
         periodo: filtroPeriodo,
         customRange: filtroCustomRange,
         semAsaasId: semAsaas,
-        riscoChurn: filtroRisco,
+        ocultarRisco,
       }),
-    [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange, semAsaas, filtroRisco],
+    [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange, semAsaas, ocultarRisco],
   );
   const carteira = useMemo(() => selectCarteira(rows), [rows]);
 
@@ -138,9 +169,9 @@ export default function SucessoDashboard() {
         ocultarEtapas,
         periodo: filtroPeriodo,
         customRange: filtroCustomRange,
-        riscoChurn: filtroRisco,
+        ocultarRisco,
       }).filter((r) => !(r.asaas_id ?? "").trim()),
-    [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange, filtroRisco],
+    [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange, ocultarRisco],
   );
   const semAsaasCount = semAsaasRows.length;
 
@@ -178,9 +209,9 @@ export default function SucessoDashboard() {
         agentes: filtroAgentes,
         periodo: filtroPeriodo,
         customRange: filtroCustomRange,
-        riscoChurn: filtroRisco,
+        ocultarRisco,
       }),
-    [rowsRaw, filtroAgentes, filtroPeriodo, filtroCustomRange, filtroRisco],
+    [rowsRaw, filtroAgentes, filtroPeriodo, filtroCustomRange, ocultarRisco],
   );
 
   // Adapter: MacroFilters tipa em DashRow (Onboarding). Mapeamos só o necessário.
@@ -229,16 +260,16 @@ export default function SucessoDashboard() {
           onCustomRangeChange={setFiltroCustomRange}
         />
 
-        {/* Filtro por Risco de churn (coluna risco_churn). */}
+        {/* Filtro por Risco de churn (coluna risco_churn) — mesmo padrão do "Ocultar fase". */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
-            Risco churn:
+            Ocultar risco:
           </span>
           <MultiSelectFilter
-            label="Risco churn"
+            label="Ocultar risco"
             options={riscoOpts.options}
-            selected={filtroRisco}
-            onChange={setFiltroRisco}
+            selected={ocultarRisco}
+            onChange={handleRiscoChange}
             counts={riscoOpts.counts}
           />
         </div>
