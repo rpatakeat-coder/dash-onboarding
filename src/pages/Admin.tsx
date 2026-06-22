@@ -20,6 +20,7 @@ import { edgeErrorMessage } from "@/lib/edgeError";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRankingExcluidos } from "@/hooks/useRankingExcluidos";
 import { loadRankingExcluidos, saveRankingExcluidos, normAgente } from "@/lib/rankingExclusao";
+import { DataCard, DataCardHeader, DataCardRow } from "@/components/ui/DataCard";
 
 interface AdminUser {
   id: string;
@@ -1598,7 +1599,7 @@ const AdminAuditoria = () => {
       </div>
 
       <div className="rounded-2xl border border-border bg-card">
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-muted/40 text-left">
               <tr>
@@ -1641,6 +1642,30 @@ const AdminAuditoria = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile: cards */}
+        <div className="space-y-2 p-3 md:hidden">
+          {loading && <div className="py-8 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" /></div>}
+          {!loading && rows.length === 0 && (
+            <p className="py-8 text-center text-muted-foreground">Nenhum registro no período.</p>
+          )}
+          {!loading && rows.map((r) => (
+            <DataCard key={r.id}>
+              <DataCardHeader right={<span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px]">{ENTITY_LABEL[r.entity_type] ?? r.entity_type}</span>}>
+                <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{r.action}</code>
+              </DataCardHeader>
+              <DataCardRow label="Quando">{new Date(r.created_at).toLocaleString("pt-BR")}</DataCardRow>
+              <DataCardRow label="Quem">{r.user_name || "—"}</DataCardRow>
+              <DataCardRow label="Detalhes">{r.summary || "—"}</DataCardRow>
+              {r.metadata && Object.keys(r.metadata).length > 0 && (
+                <details className="mt-1">
+                  <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">metadata</summary>
+                  <pre className="mt-1 overflow-x-auto rounded bg-muted/50 p-2 text-[11px] leading-snug">{JSON.stringify(r.metadata, null, 2)}</pre>
+                </details>
+              )}
+            </DataCard>
+          ))}
         </div>
       </div>
     </div>
@@ -1795,7 +1820,8 @@ const AdminHubspotAgents = () => {
         ) : rows.length === 0 ? (
           <p className="px-5 py-8 text-center font-small text-sm text-muted-foreground">Nenhum agente cadastrado ainda.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-left text-sm">
               <thead className="bg-muted/40 text-muted-foreground">
                 <tr>
@@ -1844,6 +1870,37 @@ const AdminHubspotAgents = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile: cards */}
+          <div className="space-y-2 p-3 md:hidden">
+            {rows.map((r) => (
+              <DataCard key={r.id}>
+                <DataCardHeader right={
+                  <Button variant="ghost" size="sm" onClick={() => remove(r)} disabled={delId === r.id} className="h-7 gap-1 px-2 text-destructive hover:text-destructive">
+                    {delId === r.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                  </Button>
+                }>
+                  {r.name}
+                </DataCardHeader>
+                <DataCardRow label="ID HubSpot"><span className="font-mono text-xs">{r.hubspot_id}</span></DataCardRow>
+                <DataCardRow label="Time">
+                  <select
+                    value={r.equipe ?? ""}
+                    onChange={(e) => updateEquipe(r, e.target.value as AppTeam)}
+                    disabled={savingId === r.id}
+                    className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground disabled:opacity-50"
+                  >
+                    <option value="" disabled>Selecione…</option>
+                    {(["onboarding", "sucesso", "gestor"] as AppTeam[]).map((t) => (
+                      <option key={t} value={t}>{TEAM_LABELS[t]}</option>
+                    ))}
+                  </select>
+                </DataCardRow>
+                <DataCardRow label="Criado em">{new Date(r.created_at).toLocaleString("pt-BR")}</DataCardRow>
+              </DataCard>
+            ))}
+          </div>
+          </>
         )}
       </div>
     </div>
