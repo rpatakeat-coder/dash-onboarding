@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { Medal, Trophy, CalendarIcon, X, User } from "lucide-react";
 import { useAgentAvatars } from "@/hooks/useAgentAvatars";
 import { usePodiumMedals } from "@/hooks/usePodiumMedals";
+import { useRankingExcluidos } from "@/hooks/useRankingExcluidos";
+import { normAgente } from "@/lib/rankingExclusao";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
@@ -88,8 +90,9 @@ const getRanges = (period: PeriodKey, custom?: CustomRange) => {
   return { start, end, prevStart, prevEnd: start };
 };
 
-export const computeRanking = (rows: DashRow[], period: PeriodKey, custom?: CustomRange): { ranked: ScoreRow[]; team: ScoreRow } => {
+export const computeRanking = (rows: DashRow[], period: PeriodKey, custom?: CustomRange, excluidos: string[] = []): { ranked: ScoreRow[]; team: ScoreRow } => {
   const { start, end, prevStart, prevEnd } = getRanges(period, custom);
+  const excl = new Set(excluidos.map(normAgente));
   const inCur = (d: Date | null) => !!d && d >= start && d < end;
   const inPrev = (d: Date | null) => !!d && d >= prevStart && d < prevEnd;
 
@@ -130,6 +133,7 @@ export const computeRanking = (rows: DashRow[], period: PeriodKey, custom?: Cust
   const out: ScoreRow[] = [];
   let tMrrAt = 0, tMrrAnt = 0, tCliAt = 0, tCliAnt = 0, tChurn = 0;
   map.forEach((c, ativador) => {
+    if (excl.has(normAgente(ativador))) return; // admin removeu do ranking
     tMrrAt += c.mrrAtivado; tMrrAnt += c.mrrCriadoAnterior;
     tCliAt += c.clientesAtivados; tCliAnt += c.clientesCriadosAnterior;
     tChurn += c.churnReal;
@@ -245,9 +249,10 @@ export const RankingMetasMedalhas = ({ rows, variant = "default" }: Props) => {
       : format(customRange.from, "dd/MM/yyyy", { locale: ptBR })
     : "Personalizado";
 
+  const { excluidos } = useRankingExcluidos();
   const { ranked, team } = useMemo(
-    () => computeRanking(rows, period, { start: customStart, end: customEnd }),
-    [rows, period, customStart, customEnd],
+    () => computeRanking(rows, period, { start: customStart, end: customEnd }, excluidos),
+    [rows, period, customStart, customEnd, excluidos],
   );
 
   const breakdown = useMemo(() => {

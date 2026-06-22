@@ -17,6 +17,9 @@ import { z } from "zod";
 import { DEFAULT_COPILOT_SYSTEM_PROMPT, COPILOT_PROMPT_SETTINGS_KEY } from "@/lib/copilotPrompt";
 import { ACESSO_LABELS, TEAM_LABELS, acessoToRoleEquipe, roleEquipeToAcesso, type AppTeam, type AcessoOption } from "@/lib/areaAccess";
 import { edgeErrorMessage } from "@/lib/edgeError";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRankingExcluidos } from "@/hooks/useRankingExcluidos";
+import { loadRankingExcluidos, saveRankingExcluidos, normAgente } from "@/lib/rankingExclusao";
 
 interface AdminUser {
   id: string;
@@ -71,7 +74,7 @@ const Admin = () => {
           <TabsContent value="hubspot" className="mt-4"><AdminHubspotAgents /></TabsContent>
           <TabsContent value="users" className="mt-4"><AdminUsers /></TabsContent>
           <TabsContent value="podium" className="mt-4"><AdminPodium /></TabsContent>
-          <TabsContent value="config" className="mt-4"><AdminConfig /></TabsContent>
+          <TabsContent value="config" className="mt-4"><div className="space-y-6"><AdminConfig /><AdminRankingExclusao /></div></TabsContent>
           <TabsContent value="auditoria" className="mt-4"><AdminAuditoria /></TabsContent>
         </Tabs>
       </main>
@@ -1010,6 +1013,106 @@ const validateMetas = (v: MetasValues): MetasErrors => {
   return errs;
 };
 
+// Gerencia quem fica de fora dos rankings de Ativadores (Variável + Metas/Medalhas).
+const AdminRankingExclusao = () => {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const [agentes, setAgentes] = useState<string[]>([]);
+  const [excluidos, setExcluidos] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [savingName, setSavingName] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const [{ data: ags }, excl] = await Promise.all([
+        supabase.rpc("distinct_agentes_ativacao"),
+        loadRankingExcluidos(),
+      ]);
+      const names = ((ags as { agente: string }[]) ?? []).map((a) => a.agente).filter(Boolean);
+      const all = Array.from(new Set([...names, ...excl])).sort((a, b) => a.localeCompare(b, "pt-BR"));
+      setAgentes(all);
+      setExcluidos(excl);
+    } catch (e) {
+      toast.error("Erro ao carregar exclusões do ranking", { description: (e as Error).message });
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => { load(); }, []);
+
+  const isExcl = (name: string) => excluidos.some((x) => normAgente(x) === normAgente(name));
+
+  const toggle = async (name: string) => {
+    const currentlyExcl = isExcl(name);
+    const next = currentlyExcl
+      ? excluidos.filter((x) => normAgente(x) !== normAgente(name))
+      : [...excluidos, name];
+    setSavingName(name);
+    try {
+      await saveRankingExcluidos(next, user?.id ?? null);
+      setExcluidos(next);
+      qc.invalidateQueries({ queryKey: ["ranking-excluidos"] });
+      toast.success(currentlyExcl ? `${name} voltou ao ranking` : `${name} removido do ranking`);
+      void logAudit({
+        action: "ranking.exclusao",
+        entity_type: "config",
+        entity_id: "ranking.excluidos",
+        summary: `${currentlyExcl ? "Reincluiu" : "Removeu"} ${name} ${currentlyExcl ? "no" : "do"} ranking de Ativadores`,
+        metadata: { agente: name, excluido: !currentlyExcl },
+      });
+    } catch (e) {
+      toast.error("Erro ao salvar", { description: (e as Error).message });
+    } finally {
+      setSavingName(null);
+    }
+  };
+
+  const term = q.trim().toLowerCase();
+  const filtered = term ? agentes.filter((a) => a.toLowerCase().includes(term)) : agentes;
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <h2 className="font-display text-lg font-semibold text-secondary">Excluir do ranking (Ativadores)</h2>
+      <p className="mt-1 font-small text-sm text-muted-foreground">
+        Pessoas marcadas aqui não aparecem nos rankings de Ativadores (Variável e Metas/Medalhas) nem ganham medalha no pódium.
+        {" "}<strong className="text-foreground">{excluidos.length}</strong> excluída(s). Clique num nome para alternar.
+      </p>
+      <div className="mt-4">
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar agente…" className="max-w-xs" />
+      </div>
+      {loading ? (
+        <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+      ) : (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {filtered.map((name) => {
+            const excl = isExcl(name);
+            return (
+              <button
+                key={name}
+                type="button"
+                onClick={() => toggle(name)}
+                disabled={savingName === name}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition disabled:opacity-50 ${
+                  excl
+                    ? "border-destructive/40 bg-destructive/10 text-destructive"
+                    : "border-border bg-background text-foreground hover:border-primary/40"
+                }`}
+                title={excl ? "Clique para reincluir no ranking" : "Clique para remover do ranking"}
+              >
+                {savingName === name ? <Loader2 className="h-3 w-3 animate-spin" /> : <span>{excl ? "✕" : "+"}</span>}
+                {name}
+              </button>
+            );
+          })}
+          {filtered.length === 0 && <p className="font-small text-sm text-muted-foreground">Nenhum agente encontrado.</p>}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const AdminConfig = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -1776,11 +1879,12 @@ const AdminPodium = () => {
   const monthKey = `${prevStart.getFullYear()}-${String(prevStart.getMonth() + 1).padStart(2, "0")}`;
   const monthLabel = `${MONTH_LABELS[prevStart.getMonth()]}/${prevStart.getFullYear()}`;
 
+  const { excluidos } = useRankingExcluidos();
   const top3 = _useMemo(() => {
     if (!data?.rows) return [];
-    const { ranked } = computeRanking(data.rows, "custom", { start: prevStart, end: prevEnd });
+    const { ranked } = computeRanking(data.rows, "custom", { start: prevStart, end: prevEnd }, excluidos);
     return ranked.slice(0, 3);
-  }, [data, prevStart, prevEnd]);
+  }, [data, prevStart, prevEnd, excluidos]);
 
   useEffect(() => {
     let cancel = false;

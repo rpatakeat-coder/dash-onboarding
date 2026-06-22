@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import { InfoTooltip } from "./InfoTooltip";
 import { cn } from "@/lib/utils";
+import { useRankingExcluidos } from "@/hooks/useRankingExcluidos";
+import { normAgente } from "@/lib/rankingExclusao";
 import {
   parseDate,
   parseActivationDate,
@@ -94,8 +96,10 @@ const getRanges = (period: PeriodKey) => {
 
 export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
   const [period, setPeriod] = useState<PeriodKey>("mes");
+  const { excluidos } = useRankingExcluidos();
   const data = useMemo(() => {
     const { start, end, prevStart, prevEnd } = getRanges(period);
+    const excl = new Set(excluidos.map(normAgente));
 
     const inMonth = (d: Date | null) => !!d && d >= start && d < end;
     const inPrevMonth = (d: Date | null) => !!d && d >= prevStart && d < prevEnd;
@@ -160,7 +164,7 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
       const churnTerm = churnMargem < 0 ? churnMargem * 10 : 0;
       c.scoreFinal = Math.max(0, (c.pctMrr * 60 + c.pctClientes * 30) / 100 + churnTerm);
       c.pctFixo = pctFixoFromScore(c.scoreFinal);
-      result.push(c);
+      if (!excl.has(normAgente(c.ativador))) result.push(c); // admin pode remover do ranking
     });
 
     result.sort((a, b) => b.scoreFinal - a.scoreFinal);
@@ -202,7 +206,7 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
     };
 
     return { rows: filtered, team };
-  }, [rows, onlyAgente, period]);
+  }, [rows, onlyAgente, period, excluidos]);
 
   if (!data.rows.length) return null;
   const { rows: tableRows, team } = data;
