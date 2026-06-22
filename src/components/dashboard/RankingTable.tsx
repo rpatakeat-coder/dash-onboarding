@@ -2,6 +2,7 @@ import { Trophy, ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtBRL, type OperatorStat } from "@/hooks/useDashOperacoes";
 import { METAS } from "@/lib/metas";
+import { DataCard, DataCardHeader, DataCardRow } from "@/components/ui/DataCard";
 
 interface Props {
   operadores: OperatorStat[];
@@ -52,7 +53,7 @@ export const RankingTable = ({ operadores, onOperatorClick }: Props) => {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-muted/50">
             <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -147,6 +148,39 @@ export const RankingTable = ({ operadores, onOperatorClick }: Props) => {
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: cards */}
+      <div className="space-y-2 md:hidden">
+        {rows.map((r, i) => {
+          const meta = r.pctNoPrazo - METAS.slaNoPrazo;
+          const okMeta = meta >= 0;
+          return (
+            <button
+              key={r.op.nome}
+              type="button"
+              onClick={() => onOperatorClick?.(r.op)}
+              className={cn("block w-full text-left", !onOperatorClick && "cursor-default")}
+            >
+              <DataCard>
+                <DataCardHeader right={<span className={cn("font-numeric text-base font-bold tabular-nums", okMeta ? "text-success" : "text-destructive")}>{r.pctNoPrazo.toFixed(0)}%</span>}>
+                  <span className="font-numeric text-muted-foreground">{i + 1}.</span> {r.op.nome}
+                </DataCardHeader>
+                <DataCardRow label="Ativos">{r.op.ativos}</DataCardRow>
+                <DataCardRow label="vs. meta SLA">
+                  <span className={okMeta ? "text-success" : "text-destructive"}>{meta >= 0 ? "+" : ""}{meta.toFixed(0)}pp</span>
+                </DataCardRow>
+                <DataCardRow label="% crítico">
+                  <span className={r.pctCritico > METAS.maxCritico ? "font-bold text-destructive" : undefined}>{r.pctCritico.toFixed(0)}%</span>
+                </DataCardRow>
+                <DataCardRow label="SLA médio">
+                  <span className={r.op.tempoMedio > METAS.tempoMedioMax ? "font-semibold text-destructive" : undefined}>{r.op.tempoMedio.toFixed(1)}d</span>
+                </DataCardRow>
+                <DataCardRow label="MRR">{fmtBRL(r.op.mrr)}</DataCardRow>
+              </DataCard>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

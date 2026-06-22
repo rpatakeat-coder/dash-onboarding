@@ -3,6 +3,7 @@ import { Flame, ExternalLink } from "lucide-react";
 import { computeRisk } from "@/lib/risk";
 import { fmtBRL, slaBand, SLA_BAND_META, type DashRow } from "@/hooks/useDashOperacoes";
 import { useDealDrawer } from "@/contexts/DealDrawer";
+import { DataCard, DataCardHeader, DataCardRow } from "@/components/ui/DataCard";
 
 interface Props {
   rows: DashRow[];
@@ -99,7 +100,7 @@ export const RiskRanking = ({ rows, limit = 10, variant = "table" }: Props) => {
           dias × etapa × perfil × MRR
         </span>
       </div>
-      <div className="-mx-1 overflow-x-auto rounded-lg border border-border sm:mx-0">
+      <div className="hidden -mx-1 overflow-x-auto rounded-lg border border-border sm:mx-0 md:block">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="bg-muted/40">
             <tr className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
@@ -171,6 +172,29 @@ export const RiskRanking = ({ rows, limit = 10, variant = "table" }: Props) => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: cards */}
+      <div className="space-y-2 md:hidden">
+        {top.map((it, i) => {
+          const meta = SLA_BAND_META[slaBand(slaOf(it.row))];
+          return (
+            <button key={it.row.id_deal} type="button" onClick={() => open(it.row)} className="block w-full text-left">
+              <DataCard>
+                <DataCardHeader right={<span className={`inline-flex items-center rounded-full border px-2 py-0.5 font-numeric text-[11px] font-semibold tabular-nums ${BAND_TONE[it.band]}`}>{it.score.toFixed(0)}</span>}>
+                  <span className="font-numeric text-muted-foreground">{i + 1}.</span> {it.row.nome_negocio?.trim() || "—"}
+                </DataCardHeader>
+                <DataCardRow label="Ativador">{it.row.agente_ativacao?.trim() || "—"}</DataCardRow>
+                <DataCardRow label="Etapa">{it.row.etapa_negocio?.trim() || "—"}</DataCardRow>
+                <DataCardRow label="SLA"><span className="font-numeric font-semibold tabular-nums" style={{ color: `hsl(var(${meta.cssVar}))` }}>{slaOf(it.row).toFixed(0)}d</span></DataCardRow>
+                <DataCardRow label="MRR">{fmtBRL(mrrOf(it.row))}</DataCardRow>
+              </DataCard>
+            </button>
+          );
+        })}
+        {!top.length && (
+          <p className="py-6 text-center text-sm text-muted-foreground">Sem dados.</p>
+        )}
       </div>
     </div>
   );

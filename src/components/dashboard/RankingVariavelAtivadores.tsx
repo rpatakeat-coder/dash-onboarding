@@ -4,6 +4,7 @@ import { InfoTooltip } from "./InfoTooltip";
 import { cn } from "@/lib/utils";
 import { useRankingExcluidos } from "@/hooks/useRankingExcluidos";
 import { normAgente } from "@/lib/rankingExclusao";
+import { DataCard, DataCardHeader, DataCardRow } from "@/components/ui/DataCard";
 import {
   parseDate,
   parseActivationDate,
@@ -252,7 +253,7 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[820px] text-sm">
           <thead className="bg-muted/50">
             <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -347,6 +348,38 @@ export const RankingVariavelAtivadores = ({ rows, onlyAgente }: Props) => {
           )}
 
         </table>
+      </div>
+
+      {/* Mobile: cards */}
+      <div className="space-y-2 md:hidden">
+        {tableRows.map((r, i) => (
+          <DataCard key={r.ativador}>
+            <DataCardHeader right={<span className={cn("font-numeric text-base font-bold tabular-nums", scoreColor(r.scoreFinal))}>{Math.round(r.scoreFinal)}</span>}>
+              <span className="font-numeric text-muted-foreground">{i + 1}.</span> {r.ativador}
+            </DataCardHeader>
+            <DataCardRow label="% MRR"><span className={scoreColor(r.pctMrr)}>{fmtPct(r.pctMrr)}</span></DataCardRow>
+            <DataCardRow label="% Clientes"><span className={scoreColor(r.pctClientes)}>{fmtPct(r.pctClientes)}</span></DataCardRow>
+            <DataCardRow label="% Churn"><span className={pctChurnColor(r.pctChurn)}>{fmtPct(r.pctChurn)}</span></DataCardRow>
+            <DataCardRow label="% do fixo"><span className={pctFixoColor(r.pctFixo)}>{r.pctFixo}%</span></DataCardRow>
+            <DataCardRow label="MRR ativ./criado">{fmtBRL(r.mrrAtivado)} / {fmtBRL(r.mrrCriadoAnterior)}</DataCardRow>
+            <DataCardRow label="Clientes ativ./criados">{r.clientesAtivados} / {r.clientesCriadosAnterior}</DataCardRow>
+            <DataCardRow label="Churn real/máx">{fmtBRL(r.churnReal)} / {fmtBRL(r.churnMax)}</DataCardRow>
+          </DataCard>
+        ))}
+        {!onlyAgente && (
+          <DataCard className="border-primary/30 bg-primary/5">
+            <DataCardHeader right={<span className={cn("font-numeric text-base font-bold tabular-nums", scoreColor(team.scoreFinal))}>{Math.round(team.scoreFinal)}</span>}>
+              Time (consolidado)
+            </DataCardHeader>
+            <DataCardRow label="% MRR"><span className={scoreColor(team.pctMrr)}>{fmtPct(team.pctMrr)}</span></DataCardRow>
+            <DataCardRow label="% Clientes"><span className={scoreColor(team.pctClientes)}>{fmtPct(team.pctClientes)}</span></DataCardRow>
+            <DataCardRow label="% Churn"><span className={pctChurnColor(team.pctChurn)}>{fmtPct(team.pctChurn)}</span></DataCardRow>
+            <DataCardRow label="% do fixo"><span className={pctFixoColor(team.pctFixo)}>{team.pctFixo}%</span></DataCardRow>
+            <DataCardRow label="MRR ativ./criado">{fmtBRL(team.mrrAtivado)} / {fmtBRL(team.mrrCriadoAnterior)}</DataCardRow>
+            <DataCardRow label="Clientes ativ./criados">{team.clientesAtivados} / {team.clientesCriadosAnterior}</DataCardRow>
+            <DataCardRow label="Churn real/máx">{fmtBRL(team.churnReal)} / {fmtBRL(team.churnMax)}</DataCardRow>
+          </DataCard>
+        )}
       </div>
 
       <p className="mt-3 text-[11px] text-muted-foreground">
