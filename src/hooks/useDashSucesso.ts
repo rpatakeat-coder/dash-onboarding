@@ -234,20 +234,42 @@ export const selectChurn = (rows: DashSucessoRow[]): ChurnStats => {
 // ---------- Hook ----------
 
 const fetchDashSucesso = async (): Promise<DashSucessoRow[]> => {
-  const pageSize = 1000;
-  let from = 0;
-  const all: DashSucessoRow[] = [];
-  // paginate to avoid 1000-row default cap
-  while (true) {
+  const PAGE = 1000;
+  const HARD_CAP = 100_000;
+
+  const fetchPage = async (from: number, size: number): Promise<DashSucessoRow[]> => {
     const { data, error } = await supabase
       .from("dash_sucesso")
       .select("*")
-      .range(from, from + pageSize - 1);
+      .order("id_deal", { ascending: true }) // ordem estável p/ paginação consistente
+      .range(from, from + size - 1);
     if (error) throw error;
-    if (!data || data.length === 0) break;
-    all.push(...data);
-    if (data.length < pageSize) break;
-    from += pageSize;
+    return data ?? [];
+  };
+
+  // Total p/ paralelizar (cai em sequencial se não vier).
+  const { count } = await supabase
+    .from("dash_sucesso")
+    .select("id_deal", { count: "exact", head: true });
+  const totalRows = Math.min(count ?? 0, HARD_CAP);
+
+  const first = await fetchPage(0, PAGE);
+  const step = first.length || PAGE;
+  const all: DashSucessoRow[] = [...first];
+  if (totalRows > step) {
+    const offsets: number[] = [];
+    for (let off = step; off < totalRows; off += step) offsets.push(off);
+    const pages = await Promise.all(offsets.map((off) => fetchPage(off, step)));
+    for (const batch of pages) all.push(...batch);
+  } else if (!totalRows && first.length === step) {
+    let from = step;
+    while (from < HARD_CAP) {
+      const batch = await fetchPage(from, step);
+      if (!batch.length) break;
+      all.push(...batch);
+      from += batch.length;
+      if (batch.length < step) break;
+    }
   }
   return all;
 };

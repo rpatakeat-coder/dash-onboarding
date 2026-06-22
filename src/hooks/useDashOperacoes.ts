@@ -645,37 +645,53 @@ export function useDashOperacoes() {
     queryKey: ["dash_operacoes"],
     queryFn: async (): Promise<DashData> => {
       // PostgREST normalmente entrega até 1000 por requisição, mas algumas
-      // configurações limitam a 100. Pedimos páginas grandes mas paginamos
-      // pelo tamanho REAL do lote recebido — assim funciona em ambos os casos.
+      // configurações limitam a 100. Sondamos a 1ª página p/ descobrir o tamanho
+      // REAL do lote e então buscamos as demais páginas EM PARALELO (mais rápido),
+      // sem distorcer dado: as mesmas linhas, só baixadas concorrentemente.
       const PAGE = 1000;
       const HARD_CAP = 100_000;
-      const all: DashRow[] = [];
       const { count, error: countError } = await supabase
         .from("dash_operacoes")
         .select("id_deal", { count: "exact", head: true });
       if (countError) throw countError;
-      const totalRows = count ?? 0;
-      let from = 0;
-      while (from < HARD_CAP) {
+      const totalRows = Math.min(count ?? 0, HARD_CAP);
+
+      const fetchPage = async (from: number, size: number): Promise<DashRow[]> => {
         const { data, error } = await supabase
           .from("dash_operacoes")
           .select("*")
           .order("id_deal", { ascending: true })
-          .range(from, from + PAGE - 1);
+          .range(from, from + size - 1);
         if (error) throw error;
-        const batch = (data ?? []) as unknown as DashRow[];
-        if (!batch.length) break;
-        all.push(...batch);
-        // Avança pelo tamanho real do lote (cobre o caso da API capar em 100).
-        from += batch.length;
-        // Critérios de parada: lote menor que o pedido OU já cobrimos o total conhecido.
-        if (batch.length < PAGE) break;
-        if (totalRows && all.length >= totalRows) break;
+        return (data ?? []) as unknown as DashRow[];
+      };
+
+      const first = await fetchPage(0, PAGE);
+      const step = first.length || PAGE; // tamanho real (cobre cap em 100)
+      const all: DashRow[] = [...first];
+      if (totalRows > step) {
+        // Total confiável → busca as páginas restantes em paralelo.
+        const offsets: number[] = [];
+        for (let off = step; off < totalRows; off += step) offsets.push(off);
+        const pages = await Promise.all(offsets.map((off) => fetchPage(off, step)));
+        for (const batch of pages) all.push(...batch);
+      } else if (!totalRows && first.length === step) {
+        // Total desconhecido mas 1ª página veio cheia → continua sequencial (seguro).
+        let from = step;
+        while (from < HARD_CAP) {
+          const batch = await fetchPage(from, step);
+          if (!batch.length) break;
+          all.push(...batch);
+          from += batch.length;
+          if (batch.length < step) break;
+        }
       }
       const agg = aggregate(all);
       return { ...agg, totalDb: totalRows };
     },
-    refetchInterval: 60_000,
+    // Atualiza em segundo plano a cada 5 min (só com a aba ativa) — antes era 1 min.
+    // O botão "Atualizar dados" continua trazendo o dado fresco na hora.
+    refetchInterval: 5 * 60_000,
   });
 }
 
