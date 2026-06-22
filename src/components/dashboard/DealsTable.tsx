@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { MultiSelectFilter } from "./MultiSelectFilter";
 import { ExportCsvButton } from "./ExportCsvButton";
+import { DataCard, DataCardHeader, DataCardRow } from "@/components/ui/DataCard";
 import { useDealDrawer } from "@/contexts/DealDrawer";
 import { cn } from "@/lib/utils";
 import { usePersistedSet } from "@/hooks/usePersistedSet";
@@ -304,7 +305,7 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
         ) : null}
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-border">
+      <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -434,6 +435,40 @@ export const DealsTable = ({ rows: rowsRaw, hideAtivadorFilter }: Props) => {
             })}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile: cards */}
+      <div className="space-y-2 md:hidden">
+        {pageRows.length === 0 && (
+          <p className="py-6 text-center text-sm text-muted-foreground">Nenhum cliente encontrado.</p>
+        )}
+        {pageRows.map((r) => {
+          const mrrHub = toNum(r.mrr);
+          const mrrAsaas = toNum(r.mrr_asaas);
+          const hasAsaas = (r.asaas_id?.trim() ?? "") !== "";
+          const delta = mrrAsaas - mrrHub;
+          const divergent = hasAsaas && Math.abs(delta) > EPS_DIV;
+          return (
+            <button key={r.id_deal} type="button" onClick={() => openDeal(r)} className="block w-full text-left">
+              <DataCard>
+                <DataCardHeader right={<span className="rounded border border-border bg-muted px-1.5 py-0.5 font-numeric text-xs">{perfilOf(r)}</span>}>
+                  {r.nome_negocio || "—"}
+                </DataCardHeader>
+                <DataCardRow label="Etapa">{r.etapa_negocio || "—"}</DataCardRow>
+                {!hideAtivadorFilter && <DataCardRow label="Ativador">{r.agente_ativacao || "—"}</DataCardRow>}
+                <DataCardRow label="SLA criação"><BandPill dias={toNum(r.sla_dias_criacao)} /></DataCardRow>
+                <DataCardRow label="SLA etapa"><BandPill dias={toNum(r.sla_dias_etapa)} /></DataCardRow>
+                <DataCardRow label="MRR Hub">{mrrHub > 0 ? fmtBRL0(mrrHub) : "—"}</DataCardRow>
+                <DataCardRow label="MRR Asaas">{hasAsaas ? fmtBRL0(mrrAsaas) : "—"}</DataCardRow>
+                <DataCardRow label="Δ Asaas−Hub">
+                  <span className={cn("font-numeric font-semibold", divergent && delta >= 0 && "text-success", divergent && delta < 0 && "text-destructive")}>
+                    {!hasAsaas ? "—" : divergent ? `${delta >= 0 ? "+" : ""}${fmtBRL0(delta)}` : "≈"}
+                  </span>
+                </DataCardRow>
+              </DataCard>
+            </button>
+          );
+        })}
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 font-subtitle text-xs text-muted-foreground">
