@@ -533,8 +533,8 @@ export default function SucessoChurn() {
 
   const { rowsRaw, isLoading } = useDashSucesso(useMemo(() => ({}), []));
 
-  // Filtro "Ocultar risco" (coluna risco_churn). Começa VAZIO (nada oculto);
-  // o usuário escolhe quais riscos esconder.
+  // Filtro "Risco churn" (coluna risco_churn) — whitelist, igual ao Ativador.
+  // Vazio = todos; selecionado = mostra só esses riscos.
   const [filtroRisco, setFiltroRisco] = usePersistedSet("sucesso:churn:risco");
 
   // Churn do período (etapa Churn) já recortado por data_fechamento — base, sem o filtro de risco.
@@ -551,12 +551,12 @@ export default function SucessoChurn() {
     }
     return { options: Object.keys(counts), counts };
   }, [churnPeriodoBase]);
-  // Oculta os riscos selecionados — cascateia para todas as abas/recortes.
+  // Mostra só os riscos selecionados (whitelist) — cascateia para todas as abas/recortes.
   const churnPeriodo = useMemo(
     () =>
       filtroRisco.size === 0
         ? churnPeriodoBase
-        : churnPeriodoBase.filter((r) => !filtroRisco.has(r.risco_churn?.trim() || "Sem risco")),
+        : churnPeriodoBase.filter((r) => filtroRisco.has(r.risco_churn?.trim() || "Sem risco")),
     [churnPeriodoBase, filtroRisco],
   );
   // Regra "Só Sucesso" (Visão Geral / MRR / Meu Desempenho).
@@ -605,7 +605,7 @@ export default function SucessoChurn() {
               </SelectContent>
             </Select>
             <MultiSelectFilter
-              label="Ocultar risco"
+              label="Risco churn"
               options={riscoOpts.options}
               selected={filtroRisco}
               onChange={setFiltroRisco}

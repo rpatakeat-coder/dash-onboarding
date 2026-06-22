@@ -46,8 +46,8 @@ export default function SucessoDashboard() {
   const [filtroEtapas, setFiltroEtapas] = usePersistedSet("sucesso:etapas");
   const [filtroPeriodo, setFiltroPeriodo] = useState<MacroPeriodKey>("tudo");
   const [filtroCustomRange, setFiltroCustomRange] = useState<CustomRange | null>(null);
-  // Filtro "Ocultar risco" (coluna risco_churn). Começa VAZIO (nada oculto);
-  // o usuário escolhe quais riscos esconder.
+  // Filtro "Risco churn" (coluna risco_churn) — whitelist, igual ao Ativador.
+  // Vazio = todos; selecionado = mostra só esses riscos.
   const [filtroRisco, setFiltroRisco] = usePersistedSet("sucesso:risco");
   // Filtro "somente sem Asaas ID" (persiste, como os demais filtros de Sucesso).
   const [semAsaas, setSemAsaas] = useState<boolean>(() => {
@@ -123,7 +123,7 @@ export default function SucessoDashboard() {
         periodo: filtroPeriodo,
         customRange: filtroCustomRange,
         semAsaasId: semAsaas,
-        ocultarRisco: filtroRisco,
+        riscoChurn: filtroRisco,
       }),
     [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange, semAsaas, filtroRisco],
   );
@@ -139,7 +139,7 @@ export default function SucessoDashboard() {
         ocultarEtapas,
         periodo: filtroPeriodo,
         customRange: filtroCustomRange,
-        ocultarRisco: filtroRisco,
+        riscoChurn: filtroRisco,
       }).filter((r) => !(r.asaas_id ?? "").trim()),
     [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange, filtroRisco],
   );
@@ -179,7 +179,7 @@ export default function SucessoDashboard() {
         agentes: filtroAgentes,
         periodo: filtroPeriodo,
         customRange: filtroCustomRange,
-        ocultarRisco: filtroRisco,
+        riscoChurn: filtroRisco,
       }),
     [rowsRaw, filtroAgentes, filtroPeriodo, filtroCustomRange, filtroRisco],
   );
@@ -230,13 +230,13 @@ export default function SucessoDashboard() {
           onCustomRangeChange={setFiltroCustomRange}
         />
 
-        {/* Filtro por Risco de churn (coluna risco_churn) — mesmo padrão do "Ocultar fase". */}
+        {/* Filtro por Risco de churn (coluna risco_churn) — whitelist, igual ao Ativador. */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
-            Ocultar risco:
+            Risco churn:
           </span>
           <MultiSelectFilter
-            label="Ocultar risco"
+            label="Risco churn"
             options={riscoOpts.options}
             selected={filtroRisco}
             onChange={setFiltroRisco}

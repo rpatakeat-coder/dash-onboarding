@@ -327,8 +327,8 @@ export interface SucessoFilter {
   perfilGrupo?: "P+M" | "G+GG" | null;
   /** Quando true, mantém só clientes SEM asaas_id (cobrança Asaas não vinculada). */
   semAsaasId?: boolean;
-  /** Riscos de churn a OCULTAR (coluna risco_churn). Mesmo padrão do "Ocultar fase". */
-  ocultarRisco?: Set<string>;
+  /** Whitelist de Risco de churn (coluna risco_churn). Vazio = todos. Igual ao Ativador. */
+  riscoChurn?: Set<string>;
 }
 
 // Datas BR (DD/MM/YYYY) — reaproveita o parser flexível (ver parseDataFlex).
@@ -377,7 +377,7 @@ export const applySucessoFilter = (
   const oc = filter.ocultarEtapas && filter.ocultarEtapas.size > 0 ? filter.ocultarEtapas : null;
   const pg = filter.perfilGrupo ?? null;
   const semAsaas = filter.semAsaasId ?? false;
-  const rc = filter.ocultarRisco && filter.ocultarRisco.size > 0 ? filter.ocultarRisco : null;
+  const rc = filter.riscoChurn && filter.riscoChurn.size > 0 ? filter.riscoChurn : null;
   if (!ag && !oc && !range && !pg && !semAsaas && !rc) return rows;
   return rows.filter((r) => {
     if (ag) {
@@ -401,7 +401,7 @@ export const applySucessoFilter = (
     }
     if (rc) {
       const v = r.risco_churn?.trim() || "Sem risco";
-      if (rc.has(v)) return false; // ocultar os riscos selecionados
+      if (!rc.has(v)) return false; // mostra só os riscos selecionados (whitelist)
     }
     return true;
   });
