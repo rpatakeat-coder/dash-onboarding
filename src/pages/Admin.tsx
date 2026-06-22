@@ -452,7 +452,7 @@ const AdminOperators = () => {
       </div>
 
       <div className="rounded-2xl border border-border bg-card">
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-muted/40 text-left">
               <tr>
@@ -572,6 +572,69 @@ const AdminOperators = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile: cards */}
+        <div className="space-y-2 p-3 md:hidden">
+          {loading && <div className="py-8 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" /></div>}
+          {!loading && list.length === 0 && (
+            <p className="py-8 text-center text-muted-foreground">Nenhum operador cadastrado.</p>
+          )}
+          {!loading && list.map((op) => {
+            const isMe = op.user_id === user?.id;
+            const targetIsPrivileged = op.role === "admin" || op.role === "super_admin";
+            const canModify = !targetIsPrivileged || isSuperAdmin;
+            const lockReason = !canModify ? "Apenas super-admin pode alterar admins" : undefined;
+            return (
+              <DataCard key={op.user_id}>
+                <DataCardHeader right={
+                  <span className={`rounded-full border px-2 py-0.5 text-[11px] ${
+                    op.role === "super_admin" ? "border-amber-500/40 bg-amber-500/10 text-amber-500"
+                    : op.role === "admin" ? "border-primary/30 bg-primary/10 text-primary"
+                    : "border-border bg-muted text-foreground"
+                  }`}>{op.role === "super_admin" ? "super-admin" : op.role}</span>
+                }>
+                  {op.full_name || "Sem nome"}
+                  {isMe && <span className="ml-2 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary">você</span>}
+                </DataCardHeader>
+                <DataCardRow label="Email">{op.email ?? "—"}</DataCardRow>
+                <DataCardRow label="Agente HubSpot">{op.agente_ativacao || "—"}</DataCardRow>
+                <DataCardRow label="Status">
+                  {op.has_password ? (
+                    <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-500">Ativo</span>
+                  ) : op.last_sign_in_at || op.email_confirmed_at ? (
+                    <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-500">Convite aberto</span>
+                  ) : (
+                    <span className="rounded-full border border-muted-foreground/30 bg-muted px-2 py-0.5 text-xs text-muted-foreground">Pendente</span>
+                  )}
+                </DataCardRow>
+                <DataCardRow label="Criado em">{new Date(op.created_at).toLocaleDateString("pt-BR")}</DataCardRow>
+                <div className="mt-2 flex items-center justify-end gap-1 border-t border-border/50 pt-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" variant="ghost" disabled={resendId === op.user_id || !canModify} className="gap-1.5" title={lockReason}>
+                        {resendId === op.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                        Reenviar
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-52">
+                      <DropdownMenuLabel className="text-xs">Reenviar convite via</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => resend(op, ["email"])}><Mail className="mr-2 h-3.5 w-3.5" /> Email</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => resend(op, ["whatsapp"])}><MessageCircle className="mr-2 h-3.5 w-3.5" /> WhatsApp</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => resend(op, ["email", "whatsapp"])}><Send className="mr-2 h-3.5 w-3.5" /> Email + WhatsApp</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => resend(op, ["link_only"])}><Link2 className="mr-2 h-3.5 w-3.5" /> Apenas copiar link</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button size="sm" variant="ghost" disabled={delId === op.user_id || isMe || !canModify} onClick={() => remove(op)} className="gap-1.5 text-destructive hover:text-destructive" title={isMe ? "Você não pode excluir a si mesmo" : lockReason}>
+                    {delId === op.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                    Excluir
+                  </Button>
+                </div>
+              </DataCard>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -768,7 +831,7 @@ const AdminUsers = () => {
 
   return (
     <div className="rounded-2xl border border-border bg-card">
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-muted/40 text-left">
             <tr>
@@ -950,6 +1013,82 @@ const AdminUsers = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: cards */}
+      <div className="space-y-2 p-3 md:hidden">
+        {users.length === 0 && (
+          <p className="py-8 text-center text-muted-foreground">Nenhum usuário encontrado.</p>
+        )}
+        {users.map((u) => {
+          const isMe = u.id === user?.id;
+          const isAdmin = u.rawRole === "admin" || u.rawRole === "super_admin";
+          const isTargetSuper = u.rawRole === "super_admin";
+          const canDelete = !isMe && (!isTargetSuper || iAmSuperAdmin);
+          const team = u.equipe === "sucesso" ? "sucesso" : u.equipe === "onboarding" ? "onboarding" : null;
+          const opts = team ? hubspotAgents.filter((a) => a.equipe === team) : hubspotAgents;
+          const cur = u.agente_ativacao ?? "";
+          const curMissing = cur !== "" && !opts.some((a) => a.name === cur);
+          return (
+            <DataCard key={u.id}>
+              <DataCardHeader right={iAmAdmin && editProfileId !== u.id ? (
+                <button type="button" onClick={() => { setEditProfileId(u.id); setEditProfileName(u.full_name ?? ""); setEditProfileAvatar(u.avatar_url ?? ""); }} className="rounded border border-dashed border-border px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground hover:border-primary hover:text-primary">editar</button>
+              ) : undefined}>
+                <span className="inline-flex items-center gap-2">
+                  {u.avatar_url ? <img src={u.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" /> : <span className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{(u.full_name || "?").slice(0, 1).toUpperCase()}</span>}
+                  {u.full_name || "Sem nome"}
+                  {isMe && <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary">você</span>}
+                </span>
+              </DataCardHeader>
+              {editProfileId === u.id && (
+                <div className="flex flex-col gap-1.5 border-t border-border/50 py-2">
+                  <Input value={editProfileName} onChange={(e) => setEditProfileName(e.target.value)} placeholder="Nome completo" className="h-8 text-xs" autoFocus />
+                  <Input value={editProfileAvatar} onChange={(e) => setEditProfileAvatar(e.target.value)} placeholder="URL da foto (https://…)" className="h-8 text-xs" />
+                  <div className="flex items-center gap-1.5">
+                    <Button size="sm" onClick={() => saveProfile(u)} disabled={savingProfile || uploadingAvatar} className="h-7 px-2 text-xs">{savingProfile ? <Loader2 className="h-3 w-3 animate-spin" /> : "Salvar"}</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setEditProfileId(null)} className="h-7 px-2 text-xs">Cancelar</Button>
+                  </div>
+                </div>
+              )}
+              <DataCardRow label="Acesso">
+                {u.rawRole === "super_admin" ? (
+                  <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-500">Super-admin</span>
+                ) : (
+                  <select
+                    value={roleEquipeToAcesso(u.rawRole, u.equipe ?? null)}
+                    onChange={(e) => saveAcesso(u, e.target.value as AcessoOption)}
+                    disabled={busyId === u.id || isMe || (isAdmin && !iAmSuperAdmin)}
+                    className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground disabled:opacity-50"
+                  >
+                    <option value="onboarding">{ACESSO_LABELS.onboarding}</option>
+                    <option value="sucesso">{ACESSO_LABELS.sucesso}</option>
+                    <option value="viewer">{ACESSO_LABELS.viewer}</option>
+                    <option value="gestor" disabled={!iAmSuperAdmin}>{ACESSO_LABELS.gestor}</option>
+                  </select>
+                )}
+              </DataCardRow>
+              <DataCardRow label="Agente">
+                <select
+                  value={cur}
+                  onChange={(e) => saveAgente(u, e.target.value)}
+                  disabled={savingAgente === u.id}
+                  className="h-8 max-w-[200px] rounded-md border border-border bg-background px-2 text-xs text-foreground disabled:opacity-50"
+                >
+                  <option value="">Sem agente</option>
+                  {curMissing && <option value={cur}>{cur} (fora do time)</option>}
+                  {opts.map((a) => <option key={a.name} value={a.name}>{a.name}</option>)}
+                </select>
+              </DataCardRow>
+              <DataCardRow label="Criado em">{new Date(u.created_at).toLocaleDateString("pt-BR")}</DataCardRow>
+              <div className="mt-2 flex justify-end border-t border-border/50 pt-2">
+                <Button size="sm" variant="ghost" disabled={delId === u.id || !canDelete} onClick={() => removeUser(u)} className="gap-1.5 text-destructive hover:text-destructive">
+                  {delId === u.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                  Excluir
+                </Button>
+              </div>
+            </DataCard>
+          );
+        })}
       </div>
     </div>
   );
