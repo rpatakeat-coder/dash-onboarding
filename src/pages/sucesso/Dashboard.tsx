@@ -4,6 +4,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Switch } from "@/components/ui/switch";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { MacroFilters, type MacroPeriodKey, type CustomRange } from "@/components/dashboard/MacroFilters";
+import { MultiSelectFilter } from "@/components/dashboard/MultiSelectFilter";
 import { CarteiraPorAgente } from "@/components/sucesso/CarteiraPorAgente";
 import { RiscoEstoque } from "@/components/sucesso/RiscoEstoque";
 import { ChurnSucesso } from "@/components/sucesso/ChurnSucesso";
@@ -45,6 +46,8 @@ export default function SucessoDashboard() {
   const [filtroEtapas, setFiltroEtapas] = usePersistedSet("sucesso:etapas");
   const [filtroPeriodo, setFiltroPeriodo] = useState<MacroPeriodKey>("tudo");
   const [filtroCustomRange, setFiltroCustomRange] = useState<CustomRange | null>(null);
+  // Filtro por Risco de churn (coluna risco_churn de dash_sucesso).
+  const [filtroRisco, setFiltroRisco] = usePersistedSet("sucesso:risco");
   // Filtro "somente sem Asaas ID" (persiste, como os demais filtros de Sucesso).
   const [semAsaas, setSemAsaas] = useState<boolean>(() => {
     try {
@@ -93,6 +96,16 @@ export default function SucessoDashboard() {
     [rowsRaw],
   );
 
+  // Opções e contagem do filtro "Risco churn" (derivadas dos dados).
+  const riscoOpts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const r of rowsRaw) {
+      const v = r.risco_churn?.trim() || "Sem risco";
+      counts[v] = (counts[v] ?? 0) + 1;
+    }
+    return { options: Object.keys(counts), counts };
+  }, [rowsRaw]);
+
   // Conjunto EFETIVO de etapas ocultas: default (Estorno + Churn) até o usuário
   // personalizar; depois disso, exatamente o que ele escolheu (inclusive vazio).
   const ocultarEtapas = useMemo(
@@ -109,8 +122,9 @@ export default function SucessoDashboard() {
         periodo: filtroPeriodo,
         customRange: filtroCustomRange,
         semAsaasId: semAsaas,
+        riscoChurn: filtroRisco,
       }),
-    [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange, semAsaas],
+    [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange, semAsaas, filtroRisco],
   );
   const carteira = useMemo(() => selectCarteira(rows), [rows]);
 
@@ -124,8 +138,9 @@ export default function SucessoDashboard() {
         ocultarEtapas,
         periodo: filtroPeriodo,
         customRange: filtroCustomRange,
+        riscoChurn: filtroRisco,
       }).filter((r) => !(r.asaas_id ?? "").trim()),
-    [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange],
+    [rowsRaw, filtroAgentes, ocultarEtapas, filtroPeriodo, filtroCustomRange, filtroRisco],
   );
   const semAsaasCount = semAsaasRows.length;
 
@@ -163,8 +178,9 @@ export default function SucessoDashboard() {
         agentes: filtroAgentes,
         periodo: filtroPeriodo,
         customRange: filtroCustomRange,
+        riscoChurn: filtroRisco,
       }),
-    [rowsRaw, filtroAgentes, filtroPeriodo, filtroCustomRange],
+    [rowsRaw, filtroAgentes, filtroPeriodo, filtroCustomRange, filtroRisco],
   );
 
   // Adapter: MacroFilters tipa em DashRow (Onboarding). Mapeamos só o necessário.
@@ -212,6 +228,20 @@ export default function SucessoDashboard() {
           customRange={filtroCustomRange}
           onCustomRangeChange={setFiltroCustomRange}
         />
+
+        {/* Filtro por Risco de churn (coluna risco_churn). */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-subtitle text-[11px] uppercase tracking-widest text-muted-foreground">
+            Risco churn:
+          </span>
+          <MultiSelectFilter
+            label="Risco churn"
+            options={riscoOpts.options}
+            selected={filtroRisco}
+            onChange={setFiltroRisco}
+            counts={riscoOpts.counts}
+          />
+        </div>
 
         {/* Filtro específico de Sucesso: clientes sem Asaas ID (cobrança não vinculada). */}
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">

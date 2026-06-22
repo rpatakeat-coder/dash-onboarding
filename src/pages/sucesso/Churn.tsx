@@ -38,6 +38,8 @@ import {
 } from "@/hooks/useDashSucesso";
 import { hubspotDealUrl } from "@/lib/hubspot";
 import { DataCard, DataCardHeader, DataCardRow } from "@/components/ui/DataCard";
+import { MultiSelectFilter } from "@/components/dashboard/MultiSelectFilter";
+import { usePersistedSet } from "@/hooks/usePersistedSet";
 import { cn } from "@/lib/utils";
 
 const MONTHS_PT = [
@@ -531,10 +533,30 @@ export default function SucessoChurn() {
 
   const { rowsRaw, isLoading } = useDashSucesso(useMemo(() => ({}), []));
 
-  // Churn do período (etapa Churn) já recortado por data_fechamento.
-  const churnPeriodo = useMemo(
+  // Filtro por Risco de churn (coluna risco_churn).
+  const [filtroRisco, setFiltroRisco] = usePersistedSet("sucesso:churn:risco");
+
+  // Churn do período (etapa Churn) já recortado por data_fechamento — base, sem o filtro de risco.
+  const churnPeriodoBase = useMemo(
     () => rowsRaw.filter((r) => norm(r.etapa_negocio) === "churn" && matchPeriodo(r.data_fechamento, month, year)),
     [rowsRaw, month, year],
+  );
+  // Opções do filtro de risco derivadas do churn do período.
+  const riscoOpts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const r of churnPeriodoBase) {
+      const v = r.risco_churn?.trim() || "Sem risco";
+      counts[v] = (counts[v] ?? 0) + 1;
+    }
+    return { options: Object.keys(counts), counts };
+  }, [churnPeriodoBase]);
+  // Aplica o filtro de risco — cascateia para todas as abas/recortes.
+  const churnPeriodo = useMemo(
+    () =>
+      filtroRisco.size === 0
+        ? churnPeriodoBase
+        : churnPeriodoBase.filter((r) => filtroRisco.has(r.risco_churn?.trim() || "Sem risco")),
+    [churnPeriodoBase, filtroRisco],
   );
   // Regra "Só Sucesso" (Visão Geral / MRR / Meu Desempenho).
   const churnSucesso = useMemo(
@@ -581,6 +603,13 @@ export default function SucessoChurn() {
                 {years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
               </SelectContent>
             </Select>
+            <MultiSelectFilter
+              label="Risco churn"
+              options={riscoOpts.options}
+              selected={filtroRisco}
+              onChange={setFiltroRisco}
+              counts={riscoOpts.counts}
+            />
             <RefreshDataButton event="atualizar_dados_sucesso" invalidateKey="dash_sucesso" />
           </div>
         </div>

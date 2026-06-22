@@ -850,6 +850,7 @@ export type Database = {
           nome_negocio: string | null
           perfil_cliente: string | null
           pipeline_nome: string
+          risco_churn: string | null
           updated_at: string
         }
         Insert: {
@@ -868,6 +869,7 @@ export type Database = {
           nome_negocio?: string | null
           perfil_cliente?: string | null
           pipeline_nome?: string
+          risco_churn?: string | null
           updated_at?: string
         }
         Update: {
@@ -886,6 +888,7 @@ export type Database = {
           nome_negocio?: string | null
           perfil_cliente?: string | null
           pipeline_nome?: string
+          risco_churn?: string | null
           updated_at?: string
         }
         Relationships: []
