@@ -9,6 +9,7 @@ import { fmtBRL, fmtPct, grupoPerfil, type DashSucessoRow } from "@/hooks/useDas
 import { cn } from "@/lib/utils";
 import { hubspotDealUrl } from "@/lib/hubspot";
 import { SucessoClientesModal } from "@/components/sucesso/SucessoClientesModal";
+import { DataCard, DataCardHeader, DataCardRow } from "@/components/ui/DataCard";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
@@ -451,7 +452,7 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
             </p>
           </div>
         </div>
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[720px] text-sm">
             <thead className="bg-muted/50">
               <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -504,6 +505,29 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
             </tbody>
           </table>
         </div>
+
+        {/* Mobile: cards (clicar filtra a lista por agente) */}
+        <div className="space-y-2 md:hidden">
+          {ranking.map((r, i) => {
+            const isActive = agenteSel === r.agente;
+            return (
+              <button key={r.agente} type="button" onClick={() => toggleAgente(r.agente)} aria-pressed={isActive} className="block w-full text-left">
+                <DataCard className={isActive ? "border-primary ring-1 ring-primary/40" : undefined}>
+                  <DataCardHeader right={<span className="font-numeric text-xs text-muted-foreground">#{i + 1}</span>}>
+                    {isActive && <span className="mr-1.5 text-primary">●</span>}
+                    {r.agente}
+                  </DataCardHeader>
+                  <DataCardRow label="Qtd churns">{fmtN(r.qtd)}</DataCardRow>
+                  <DataCardRow label="MRR perdido">{fmtBRL(r.mrr)}</DataCardRow>
+                  <DataCardRow label="% do churn">{fmtPct(r.pctRep, 1)}</DataCardRow>
+                </DataCard>
+              </button>
+            );
+          })}
+          {!ranking.length && (
+            <p className="py-6 text-center text-sm text-muted-foreground">Nenhum churn no período selecionado.</p>
+          )}
+        </div>
       </div>
 
       {/* Lista detalhada — filtrada pelos filtros locais (perfil + agente) */}
@@ -523,7 +547,7 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
             </p>
           </div>
         </div>
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[720px] text-sm">
             <thead className="bg-muted/50">
               <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -567,6 +591,33 @@ export const ChurnSucesso = ({ rows, qtdPMTotal, qtdGGGTotal, mrrPMTotal, mrrGGG
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile: cards */}
+        <div className="space-y-2 md:hidden">
+          {pageRows.map((r) => (
+            <DataCard key={r.id_deal ?? r.asaas_id ?? r.nome_negocio}>
+              <DataCardHeader>
+                <a
+                  href={hubspotDealUrl(r.id_deal)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group/hs inline-flex items-center gap-1 text-foreground transition hover:text-primary hover:underline"
+                  title="Abrir no HubSpot"
+                >
+                  {r.nome_negocio ?? "—"}
+                  <ExternalLink className="h-3 w-3 text-muted-foreground transition group-hover/hs:text-primary" />
+                </a>
+              </DataCardHeader>
+              <DataCardRow label="Perfil">{r.perfil_cliente ?? "—"}</DataCardRow>
+              <DataCardRow label="Agente">{r.agente_sucesso?.trim() || "Sem responsável"}</DataCardRow>
+              <DataCardRow label="MRR">{fmtBRL(num(r.mrr))}</DataCardRow>
+              <DataCardRow label="Fechado em">{fmtFechado(r.data_fechamento)}</DataCardRow>
+            </DataCard>
+          ))}
+          {!filteredRows.length && (
+            <p className="py-6 text-center text-sm text-muted-foreground">Nenhum deal corresponde aos filtros desta seção.</p>
+          )}
         </div>
 
         {filteredSorted.length > 0 && (

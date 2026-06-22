@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { fmtBRL } from "@/hooks/useDashSucesso";
+import { DataCard, DataCardHeader, DataCardRow } from "@/components/ui/DataCard";
 
 type UpsellRow = Database["public"]["Tables"]["dash_upsell"]["Row"];
 
@@ -174,7 +175,7 @@ export const UpsellSucesso = () => {
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+      <div className="hidden overflow-x-auto rounded-2xl border border-border bg-card md:block">
         <table className="w-full min-w-[920px] text-sm">
           <thead className="bg-muted/50">
             <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -211,6 +212,33 @@ export const UpsellSucesso = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: cards + ordenação */}
+      <div className="md:hidden">
+        <div className="mb-2 flex items-center gap-2 font-subtitle text-xs text-muted-foreground">
+          <span>Ordenar:</span>
+          <button type="button" onClick={() => toggleSort("mrr")} className="rounded-full border border-border px-2.5 py-1 hover:border-primary/40">MRR{arrow("mrr")}</button>
+          <button type="button" onClick={() => toggleSort("data")} className="rounded-full border border-border px-2.5 py-1 hover:border-primary/40">Data{arrow("data")}</button>
+        </div>
+        <div className="space-y-2">
+          {pageRows.map((r, i) => (
+            <DataCard key={`${txt(r.cliente)}-m-${pageSafe * pageSize + i}`}>
+              <DataCardHeader right={<span className="font-numeric text-sm font-semibold text-foreground">{fmtBRL(mrrOf(r))}</span>}>
+                {txt(r.cliente) || "—"}
+              </DataCardHeader>
+              <DataCardRow label="Vendedor">{txt(r.vendedor) || "—"}</DataCardRow>
+              <DataCardRow label="Pagamento">{txt(r.forma_pagamento) || "—"}</DataCardRow>
+              <DataCardRow label="Período">{txt(r.periodo) || "—"}</DataCardRow>
+              <DataCardRow label="Adicionais">{txt(r.adicionais) || "—"}</DataCardRow>
+              <DataCardRow label="Data">{fmtData(r.data)}</DataCardRow>
+            </DataCard>
+          ))}
+          {!isLoading && sorted.length === 0 && (
+            <p className="py-6 text-center text-muted-foreground">Nenhum upsell encontrado.</p>
+          )}
+          {isLoading && <p className="py-6 text-center text-muted-foreground">Carregando…</p>}
+        </div>
       </div>
 
       {sorted.length > 0 && (

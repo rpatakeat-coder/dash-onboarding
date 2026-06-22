@@ -37,6 +37,7 @@ import {
   type DashSucessoRow,
 } from "@/hooks/useDashSucesso";
 import { hubspotDealUrl } from "@/lib/hubspot";
+import { DataCard, DataCardHeader, DataCardRow } from "@/components/ui/DataCard";
 import { cn } from "@/lib/utils";
 
 const MONTHS_PT = [
@@ -216,7 +217,7 @@ const ClientesTable = ({ rows, hideAgente }: { rows: DashSucessoRow[]; hideAgent
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+      <div className="hidden overflow-x-auto rounded-2xl border border-border bg-card md:block">
         <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-muted/50">
             <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -261,6 +262,40 @@ const ClientesTable = ({ rows, hideAgente }: { rows: DashSucessoRow[]; hideAgent
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: cards + ordenação */}
+      <div className="md:hidden">
+        <div className="mb-2 flex items-center gap-2 font-subtitle text-xs text-muted-foreground">
+          <span>Ordenar:</span>
+          <button type="button" onClick={() => toggleSort("mrr")} className="rounded-full border border-border px-2.5 py-1 hover:border-primary/40">MRR{arrow("mrr")}</button>
+          <button type="button" onClick={() => toggleSort("perfil")} className="rounded-full border border-border px-2.5 py-1 hover:border-primary/40">Perfil{arrow("perfil")}</button>
+        </div>
+        <div className="space-y-2">
+          {pageRows.map((r, i) => (
+            <DataCard key={`${r.id_deal}-${i}`}>
+              <DataCardHeader>
+                <a
+                  href={hubspotDealUrl(r.id_deal)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group/hs inline-flex items-center gap-1 text-foreground transition hover:text-primary hover:underline"
+                  title="Abrir no HubSpot"
+                >
+                  {r.nome_negocio ?? "—"}
+                  <ExternalLink className="h-3 w-3 text-muted-foreground transition group-hover/hs:text-primary" />
+                </a>
+              </DataCardHeader>
+              <DataCardRow label="Perfil">{r.perfil_cliente ?? "—"}</DataCardRow>
+              <DataCardRow label="Agente">{r.agente_sucesso?.trim() || "Sem responsável"}</DataCardRow>
+              <DataCardRow label="MRR">{fmtBRL(num(r.mrr))}</DataCardRow>
+              <DataCardRow label="Fechado em">{fmtFechado(r.data_fechamento)}</DataCardRow>
+            </DataCard>
+          ))}
+          {sorted.length === 0 && (
+            <p className="py-6 text-center text-muted-foreground">Nenhum churn no período.</p>
+          )}
+        </div>
       </div>
       {sorted.length > 0 && (
         <PaginationBar total={sorted.length} page={pageSafe} pageSize={pageSize} totalPages={totalPages} setPage={setPage} setPageSize={setPageSize} />
@@ -372,7 +407,7 @@ const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
         {filtered.length.toLocaleString("pt-BR")} de {rows.length.toLocaleString("pt-BR")} churns
       </p>
 
-      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+      <div className="hidden overflow-x-auto rounded-2xl border border-border bg-card md:block">
         <table className="w-full min-w-[820px] text-sm">
           <thead className="bg-muted/50">
             <tr className="font-subtitle text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -411,6 +446,36 @@ const MotivosTab = ({ rows }: { rows: DashSucessoRow[] }) => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: cards (toque abre o detalhe) */}
+      <div className="space-y-2 md:hidden">
+        {pageRows.map((r, i) => {
+          const ms = motivosForNivel(r, nivel);
+          return (
+            <button key={`${r.id_deal}-${i}`} type="button" onClick={() => setDetalhe(r)} className="block w-full text-left">
+              <DataCard>
+                <DataCardHeader>{r.nome_negocio ?? "—"}</DataCardHeader>
+                <DataCardRow label={`Motivo (${NIVEL_LABEL[nivel]})`}>
+                  {ms.length ? (
+                    <span className="flex flex-wrap justify-end gap-1">
+                      {ms.map((m, j) => (
+                        <span key={j} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] text-foreground">{m}</span>
+                      ))}
+                    </span>
+                  ) : "—"}
+                </DataCardRow>
+                <DataCardRow label="Perfil">{r.perfil_cliente ?? "—"}</DataCardRow>
+                <DataCardRow label="Agente">{r.agente_sucesso?.trim() || "Sem responsável"}</DataCardRow>
+                <DataCardRow label="Etapa cancelamento">{r.etapa_de_cancelamento?.trim() || "—"}</DataCardRow>
+                <DataCardRow label="Ativação">{fmtFechado(r.data_ativacao)}</DataCardRow>
+              </DataCard>
+            </button>
+          );
+        })}
+        {filtered.length === 0 && (
+          <p className="py-6 text-center text-muted-foreground">Nenhum churn corresponde aos filtros.</p>
+        )}
       </div>
 
       {filtered.length > 0 && (
