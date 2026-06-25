@@ -20,18 +20,18 @@ interface RestaurantTableProps {
 
 // Status badge per rule-based band — soft tinted pill + a saturated status dot.
 const BADGE: Record<RiskBandKey, { pill: string; dot: string }> = {
-  critico: { pill: 'bg-brand-soft text-[#B91D18]', dot: '#D12B27' },
-  alerta: { pill: 'bg-[#FFF7EC] text-[#8A5A07]', dot: '#E8920C' },
-  ativo: { pill: 'bg-[#E7F6EF] text-[#0F7A50]', dot: '#18A06B' },
-  nunca_movimentou: { pill: 'bg-[#F1EFEC] text-faint', dot: '#ABA59E' },
-  recem_criado: { pill: 'bg-[#EAF1FE] text-[#2C5AB8]', dot: '#3D7BF0' },
+  critico: { pill: 'bg-brand-soft text-destructive', dot: '#D12B27' },
+  alerta: { pill: 'bg-warning/10 text-warning', dot: '#E8920C' },
+  ativo: { pill: 'bg-success/10 text-success', dot: '#18A06B' },
+  nunca_movimentou: { pill: 'bg-muted text-faint', dot: '#ABA59E' },
+  recem_criado: { pill: 'bg-primary/10 text-primary', dot: '#3D7BF0' },
 }
 
 // ML churn tier → pill + value color.
 const FAIXA: Record<ChurnFaixa, { pill: string; text: string }> = {
-  Alto: { pill: 'bg-brand-soft text-[#B91D18]', text: 'text-critico' },
-  Médio: { pill: 'bg-[#FFF7EC] text-[#8A5A07]', text: 'text-alerta' },
-  Baixo: { pill: 'bg-[#E7F6EF] text-[#0F7A50]', text: 'text-ativo' },
+  Alto: { pill: 'bg-brand-soft text-destructive', text: 'text-critico' },
+  Médio: { pill: 'bg-warning/10 text-warning', text: 'text-alerta' },
+  Baixo: { pill: 'bg-success/10 text-success', text: 'text-ativo' },
 }
 
 function StatusBadge({ label }: { label: string }) {
@@ -104,10 +104,10 @@ export default function RestaurantTable({
   totalFiltered,
 }: RestaurantTableProps) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-line bg-white">
+    <div className="overflow-hidden rounded-2xl border border-line bg-card">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-[13.5px]">
-          <thead className="border-b border-line bg-[#FAF9F7]">
+          <thead className="border-b border-line bg-muted/40">
             <tr>
               <th className={TH}>ID</th>
               <th className={TH}>Restaurante</th>
@@ -128,7 +128,7 @@ export default function RestaurantTable({
               </tr>
             ) : (
               rows.map((r) => (
-                <tr key={r.restaurant_id} className="border-b border-[#F4F2EF] last:border-0 hover:bg-surface">
+                <tr key={r.restaurant_id} className="border-b border-border last:border-0 hover:bg-surface">
                   <td className={`${TD} tabular-nums text-cmuted2`}>{r.restaurant_id}</td>
                   <td className={`${TD} font-bold text-ink`}>{r.restaurante}</td>
                   <td className={`${TD} text-faint`}>{r.responsavel_cs ?? '—'}</td>
@@ -157,7 +157,7 @@ export default function RestaurantTable({
             type="button"
             onClick={() => onPageChange(page - 1)}
             disabled={page <= 1}
-            className="rounded-[9px] border border-line2 px-3 py-1.5 font-medium text-ink2 transition hover:bg-surface disabled:cursor-not-allowed disabled:text-[#C9C4BD] disabled:hover:bg-transparent"
+            className="rounded-[9px] border border-line2 px-3 py-1.5 font-medium text-ink2 transition hover:bg-surface disabled:cursor-not-allowed disabled:text-muted-foreground disabled:hover:bg-transparent"
           >
             Anterior
           </button>
@@ -168,7 +168,7 @@ export default function RestaurantTable({
             type="button"
             onClick={() => onPageChange(page + 1)}
             disabled={page >= pageCount}
-            className="rounded-[9px] border border-line2 px-3 py-1.5 font-medium text-ink2 transition hover:bg-surface disabled:cursor-not-allowed disabled:text-[#C9C4BD] disabled:hover:bg-transparent"
+            className="rounded-[9px] border border-line2 px-3 py-1.5 font-medium text-ink2 transition hover:bg-surface disabled:cursor-not-allowed disabled:text-muted-foreground disabled:hover:bg-transparent"
           >
             Próxima
           </button>

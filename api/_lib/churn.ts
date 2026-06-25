@@ -12,7 +12,7 @@
 // changes when the source goes live.
 
 import type { ChurnFaixa, Restaurant } from '../../src/features/inatividade/lib/types'
-import scoresData from '../../data/churn-scores.json' with { type: 'json' }
+import scoresData from '../../data/churn-scores.json'
 
 interface ScoreEntry {
   prob: number

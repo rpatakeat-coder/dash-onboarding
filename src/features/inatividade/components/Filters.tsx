@@ -27,7 +27,7 @@ export default function Filters({ filters, owners, onChange }: FiltersProps) {
   return (
     <div className="space-y-3.5">
       <div className="flex flex-wrap items-center gap-2.5">
-        <div className="flex h-[42px] items-center gap-2.5 rounded-[11px] border border-line2 bg-white px-3.5 focus-within:border-cmuted2">
+        <div className="flex h-[42px] items-center gap-2.5 rounded-[11px] border border-line2 bg-card px-3.5 focus-within:border-cmuted2">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A39D" strokeWidth="2" aria-hidden="true">
             <circle cx="11" cy="11" r="7" />
             <path d="m20 20-3-3" />
@@ -45,7 +45,7 @@ export default function Filters({ filters, owners, onChange }: FiltersProps) {
           aria-label="Responsável CS"
           value={filters.owner}
           onChange={(e) => onChange({ ...filters, owner: e.target.value })}
-          className="h-[42px] rounded-[11px] border border-line2 bg-white px-3.5 text-[13.5px] font-medium text-ink2 outline-none focus:border-cmuted2"
+          className="h-[42px] rounded-[11px] border border-line2 bg-card px-3.5 text-[13.5px] font-medium text-ink2 outline-none focus:border-cmuted2"
         >
           <option value="all">Todos os responsáveis</option>
           <option value="none">Sem responsável</option>
@@ -67,8 +67,8 @@ export default function Filters({ filters, owners, onChange }: FiltersProps) {
               aria-pressed={active}
               className={`rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition ${
                 active
-                  ? 'bg-brand text-white'
-                  : 'border border-line2 bg-white text-faint hover:bg-surface'
+                  ? 'bg-brand text-primary-foreground'
+                  : 'border border-line2 bg-card text-faint hover:bg-surface'
               }`}
             >
               {chip.label}
@@ -88,8 +88,8 @@ export default function Filters({ filters, owners, onChange }: FiltersProps) {
               aria-pressed={active}
               className={`rounded-full px-3 py-1 text-[12px] font-semibold transition ${
                 active
-                  ? 'bg-ink text-white'
-                  : 'border border-line2 bg-white text-faint hover:bg-surface'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'border border-line2 bg-card text-faint hover:bg-surface'
               }`}
             >
               {chip.label}

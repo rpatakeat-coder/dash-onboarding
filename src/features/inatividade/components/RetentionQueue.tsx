@@ -26,9 +26,9 @@ interface RetentionQueueProps {
 
 // Faixa → accent bar + score color + badge style (mirrors the table's FAIXA palette).
 const FAIXA_STYLE: Record<ChurnFaixa, { accent: string; score: string; badge: string }> = {
-  Alto: { accent: '#D12B27', score: 'text-critico', badge: 'bg-brand-soft text-[#B91D18]' },
-  Médio: { accent: '#E8920C', score: 'text-alerta', badge: 'bg-[#FFF7EC] text-[#8A5A07]' },
-  Baixo: { accent: '#18A06B', score: 'text-ativo', badge: 'bg-[#E7F6EF] text-[#0F7A50]' },
+  Alto: { accent: '#D12B27', score: 'text-critico', badge: 'bg-brand-soft text-destructive' },
+  Médio: { accent: '#E8920C', score: 'text-alerta', badge: 'bg-warning/10 text-warning' },
+  Baixo: { accent: '#18A06B', score: 'text-ativo', badge: 'bg-success/10 text-success' },
 }
 
 const FAIXA_CHIPS: ReadonlyArray<{ key: ChurnFaixa | 'all'; label: string }> = [
@@ -90,7 +90,7 @@ export default function RetentionQueue({ rows, owners, scoresGeneratedAt }: Rete
             value={owner}
             onChange={(e) => update(setOwner, e.target.value)}
             aria-label="Responsável CS"
-            className="rounded-[9px] border border-line2 bg-white px-2.5 py-2 text-[13px] text-ink2 outline-none focus:border-brand"
+            className="rounded-[9px] border border-line2 bg-card px-2.5 py-2 text-[13px] text-ink2 outline-none focus:border-brand"
           >
             <option value="all">Todos os responsáveis</option>
             <option value="none">Sem responsável</option>
@@ -107,8 +107,8 @@ export default function RetentionQueue({ rows, owners, scoresGeneratedAt }: Rete
                 onClick={() => update(setFaixa, c.key)}
                 className={`rounded-full px-3 py-1.5 text-[12.5px] font-bold transition ${
                   faixa === c.key
-                    ? 'bg-ink text-white'
-                    : 'border border-line2 bg-white text-cmuted hover:bg-surface'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'border border-line2 bg-card text-cmuted hover:bg-surface'
                 }`}
               >
                 {c.label}
@@ -120,7 +120,7 @@ export default function RetentionQueue({ rows, owners, scoresGeneratedAt }: Rete
             value={sort}
             onChange={(e) => update(setSort, e.target.value as SortKey)}
             aria-label="Ordenar"
-            className="rounded-[9px] border border-line2 bg-white px-2.5 py-2 text-[13px] text-ink2 outline-none focus:border-brand"
+            className="rounded-[9px] border border-line2 bg-card px-2.5 py-2 text-[13px] text-ink2 outline-none focus:border-brand"
           >
             {SORTS.map((s) => (
               <option key={s.key} value={s.key}>{s.label}</option>
@@ -131,7 +131,7 @@ export default function RetentionQueue({ rows, owners, scoresGeneratedAt }: Rete
 
       {/* card list */}
       {pageRows.length === 0 ? (
-        <div className="rounded-2xl border border-line bg-white px-6 py-14 text-center text-cmuted2">
+        <div className="rounded-2xl border border-line bg-card px-6 py-14 text-center text-cmuted2">
           Nenhum restaurante nesta fila.
         </div>
       ) : (
@@ -144,7 +144,7 @@ export default function RetentionQueue({ rows, owners, scoresGeneratedAt }: Rete
             return (
               <div
                 key={r.restaurant_id}
-                className="flex overflow-hidden rounded-2xl border border-line bg-white transition hover:border-line2 hover:shadow-[0_6px_22px_rgba(28,26,24,.07)]"
+                className="flex overflow-hidden rounded-2xl border border-line bg-card transition hover:border-line2 hover:shadow-[0_6px_22px_rgba(28,26,24,.07)]"
               >
                 <div className="w-1.5 shrink-0" style={{ background: style.accent }} />
                 <div className="flex-1 p-[18px]">
@@ -180,11 +180,11 @@ export default function RetentionQueue({ rows, owners, scoresGeneratedAt }: Rete
                   </div>
                 </div>
 
-                <div className="flex min-w-[170px] flex-col items-end justify-center gap-1.5 border-l border-line bg-[#FCFBFA] px-5 py-4">
+                <div className="flex min-w-[170px] flex-col items-end justify-center gap-1.5 border-l border-line bg-muted/30 px-5 py-4">
                   <span className="text-[11px] font-semibold uppercase tracking-[.04em] text-faint">Responsável CS</span>
                   {noOwner ? (
                     <span className="flex items-center gap-2 text-[13.5px] font-bold text-alerta">
-                      <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-[#FFF7EC] text-[12px] font-extrabold text-alerta">!</span>
+                      <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-warning/10 text-[12px] font-extrabold text-alerta">!</span>
                       Sem responsável
                     </span>
                   ) : (
@@ -213,7 +213,7 @@ export default function RetentionQueue({ rows, owners, scoresGeneratedAt }: Rete
               type="button"
               onClick={() => setPage(safePage - 1)}
               disabled={safePage <= 1}
-              className="rounded-[9px] border border-line2 px-3 py-1.5 font-medium text-ink2 transition hover:bg-surface disabled:cursor-not-allowed disabled:text-[#C9C4BD] disabled:hover:bg-transparent"
+              className="rounded-[9px] border border-line2 px-3 py-1.5 font-medium text-ink2 transition hover:bg-surface disabled:cursor-not-allowed disabled:text-muted-foreground disabled:hover:bg-transparent"
             >
               Anterior
             </button>
@@ -221,7 +221,7 @@ export default function RetentionQueue({ rows, owners, scoresGeneratedAt }: Rete
               type="button"
               onClick={() => setPage(safePage + 1)}
               disabled={safePage >= totalPages}
-              className="rounded-[9px] border border-line2 px-3 py-1.5 font-medium text-ink2 transition hover:bg-surface disabled:cursor-not-allowed disabled:text-[#C9C4BD] disabled:hover:bg-transparent"
+              className="rounded-[9px] border border-line2 px-3 py-1.5 font-medium text-ink2 transition hover:bg-surface disabled:cursor-not-allowed disabled:text-muted-foreground disabled:hover:bg-transparent"
             >
               Próxima
             </button>

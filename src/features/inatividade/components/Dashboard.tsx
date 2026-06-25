@@ -110,27 +110,24 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-surface text-ink2">
-      <div className="border-b border-line bg-white px-7 py-4">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[11px] bg-brand shadow-[0_2px_6px_rgba(200,19,27,.28)]">
-              <span className="text-xl font-extrabold tracking-tight text-white">t</span>
-            </div>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h1 className="text-[18px] font-bold tracking-tight text-ink">Monitor de Inatividade</h1>
-                <span className="rounded-full bg-brand-soft px-2.5 py-0.5 text-[11px] font-semibold text-brand">CS</span>
-              </div>
-              <p className="mt-0.5 text-[12.5px] text-cmuted">
-                {dataset?.generated_at ? `Atualizado em ${formatBrtTimestamp(dataset.generated_at)}` : 'Carregando…'}
-                {dataset && ` · ${dataset.data.length.toLocaleString('pt-BR')} restaurantes`}
-              </p>
-            </div>
+    <div className="min-h-screen bg-background">
+      <main className="mx-auto max-w-[1400px] space-y-5 px-4 py-6 sm:px-6 md:px-10">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="font-subtitle text-xs uppercase tracking-widest text-muted-foreground">
+              Sucesso · CS
+            </p>
+            <h2 className="font-display text-3xl font-bold tracking-tight text-secondary md:text-4xl">
+              Monitor de Inatividade
+            </h2>
+            <p className="mt-1 font-small text-xs text-muted-foreground">
+              {dataset?.generated_at ? `Atualizado em ${formatBrtTimestamp(dataset.generated_at)}` : 'Carregando…'}
+              {dataset && ` · ${dataset.data.length.toLocaleString('pt-BR')} restaurantes`}
+            </p>
           </div>
           <div className="flex items-center gap-2.5">
             {dataset?.stale && (
-              <span role="status" className="rounded-full bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-800">
+              <span role="status" className="rounded-full bg-warning/15 px-3 py-1.5 text-xs font-medium text-warning">
                 Dados possivelmente desatualizados
               </span>
             )}
@@ -138,19 +135,17 @@ export default function Dashboard() {
               type="button"
               onClick={() => void load(true)}
               disabled={refreshing || loading}
-              className="rounded-[10px] border border-line2 bg-white px-4 py-2 text-[13px] font-semibold text-cmuted transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {refreshing ? 'Atualizando…' : 'Atualizar'}
             </button>
           </div>
         </div>
-      </div>
 
-      <main className="mx-auto max-w-7xl space-y-[18px] px-7 py-6">
-        {loading && <p className="text-sm text-cmuted">Carregando dados…</p>}
+        {loading && <p className="text-sm text-muted-foreground">Carregando dados…</p>}
 
         {error && !dataset && (
-          <div role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/[0.06] px-4 py-3 text-sm text-destructive">
             {error}{' '}
             <button type="button" onClick={() => void load()} className="font-semibold underline">
               Tentar novamente
@@ -172,7 +167,7 @@ export default function Dashboard() {
                   onClick={() => setView(t.key)}
                   className={`-mb-px rounded-t-[11px] border border-b-0 px-4 py-2.5 text-[13.5px] font-bold transition ${
                     view === t.key
-                      ? 'border-line bg-white text-ink'
+                      ? 'border-line bg-card text-ink'
                       : 'border-transparent text-cmuted hover:text-ink2'
                   }`}
                 >
@@ -192,12 +187,12 @@ export default function Dashboard() {
             {view === 'painel' && (
             <>
             {semResponsavel > 0 && (
-              <div className="flex items-center gap-3 rounded-xl border border-[#F6E2C0] bg-[#FFF7EC] px-4 py-3.5">
+              <div className="flex items-center gap-3 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3.5">
                 <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-alerta">
-                  <span className="text-[15px] font-extrabold text-white">!</span>
+                  <span className="text-[15px] font-extrabold text-primary-foreground">!</span>
                 </div>
-                <p className="text-[13.5px] text-[#8A5A07]">
-                  <strong className="font-bold text-[#7A4D06]">
+                <p className="text-[13.5px] text-warning">
+                  <strong className="font-bold text-warning">
                     {semResponsavel.toLocaleString('pt-BR')} restaurantes
                   </strong>{' '}
                   ainda estão sem responsável de CS atribuído.
@@ -208,7 +203,7 @@ export default function Dashboard() {
                     updateFilters({ ...filters, owner: 'none' })
                     tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                   }}
-                  className="ml-auto rounded-[9px] border border-[#EAD3A8] bg-white px-3.5 py-1.5 text-[12.5px] font-semibold text-[#8A5A07] transition hover:bg-[#FFF1DC]"
+                  className="ml-auto rounded-[9px] border border-warning/40 bg-card px-3.5 py-1.5 text-[12.5px] font-semibold text-warning transition hover:bg-warning/15"
                 >
                   Ver agora
                 </button>
@@ -216,7 +211,7 @@ export default function Dashboard() {
             )}
 
             {dataset.warnings.length > 0 && (
-              <div role="status" className="rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+              <div role="status" className="rounded-xl bg-warning/10 px-4 py-2.5 text-sm text-warning">
                 {dataset.warnings.join(' · ')}
               </div>
             )}
@@ -230,7 +225,7 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={exportCsv}
-                className="flex items-center gap-2 rounded-[11px] bg-ink px-[18px] py-2.5 text-[13.5px] font-bold text-white transition hover:bg-ink2"
+                className="flex items-center gap-2 rounded-[11px] bg-primary px-[18px] py-2.5 text-[13.5px] font-bold text-primary-foreground transition hover:bg-primary/90"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" />

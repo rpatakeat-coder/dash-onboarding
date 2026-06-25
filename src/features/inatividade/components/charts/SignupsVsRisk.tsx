@@ -31,7 +31,7 @@ function currentBrtMonth(): string {
 export default function SignupsVsRisk({ data }: { data: Restaurant[] }) {
   const series = signupsVsRisk(data, currentBrtMonth(), 18)
   return (
-    <div className="rounded-2xl border border-line bg-white p-[22px] lg:col-span-2">
+    <div className="rounded-2xl border border-line bg-card p-[22px] lg:col-span-2">
       <div className="mb-3.5 flex items-center justify-between">
         <div>
           <h3 className="text-[14.5px] font-bold text-ink">Cadastros × risco</h3>

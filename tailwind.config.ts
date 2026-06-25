@@ -64,23 +64,28 @@ export default {
           5: "hsl(var(--chart-5))",
         },
 
-        // Paleta da página Sucesso → Inatividade (Monitor de Inatividade · CS),
-        // portada do takeat-churn-tracker. Nomes próprios (não colidem com os
-        // tokens shadcn). cmuted/cmuted2 substituem o `muted` (que colide com o shadcn).
-        brand: { DEFAULT: "#C8131B", dark: "#A10F16", soft: "#FBEAE9" },
-        surface: "#F6F5F3",
-        line: "#ECEAE7",
-        line2: "#E2DFDB",
-        ink: "#1C1A18",
-        ink2: "#3A3733",
-        cmuted: "#8A8682",
-        cmuted2: "#A8A39D",
-        faint: "#6B6864",
-        critico: "#D12B27",
-        alerta: "#C77A0A",
-        ativo: "#18A06B",
-        recem: "#3D7BF0",
-        nunca: "#ABA59E",
+        // Tokens da página Sucesso → Inatividade (Monitor de Inatividade · CS).
+        // Apontam para o tema do dash (shadcn) para a página seguir o mesmo
+        // design das outras abas (incl. dark mode). cmuted/cmuted2 substituem o
+        // `muted` (que colide com o objeto muted do shadcn).
+        brand: {
+          DEFAULT: "hsl(var(--primary))",
+          dark: "hsl(var(--primary))",
+          soft: "hsl(var(--primary) / 0.12)",
+        },
+        surface: "hsl(var(--background))",
+        line: "hsl(var(--border))",
+        line2: "hsl(var(--border))",
+        ink: "hsl(var(--foreground))",
+        ink2: "hsl(var(--foreground))",
+        cmuted: "hsl(var(--muted-foreground))",
+        cmuted2: "hsl(var(--muted-foreground))",
+        faint: "hsl(var(--muted-foreground))",
+        critico: "hsl(var(--destructive))",
+        alerta: "hsl(var(--warning))",
+        ativo: "hsl(var(--success))",
+        recem: "hsl(var(--primary))",
+        nunca: "hsl(var(--muted-foreground))",
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',

@@ -12,7 +12,7 @@ export default function StatusDonut({ summary }: { summary: BandCounts }) {
   const data = ORDER.map((key) => ({ key, name: KEY_TO_SHORT_LABEL[key], value: summary[key] }))
   const total = data.reduce((sum, d) => sum + d.value, 0)
   return (
-    <div className="rounded-2xl border border-line bg-white p-[22px]">
+    <div className="rounded-2xl border border-line bg-card p-[22px]">
       <h3 className="text-[14.5px] font-bold text-ink">Distribuição por status</h3>
       <p className="mb-3 text-[12.5px] text-cmuted">{total.toLocaleString('pt-BR')} restaurantes monitorados</p>
       <div className="flex items-center gap-6">

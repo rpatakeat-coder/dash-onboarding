@@ -17,7 +17,7 @@ import { buildRiskDataset, type RiskBuildResult } from './_lib/inactiveRisk'
 import { enrichWithChurn } from './_lib/churn'
 import { fetchHubspotOwners } from './_lib/hubspot'
 import { matchOwners } from './_lib/matcher'
-import aliases from '../data/cs-aliases.json' with { type: 'json' }
+import aliases from '../data/cs-aliases.json'
 
 const STALE_WARNING = 'Os dados podem estar desatualizados: falha ao atualizar a partir da fonte.'
 const HUBSPOT_WARNING = 'Responsáveis CS indisponíveis: não foi possível consultar o HubSpot.'

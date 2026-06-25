@@ -11,7 +11,7 @@ const RAMP = ['#F0A6A2', '#F0A6A2', '#E26B66', '#E26B66', '#D6433D', '#D6433D', 
 export default function InactivityBands({ data }: { data: Restaurant[] }) {
   const buckets = inactivityBuckets(data)
   return (
-    <div className="rounded-2xl border border-line bg-white p-[22px]">
+    <div className="rounded-2xl border border-line bg-card p-[22px]">
       <h3 className="text-[14.5px] font-bold text-ink">Dias de inatividade</h3>
       <p className="mb-3.5 text-[12.5px] text-cmuted">Distribuição por faixa</p>
       <ResponsiveContainer width="100%" height={196}>
