@@ -27,15 +27,15 @@ const MinhaCarteira = () => {
   const { data } = useDashOperacoes();
   const allRows = data?.rows ?? [];
 
-  // Esta página é do Onboarding: removemos os deals do pipeline "Sucesso"
-  // (mesma regra da lista de deals em DealsTable). No dash_operacoes os deals
-  // de Onboarding em geral têm pipeline_nome vazio/null; só os que migraram p/
-  // Sucesso recebem "sucesso". Por isso filtramos por exclusão (!== "sucesso")
-  // em vez de exigir === "onboarding" (que vale só p/ o "estoque atual").
+  // Esta página é do Onboarding: só entram deals que estão NA pipeline
+  // "Onboarding". No dash_operacoes o pipeline_nome é sempre preenchido —
+  // "Onboarding" (deal em ativação) ou "Sucesso" (já ativado/handoff ou em
+  // churn). Ao ativar/cancelar, o deal sai da pipeline Onboarding. Por isso o
+  // recorte é === "onboarding" (igual ao "estoque atual" do Index).
   const onboardingRows = useMemo(
     () =>
       allRows.filter(
-        (r) => (r.pipeline_nome?.trim().toLowerCase() ?? "") !== "sucesso",
+        (r) => (r.pipeline_nome?.trim().toLowerCase() ?? "") === "onboarding",
       ),
     [allRows],
   );
