@@ -27,12 +27,25 @@ const MinhaCarteira = () => {
   const { data } = useDashOperacoes();
   const allRows = data?.rows ?? [];
 
+  // Esta página é do Onboarding: só consideramos deals do pipeline "Onboarding"
+  // (mesmo critério de Index.tsx). Deals do mesmo ativador em outros pipelines
+  // — ex.: Sucesso — não entram na carteira.
+  const onboardingRows = useMemo(
+    () =>
+      allRows.filter(
+        (r) => (r.pipeline_nome?.trim().toLowerCase() ?? "") === "onboarding",
+      ),
+    [allRows],
+  );
+
   const myAgente = (agenteAtivacao ?? fullName ?? "").trim();
   const myRows = useMemo(() => {
     if (!myAgente) return [];
     const me = myAgente.toLowerCase();
-    return allRows.filter((r) => (r.agente_ativacao?.trim().toLowerCase() ?? "") === me);
-  }, [allRows, myAgente]);
+    return onboardingRows.filter(
+      (r) => (r.agente_ativacao?.trim().toLowerCase() ?? "") === me,
+    );
+  }, [onboardingRows, myAgente]);
 
   const kpis = useMemo(() => {
     const total = myRows.length;
@@ -52,11 +65,12 @@ const MinhaCarteira = () => {
   }, [myRows]);
 
   const teamAvg = useMemo(() => {
-    if (!allRows.length) return { pctNoPrazo: 0, slaAvg: 0 };
-    const noPrazo = allRows.filter((r) => slaOf(r) <= 30).length;
-    const slaAvg = allRows.reduce((s, r) => s + slaOf(r), 0) / allRows.length;
-    return { pctNoPrazo: (noPrazo / allRows.length) * 100, slaAvg };
-  }, [allRows]);
+    if (!onboardingRows.length) return { pctNoPrazo: 0, slaAvg: 0 };
+    const noPrazo = onboardingRows.filter((r) => slaOf(r) <= 30).length;
+    const slaAvg =
+      onboardingRows.reduce((s, r) => s + slaOf(r), 0) / onboardingRows.length;
+    return { pctNoPrazo: (noPrazo / onboardingRows.length) * 100, slaAvg };
+  }, [onboardingRows]);
 
   const proximos = useMemo(() => {
     return [...myRows]
