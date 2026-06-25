@@ -32,7 +32,6 @@ const PAGE_SIZE = 25
 export default function Dashboard() {
   const [dataset, setDataset] = useState<Dataset | null>(null)
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [view, setView] = useState<DashboardView>('painel')
@@ -43,12 +42,13 @@ export default function Dashboard() {
   // Anchor for the "Ver agora" banner CTA — filtering to no-owner rows scrolls the table into view.
   const tableRef = useRef<HTMLDivElement>(null)
 
-  async function load(refresh = false) {
-    if (refresh) setRefreshing(true)
-    else setLoading(true)
+  // Sempre lê do cache (sem ?refresh): o upstream só é puxado pelo cron das 3h (BRT).
+  // Não há refresh manual — evita sobrecarregar a API da Takeat durante o dia.
+  async function load() {
+    setLoading(true)
     setError(null)
     try {
-      const data = await fetchDataset({ refresh })
+      const data = await fetchDataset()
       setDataset(data)
     } catch (e) {
       if (e instanceof UnauthorizedError) {
@@ -58,7 +58,6 @@ export default function Dashboard() {
       setError(e instanceof Error ? e.message : 'Falha ao carregar dados.')
     } finally {
       setLoading(false)
-      setRefreshing(false)
     }
   }
 
@@ -131,14 +130,9 @@ export default function Dashboard() {
                 Dados possivelmente desatualizados
               </span>
             )}
-            <button
-              type="button"
-              onClick={() => void load(true)}
-              disabled={refreshing || loading}
-              className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {refreshing ? 'Atualizando…' : 'Atualizar'}
-            </button>
+            <span className="font-small text-xs text-muted-foreground">
+              Atualização automática diária às 3h
+            </span>
           </div>
         </div>
 
