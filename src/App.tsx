@@ -30,6 +30,7 @@ const Admin = lazy(() => import("./pages/Admin.tsx"));
 const SetPassword = lazy(() => import("./pages/SetPassword.tsx"));
 const SucessoDashboard = lazy(() => import("./pages/sucesso/Dashboard"));
 const SucessoChurn = lazy(() => import("./pages/sucesso/Churn"));
+const SucessoInatividade = lazy(() => import("./pages/sucesso/Inatividade"));
 const SucessoClientes = lazy(() => import("./pages/sucesso/Clientes"));
 const SucessoLista = lazy(() => import("./pages/sucesso/Lista"));
 const SucessoKanban = lazy(() => import("./pages/sucesso/Kanban"));
@@ -64,6 +65,7 @@ const Shell = () => {
           <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
           <Route path="/sucesso" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoDashboard /></RequireArea></ProtectedRoute>} />
           <Route path="/sucesso/churn" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoChurn /></RequireArea></ProtectedRoute>} />
+          <Route path="/sucesso/inatividade" element={<ProtectedRoute><AdminOnlyRoute><SucessoInatividade /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="/sucesso/clientes" element={<ProtectedRoute><AdminOnlyRoute><SucessoClientes /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="/sucesso/lista" element={<ProtectedRoute><AdminOnlyRoute><SucessoLista /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="/sucesso/kanban" element={<ProtectedRoute><AdminOnlyRoute><SucessoKanban /></AdminOnlyRoute></ProtectedRoute>} />

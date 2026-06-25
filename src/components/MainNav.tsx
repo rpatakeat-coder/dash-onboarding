@@ -9,6 +9,7 @@ import {
   List,
   Columns3,
   TrendingDown,
+  Activity,
   Settings as SettingsIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -36,6 +37,7 @@ export const NAV_ITEMS_ONBOARDING: NavItem[] = [
 export const NAV_ITEMS_SUCESSO: NavItem[] = [
   { to: "/sucesso", label: "Dashboard", icon: LayoutDashboard },
   { to: "/sucesso/churn", label: "Churn", icon: TrendingDown },
+  { to: "/sucesso/inatividade", label: "Inatividade", icon: Activity, title: "Monitor de inatividade · CS", adminOnly: true },
   { to: "/sucesso/clientes", label: "Clientes", icon: Users, adminOnly: true },
   { to: "/sucesso/lista", label: "Lista", icon: List, adminOnly: true },
   { to: "/sucesso/kanban", label: "Kanban", icon: Columns3, adminOnly: true },
