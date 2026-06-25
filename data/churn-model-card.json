@@ -1,0 +1,101 @@
+{
+  "_comment": "Canonical, validated facts brought over from the TCC (frozen). This is the reference the app and future research trust. Source: TCC MBA — Predição de Churn Takeat (Resultados Preliminares).",
+  "provenance": {
+    "project": "TCC MBA — Predição de Churn Takeat",
+    "stage": "Resultados Preliminares (CRISP-DM fases 1–5)",
+    "imported_on": "2026-06-24",
+    "note": "TCC permanece congelado; toda evolução acontece neste projeto."
+  },
+  "churn_definition": {
+    "rule": "cancelou formalmente OU 30 dias sem nenhuma atividade",
+    "excluded": "restaurantes que nunca usaram (problema de onboarding, não de churn)",
+    "validation": "entre os cancelamentos formais, metade já estava 25 dias em silêncio antes do cancelamento"
+  },
+  "temporal_design": {
+    "cutoff": "2025-11-30",
+    "observation_window": "2025-06-01..2025-11-30",
+    "prediction_window": "2025-12-01..2026-05-31",
+    "note": "features só de antes do corte; churn medido só depois. Melhoria sugerida: mês de gap entre janelas."
+  },
+  "model": {
+    "algorithm": "Regressão Logística + SMOTE",
+    "primary_metric": "F1",
+    "n_train": 1967,
+    "churn_rate": 0.187,
+    "cv_auc": 0.742,
+    "C": 2,
+    "ticket_cap": 402.21,
+    "risk_bands": { "Baixo": "<0.20", "Médio": "0.20–0.50", "Alto": ">0.50" }
+  },
+  "metrics": {
+    "auc_roc": 0.799,
+    "pr_auc": 0.501,
+    "ks": 0.494,
+    "f1": 0.5,
+    "recall": 0.73,
+    "precision": 0.38,
+    "lift_decil_1": 3.28,
+    "captura_top_20pct": 51.35
+  },
+  "validated_risk_tiers": {
+    "_comment": "Churn real observado por faixa — a evidência mais forte para priorização do CS.",
+    "Baixo": { "restaurantes": 265, "churn_real_pct": 5.3 },
+    "Médio": { "restaurantes": 967, "churn_real_pct": 9.9 },
+    "Alto": { "restaurantes": 735, "churn_real_pct": 35.0 }
+  },
+  "features_used": [
+    "sessoes_ult", "gmv_medio", "dias_ativos_media", "sessoes_media", "tendencia",
+    "taxa_cancel", "tempo_casa_T", "meses_ativos_janela", "ticket_medio", "n_cobrancas",
+    "qtd_usuarios", "mrr", "tem_avaliacao", "share_delivery", "n_features_adotadas"
+  ],
+  "feature_relevance": {
+    "_comment": "IV = Information Value. 'suspeita' = IV alto (>0.5); a janela temporal já trata o vazamento, mas vale auditar.",
+    "strong": ["dias_ativos_media (0.50)", "sessoes_media (0.50)", "tendencia (0.36)", "taxa_cancel (0.34)"],
+    "medium": ["tempo_casa_T (0.28)", "meses_ativos_janela (0.22)", "ticket_medio (0.19)", "n_cobrancas (0.17)", "qtd_usuarios (0.15)"],
+    "suspeita_alto_IV": ["sessoes_ult (0.69)", "gmv_medio (0.58)"],
+    "dropped_weak_or_useless": ["mrr (0.10)", "qtd_usuarios_removidos (0.06)", "share_delivery (0.05)", "n_features_adotadas (0.04)", "plano/UF/feature flags (~0)"]
+  },
+  "confirmed_hypotheses": {
+    "menos_uso_mais_churn": true,
+    "menos_tempo_de_casa_mais_churn": true,
+    "queda_de_uso_e_o_sinal_mais_forte": "43.9% de churn entre os em forte queda vs 15.6% entre os em crescimento"
+  },
+  "known_limitations": [
+    "Validado em um único corte (sem validação out-of-time).",
+    "Precisão ~0.38 (muitos falsos positivos) — aceitável para fila de priorização, não para ação automatizada.",
+    "Probabilidades não calibradas (SMOTE infla a probabilidade).",
+    "Sinais não usados que costumam prever churn: suporte (help_requests), saúde de cobrança, tendências mais ricas."
+  ],
+  "out_of_time_validation": {
+    "_comment": "research/10_multicutoff_oot.py — 12 cortes mensais (2024-12 a 2025-11), mesmas 15 features, LogReg + class_weight. Responde 'o modelo se mantém ao longo do tempo?'.",
+    "stability_auc_12_cortes": { "media": 0.734, "desvio": 0.015, "min": 0.712, "max": 0.763 },
+    "out_of_time_auc": 0.709,
+    "in_time_reference_auc": 0.733,
+    "precision_at_capacity_pct": { "topo_5": 53.1, "topo_10": 48.5, "topo_20": 41.7, "base": 18.7 },
+    "verdict": "AUC estável ao longo de 12 meses (0,73 ± 0,015) — o 0,74 não foi sorte de um corte. OOT ~0,71, só ~0,02 abaixo do in-time: generaliza para o futuro. Para o CS, o topo 5–10% do ranking tem ~50% de churn real (2,6–2,8x o base)."
+  },
+  "signal_track": {
+    "_comment": "research/11_signal_track.py — adiciona sinais subaproveitados (forma de uso, avaliações, equipe; cobrança não ajudou) e testa no mesmo protocolo OOT.",
+    "oot_auc": { "baseline_15_logreg": 0.709, "enriquecido_logreg": 0.725, "enriquecido_histgb": 0.750 },
+    "precision_top_10pct": { "baseline": 48, "enriquecido_histgb": 64 },
+    "estabilidade_enriquecido_logreg": { "media": 0.753, "desvio": 0.012 },
+    "novos_sinais_que_pesaram": ["dias_ativos_ult", "n_avaliacoes", "ratio_ult_media", "pct_do_pico", "qtd_usuarios_removidos"],
+    "nao_ajudaram": ["taxa_overdue (cobrança)", "cob_recentes_3m", "clientes_trend", "volatilidade"],
+    "ainda_nao_usado": "suporte/help_requests — nunca foi extraído; exige novo pull do banco; sinal potencialmente forte.",
+    "verdict": "Sinais em mãos elevam OOT AUC 0,71 -> 0,75 e, sobretudo, precisão@topo-10% 48% -> 64% (~3,4x o base). Ganho real e estável. Cobrança (overdue) não preveem aqui; o forte é recência/queda de uso. HistGB precisa de calibração e confirmação multi-corte antes de produção."
+  },
+  "promotion": {
+    "_comment": "research/12_promote.py — campeão promovido e usado para regenerar data/churn-scores.json.",
+    "champion": "HistGradientBoosting (baseline + novos sinais) + calibração isotônica",
+    "stability_auc_12_cortes": { "media": 0.773, "desvio": 0.017, "min": 0.744, "max": 0.801 },
+    "out_of_time_auc": 0.752,
+    "precision_top_pct": { "topo_5": 64, "topo_10": 63, "topo_20": 48 },
+    "brier": { "cru": 0.162, "calibrado": 0.130 },
+    "faixas_revalidadas_churn_real_pct": { "Baixo": 10.4, "Médio": 25.2, "Alto": 60.9 },
+    "scored_at": "2026-05-31",
+    "n_scored": 2512,
+    "artifacts": ["research/artifacts/champion_model.joblib", "data/churn-scores.json (regenerado)"],
+    "caveat_live_scoring": "O campeão é uma árvore (HistGB), NÃO portável para scoring nativo em TS (Opção B). Scoring ao vivo passa a ser via batch Python (Opção A) reusando champion_model.joblib. O data/churn-model.json (linear) continua válido só como artefato do modelo linear original.",
+    "verdict": "Campeão validado em 12 cortes (AUC 0,77 ± 0,017) e out-of-time (0,75), calibrado (Brier 0,162 -> 0,130). Faixas revalidadas muito mais separadas que o TCC: Alto = 61% de churn real (era 35%). Scores do dashboard regenerados."
+  }
+}
