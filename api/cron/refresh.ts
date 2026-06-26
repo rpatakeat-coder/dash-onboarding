@@ -24,12 +24,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
     return
   }
 
+  // Mesmo deadline do /api/restaurants: o cron também respeita o limite de duração da função.
+  const deadline = Date.now() + 50_000
   const result = await resolveDataset({
     store: getDefaultStore(),
     now: Date.now(),
     forceRefresh: true, // always rebuild + repopulate the cache, regardless of current freshness
-    build: buildRiskDataset,
-    enrich: enrichWithOwners,
+    build: () => buildRiskDataset(deadline),
+    enrich: (built) => enrichWithOwners(built, deadline),
   })
 
   const body = (result.body ?? {}) as { data?: unknown[]; warnings?: string[]; stale?: boolean }

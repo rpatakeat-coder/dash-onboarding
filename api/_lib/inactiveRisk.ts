@@ -27,6 +27,8 @@ export interface RiskBuildResult {
   generated_at: string
   summary: BandCounts
   data: Restaurant[]
+  /** true quando a paginação parou no deadline (universo parcial — só em plano com limite de tempo). */
+  partial?: boolean
 }
 
 function coerceSummary(raw: Record<string, number> | undefined): BandCounts {
@@ -43,7 +45,9 @@ function coerceSummary(raw: Record<string, number> | undefined): BandCounts {
  * no new id — both a runaway-loop guard and what keeps each restaurant appearing exactly once (a churn
  * report must not double-count, and duplicate ids would also collide as React keys in the table).
  */
-export async function buildRiskDataset(): Promise<RiskBuildResult> {
+export async function buildRiskDataset(deadlineMs?: number): Promise<RiskBuildResult> {
+  const t0 = Date.now()
+  let partial = false
   let token = await serviceLogin()
   let reloggedIn = false
 
@@ -82,6 +86,7 @@ export async function buildRiskDataset(): Promise<RiskBuildResult> {
   const numPages = Math.min(MAX_PAGES, Math.max(1, Math.ceil(total / pageSize)))
   const CONCURRENCY = 8
   for (let start = 2; start <= numPages; start += CONCURRENCY) {
+    if (deadlineMs && Date.now() > deadlineMs) { partial = true; break }
     const batch: number[] = []
     for (let p = start; p < start + CONCURRENCY && p <= numPages; p += 1) batch.push(p)
     const pages = await Promise.all(batch.map((p) => fetchPage(p)))
@@ -94,9 +99,15 @@ export async function buildRiskDataset(): Promise<RiskBuildResult> {
     responsavel_cs: null,
   }))
 
+  console.log(
+    `[inatividade] inactive-risk: ${seen.size}/${total} restaurantes em ${Date.now() - t0}ms` +
+      `${partial ? ' (PARCIAL — atingiu o deadline)' : ''}`,
+  )
+
   return {
     generated_at: first.meta.generated_at,
     summary: coerceSummary(first.summary),
     data,
+    partial,
   }
 }

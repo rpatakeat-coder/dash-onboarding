@@ -21,6 +21,10 @@ import aliases from '../data/cs-aliases.json' with { type: 'json' }
 
 const STALE_WARNING = 'Os dados podem estar desatualizados: falha ao atualizar a partir da fonte.'
 const HUBSPOT_WARNING = 'Responsáveis CS indisponíveis: não foi possível consultar o HubSpot.'
+const PARTIAL_WARNING = 'Dados parciais: o processamento atingiu o limite de tempo. Considere o plano Vercel Pro para o universo completo.'
+/** Deadline (ms) que o build inteiro (inactive-risk + HubSpot) deve respeitar, deixando folga para
+ *  o churn-enrich, a gravação no KV e a resposta dentro do limite de duração da função (Hobby = 60s). */
+const BUILD_BUDGET_MS = 50_000
 
 /** The owner-enrichment overlay applied to a fresh build before caching/serving. */
 export interface EnrichResult {
@@ -34,9 +38,9 @@ export interface EnrichResult {
  * every `responsavel_cs` null plus a warning, with the risk data fully intact (AC-009B). The HubSpot
  * outage must never fail the request, so this never rethrows.
  */
-export async function enrichWithOwners(built: RiskBuildResult): Promise<EnrichResult> {
+export async function enrichWithOwners(built: RiskBuildResult, deadlineMs?: number): Promise<EnrichResult> {
   try {
-    const owners = await fetchHubspotOwners()
+    const owners = await fetchHubspotOwners(deadlineMs)
     const outcome = matchOwners({
       restaurants: built.data,
       companies: owners,
@@ -106,7 +110,7 @@ export async function resolveDataset(deps: {
       owners: enriched.owners,
       data: churn.data,
       stale: false,
-      warnings: enriched.warnings,
+      warnings: built.partial ? [...enriched.warnings, PARTIAL_WARNING] : enriched.warnings,
       scores_generated_at: churn.scores_generated_at,
     }
     try {
@@ -139,12 +143,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
     return
   }
 
+  const deadline = Date.now() + BUILD_BUDGET_MS
   const result = await resolveDataset({
     store: getDefaultStore(),
     now: Date.now(),
     forceRefresh: wantsRefresh(req),
-    build: buildRiskDataset,
-    enrich: enrichWithOwners,
+    build: () => buildRiskDataset(deadline),
+    enrich: (built) => enrichWithOwners(built, deadline),
   })
   res.status(result.status).json(result.body)
 }
