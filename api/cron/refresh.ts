@@ -7,10 +7,10 @@
 // the one heavy upstream scan happens once, off-peak. Daytime `/api/restaurants` calls are then pure
 // cache reads that never touch the Takeat backend.
 
-import type { ApiRequest, ApiResponse } from '../_lib/http'
-import { getDefaultStore } from '../_lib/cache'
-import { buildRiskDataset } from '../_lib/inactiveRisk'
-import { resolveDataset, enrichWithOwners } from '../restaurants'
+import type { ApiRequest, ApiResponse } from '../_lib/http.js'
+import { getDefaultStore } from '../_lib/cache.js'
+import { buildRiskDataset } from '../_lib/inactiveRisk.js'
+import { resolveDataset, enrichWithOwners } from '../restaurants.js'
 
 function bearer(header: string | string[] | undefined): string {
   const value = Array.isArray(header) ? header[0] : header

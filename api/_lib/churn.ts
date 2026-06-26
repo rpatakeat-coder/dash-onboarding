@@ -11,8 +11,8 @@
 // the same `{ restaurant_id: { prob, faixa } }` contract this module reads — so nothing downstream
 // changes when the source goes live.
 
-import type { ChurnFaixa, Restaurant } from '../../src/features/inatividade/lib/types'
-import scoresData from '../../data/churn-scores.json'
+import type { ChurnFaixa, Restaurant } from './types.js'
+import scoresData from '../../data/churn-scores.json' with { type: 'json' }
 
 interface ScoreEntry {
   prob: number

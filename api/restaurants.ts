@@ -3,21 +3,21 @@
 // and degrades to the last-good stale copy if the rebuild fails (AC-009A). `?refresh=1` forces a
 // rebuild (the manual refresh control, wired in S7).
 
-import type { ApiRequest, ApiResponse } from './_lib/http'
-import type { Dataset, Restaurant } from '../src/features/inatividade/lib/types'
-import { requireSupabaseUser } from './_lib/supabaseAuth'
+import type { ApiRequest, ApiResponse } from './_lib/http.js'
+import type { Dataset, Restaurant } from './_lib/types.js'
+import { requireSupabaseUser } from './_lib/supabaseAuth.js'
 import {
   getDefaultStore,
   isFresh,
   readCachedDataset,
   writeCachedDataset,
   type KvStore,
-} from './_lib/cache'
-import { buildRiskDataset, type RiskBuildResult } from './_lib/inactiveRisk'
-import { enrichWithChurn } from './_lib/churn'
-import { fetchHubspotOwners } from './_lib/hubspot'
-import { matchOwners } from './_lib/matcher'
-import aliases from '../data/cs-aliases.json'
+} from './_lib/cache.js'
+import { buildRiskDataset, type RiskBuildResult } from './_lib/inactiveRisk.js'
+import { enrichWithChurn } from './_lib/churn.js'
+import { fetchHubspotOwners } from './_lib/hubspot.js'
+import { matchOwners } from './_lib/matcher.js'
+import aliases from '../data/cs-aliases.json' with { type: 'json' }
 
 const STALE_WARNING = 'Os dados podem estar desatualizados: falha ao atualizar a partir da fonte.'
 const HUBSPOT_WARNING = 'Responsáveis CS indisponíveis: não foi possível consultar o HubSpot.'

@@ -2,10 +2,10 @@
 // are layered on in S4). Auth model A: the service JWT (from serviceLogin) authorizes the calls; an
 // upstream 401 mid-fetch is recovered once by re-logging-in with the service account (AC-008).
 
-import type { BandCounts, RawRiskRow, Restaurant, RiskBandKey } from '../../src/features/inatividade/lib/types'
-import { RISK_BAND_KEYS } from '../../src/features/inatividade/lib/risk'
-import { parseDiasInativo } from '../../src/features/inatividade/lib/format'
-import { serviceLogin, upstreamFetch } from './upstream'
+import type { BandCounts, RawRiskRow, Restaurant, RiskBandKey } from './types.js'
+import { RISK_BAND_KEYS } from './risk.js'
+import { parseDiasInativo } from './format.js'
+import { serviceLogin, upstreamFetch } from './upstream.js'
 
 const PAGE_SIZE = 200
 /** Absolute safety cap on pages, far above the real universe (~2,800 rows / 200 ≈ 14 pages). */

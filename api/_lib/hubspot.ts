@@ -15,7 +15,7 @@
 // newer deal that left the field blank). Search caps at 10k results; the username set is well under it.
 // Requests retry on 429/5xx (HubSpot's search limit is ~4 req/s) and pages are lightly throttled.
 
-import { normalizeName } from '../../src/features/inatividade/lib/format'
+import { normalizeName } from './format.js'
 
 const HUBSPOT_API_BASE = 'https://api.hubapi.com'
 const PAGE_LIMIT = 100

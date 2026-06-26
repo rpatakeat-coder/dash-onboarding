@@ -9,9 +9,9 @@
 // Unmatched rows still appear; the count of `null` owners is returned so the dashboard can surface
 // "N sem responsável CS".
 
-import { normalizeName } from '../../src/features/inatividade/lib/format'
-import type { Restaurant } from '../../src/features/inatividade/lib/types'
-import type { OwnerRecord } from './hubspot'
+import { normalizeName } from './format.js'
+import type { Restaurant } from './types.js'
+import type { OwnerRecord } from './hubspot.js'
 
 export interface MatchOutcome {
   /** Input rows, copied with `responsavel_cs` filled in (input is never mutated). */

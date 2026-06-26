@@ -3,7 +3,7 @@
 // local dev / tests only. The cache bounds upstream load to ~once per day (AC-007) and retains the
 // last-good entry past freshness so the route can degrade to stale on dependency failure (AC-009A).
 
-import type { Dataset } from '../../src/features/inatividade/lib/types'
+import type { Dataset } from './types.js'
 
 /** Freshness window: serve from cache without rebuilding for 24h. */
 export const CACHE_TTL_MS = 24 * 60 * 60 * 1000

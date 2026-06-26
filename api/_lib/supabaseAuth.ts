@@ -7,7 +7,7 @@
 // an unauthenticated caller can't pass. No SERVICE_* / upstream secret is involved here — those
 // authenticate the server to the Takeat API, never the end user.
 
-import type { ApiRequest } from './http'
+import type { ApiRequest } from './http.js'
 
 export interface SupabaseUser {
   id: string
