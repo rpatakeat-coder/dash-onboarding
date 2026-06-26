@@ -15,6 +15,7 @@ import { PreferencesDialog } from "./components/PreferencesDialog";
 import { PreferencesDialogContext } from "./contexts/PreferencesDialogContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminOnlyRoute } from "./components/AdminOnlyRoute";
+import { SuperAdminOnlyRoute } from "./components/SuperAdminOnlyRoute";
 import { RequireArea } from "./components/RequireArea";
 import ScrollToTop from "./components/ScrollToTop";
 import { PageTransition } from "./components/PageTransition";
@@ -65,7 +66,7 @@ const Shell = () => {
           <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
           <Route path="/sucesso" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoDashboard /></RequireArea></ProtectedRoute>} />
           <Route path="/sucesso/churn" element={<ProtectedRoute viewerAllowed><RequireArea area="sucesso"><SucessoChurn /></RequireArea></ProtectedRoute>} />
-          <Route path="/sucesso/inatividade" element={<ProtectedRoute><AdminOnlyRoute><SucessoInatividade /></AdminOnlyRoute></ProtectedRoute>} />
+          <Route path="/sucesso/inatividade" element={<ProtectedRoute><SuperAdminOnlyRoute><SucessoInatividade /></SuperAdminOnlyRoute></ProtectedRoute>} />
           <Route path="/sucesso/clientes" element={<ProtectedRoute><AdminOnlyRoute><SucessoClientes /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="/sucesso/lista" element={<ProtectedRoute><AdminOnlyRoute><SucessoLista /></AdminOnlyRoute></ProtectedRoute>} />
           <Route path="/sucesso/kanban" element={<ProtectedRoute><AdminOnlyRoute><SucessoKanban /></AdminOnlyRoute></ProtectedRoute>} />

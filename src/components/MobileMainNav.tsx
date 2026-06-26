@@ -19,14 +19,16 @@ import { useArea } from "@/contexts/AreaContext";
 export const MobileMainNav = ({ className }: { className?: string }) => {
   const [open, setOpen] = useState(false);
   const { isAdmin } = useIsAdmin();
-  const { isViewer } = useUserRole();
+  const { isViewer, isSuperAdmin } = useUserRole();
   const location = useLocation();
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelId = "mobile-mainnav-panel";
 
   const { area } = useArea();
-  const allItems = getNavItemsForArea(area).filter((i) => !i.adminOnly || isAdmin);
+  const allItems = getNavItemsForArea(area).filter(
+    (i) => (!i.adminOnly || isAdmin) && (!i.superAdminOnly || isSuperAdmin),
+  );
   // Viewer de Onboarding só vê a Home; em Sucesso (Time Sucesso/Gestor) vê as telas da área.
   const items = area === "onboarding" && isViewer ? allItems.filter((i) => i.to === "/") : allItems;
   const currentTab = new URLSearchParams(location.search).get("tab");

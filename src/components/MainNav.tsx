@@ -24,6 +24,8 @@ interface NavItem {
   icon: LucideIcon;
   title?: string;
   adminOnly?: boolean;
+  /** Mais restrito que adminOnly: só aparece para role "super_admin". */
+  superAdminOnly?: boolean;
 }
 
 export const NAV_ITEMS_ONBOARDING: NavItem[] = [
@@ -37,7 +39,7 @@ export const NAV_ITEMS_ONBOARDING: NavItem[] = [
 export const NAV_ITEMS_SUCESSO: NavItem[] = [
   { to: "/sucesso", label: "Dashboard", icon: LayoutDashboard },
   { to: "/sucesso/churn", label: "Churn", icon: TrendingDown },
-  { to: "/sucesso/inatividade", label: "Inatividade", icon: Activity, title: "Monitor de inatividade · CS", adminOnly: true },
+  { to: "/sucesso/inatividade", label: "Inatividade", icon: Activity, title: "Monitor de inatividade · CS", superAdminOnly: true },
   { to: "/sucesso/clientes", label: "Clientes", icon: Users, adminOnly: true },
   { to: "/sucesso/lista", label: "Lista", icon: List, adminOnly: true },
   { to: "/sucesso/kanban", label: "Kanban", icon: Columns3, adminOnly: true },
@@ -61,10 +63,12 @@ interface Props {
 export const MainNav = ({ className, orientation = "horizontal", onNavigate }: Props) => {
   const vertical = orientation === "vertical";
   const { isAdmin } = useIsAdmin();
-  const { isViewer } = useUserRole();
+  const { isViewer, isSuperAdmin } = useUserRole();
   const location = useLocation();
   const { area } = useArea();
-  const allItems = getNavItemsForArea(area).filter((i) => !i.adminOnly || isAdmin);
+  const allItems = getNavItemsForArea(area).filter(
+    (i) => (!i.adminOnly || isAdmin) && (!i.superAdminOnly || isSuperAdmin),
+  );
   // Viewer de Onboarding só enxerga a Home (rankings). Em Sucesso (Time Sucesso/Gestor),
   // o viewer vê as telas da área (itens adminOnly como Config/Área do Gestor já saíram acima).
   const items = area === "onboarding" && isViewer ? allItems.filter((i) => i.to === "/") : allItems;

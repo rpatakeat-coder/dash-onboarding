@@ -45,10 +45,11 @@ export const useUserRole = () => {
   const equipe: AppTeam | null = query.data?.equipe ?? null;
   const loading = !!user && query.isLoading;
   const isAdmin = role === "admin" || role === "super_admin";
+  const isSuperAdmin = role === "super_admin";
   const isViewer = role === "viewer";
 
   const allowedAreas = getAllowedAreas(role, equipe);
   const homeRoute = homeRouteForAreas(allowedAreas);
 
-  return { role, equipe, isAdmin, isViewer, allowedAreas, homeRoute, loading };
+  return { role, equipe, isAdmin, isSuperAdmin, isViewer, allowedAreas, homeRoute, loading };
 };
