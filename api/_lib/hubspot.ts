@@ -25,7 +25,14 @@ const MAX_PAGES = 2000
 const MAX_RETRIES = 5
 const BASE_RETRY_MS = 500
 /** Inter-page delay to stay under HubSpot's ~4 req/s search secondary limit. */
-const PAGE_THROTTLE_MS = 250
+const PAGE_THROTTLE_MS = 150
+/**
+ * Orçamento de tempo (wall-clock) para a varredura de deals do HubSpot. Em planos com limite de
+ * duração da função (Hobby = 60s), o build inteiro precisa caber; se o HubSpot demorar mais que
+ * isto, paramos a paginação e seguimos com o que já foi coletado (donos parciais) — melhor uma
+ * lista parcial de responsáveis do que estourar o tempo (504). O resto vira "sem responsável".
+ */
+const HUBSPOT_BUDGET_MS = 35_000
 const DEFAULT_CS_PROPERTY = 'agente_do_sucesso_responsavel'
 const DEFAULT_USERNAME_PROPERTY = 'username'
 const LAST_MODIFIED_PROPERTY = 'hs_lastmodifieddate'
@@ -154,7 +161,10 @@ export async function fetchHubspotOwners(): Promise<OwnerRecord[]> {
   const byKey = new Map<string, { record: OwnerRecord; ownerModifiedAt: number }>()
 
   let after: string | undefined
+  const startedAt = Date.now()
   for (let pages = 0; pages < MAX_PAGES; pages += 1) {
+    // Respeita o orçamento de tempo: se estourar, devolve os donos coletados até aqui (parcial).
+    if (Date.now() - startedAt > HUBSPOT_BUDGET_MS) break
     const payload = {
       filterGroups: [{ filters: [{ propertyName: usernameProperty, operator: 'HAS_PROPERTY' }] }],
       properties: [usernameProperty, csProperty, LAST_MODIFIED_PROPERTY],

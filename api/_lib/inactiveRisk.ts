@@ -75,14 +75,17 @@ export async function buildRiskDataset(): Promise<RiskBuildResult> {
   const total = Number(first.meta.total) || 0
   addRows(first.data)
 
-  let page = 1
-  while (seen.size < total && page < MAX_PAGES) {
-    page += 1
-    const next = await fetchPage(page)
-    if (next.data.length === 0) break // short/empty page guard — never loop forever (C3)
-    const before = seen.size
-    addRows(next.data)
-    if (seen.size === before) break // a full page with no new id → universe covered; stop (unstable-order guard)
+  // Paginação PARALELA (concorrência limitada). O upstream ordena sem tiebreaker estável e pode
+  // repetir linhas entre páginas, mas o dedupe por restaurant_id resolve. Buscar as páginas
+  // concorrentemente (em vez de uma a uma) é o que faz o build caber no limite de tempo da função.
+  const pageSize = first.data.length || PAGE_SIZE
+  const numPages = Math.min(MAX_PAGES, Math.max(1, Math.ceil(total / pageSize)))
+  const CONCURRENCY = 8
+  for (let start = 2; start <= numPages; start += CONCURRENCY) {
+    const batch: number[] = []
+    for (let p = start; p < start + CONCURRENCY && p <= numPages; p += 1) batch.push(p)
+    const pages = await Promise.all(batch.map((p) => fetchPage(p)))
+    for (const pg of pages) addRows(pg.data)
   }
 
   const data: Restaurant[] = [...seen.values()].map((row) => ({
