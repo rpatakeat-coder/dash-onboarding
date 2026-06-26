@@ -81,8 +81,18 @@ export async function resolveDataset(deps: {
     cached = null // a cache read failure must not break the request
   }
 
-  if (cached && isFresh(cached.storedAt, now) && !forceRefresh) {
-    return { status: 200, body: cached.dataset }
+  // Requisição de usuário (não-cron) NUNCA puxa do upstream: serve o que houver no cache
+  // (fresco OU vencido). O upstream só é puxado pelo cron das 3h (forceRefresh). Exceção:
+  // bootstrap — quando ainda não existe NENHUM cache, faz UMA carga (senão a página ficaria
+  // vazia até o primeiro cron). Depois disso, abrir a página nunca mais bate na API.
+  if (cached && !forceRefresh) {
+    const stale = !isFresh(cached.storedAt, now)
+    return {
+      status: 200,
+      body: stale
+        ? { ...cached.dataset, stale: true, warnings: [...cached.dataset.warnings, STALE_WARNING] }
+        : cached.dataset,
+    }
   }
 
   try {
